@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.claude/settings.local.json
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+# Export del design: NON versionare i file .dc.html pesanti finché non si decide (vedi design/README.md)
+design/export/*.zip

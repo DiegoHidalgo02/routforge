@@ -1,0 +1,21 @@
+{
+  "name": "routforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RoutForge — app di organizzazione e studio (calendario, scheduler, sessioni, corsi, pratica AI, statistiche, sync)",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run check && npm run test",
+    "design:check": "node scripts/check-design.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
