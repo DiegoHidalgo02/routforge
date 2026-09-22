@@ -1,0 +1,11 @@
+// Punto d'ingresso del dominio puro. Ogni modulo dichiara in testa fonte (§) e scenari coperti.
+export * from './types';
+export * from './time';
+export * from './sm2';
+export * from './streak';
+export * from './pomodoro';
+export * from './practice';
+export * from './pointer';
+export * from './lost';
+export * from './nowBlock';
+export * from './course/parser';
