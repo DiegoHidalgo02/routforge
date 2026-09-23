@@ -419,7 +419,7 @@ Il design non si modifica mai dal repository. Se cambi qualcosa in Claude Design
 
 In questo task l'agente legge tutto il design, verifica l'handoff e **sceglie lo stack motivandolo**; tu leggi la decisione e puoi porre il veto prima che venga costruita la UI (task T-006). Dura 20–40 minuti e lo fai con il modello più capace.
 
-1. Scegli il modello (il task è marcato **F** nel backlog):
+1. Scegli il modello indicato nella colonna **Modello** del backlog:
 
 ```text
 /model
@@ -474,15 +474,16 @@ Ogni sessione chiude da 1 a 3 task con lo stesso schema: apri, `/task next`, leg
 
 1. Apri VS Code nella cartella del progetto e controlla che `git status` sia pulito.
 2. Apri una **nuova** sessione di Claude Code: l'hook carica lo stato e i prossimi task.
-3. Guarda il marcatore del prossimo task in `docs/TASKS.md` e scegli di conseguenza:
+3. Guarda la riga del prossimo task in `docs/TASKS.md` e preparati di conseguenza:
 
-| Marcatore | Significato | Cosa fai prima di `/task next` |
-| --- | --- | --- |
-| nessuno | task standard | modello **Sonnet 5** |
-| **F** | task complesso | `/model` → **Fable 5.1** |
-| **R** | task rischioso (dati, plugin nativi, sync) | attività **snapshot**: Terminale → Esegui attività… → snapshot |
-| **M** | task meccanico | puoi delegarlo a OpenCode (Fase 8) |
-| **CPn** | checkpoint prima di iniziare | vai alla Fase 7 |
+| Nella riga del task | Cosa fai prima di `/task next` |
+| --- | --- |
+| colonna **Modello** | `/model` → il modello indicato: **Fable 5.1**, **Opus 5.5**, **Sonnet 5** o **Haiku 4.5** |
+| **R** (rischioso: dati, plugin nativi, sync) | attività **snapshot**: Terminale → Esegui attività… → snapshot |
+| **M** (meccanico) | puoi delegarlo a OpenCode (Fase 8) |
+| **CPn** (checkpoint prima di iniziare) | vai alla Fase 7 |
+
+Fable 5.1 è previsto solo per quattro task (T-000, T-013, T-019, T-033): consuma molta quota. Se il gate resta rosso dopo due tentativi, passa al modello superiore: Haiku → Sonnet → Opus → Fable. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
 
 **Durante**
 
@@ -514,8 +515,10 @@ git push
 **Modalità semi-autonoma (dopo i primi 5–10 task).** Quando ti fidi del processo, fai girare più task di fila. Il loop si ferma da solo a un checkpoint, a un blocco o con il gate rosso, e crea prima un tag git per tornare indietro.
 
 ```powershell
-pwsh -File scripts/loop.ps1 -MaxTasks 3
+pwsh -File scripts/loop.ps1 -MaxTasks 3 -Model sonnet
 ```
+
+Il loop usa un solo modello: lancialo solo su task consecutivi che nella colonna **Modello** hanno lo stesso valore.
 
 In alternativa: Terminale → Esegui attività… → **loop agentico (3 task)**. Alla fine leggi `docs/STATO.md` e `git log --oneline -10`.
 

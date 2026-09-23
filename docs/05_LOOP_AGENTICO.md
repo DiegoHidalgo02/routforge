@@ -35,8 +35,9 @@ in ciclo finché: tutti i task sono `fatto`, oppure `docs/STATO.md` contiene `CH
 raggiunge il numero massimo di iterazioni. Lo script crea da solo il tag `pre-loop-<data>`: per tornare indietro `git switch -c recupero pre-loop-<data>`.
 Da VS Code: *Terminale → Esegui attività… → loop agentico (3 task)*.
 ```
-pwsh scripts/loop.ps1 -MaxTasks 5
+pwsh scripts/loop.ps1 -MaxTasks 5 -Model sonnet
 ```
+Il loop usa un solo modello: lancialo solo su task consecutivi con lo stesso valore nella colonna **Modello**.
 Ogni iterazione è una sessione nuova: il contesto arriva da `CLAUDE.md` + hook SessionStart + `docs/STATO.md`
 (principio di continuità). Non usare mai `--dangerously-skip-permissions`.
 
@@ -49,7 +50,7 @@ Ogni iterazione è una sessione nuova: il contesto arriva da `CLAUDE.md` + hook 
 
 | Dove in VS Code | Agente | Compito |
 |---|---|---|
-| Pannello estensione **Claude Code** (o terminale 1: `claude`) | Claude Code (Sonnet 5 di default; `/model` → Fable 5.1 per i task marcati **F** in `docs/TASKS.md`) | Esecuzione del loop; vede file aperti e selezione, mostra i diff inline |
+| Pannello estensione **Claude Code** (o terminale 1: `claude`) | Claude Code (modello indicato dalla colonna **Modello** di `docs/TASKS.md`; cambia con `/model`) | Esecuzione del loop; vede file aperti e selezione, mostra i diff inline |
 | Pannello estensione **Codex** (o terminale 2: `codex`) | Codex (gpt-5.6-terra) | `codex review`, seconda opinione via council; **non modifica** file del loop |
 | Terminale 3: `opencode` | OpenCode (nemotron-3.5-lightning-free) | Task meccanici delegati esplicitamente (marcati **M**), in un branch separato |
 | Pannello **Testing** (Vitest Explorer) | — | Rieseguire e fare debug di un singolo test o scenario |

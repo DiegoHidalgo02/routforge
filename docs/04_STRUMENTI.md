@@ -32,14 +32,18 @@ Linee guida **Karpathy** (Think first · Simplicity · Surgical changes · Goal-
 
 ## 3. Modelli: chi fa cosa
 
-| Ruolo | Modello | Note |
+La scelta per ogni task è nella colonna **Modello** di `docs/TASKS.md`. Criterio:
+
+| Modello | Quando | Task |
 |---|---|---|
-| Pianificazione, architettura, task complessi (scheduler §9, notifiche §13, sessione §10, sync §25) | **Claude Fable 5.1** | Ragionamento lungo e agentico; usa la quota con attenzione |
-| Implementazione standard, test, UI da design | **Claude Sonnet 5** | Rapporto velocità/qualità; default del loop |
-| Task meccanici (rename, chiavi i18n, boilerplate) | **Claude Haiku 4.5** | Economico |
-| Seconda opinione / revisione indipendente | Codex **gpt-5.6-terra** (o **luna** per rapidità) | Piano gratuito: poche chiamate, ai checkpoint |
-| Bulk non sensibile | OpenCode **nemotron-3.5-lightning-free** | Endpoint NVIDIA "trial": nessun dato personale o confidenziale |
-| Da evitare con dati del progetto | Muse Spark **"Contributor Free"** | Usa prompt e completamenti per addestrare modelli Meta |
+| **Claude Fable 5.1** | decisioni irreversibili o logica che intreccia molte regole; il più costoso in quota | T-000, T-013, T-019, T-033 |
+| **Claude Opus 5.5** | algoritmi con molti casi limite, rischio di perdere dati, codice nativo | T-004, T-011, T-012, T-017, T-018, T-021, T-023, T-029, T-030, T-034, T-036 |
+| **Claude Sonnet 5** | default: funzionalità, UI, integrazioni | tutti gli altri |
+| **Claude Haiku 4.5** | regole chiare e meccaniche | T-014, T-025 |
+| Codex **gpt-5.6-terra** (o **luna**) | seconda opinione / revisione indipendente | ai checkpoint e a fine passo |
+| OpenCode **nemotron-3.5-lightning-free** | bulk non sensibile | task **M**, solo con dati non riservati |
+
+Escalation: se il gate resta rosso dopo due tentativi, passa al modello superiore (Haiku → Sonnet → Opus → Fable). Da evitare con dati del progetto: Muse Spark **"Contributor Free"** (usa prompt e completamenti per l'addestramento).
 
 In Claude Code: `/model` per cambiare modello a metà sessione; `/compact` per contenere il contesto; `/cost` per vedere il consumo.
 

@@ -7,6 +7,8 @@ le cui dipendenze sono `fatto`).
 
 Procedura obbligatoria:
 1. Leggi `docs/STATO.md`, la riga del task in `docs/TASKS.md`, i paragrafi di spec e gli scenari che cita.
+   Se la colonna **Modello** indica un modello diverso da quello di questa sessione, dillo in una riga
+   ("Questo task è previsto per <modello>: vuoi cambiare con /model prima che inizi?") e attendi la risposta.
 2. Scrivi un piano di massimo 8 righe: file da creare/modificare, assunzioni, decisioni da annotare.
 3. Test rossi che codificano gli scenari (un `describe` per scenario, es. `'Orizzonte — SCENARI A2'`).
 4. Implementa il minimo che li fa passare rispettando `CLAUDE.md` §3–§4.
