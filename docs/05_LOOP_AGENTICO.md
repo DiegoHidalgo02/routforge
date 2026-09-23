@@ -70,7 +70,7 @@ Regole di convivenza: un solo agente scrive sul branch `main`; gli altri lavoran
 - `docs/TASKS.md`: stato `fatto`, con i test che lo dimostrano.
 - `docs/STATO.md`: Fatto / In corso / Problemi aperti / Prossimo / Checkpoint.
 - Commit: `tipo(ambito): descrizione (scenari)`; un commit per task, o più commit piccoli con il gate verde ognuno.
-- A fine sessione lunga: `/handoff` (skill) → `docs/handoff/<data>.md`.
+- A fine sessione lunga: `/handoff` (comando di progetto) → `docs/handoff/<data>.md`.
 
 ## 6. Quando il loop si ferma da solo
 

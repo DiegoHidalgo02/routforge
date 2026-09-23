@@ -14,7 +14,7 @@
 | **Impeccable** (pbakaus) | Regole deterministiche anti "AI slop" per il front-end; comandi come `/impeccable polish` | Fedeltà al design e qualità visiva delle schermate React | Da T-006 (UI) in poi, dopo ogni schermata | `npx impeccable install` poi `/impeccable init` |
 | **claude-council** (hex) | Chiede la stessa domanda a Codex/Gemini/Grok e mostra le risposte affiancate; usa il CLI `codex` in abbonamento | Seconda opinione multi-fornitore su decisioni architetturali e dead-end di debug, sfruttando il piano gratuito OpenAI senza chiavi | Solo ai checkpoint e nei dead-end (quota gratuita limitata) | `/plugin marketplace add hex/claude-marketplace` poi `/plugin install claude-council`; `codex login`; `/claude-council:status` |
 | **Graphify** (Graphify-Labs) | Grafo di conoscenza del repo+spec, interrogabile invece di rileggere i file (meno token per query) | Le spec sono ~90 KB: il grafo evita di ricaricarle a ogni sessione | Dopo l'import del design e ogni ~10 task: `/graphify .` | `pipx install graphifyy` poi `graphify install --project` (Windows supportato; in PowerShell usare `graphify .`) |
-| **Skills di Matt Pocock** (handoff, grill-me, git-guardrails) | `handoff`: passaggio di consegne tra sessioni; `grill-me`: interroga il piano finché non ha buchi; `git-guardrails-claude-code`: hook che bloccano git distruttivo | Continuità tra sessioni (principio §9 del prompt) e sicurezza git | `handoff` a fine sessione; `grill-me` prima di task grandi; guardrails una volta | `npx skills add mattpocock/skills --skill handoff --skill grill-me --skill git-guardrails-claude-code` |
+| **Skills di Matt Pocock** (grill-me, git-guardrails-claude-code) | `grill-me`: interroga il piano finché non ha buchi; `git-guardrails-claude-code`: hook che bloccano git distruttivo | Piani più solidi e sicurezza git. La skill `handoff` **non** si installa: il repo ha già il comando `/handoff` specifico per RoutForge (evita il conflitto di nomi) | `grill-me` prima dei task **F**; guardrails una volta | `npx skills add mattpocock/skills --skill grill-me --skill git-guardrails-claude-code` |
 | **`/security-review`** (integrato) | Revisione di sicurezza del diff corrente | Codice che tocca chiave AI, PDF/file utente, backup, sync | Prima del merge dei task 24–28, 30, 33–34 | Nessuna: già in Claude Code (Pro/Max) |
 | **Codex CLI** (piano gratuito OpenAI) | Revisore indipendente (`codex review`) e seat di claude-council | Modello di un altro laboratorio trova errori sistematici del primo | Revisione a fine task grandi; con `gpt-5.6-terra`; `gpt-5.6-luna` per revisioni rapide | `npm i -g @openai/codex`; `codex login` |
 | **OpenCode** (modelli Zen free) | Task meccanici non sensibili: scaffolding di test, traduzioni delle chiavi i18n, refactor guidati da test | Costo zero, preserva la quota MAX | Solo con dati pubblici; mai chiavi, mai materiali dei corsi dell'utente | `npm i -g opencode-ai`; modello `nemotron-3.5-lightning-free` (veloce) o `nemotron-3-ultra-free` (1M ctx, lento, timeout noti) |
@@ -45,11 +45,11 @@ In Claude Code: `/model` per cambiare modello a metà sessione; `/compact` per c
 
 ## 4. Ordine di installazione (una volta, ~15 minuti)
 
-1. VS Code → apri la cartella del repo → "Installa" sulle estensioni consigliate; da terminale verifica `node -v` (≥ 20), `git --version`, `gh --version`; installa PowerShell 7 (`winget install Microsoft.PowerShell`) per `scripts/loop.ps1`.
+1. VS Code → apri la cartella del repo → "Installa" sulle estensioni consigliate; da terminale verifica `node -v` (≥ 20), `git --version`, `gh --version`; installa PowerShell 7 (`winget install Microsoft.PowerShell`) per `scripts/loop.ps1`; **Git for Windows è necessario**: gli hook del progetto usano Git Bash.
 2. `claude` nel repo → `/plugin install superpowers@claude-plugins-official`.
 3. `/plugin marketplace add DietrichGebert/ponytail` → `/plugin install ponytail@ponytail`.
 4. `npx impeccable install` (terminale) → `/impeccable init` (Claude Code).
-5. `npx skills add mattpocock/skills --skill handoff --skill grill-me --skill git-guardrails-claude-code`.
+5. `npx skills add mattpocock/skills --skill grill-me --skill git-guardrails-claude-code` (non `handoff`: il repo ha già `/handoff`).
 6. `npm i -g @openai/codex` → `codex login` → `/plugin marketplace add hex/claude-marketplace` → `/plugin install claude-council` → `/claude-council:status`.
 7. `pipx install graphifyy` → `graphify install --project`.
 8. `/design` → import del progetto RoutForge → `npm run design:check`.
