@@ -157,7 +157,12 @@ code .
 
 ```text
 /hooks
-/agents
+```
+
+Per i subagent non esiste più un comando dedicato: dalla versione 2.1.198 di Claude Code, `/agents` stampa solo un promemoria. Scrivi `@spec` nel prompt: nel menu che si apre deve comparire **spec-reviewer (agent)**; fai lo stesso con `@test` e `@design`. Poi, nel terminale, controlla che i tre file si leggano senza errori:
+
+```powershell
+claude plugin validate .claude/agents
 ```
 
 9. Scrivi `/` e guarda l'elenco dei comandi, poi fai una domanda di prova:
@@ -170,7 +175,7 @@ Qual è il prossimo task secondo docs/STATO.md? Rispondi in una riga, senza modi
 
 - `Ctrl+Shift+B` termina con **Tests 77 passed (77)**.
 - `/hooks` elenca un hook **SessionStart** e un hook **Stop**.
-- `/agents` elenca **spec-reviewer**, **test-writer** e **design-checker**.
+- Scrivendo `@` nel prompt compaiono **spec-reviewer**, **test-writer** e **design-checker** con l'etichetta *(agent)*, e `claude plugin validate .claude/agents` non segnala errori.
 - Digitando `/` compaiono i comandi di progetto **/task**, **/gate**, **/scenario**, **/stato**, **/handoff**. (Il gate si chiama `/gate` perché `/verify` è già una skill integrata di Claude Code, con un altro scopo.)
 - La risposta di prova indica **T-000** (import del design e scelta dello stack).
 
@@ -529,7 +534,7 @@ Una revisione indipendente va fatta alla fine di ogni **passo** del piano (i die
 1. **Subagent spec-reviewer** (incluso nel piano Max), nel prompt di Claude Code:
 
 ```text
-Usa il subagent spec-reviewer su tutto il passo appena completato (<nome del passo>) e riportami il rapporto, senza modificare file.
+@agent-spec-reviewer rivedi tutto il passo appena completato (<nome del passo>) e riportami il rapporto, senza modificare file.
 ```
 
 2. **Codex**, dal suo pannello in VS Code oppure con `codex` nel terminale. Chiedi una revisione in sola lettura:
@@ -619,7 +624,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 - [ ] Cartella aperta, fiducia concessa, cinque estensioni installate
 - [ ] `Ctrl+Shift+B` verde e test visibili nel pannello Testing
-- [ ] `/hooks`, `/agents` e comandi di progetto visibili; la domanda di prova risponde T-000
+- [ ] `/hooks` e comandi di progetto visibili; i tre subagent compaiono scrivendo `@`; la domanda di prova risponde T-000
 
 **Fase 3a — Pulizia**
 
