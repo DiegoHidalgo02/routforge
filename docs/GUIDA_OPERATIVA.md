@@ -623,7 +623,7 @@ Quasi tutti i problemi del primo avvio sono di PATH, permessi di PowerShell o ca
 | L'agente non chiude il turno e ripete che il gate è rosso | un test che non riesce a far passare | premi `Esc`; esegui tu `npm run verify` e leggi l'errore; chiedi "trova la causa radice, non il sintomo" oppure una revisione di Codex (Fase 8) |
 | I test "passano" ma il task sembra incompleto | file `.claude/hooks/SKIP_VERIFY` dimenticato: il gate è disattivato | `Remove-Item .claude\hooks\SKIP_VERIFY`, poi `npm run verify` |
 | `design:check` elenca ancora file mancanti | export incompleto o nomi diversi | chiedi all'agente di confrontare l'elenco atteso con i file presenti e di dirti cosa manca davvero; se serve, riesporta |
-| Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Fable; `/compact`; nel loop usa `-MaxTasks 1` |
+| Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Opus 5.5; `/compact`; nel loop usa `-MaxTasks 1` |
 | Codex risponde "quota esaurita" | piano gratuito OpenAI | usa il subagent spec-reviewer e rimanda la revisione di Codex |
 | Un'estensione non si trova in Antigravity | marketplace diverso (Open VSX) | per questo progetto usa VS Code |
 
