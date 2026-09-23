@@ -36,14 +36,14 @@ La scelta per ogni task è nella colonna **Modello** di `docs/TASKS.md`. Criteri
 
 | Modello | Quando | Task |
 |---|---|---|
-| **Claude Fable 5.1** | decisioni irreversibili o logica che intreccia molte regole; il più costoso in quota | T-000, T-013, T-019, T-033 |
-| **Claude Opus 5.5** | algoritmi con molti casi limite, rischio di perdere dati, codice nativo | T-004, T-011, T-012, T-017, T-018, T-021, T-023, T-029, T-030, T-034, T-036 |
+| **Claude Opus 5.5** | task difficili: decisioni irreversibili, logica che intreccia molte regole, algoritmi con molti casi limite, rischio dati, codice nativo | T-000, T-004, T-011, T-012, T-013, T-017, T-018, T-019, T-021, T-023, T-029, T-030, T-033, T-034, T-036 |
 | **Claude Sonnet 5** | default: funzionalità, UI, integrazioni | tutti gli altri |
 | **Claude Haiku 4.5** | regole chiare e meccaniche | T-014, T-025 |
+| **Claude Fable 5.1** | nessun task di default: solo escalation, quando Opus 5.5 con sforzo alto continua a mancare una condizione | — |
 | Codex **gpt-5.6-terra** (o **luna**) | seconda opinione / revisione indipendente | ai checkpoint e a fine passo |
 | OpenCode **nemotron-3.5-lightning-free** | bulk non sensibile | task **M**, solo con dati non riservati |
 
-Escalation: se il gate resta rosso dopo due tentativi, passa al modello superiore (Haiku → Sonnet → Opus → Fable). Da evitare con dati del progetto: Muse Spark **"Contributor Free"** (usa prompt e completamenti per l'addestramento).
+Escalation: se il gate resta rosso dopo due tentativi, passa al gradino successivo: Haiku → Sonnet → Opus 5.5 → Opus 5.5 con sforzo più alto → Fable 5.1. Motivo (23/09/2026): Opus 5.5 supera Fable 5.1 sui benchmark di coding agentico (Terminal-Bench 4.0, FrontierCode, CursorBench) con prezzo API inferiore del 60%; la guida di Anthropic sulla scelta del modello indica Fable solo per i problemi che Opus continua a mancare. Da evitare con dati del progetto: Muse Spark **"Contributor Free"** (usa prompt e completamenti per l'addestramento).
 
 In Claude Code: `/model` per cambiare modello a metà sessione; `/compact` per contenere il contesto; `/cost` per vedere il consumo.
 

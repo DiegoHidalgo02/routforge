@@ -425,7 +425,7 @@ In questo task l'agente legge tutto il design, verifica l'handoff e **sceglie lo
 /model
 ```
 
-Seleziona **Claude Fable 5.1** dall'elenco.
+Seleziona **Claude Opus 5.5** dall'elenco.
 
 2. Avvia il task:
 
@@ -478,12 +478,12 @@ Ogni sessione chiude da 1 a 3 task con lo stesso schema: apri, `/task next`, leg
 
 | Nella riga del task | Cosa fai prima di `/task next` |
 | --- | --- |
-| colonna **Modello** | `/model` → il modello indicato: **Fable 5.1**, **Opus 5.5**, **Sonnet 5** o **Haiku 4.5** |
+| colonna **Modello** | `/model` → il modello indicato: **Opus 5.5**, **Sonnet 5** o **Haiku 4.5** |
 | **R** (rischioso: dati, plugin nativi, sync) | attività **snapshot**: Terminale → Esegui attività… → snapshot |
 | **M** (meccanico) | puoi delegarlo a OpenCode (Fase 8) |
 | **CPn** (checkpoint prima di iniziare) | vai alla Fase 7 |
 
-Fable 5.1 è previsto solo per quattro task (T-000, T-013, T-019, T-033): consuma molta quota. Se il gate resta rosso dopo due tentativi, passa al modello superiore: Haiku → Sonnet → Opus → Fable. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
+Nessun task usa Fable 5.1 di default: Opus 5.5 lo supera nel coding agentico e consuma meno. Se il gate resta rosso dopo due tentativi, sali di un gradino: Haiku → Sonnet → Opus 5.5 → Opus 5.5 con sforzo più alto (lo scegli dal selettore `/model`) → Fable 5.1. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
 
 **Durante**
 
@@ -673,7 +673,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 **Fase 5 — T-000**
 
-- [ ] `/model` → Fable 5.1, poi `/task T-000` completato
+- [ ] `/model` → Opus 5.5, poi `/task T-000` completato
 - [ ] Letti D-STACK-1 e le divergenze design ↔ spec; veto dato se necessario
 - [ ] `/model` → Sonnet 5 per i task successivi
 
