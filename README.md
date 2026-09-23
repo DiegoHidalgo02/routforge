@@ -17,6 +17,7 @@ claude                  # Claude Code: poi /task next
 In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B` esegue il gate.
 
 ## Mappa del repository
+- `docs/GUIDA_OPERATIVA.md` — **i passi da fare tu**, dall'installazione al ciclo di sessione (copia della guida condivisa)
 - `docs/spec/` — le cinque specifiche (fonte di verità, sola lettura)
 - `docs/00_SINTESI.md` … `06_SUPERVISIONE.md`, `TASKS.md`, `STATO.md` — base di progetto operativa
 - `design/` — export di Claude Design (aspetto)
