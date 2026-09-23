@@ -679,7 +679,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 **Fase 6 — Ogni sessione**
 
-- [ ] Nuova sessione di Claude Code e marcatore del prossimo task controllato
+- [ ] Nuova sessione di Claude Code e modello scelto secondo la colonna Modello del prossimo task
 - [ ] `/task next` per 1–3 task, riassunto letto ogni volta
 - [ ] `/handoff` se ti fermi a lungo, poi `git push`
 
