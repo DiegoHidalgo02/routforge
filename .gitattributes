@@ -1,0 +1,7 @@
+# Fine riga coerenti su Windows: nel repository e nella cartella di lavoro sempre LF
+# (gli script .sh con CRLF non girano in Git Bash; .editorconfig e .vscode usano già LF)
+* text=auto eol=lf
+*.zip binary
+*.pdf binary
+*.png binary
+*.jpg binary
