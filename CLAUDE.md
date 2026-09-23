@@ -59,6 +59,7 @@ Tempo: ogni istante è epoch ms; il giorno è quello **locale** (`src/domain/tim
 ## 5. Comandi
 
 - `npm run verify` — **gate unico**: typecheck + tutti i test. Deve essere verde prima di ogni commit.
+  In Claude Code il comando di progetto è `/gate` (non `/verify`: è una skill integrata che avvia l'app invece dei test).
 - `npm test` / `npm run test:watch` — Vitest. `npm run check` — solo `tsc`.
 - `npm run design:check` — verifica che l'export del design sia presente in `design/`.
 

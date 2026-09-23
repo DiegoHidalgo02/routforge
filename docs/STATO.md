@@ -7,10 +7,12 @@
 ## Fatto
 - T-001 Dominio puro: `time`, `types`, `sm2` (I1), `streak` (C2), `pomodoro` (D3), `practice` (I2, I3), `pointer` (C1, C2, C3 + moduli bloccati), `lost` (A1, A2, B2, B3, B4, B7, E2, C6), `nowBlock` (G1, G2, E3). Suite eseguita in 4 fusi orari e attraverso il cambio d'ora di ottobre 2026.
 - T-002 Parser del corso `src/domain/course/parser.ts` (FORMATO_CORSO §1–§4, MECC §16): H1 e template §2–§3 su fixture sintetiche (20 test). Fedeltà ai file reali M0/M1 e a `course-data.js` rimandata a T-000 (servono i file dell'export).
-- Configurazione Claude Code: `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` (permessi + hook SessionStart/Stop), comandi `/task /verify /scenario /stato /handoff`, subagent `spec-reviewer` `test-writer` `design-checker`, skill `routforge-spec`.
+- Configurazione Claude Code: `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` (permessi + hook SessionStart/Stop), comandi `/task /gate /scenario /stato /handoff`, subagent `spec-reviewer` `test-writer` `design-checker`, skill `routforge-spec`.
 - Documenti: `docs/00_SINTESI.md`, `01_DECISIONI.md`, `02_ARCHITETTURA.md` (§0 procedura di scelta dello stack), `03_HANDOFF_DESIGN_CODE.md`, `04_STRUMENTI.md`, `05_LOOP_AGENTICO.md`, `06_SUPERVISIONE.md`, `TASKS.md`; script `scripts/loop.ps1|sh`, `scripts/check-design.mjs`; CI.
 
 - Ambiente di sviluppo: **VS Code** al posto di Ship Studio (D-IDE-1): `.vscode/` con estensioni consigliate, impostazioni e attività; `scripts/loop.ps1` corretto (`$args` → `$claudeArgs`).
+
+- Isolamento degli strumenti: comando `/verify` rinominato `/gate` (conflitto con la skill integrata `/verify`); `scripts/audit-claude.mjs` (`npm run audit:claude`) per inventario, conflitti di nome e archiviazione reversibile degli accumuli di livello utente; installazioni con ambito progetto in `docs/04_STRUMENTI.md` §5.
 
 ## In corso
 - Nessun task in corso.
