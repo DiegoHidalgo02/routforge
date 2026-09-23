@@ -9,6 +9,13 @@ Procedura obbligatoria:
 1. Leggi `docs/STATO.md`, la riga del task in `docs/TASKS.md`, i paragrafi di spec e gli scenari che cita.
    Se la colonna **Modello** indica un modello diverso da quello di questa sessione, dillo in una riga
    ("Questo task è previsto per <modello>: vuoi cambiare con /model prima che inizi?") e attendi la risposta.
+   **Task in due fasi** (colonna "Fable 5.1 (piano) → Opus 5.5 (codice)"):
+   - se `docs/piani/<ID>.md` NON esiste → fase piano (sessione Fable): scrivi in quel file un piano completo
+     (regole di spec coinvolte con §, scenari, casi limite, file da creare, sequenza di test, rischi e decisioni
+     da annotare); nessun codice di produzione; commit `docs(piano): <ID>`; poi fermati e scrivi
+     "Piano pronto: passa a Opus 5.5 con /model e rilancia /task <ID>".
+   - se `docs/piani/<ID>.md` esiste → fase codice (sessione Opus): segui il piano; se devi discostartene,
+     annota il motivo in fondo al file del piano. Poi prosegui dal passo 2.
 2. Scrivi un piano di massimo 8 righe: file da creare/modificare, assunzioni, decisioni da annotare.
 3. Test rossi che codificano gli scenari (un `describe` per scenario, es. `'Orizzonte — SCENARI A2'`).
 4. Implementa il minimo che li fa passare rispettando `CLAUDE.md` §3–§4.
