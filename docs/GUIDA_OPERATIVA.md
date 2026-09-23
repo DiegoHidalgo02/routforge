@@ -159,7 +159,13 @@ code .
 /hooks
 ```
 
-Per i subagent non esiste più un comando dedicato: dalla versione 2.1.198 di Claude Code, `/agents` stampa solo un promemoria. Scrivi `@spec` nel prompt: nel menu che si apre deve comparire **spec-reviewer (agent)**; fai lo stesso con `@test` e `@design`. Poi, nel terminale, controlla che i tre file si leggano senza errori:
+Per i subagent non esiste più un comando dedicato: dalla versione 2.1.198 di Claude Code, `/agents` stampa solo un promemoria. Controllali con questa domanda. Le menzioni con `@` servono a scegliere un subagent dentro un messaggio: inviate da sole vengono lette come domande.
+
+```text
+Elenca i subagent di progetto disponibili in questa sessione, con nome e modello. Non modificare nulla.
+```
+
+Poi, nel terminale, controlla che i tre file si leggano senza errori:
 
 ```powershell
 claude plugin validate .claude/agents
@@ -175,7 +181,7 @@ Qual è il prossimo task secondo docs/STATO.md? Rispondi in una riga, senza modi
 
 - `Ctrl+Shift+B` termina con **Tests 77 passed (77)**.
 - `/hooks` elenca un hook **SessionStart** e un hook **Stop**.
-- Scrivendo `@` nel prompt compaiono **spec-reviewer**, **test-writer** e **design-checker** con l'etichetta *(agent)*, e `claude plugin validate .claude/agents` non segnala errori.
+- La domanda sui subagent elenca **spec-reviewer** e **design-checker** (modello ereditato dalla sessione) e **test-writer** (Sonnet); `claude plugin validate .claude/agents` non segnala errori.
 - Digitando `/` compaiono i comandi di progetto **/task**, **/gate**, **/scenario**, **/stato**, **/handoff**. (Il gate si chiama `/gate` perché `/verify` è già una skill integrata di Claude Code, con un altro scopo.)
 - La risposta di prova indica **T-000** (import del design e scelta dello stack).
 
@@ -641,7 +647,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 - [ ] Cartella aperta, fiducia concessa, cinque estensioni installate
 - [ ] `Ctrl+Shift+B` verde e test visibili nel pannello Testing
-- [ ] `/hooks` e comandi di progetto visibili; i tre subagent compaiono scrivendo `@`; la domanda di prova risponde T-000
+- [ ] `/hooks` e comandi di progetto visibili; la domanda sui subagent elenca i tre subagent; la domanda di prova risponde T-000
 
 **Fase 3a — Pulizia**
 
