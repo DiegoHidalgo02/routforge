@@ -14,6 +14,7 @@ npm run verify          # typecheck + test (gate unico)
 npm run design:check    # verifica l'export di Claude Design in design/
 claude                  # Claude Code: poi /task next
 ```
+In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B` esegue il gate.
 
 ## Mappa del repository
 - `docs/spec/` — le cinque specifiche (fonte di verità, sola lettura)
@@ -21,5 +22,6 @@ claude                  # Claude Code: poi /task next
 - `design/` — export di Claude Design (aspetto)
 - `src/domain/` — meccanismi puri testati in isolamento
 - `.claude/` — configurazione di Claude Code (permessi, hook, comandi, subagent, skill)
+- `.vscode/` — estensioni consigliate, impostazioni e attività (gate, loop, snapshot)
 - `scripts/` — gate e loop agentico (`loop.ps1` / `loop.sh`)
 - `CLAUDE.md` / `AGENTS.md` — istruzioni per gli agenti

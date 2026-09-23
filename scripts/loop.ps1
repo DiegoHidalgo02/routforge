@@ -1,6 +1,6 @@
 # Loop agentico semi-autonomo (Windows PowerShell 7+). Vedi docs/05_LOOP_AGENTICO.md §2.B
 # Esegue `claude -p "/task next"` finché: i task sono finiti, compare CHECKPOINT/BLOCCO in docs/STATO.md,
-# o si raggiunge -MaxTasks. Prima: snapshot in Ship Studio o `git tag pre-loop-<data>`.
+# o si raggiunge -MaxTasks. Crea da solo il tag git `pre-loop-<data>` per poter tornare indietro.
 param(
   [int]$MaxTasks = 3,
   [string]$Model = ""   # es. "sonnet" oppure vuoto = default di Claude Code
@@ -18,9 +18,9 @@ for ($i = 1; $i -le $MaxTasks; $i++) {
   if ($aperti -eq 0) { Write-Host "Nessun task aperto: finito."; break }
 
   Write-Host "=== Iterazione $i/$MaxTasks ==="
-  $args = @("-p", "/task next", "--permission-mode", "acceptEdits")
-  if ($Model -ne "") { $args += @("--model", $Model) }
-  & claude @args
+  $claudeArgs = @("-p", "/task next", "--permission-mode", "acceptEdits")
+  if ($Model -ne "") { $claudeArgs += @("--model", $Model) }
+  & claude @claudeArgs
   if ($LASTEXITCODE -ne 0) { Write-Host "claude è uscito con codice $LASTEXITCODE: fermo."; break }
 
   & npm run verify --silent

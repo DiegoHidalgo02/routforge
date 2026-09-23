@@ -1,0 +1,10 @@
+{
+  // Estensioni consigliate: VS Code le propone all'apertura del progetto.
+  "recommendations": [
+    "anthropic.claude-code",      // Claude Code: esecutore del loop (pannello laterale + terminale)
+    "openai.chatgpt",             // Codex: revisore indipendente (piano gratuito, quota limitata)
+    "vitest.explorer",            // Test Explorer: esegui/debug dei test Vitest dal pannello Testing
+    "editorconfig.editorconfig",  // Applica .editorconfig (LF, 2 spazi, UTF-8)
+    "eamodio.gitlens"             // Storia dei commit dell'agente riga per riga
+  ]
+}

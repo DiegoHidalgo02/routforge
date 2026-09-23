@@ -1,0 +1,39 @@
+{
+  // Ctrl+Shift+B esegue il gate; gli altri da "Terminale → Esegui attività…"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "verify (gate)",
+      "type": "npm",
+      "script": "verify",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "test watch",
+      "type": "npm",
+      "script": "test:watch",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "design:check",
+      "type": "npm",
+      "script": "design:check",
+      "problemMatcher": []
+    },
+    {
+      "label": "loop agentico (3 task)",
+      "type": "shell",
+      "command": "pwsh -File scripts/loop.ps1 -MaxTasks 3",
+      "problemMatcher": []
+    },
+    {
+      "label": "snapshot (tag git prima di un task rischioso)",
+      "type": "shell",
+      "command": "git tag -f snapshot-$(Get-Date -Format yyyyMMdd-HHmm); git tag --list 'snapshot-*' | Select-Object -Last 3",
+      "options": { "shell": { "executable": "pwsh" } },
+      "problemMatcher": []
+    }
+  ]
+}

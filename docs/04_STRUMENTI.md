@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | **Claude Code** (piano MAX) | Esecutore del loop: legge `CLAUDE.md`, esegue `/task`, hook `Stop` con gate `npm run verify` | Unico agente con hook, subagent, skill di progetto e `/design` per importare Claude Design | Sempre | `npm install -g @anthropic-ai/claude-code@latest`; poi `claude` nella cartella del repo |
 | **Claude Design → `/design`** (ufficiale) | Import del progetto di design nel repo; `/design-sync` per riallineare | È il canale ufficiale di handoff (Help Center "Get started with Claude Design", aggiornato sett. 2026) | Fase 3 (una volta) e a ogni modifica del design | `/design` in Claude Code, oppure Export → "Handoff to Claude Code" |
-| **Ship Studio** (v. Windows x64) | Cockpit: terminale agenti (Claude Code / Codex / OpenCode affiancati), preview live, snapshot/restore, git+GitHub, deploy Vercel della PWA | Un'unica finestra per lanciare il loop, guardare la preview e fare snapshot prima dei task rischiosi | Dalla T-006 in poi (preview); snapshot prima di ogni task "rischioso" | Download da github.com/ship-studio/ship-studio (`Ship.Studio_<v>_x64-setup.exe`); onboarding installa Node/Git/gh/agent CLI |
+| **VS Code** (+ `.vscode/` del repo) | Ambiente unico: estensione Claude Code (pannello + terminale), estensione Codex, terminali divisi per più agenti, Test Explorer di Vitest, task `Ctrl+Shift+B` = gate, Git/GitLens, Simple Browser per la preview | Scelta dell'utente (23/09/2026) al posto di Ship Studio: nessuno strumento in più da imparare, estensioni ufficiali di Anthropic e OpenAI, configurazione versionata nel repo | Sempre | Apri la cartella → accetta le estensioni consigliate (`.vscode/extensions.json`); Claude Code: `anthropic.claude-code`; Codex: `openai.chatgpt` |
 | **Superpowers** (obra) | Brainstorm → piano → esecuzione per subagent, TDD, debugging sistematico, verifica prima di dichiarare finito | Copre esattamente il ciclo Task → Analisi → Implementazione → Test → Verifica | Task medi/grandi (scheduler, sessione, notifiche): `/superpowers:brainstorm` poi `/superpowers:write-plan` | `/plugin install superpowers@claude-plugins-official` |
 | **Ponytail** (DietrichGebert) | "Il miglior codice è quello non scritto": preferisce stdlib/piattaforma, taglia astrazioni; `/ponytail-review` | Contiene il costo in token e la complessità (obiettivo esplicito: niente complessità prematura) | Sempre attivo; `/ponytail-review` prima del commit di task grandi | `/plugin marketplace add DietrichGebert/ponytail` poi `/plugin install ponytail@ponytail` (due prompt separati) |
 | **Impeccable** (pbakaus) | Regole deterministiche anti "AI slop" per il front-end; comandi come `/impeccable polish` | Fedeltà al design e qualità visiva delle schermate React | Da T-006 (UI) in poi, dopo ogni schermata | `npx impeccable install` poi `/impeccable init` |
@@ -26,7 +26,7 @@ Linee guida **Karpathy** (Think first · Simplicity · Surgical changes · Goal-
 
 | Nome | Esito |
 |---|---|
-| Impeccable, Ponytail, Claude Council (hex), Superpowers, Graphify, Handoff (Pocock), Ship Studio, karpathy-skills, Framer Motion (→ Motion) | **Esistono e sono aggiornati** (fonti: repo GitHub ufficiali, impeccable.style, opencode.ai/docs/zen) |
+| Impeccable, Ponytail, Claude Council (hex), Superpowers, Graphify, Handoff (Pocock), Ship Studio (verificato ma **non adottato**: sostituito da VS Code), karpathy-skills, Framer Motion (→ Motion) | **Esistono e sono aggiornati** (fonti: repo GitHub ufficiali, impeccable.style, opencode.ai/docs/zen) |
 | "Strumenti cybersecurity" (generico) | Coperto da `/security-review` integrato + `npm audit` + guardrails git; nessuno strumento terzo necessario |
 | Claude Design "MCP" | Non serve un MCP terzo: il canale ufficiale è `/design` in Claude Code. Esistono MCP non ufficiali (pilotano Chrome): **scartati** (fragili, sessione sensibile) |
 
@@ -45,7 +45,7 @@ In Claude Code: `/model` per cambiare modello a metà sessione; `/compact` per c
 
 ## 4. Ordine di installazione (una volta, ~15 minuti)
 
-1. Ship Studio → onboarding (Node, Git, gh, Claude Code).
+1. VS Code → apri la cartella del repo → "Installa" sulle estensioni consigliate; da terminale verifica `node -v` (≥ 20), `git --version`, `gh --version`; installa PowerShell 7 (`winget install Microsoft.PowerShell`) per `scripts/loop.ps1`.
 2. `claude` nel repo → `/plugin install superpowers@claude-plugins-official`.
 3. `/plugin marketplace add DietrichGebert/ponytail` → `/plugin install ponytail@ponytail`.
 4. `npx impeccable install` (terminale) → `/impeccable init` (Claude Code).

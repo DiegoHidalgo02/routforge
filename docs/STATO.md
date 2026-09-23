@@ -10,6 +10,8 @@
 - Configurazione Claude Code: `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` (permessi + hook SessionStart/Stop), comandi `/task /verify /scenario /status /handoff`, subagent `spec-reviewer` `test-writer` `design-checker`, skill `routforge-spec`.
 - Documenti: `docs/00_SINTESI.md`, `01_DECISIONI.md`, `02_ARCHITETTURA.md` (§0 procedura di scelta dello stack), `03_HANDOFF_DESIGN_CODE.md`, `04_STRUMENTI.md`, `05_LOOP_AGENTICO.md`, `06_SUPERVISIONE.md`, `TASKS.md`; script `scripts/loop.ps1|sh`, `scripts/check-design.mjs`; CI.
 
+- Ambiente di sviluppo: **VS Code** al posto di Ship Studio (D-IDE-1): `.vscode/` con estensioni consigliate, impostazioni e attività; `scripts/loop.ps1` corretto (`$args` → `$claudeArgs`).
+
 ## In corso
 - Nessun task in corso.
 

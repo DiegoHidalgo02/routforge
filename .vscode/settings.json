@@ -1,0 +1,25 @@
+{
+  // --- TypeScript: usa la versione del progetto, non quella di VS Code
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // --- Coerenza con .editorconfig (i file dell'agente sono in LF)
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "[markdown]": { "files.trimTrailingWhitespace": false },
+
+  // --- Le spec sono di sola lettura anche per te (le modifichi solo di proposito)
+  "files.readonlyInclude": { "docs/spec/**": true },
+
+  // --- Meno rumore nella ricerca e nell'albero
+  "search.exclude": { "node_modules": true, "package-lock.json": true, "coverage": true, "dist": true },
+  "files.watcherExclude": { "**/node_modules/**": true },
+
+  // --- Terminale: PowerShell 7 per scripts/loop.ps1 (se non installato, VS Code usa il default)
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+  // --- Git: l'agente committa da solo; niente fetch automatico che interrompe
+  "git.autofetch": false,
+  "git.confirmSync": true
+}
