@@ -16,6 +16,10 @@
   "search.exclude": { "node_modules": true, "package-lock.json": true, "coverage": true, "dist": true },
   "files.watcherExclude": { "**/node_modules/**": true },
 
+  // --- Estensione Vitest (pannello Testing): indica esplicitamente la configurazione dei test,
+  //     così la ricerca automatica non dipende dalla cartella aperta
+  "vitest.rootConfig": "vitest.config.ts",
+
   // --- Terminale: PowerShell 7 per scripts/loop.ps1 (se non installato, VS Code usa il default)
   "terminal.integrated.defaultProfile.windows": "PowerShell",
 

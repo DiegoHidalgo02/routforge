@@ -179,6 +179,23 @@ Qual è il prossimo task secondo docs/STATO.md? Rispondi in una riga, senza modi
 - Digitando `/` compaiono i comandi di progetto **/task**, **/gate**, **/scenario**, **/stato**, **/handoff**. (Il gate si chiama `/gate` perché `/verify` è già una skill integrata di Claude Code, con un altro scopo.)
 - La risposta di prova indica **T-000** (import del design e scelta dello stack).
 
+**Se il pannello Testing resta vuoto** (il gate con `Ctrl+Shift+B` è verde ma la provetta non mostra nulla), il progetto è a posto: il problema è l'estensione Vitest. Il gate vero resta `npm run verify`, quindi puoi proseguire con le fasi successive anche prima di sistemarlo. Controlla in quest'ordine:
+
+1. **Modalità con restrizioni**: se VS Code la segnala (in alto o in basso a sinistra), clicca e scegli *Considera attendibile*. In quella modalità l'estensione Vitest non parte.
+2. **Estensione attiva**: `Ctrl+Shift+X`, cerca `vitest.explorer`; deve risultare installata e non disabilitata. Da terminale:
+
+```powershell
+code --list-extensions | Select-String vitest
+```
+
+3. **Dipendenze installate**: deve esistere la cartella `node_modules\vitest`; se manca, esegui `npm ci`.
+4. **Ricarica**: `Ctrl+Shift+P` → "Developer: Reload Window", poi nel pannello Testing premi il pulsante di aggiornamento dei test. I file compaiono dopo qualche secondo; i singoli test si vedono espandendo i file.
+5. **Leggi il log**: `Ctrl+Shift+U` apre il pannello Output; nel menu a tendina a destra scegli **Vitest**.
+    - "could not load any config" oppure `spawn EINVAL` → aggiorna l'estensione Vitest e riavvia VS Code;
+    - errore su `node` non trovato → chiudi e riapri VS Code; se persiste, nelle Impostazioni utente (`Ctrl+,`) cerca "vitest node executable" e incolla il percorso stampato da `(Get-Command node).Source`;
+    - la voce **Vitest** non esiste nel menu → l'estensione non si è attivata: torna ai punti 1 e 2.
+6. Se è ancora vuoto, copia il log di Output → Vitest e incollalo in Claude Code chiedendo la causa radice.
+
 Se preferisci Antigravity, i passi sono identici. Se un'estensione non si trova nel suo marketplace, per questo progetto usa VS Code.
 
 ## Fase 3a — Pulizia: solo ciò che serve a RoutForge
