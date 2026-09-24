@@ -10,67 +10,67 @@
 
 // ---------------------------------------------------------------- DevSwipe
 
-export type Verdict = 'corretto' | 'errato';
-export type SwipeDirection = 'destra' | 'sinistra';
+export type Verdetto = 'corretto' | 'errato';
+export type DirezioneSwipe = 'destra' | 'sinistra';
 
 /** Mappa lo swipe al verdetto dell'utente (§18: destra = corretto, sinistra = errato). */
-export function verdictFromSwipe(direction: SwipeDirection): Verdict {
+export function verdictFromSwipe(direction: DirezioneSwipe): Verdetto {
   return direction === 'destra' ? 'corretto' : 'errato';
 }
 
-export interface DevSwipeResult {
-  correct: number;
-  total: number;
+export interface RisultatoDevSwipe {
+  giuste: number;
+  totali: number;
   /** Frazione 0..1 = giuste al primo passaggio / totali. */
-  score: number;
+  punteggio: number;
   /** Indici delle carte sbagliate al primo passaggio, da riproporre una volta. */
-  toRetry: number[];
+  daRiproporre: number[];
 }
 
 /**
  * @param expected verdetti attesi delle carte, in ordine
  * @param firstPass verdetti dati dall'utente al primo passaggio, stesso ordine
  */
-export function scoreDevSwipe(expected: readonly Verdict[], firstPass: readonly Verdict[]): DevSwipeResult {
+export function scoreDevSwipe(expected: readonly Verdetto[], firstPass: readonly Verdetto[]): RisultatoDevSwipe {
   if (expected.length !== firstPass.length) {
     throw new Error('scoreDevSwipe: expected e firstPass devono avere la stessa lunghezza');
   }
-  const toRetry: number[] = [];
-  let correct = 0;
+  const daRiproporre: number[] = [];
+  let giuste = 0;
   expected.forEach((v, i) => {
-    if (firstPass[i] === v) correct++;
-    else toRetry.push(i);
+    if (firstPass[i] === v) giuste++;
+    else daRiproporre.push(i);
   });
-  const total = expected.length;
-  return { correct, total, score: total === 0 ? 0 : correct / total, toRetry };
+  const totali = expected.length;
+  return { giuste, totali, punteggio: totali === 0 ? 0 : giuste / totali, daRiproporre };
 }
 
 // -------------------------------------------------------------- Bug Hunter
 
 export const BUG_HUNTER_MAX_ATTEMPTS = 2;
 
-export interface BugHunterExerciseResult {
+export interface RisultatoEsercizioBugHunter {
   /** 2 al primo tentativo, 1 al secondo, altrimenti 0. */
-  points: 0 | 1 | 2;
+  punti: 0 | 1 | 2;
   /** true se la soluzione va mostrata perché l'utente non ha trovato la riga. */
-  solved: boolean;
+  risolto: boolean;
 }
 
 /**
  * @param wrongLine numero (1-based) della riga sbagliata dell'esercizio
  * @param taps sequenza delle righe toccate dall'utente (max 2 considerate)
  */
-export function scoreBugHunterExercise(wrongLine: number, taps: readonly number[]): BugHunterExerciseResult {
+export function scoreBugHunterExercise(wrongLine: number, taps: readonly number[]): RisultatoEsercizioBugHunter {
   const first = taps[0];
   const second = taps[1];
-  if (first === wrongLine) return { points: 2, solved: true };
-  if (second === wrongLine) return { points: 1, solved: true };
-  return { points: 0, solved: false };
+  if (first === wrongLine) return { punti: 2, risolto: true };
+  if (second === wrongLine) return { punti: 1, risolto: true };
+  return { punti: 0, risolto: false };
 }
 
 /** Punteggio finale = punti / (2 × esercizi). */
-export function scoreBugHunter(points: readonly number[]): { points: number; max: number; score: number } {
+export function scoreBugHunter(points: readonly number[]): { punti: number; massimo: number; punteggio: number } {
   const sum = points.reduce((a, b) => a + b, 0);
-  const max = 2 * points.length;
-  return { points: sum, max, score: max === 0 ? 0 : sum / max };
+  const massimo = 2 * points.length;
+  return { punti: sum, massimo, punteggio: massimo === 0 ? 0 : sum / massimo };
 }

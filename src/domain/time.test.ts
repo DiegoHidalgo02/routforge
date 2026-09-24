@@ -22,7 +22,7 @@ describe('Tempo locale — CONTESTO §3 (fuso e ora legale non spostano i blocch
   });
 
   it('routine senza durata il giorno del cambio d\'ora → persa alle 00:29 del giorno dopo', () => {
-    const lostAt = new Date(lostAtInstant({ start: local(2026, 10, 25, 7, 0), end: null, hasTime: true }));
+    const lostAt = new Date(lostAtInstant({ inizio: local(2026, 10, 25, 7, 0), fine: null, conOrario: true }));
     expect([lostAt.getDate(), lostAt.getHours(), lostAt.getMinutes()]).toEqual([26, 0, 29]);
   });
 });

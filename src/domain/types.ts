@@ -8,10 +8,10 @@
  */
 
 /** I quattro tipi di attività (§1: Blocco). */
-export type BlockKind = 'todo' | 'evento' | 'routine' | 'studio';
+export type TipoBlocco = 'todo' | 'evento' | 'routine' | 'studio';
 
 /** Stati di un blocco (§1). I primi due sono aperti, gli altri terminali. */
-export type BlockState =
+export type StatoBlocco =
   | 'programmato'
   | 'in_corso'
   | 'completato'
@@ -21,39 +21,42 @@ export type BlockState =
   | 'perso';
 
 /** Stati di un'unità (§1). Le prime tre sono "pendenti" e alimentano il puntatore. */
-export type UnitState = 'non_iniziata' | 'parziale' | 'da_rivedere' | 'completata' | 'saltata';
+export type StatoUnita = 'non_iniziata' | 'parziale' | 'da_rivedere' | 'completata' | 'saltata';
 
 /** Orizzonte di un todo (§6). */
-export type Horizon = 'giorno' | 'settimana' | 'mese';
+export type Orizzonte = 'giorno' | 'settimana' | 'mese';
+
+/** Stato di un modulo del corso (FORMATO_CORSO §4). */
+export type StatoModulo = 'bloccato' | 'aperto' | 'passato';
 
 /** Esito di chiusura di una sessione di studio (§11). */
-export type Outcome = 'completata' | 'continua' | 'indietro' | 'salta';
+export type Esito = 'completata' | 'continua' | 'indietro' | 'salta';
 
 /**
  * Una singola occorrenza sul calendario (§1: Blocco).
  * Campi minimi necessari ai meccanismi puri; la persistenza aggiunge il resto.
  */
-export interface Block {
+export interface Blocco {
   id: string;
-  kind: BlockKind;
-  state: BlockState;
+  tipo: TipoBlocco;
+  stato: StatoBlocco;
   /** Istante d'inizio (epoch ms). Per i blocchi senza orario è l'ancora fissa (§1). */
-  start: number;
+  inizio: number;
   /** Istante di fine (epoch ms). `null` = routine senza durata (§7). */
-  end: number | null;
+  fine: number | null;
   /** false = todo senza orario o evento tutto il giorno (§1: ancore fisse). */
-  hasTime: boolean;
+  conOrario: boolean;
   /** Solo todo (§6). */
-  horizon?: Horizon;
+  orizzonte?: Orizzonte;
   /** Solo blocchi di studio: unità puntata, se c'è (§11). */
-  unitId?: string | null;
-  courseId?: string | null;
+  unitaId?: string | null;
+  corsoId?: string | null;
   /** Istante della marcatura "perso" (§8); assente se mai perso. */
-  lostAt?: number | null;
+  persoIl?: number | null;
 }
 
 /** Stato terminale = non più aperto (§1). */
-export const TERMINAL_STATES: ReadonlySet<BlockState> = new Set([
+export const STATI_TERMINALI: ReadonlySet<StatoBlocco> = new Set([
   'completato',
   'parziale',
   'indietro',
@@ -62,7 +65,7 @@ export const TERMINAL_STATES: ReadonlySet<BlockState> = new Set([
 ]);
 
 /** Stati "pendenti" di un'unità: alimentano il puntatore (§1, §11). */
-export const PENDING_UNIT_STATES: ReadonlySet<UnitState> = new Set([
+export const STATI_UNITA_PENDENTI: ReadonlySet<StatoUnita> = new Set([
   'non_iniziata',
   'parziale',
   'da_rivedere',

@@ -12,40 +12,40 @@
  */
 import { effectiveEnd } from './lost';
 import { localDayKey, minutes } from './time';
-import type { Block } from './types';
+import type { Blocco } from './types';
 
-export type NowStatus =
-  | { kind: 'tra'; minutesToStart: number }
-  | { kind: 'adesso' }
-  | { kind: 'recupera' }
-  | { kind: 'orario_passato' };
+export type StatoAdesso =
+  | { tipo: 'tra'; minutiAllInizio: number }
+  | { tipo: 'adesso' }
+  | { tipo: 'recupera' }
+  | { tipo: 'orario_passato' };
 
-export interface NowSelection {
-  block: Block;
-  status: NowStatus;
+export interface SelezioneAdesso {
+  blocco: Blocco;
+  stato: StatoAdesso;
 }
 
 const WINDOW = minutes(30);
-const EXCLUDED: ReadonlySet<Block['state']> = new Set(['completato', 'saltato', 'perso']);
+const EXCLUDED: ReadonlySet<Blocco['stato']> = new Set(['completato', 'saltato', 'perso']);
 
-export function isNowCandidate(block: Block, now: number): boolean {
-  if (EXCLUDED.has(block.state)) return false;
-  if (!block.hasTime) return false; // E3: tutto il giorno / senza orario non occupano "Adesso"
+export function isNowCandidate(block: Blocco, now: number): boolean {
+  if (EXCLUDED.has(block.stato)) return false;
+  if (!block.conOrario) return false; // E3: tutto il giorno / senza orario non occupano "Adesso"
   const end = effectiveEnd(block);
-  return now >= block.start - WINDOW && now <= end + WINDOW;
+  return now >= block.inizio - WINDOW && now <= end + WINDOW;
 }
 
-export function isInProgress(block: Block, now: number): boolean {
-  if (block.state === 'in_corso') return true;
-  return now >= block.start && now < effectiveEnd(block);
+export function isInProgress(block: Blocco, now: number): boolean {
+  if (block.stato === 'in_corso') return true;
+  return now >= block.inizio && now < effectiveEnd(block);
 }
 
-export function statusOf(block: Block, now: number): NowStatus {
-  if (now < block.start) {
-    return { kind: 'tra', minutesToStart: Math.ceil((block.start - now) / minutes(1)) };
+export function statusOf(block: Blocco, now: number): StatoAdesso {
+  if (now < block.inizio) {
+    return { tipo: 'tra', minutiAllInizio: Math.ceil((block.inizio - now) / minutes(1)) };
   }
-  if (isInProgress(block, now)) return { kind: 'adesso' };
-  return block.kind === 'routine' || block.kind === 'studio' ? { kind: 'recupera' } : { kind: 'orario_passato' };
+  if (isInProgress(block, now)) return { tipo: 'adesso' };
+  return block.tipo === 'routine' || block.tipo === 'studio' ? { tipo: 'recupera' } : { tipo: 'orario_passato' };
 }
 
 /**
@@ -53,22 +53,22 @@ export function statusOf(block: Block, now: number): NowStatus {
  * (chiave `${giorno}|${blockId}`); la chiusura vale solo per quel blocco e quel giorno.
  */
 export function selectNowBlock(
-  blocks: readonly Block[],
+  blocks: readonly Blocco[],
   now: number,
   dismissed: ReadonlySet<string> = new Set(),
-): NowSelection | null {
-  const candidates = blocks.filter((b) => isNowCandidate(b, now)).sort((a, b) => a.start - b.start);
+): SelezioneAdesso | null {
+  const candidates = blocks.filter((b) => isNowCandidate(b, now)).sort((a, b) => a.inizio - b.inizio);
   if (candidates.length === 0) return null;
 
   // Tra più blocchi in corso vince quello iniziato più di recente (al confine vince chi inizia).
-  const inProgress = candidates.filter((b) => isInProgress(b, now)).sort((a, b) => b.start - a.start);
+  const inProgress = candidates.filter((b) => isInProgress(b, now)).sort((a, b) => b.inizio - a.inizio);
   const chosen = inProgress[0] ?? candidates[0]!;
 
   if (dismissed.has(dismissKey(chosen, now))) return null;
-  return { block: chosen, status: statusOf(chosen, now) };
+  return { blocco: chosen, stato: statusOf(chosen, now) };
 }
 
 /** Chiave di chiusura del blocco Adesso: per giorno e per blocco (§14). */
-export function dismissKey(block: Pick<Block, 'id'>, now: number): string {
+export function dismissKey(block: Pick<Blocco, 'id'>, now: number): string {
   return `${localDayKey(now)}|${block.id}`;
 }

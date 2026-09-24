@@ -5,26 +5,26 @@ import { local } from './time';
 describe('Streak — MECCANISMI §12 / SCENARI C2', () => {
   it('la prima sessione che conta porta la streak a 1', () => {
     const s = creditStreak(EMPTY_STREAK, local(2026, 9, 22, 9, 30));
-    expect(s.count).toBe(1);
-    expect(s.lastDay).toBe('2026-09-22');
+    expect(s.conteggio).toBe(1);
+    expect(s.ultimoGiorno).toBe('2026-09-22');
   });
 
   it('C2: +1 una sola volta anche con due sessioni oggi', () => {
     const s1 = creditStreak(EMPTY_STREAK, local(2026, 9, 22, 9, 30));
     const s2 = creditStreak(s1, local(2026, 9, 22, 21, 0));
-    expect(s2.count).toBe(1);
+    expect(s2.conteggio).toBe(1);
   });
 
   it('giorni consecutivi: ieri → oggi = +1', () => {
     let s = creditStreak(EMPTY_STREAK, local(2026, 9, 21, 9, 30));
     s = creditStreak(s, local(2026, 9, 22, 9, 30));
-    expect(s.count).toBe(2);
+    expect(s.conteggio).toBe(2);
   });
 
   it('si spezza se passa un giorno intero senza: riparte da 1', () => {
     let s = creditStreak(EMPTY_STREAK, local(2026, 9, 20, 9, 30));
     s = creditStreak(s, local(2026, 9, 22, 9, 30));
-    expect(s.count).toBe(1);
+    expect(s.conteggio).toBe(1);
   });
 
   it('valore mostrato: 0 se l\'ultimo giorno contato non è oggi né ieri', () => {

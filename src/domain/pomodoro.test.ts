@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { minutesByUnit, planSegments, totalMinutes } from './pomodoro';
 
-const shape = (s: ReturnType<typeof planSegments>) => s.map((x) => `${x.kind[0]}${x.minutes}`).join('/');
+const shape = (s: ReturnType<typeof planSegments>) => s.map((x) => `${x.tipo[0]}${x.minuti}`).join('/');
 
 describe('Pomodoro — MECCANISMI §10.3 / SCENARI D3', () => {
   it('D3: 90\' con 25/5 → 25/5/25/5/25/5 (tassellano esattamente)', () => {
@@ -23,7 +23,7 @@ describe('Pomodoro — MECCANISMI §10.3 / SCENARI D3', () => {
   it('senza durata (cronometro) → 4 cicli studio+pausa', () => {
     const segs = planSegments('90/20', null);
     expect(segs).toHaveLength(8);
-    expect(segs.filter((s) => s.kind === 'studio')).toHaveLength(4);
+    expect(segs.filter((s) => s.tipo === 'studio')).toHaveLength(4);
   });
 
   it('D3 multi-materia: 50\' sulla prima unità e 25\' sulla seconda', () => {

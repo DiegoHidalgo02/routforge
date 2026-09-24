@@ -3,40 +3,40 @@
  * Fonti: RoutForge_FORMATO_CORSO.md §1–§4; RoutForge_MECCANISMI.md §16. Criterio: SCENARI H1.
  *
  * Funzione pura: riceve i file già estratti (nome + contenuto). La lettura dello ZIP è del layer
- * applicativo (T-003). Gli identificatori sono deterministici a partire da `courseId`.
+ * applicativo (T-003). Gli identificatori sono deterministici a partire da `corsoId`.
  *
  * Decisione D-PARSE-1: senza file struttura il titolo è quello passato dal chiamante (chiesto
  * all'utente) o "Corso importato" — FORMATO_CORSO §1 prevale su MECC §16 ("primo H1 dei moduli").
  * Decisione D-PARSE-2: l'intestazione di sezione "Teoria (Fondamenta)" → "Fondamenta" (FORMATO §3, esempio);
  * in tutti gli altri casi è il testo dopo emoji e numero, verbatim.
  */
-import type { UnitState } from '../types';
+import type { StatoUnita, StatoModulo } from '../types';
+import { statiModuli } from '../pointer';
 
 // ------------------------------------------------------------------ tipi di output (FORMATO §4)
 
-export type SectionKind = 'teoria' | 'studio' | 'pratica' | 'progetto';
-export type SectionState = 'da_fare' | 'in_corso' | 'fatta';
-export type ModuleState = 'bloccato' | 'aperto' | 'passato';
-export type Difficulty = 'alta' | 'media' | 'bassa';
+export type TipoSezione = 'teoria' | 'studio' | 'pratica' | 'progetto';
+export type StatoSezione = 'da_fare' | 'in_corso' | 'fatta';
+export type Difficolta = 'alta' | 'media' | 'bassa';
 
-export interface ParsedResource {
+export interface RisorsaImportata {
   titolo: string;
   url: string;
   host: string;
   youtube: boolean;
 }
 
-export interface ParsedSection {
+export interface SezioneImportata {
   id: string;
-  tipo: SectionKind;
+  tipo: TipoSezione;
   etichetta: string;
   intestazione: string;
-  risorse: ParsedResource[];
+  risorse: RisorsaImportata[];
   descrizione: string;
-  stato: SectionState;
+  stato: StatoSezione;
 }
 
-export interface ParsedUnit {
+export interface UnitaImportata {
   id: string;
   moduloNumero: number;
   numero: string; // "0.7"
@@ -44,16 +44,16 @@ export interface ParsedUnit {
   titolo: string;
   markdown: string;
   concettoCore: { titolo: string; testo: string } | null;
-  sezioni: ParsedSection[];
+  sezioni: SezioneImportata[];
   oreStimate: number | null;
-  difficolta: Difficulty | null;
-  stato: UnitState;
+  difficolta: Difficolta | null;
+  stato: StatoUnita;
   progresso: number;
   minuti: number;
   confidenza: number | null;
 }
 
-export interface ParsedCriterion {
+export interface CriterioImportato {
   testo: string;
   auto: boolean;
   /** Per i criteri auto: soglia 0..1 letta dal testo (es. "≥8/10" → 0,8). */
@@ -61,7 +61,7 @@ export interface ParsedCriterion {
   fatto: boolean;
 }
 
-export interface ParsedModule {
+export interface ModuloImportato {
   id: string;
   numero: number;
   nn: string;
@@ -72,48 +72,48 @@ export interface ParsedModule {
   trasversali: string;
   intro: string;
   obiettivi: string[];
-  unita: ParsedUnit[];
+  unita: UnitaImportata[];
   domande: string[];
   esercizi: string[];
-  criteri: ParsedCriterion[];
+  criteri: CriterioImportato[];
   noGo: string;
   riassunto: string;
-  progetto: { titolo: string; descrizione: string; risorsa: ParsedResource | null } | null;
-  testDiFit: { testo: string; risorse: ParsedResource[] } | null;
+  progetto: { titolo: string; descrizione: string; risorsa: RisorsaImportata | null } | null;
+  testDiFit: { testo: string; risorse: RisorsaImportata[] } | null;
   markdown: string;
-  stato: ModuleState;
+  stato: StatoModulo;
 }
 
-export interface ParsedCourse {
+export interface CorsoImportato {
   id: string;
   titolo: string;
   sottotitolo: string;
   importatoIl: number;
-  moduli: ParsedModule[];
+  moduli: ModuloImportato[];
   numeroUnita: number;
   unitaCompletate: number;
   unitaCorrenteId: string | null;
 }
 
-export interface CourseFile {
+export interface FileCorso {
   /** Nome (o percorso) del file nello ZIP: conta solo il nome (FORMATO §1). */
   name: string;
   content: string;
 }
 
-export interface ParseWarning {
+export interface AvvisoImport {
   file: string;
   messaggio: string;
 }
 
-export interface ParseCourseOptions {
-  courseId: string;
+export interface OpzioniImport {
+  corsoId: string;
   now: number;
   /** Titolo chiesto all'utente quando manca il file struttura. */
-  title?: string | undefined;
+  titolo?: string | undefined;
 }
 
-export class CourseParseError extends Error {}
+export class ErroreImportCorso extends Error {}
 
 // ------------------------------------------------------------------ espressioni regolari
 
@@ -139,14 +139,14 @@ const HOURS_RANGE = /(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(?:h|ore)\
 const DIFFICULTY = /Difficolt[àa]\s*:\s*(alta|media|bassa)/i;
 const YOUTUBE = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)/i;
 
-const SECTION_BY_EMOJI: Record<string, SectionKind> = { '📖': 'teoria', '📺': 'studio', '🛠': 'pratica', '🏗': 'progetto' };
-const SECTION_LABEL: Record<SectionKind, string> = {
+const SECTION_BY_EMOJI: Record<string, TipoSezione> = { '📖': 'teoria', '📺': 'studio', '🛠': 'pratica', '🏗': 'progetto' };
+const SECTION_LABEL: Record<TipoSezione, string> = {
   teoria: 'Teoria',
   studio: 'Studio',
   pratica: 'Pratica',
   progetto: 'Mini progetto',
 };
-const SECTION_ORDER: SectionKind[] = ['teoria', 'studio', 'pratica', 'progetto'];
+const SECTION_ORDER: TipoSezione[] = ['teoria', 'studio', 'pratica', 'progetto'];
 
 // ------------------------------------------------------------------ helper
 
@@ -162,8 +162,8 @@ export function hostOf(url: string): string {
   }
 }
 
-export function extractLinks(text: string): ParsedResource[] {
-  const out: ParsedResource[] = [];
+export function extractLinks(text: string): RisorsaImportata[] {
+  const out: RisorsaImportata[] = [];
   for (const m of text.matchAll(LINK)) {
     const url = m[2]!;
     out.push({ titolo: m[1]!.trim(), url, host: hostOf(url), youtube: YOUTUBE.test(url) });
@@ -179,9 +179,9 @@ export function parseEstimatedHours(text: string): number | null {
   return tilde ? num(tilde[1]!) : null;
 }
 
-export function parseDifficulty(text: string): Difficulty | null {
+export function parseDifficulty(text: string): Difficolta | null {
   const m = DIFFICULTY.exec(text);
-  return m ? (m[1]!.toLowerCase() as Difficulty) : null;
+  return m ? (m[1]!.toLowerCase() as Difficolta) : null;
 }
 
 /** Soglia di un criterio auto: "≥8/10" → 0,8; "≥ 80%" → 0,8. */
@@ -192,18 +192,6 @@ export function parseThreshold(text: string): number | null {
   return pct ? Number(pct[1]) / 100 : null;
 }
 
-/** Stati dei moduli (FORMATO §4): il primo è sempre aperto; un modulo è bloccato finché il precedente non è passato. */
-export function computeModuleStates<T extends { criteri: readonly { fatto: boolean }[] }>(modules: readonly T[]): ModuleState[] {
-  const states: ModuleState[] = [];
-  let previousPassed = true;
-  for (const m of modules) {
-    const passed = m.criteri.every((c) => c.fatto);
-    if (!previousPassed) states.push('bloccato');
-    else states.push(passed ? 'passato' : 'aperto');
-    previousPassed = previousPassed && passed;
-  }
-  return states;
-}
 
 // ------------------------------------------------------------------ sezione di un'unità
 
@@ -260,7 +248,7 @@ function sectionDescription(lines: string[]): string {
   return discursive.join('\n').trim();
 }
 
-function parseSection(unitId: string, block: RawBlock): ParsedSection | null {
+function parseSection(unitId: string, block: RawBlock): SezioneImportata | null {
   const m = SECTION_MARK.exec(block.header);
   if (!m) return null;
   const tipo = SECTION_BY_EMOJI[m[1]!.replace('\uFE0F', '')];
@@ -289,8 +277,8 @@ function parseUnit(
   headerLine: string,
   bodyLines: string[],
   file: string,
-  warnings: ParseWarning[],
-): ParsedUnit | null {
+  warnings: AvvisoImport[],
+): UnitaImportata | null {
   const h = UNIT_HEADER.exec(headerLine);
   if (!h) {
     warnings.push({ file, messaggio: `unità con intestazione non leggibile saltata: "${headerLine.trim()}"` });
@@ -301,8 +289,8 @@ function parseUnit(
   const id = `${moduleId}:U${numero}`;
   const markdown = [headerLine, ...bodyLines].join('\n').trim();
 
-  let concettoCore: ParsedUnit['concettoCore'] = null;
-  const sezioni = new Map<SectionKind, ParsedSection>();
+  let concettoCore: UnitaImportata['concettoCore'] = null;
+  const sezioni = new Map<TipoSezione, SezioneImportata>();
   for (const block of splitBoldBlocks(bodyLines)) {
     const core = CORE_CONCEPT.exec(block.header);
     if (core) {
@@ -359,8 +347,8 @@ function chunkByHeadings(lines: string[]): { head: string[]; chunks: Chunk[] } {
 }
 
 /** Liste numerate sotto un grassetto, fino al prossimo grassetto o intestazione (FORMATO §2). */
-function parseVerification(lines: string[]): Pick<ParsedModule, 'domande' | 'esercizi' | 'criteri' | 'noGo'> {
-  const out: Pick<ParsedModule, 'domande' | 'esercizi' | 'criteri' | 'noGo'> = { domande: [], esercizi: [], criteri: [], noGo: '' };
+function parseVerification(lines: string[]): Pick<ModuloImportato, 'domande' | 'esercizi' | 'criteri' | 'noGo'> {
+  const out: Pick<ModuloImportato, 'domande' | 'esercizi' | 'criteri' | 'noGo'> = { domande: [], esercizi: [], criteri: [], noGo: '' };
   let mode: 'domande' | 'esercizi' | 'criteri' | 'nogo' | null = null;
   for (const line of lines) {
     const boldStart = /^\*\*\s*([^*]+?)\s*\*\*\s*(.*)$/.exec(line);
@@ -393,10 +381,10 @@ function parseVerification(lines: string[]): Pick<ParsedModule, 'domande' | 'ese
   return out;
 }
 
-function parseProject(lines: string[]): ParsedModule['progetto'] {
+function parseProject(lines: string[]): ModuloImportato['progetto'] {
   let titolo = '';
   let descrizione = '';
-  let risorsa: ParsedResource | null = null;
+  let risorsa: RisorsaImportata | null = null;
   for (const line of lines) {
     const m = /^\s*[-*]\s*\*\*\s*([^*]+?)\s*:?\s*\*\*\s*:?\s*(.*)$/.exec(line);
     if (!m) continue;
@@ -410,13 +398,13 @@ function parseProject(lines: string[]): ParsedModule['progetto'] {
   return { titolo, descrizione, risorsa };
 }
 
-export interface ModuleParseResult {
-  module: ParsedModule | null;
-  warnings: ParseWarning[];
+export interface RisultatoImportModulo {
+  module: ModuloImportato | null;
+  warnings: AvvisoImport[];
 }
 
-export function parseModule(file: CourseFile, courseId: string): ModuleParseResult {
-  const warnings: ParseWarning[] = [];
+export function parseModule(file: FileCorso, courseId: string): RisultatoImportModulo {
+  const warnings: AvvisoImport[] = [];
   const name = fileNameOf(file.name);
   const lines = file.content.split(/\r?\n/);
   const headerIndex = lines.findIndex((l) => MODULE_HEADER.test(l));
@@ -446,12 +434,12 @@ export function parseModule(file: CourseFile, courseId: string): ModuleParseResu
   if (!fields.tipo) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Tipo" mancante` });
   if (!fields.prerequisiti) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Prerequisiti" mancante` });
 
-  const unita: ParsedUnit[] = [];
+  const unita: UnitaImportata[] = [];
   let obiettivi: string[] = [];
   let verification: ReturnType<typeof parseVerification> = { domande: [], esercizi: [], criteri: [], noGo: '' };
   let riassunto = '';
-  let progetto: ParsedModule['progetto'] = null;
-  let testDiFit: ParsedModule['testDiFit'] = null;
+  let progetto: ModuloImportato['progetto'] = null;
+  let testDiFit: ModuloImportato['testDiFit'] = null;
 
   for (const chunk of chunks) {
     const heading = chunk.heading.trim();
@@ -473,7 +461,7 @@ export function parseModule(file: CourseFile, courseId: string): ModuleParseResu
     // "Self-Critique del Comitato" e blocchi sconosciuti restano solo nel markdown del modulo.
   }
 
-  const module: ParsedModule = {
+  const module: ModuloImportato = {
     id,
     numero,
     nn: String(numero).padStart(2, '0'),
@@ -497,17 +485,17 @@ export function parseModule(file: CourseFile, courseId: string): ModuleParseResu
 
 // ------------------------------------------------------------------ corso
 
-export interface CourseParseResult {
-  course: ParsedCourse;
-  warnings: ParseWarning[];
+export interface RisultatoImportCorso {
+  course: CorsoImportato;
+  warnings: AvvisoImport[];
 }
 
 /**
  * Importa un corso da un elenco di file. Solo i `.md` vengono letti; i percorsi sono appiattiti al nome;
  * serve almeno un file modulo, altrimenti `CourseParseError`. Ogni chiamata produce un corso nuovo.
  */
-export function parseCourse(files: readonly CourseFile[], opts: ParseCourseOptions): CourseParseResult {
-  const warnings: ParseWarning[] = [];
+export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): RisultatoImportCorso {
+  const warnings: AvvisoImport[] = [];
   const md = files
     .map((f) => ({ name: fileNameOf(f.name), content: f.content }))
     .filter((f) => /\.md$/i.test(f.name));
@@ -517,10 +505,10 @@ export function parseCourse(files: readonly CourseFile[], opts: ParseCourseOptio
     .map((f) => ({ file: f, order: Number(MODULE_FILE.exec(f.name)![1]) }))
     .sort((a, b) => a.order - b.order || a.file.name.localeCompare(b.file.name));
   if (moduleFiles.length === 0) {
-    throw new CourseParseError('Nessun file modulo (M<numero>-…md) trovato nello ZIP');
+    throw new ErroreImportCorso('Nessun file modulo (M<numero>-…md) trovato nello ZIP');
   }
 
-  let titolo = opts.title?.trim() || 'Corso importato';
+  let titolo = opts.titolo?.trim() || 'Corso importato';
   let sottotitolo = '';
   const structure = md.find((f) => STRUCTURE_FILE.test(f.name));
   if (structure) {
@@ -530,21 +518,23 @@ export function parseCourse(files: readonly CourseFile[], opts: ParseCourseOptio
     if (h2) sottotitolo = h2.replace(/^##\s+/, '').trim();
   }
 
-  const moduli: ParsedModule[] = [];
+  const moduli: ModuloImportato[] = [];
   for (const { file } of moduleFiles) {
-    const r = parseModule(file, opts.courseId);
+    const r = parseModule(file, opts.corsoId);
     warnings.push(...r.warnings);
     if (r.module) moduli.push(r.module);
   }
-  if (moduli.length === 0) throw new CourseParseError('Nessun modulo con intestazione valida');
+  if (moduli.length === 0) throw new ErroreImportCorso('Nessun modulo con intestazione valida');
 
-  computeModuleStates(moduli).forEach((s, i) => (moduli[i]!.stato = s));
+  // Stati dei moduli: stessa regola del puntatore (pointer.ts → statiModuli), nessuna copia locale.
+  const stati = statiModuli(moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: m.criteri.every((c) => c.fatto) })));
+  for (const m of moduli) m.stato = stati.get(m.numero) ?? 'bloccato';
   const firstOpen = moduli.find((m) => m.stato !== 'bloccato');
   const unitaCorrenteId = firstOpen?.unita[0]?.id ?? null;
 
   return {
     course: {
-      id: opts.courseId,
+      id: opts.corsoId,
       titolo,
       sottotitolo,
       importatoIl: opts.now,

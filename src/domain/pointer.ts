@@ -12,64 +12,69 @@
  * sempre aperto; il puntatore NON entra in un modulo bloccato. Senza criteri, tutti i moduli
  * sono aperti (coerente con C1, dove il corso non ha criteri).
  */
-import { PENDING_UNIT_STATES, type Outcome, type UnitState } from './types';
+import { STATI_UNITA_PENDENTI, type Esito, type StatoUnita, type StatoModulo } from './types';
 
-export interface UnitRef {
+export interface UnitaPercorso {
   id: string;
   /** Numero del modulo (ordine dal nome file, FORMATO_CORSO §1). */
-  moduleOrder: number;
+  moduloNumero: number;
   /** Posizione dell'unità dentro il modulo (ordine nel file). */
-  order: number;
-  state: UnitState;
+  ordine: number;
+  stato: StatoUnita;
   /** Minuti accreditati (§11). */
-  minutes: number;
+  minuti: number;
   /** Progresso 0..1 (§11). */
-  progress: number;
+  progresso: number;
   /** Ore stimate dal file del corso, se dichiarate (FORMATO_CORSO §3). */
-  estimatedHours?: number | null;
+  oreStimate?: number | null;
 }
 
-export interface ModuleRef {
-  order: number;
+export interface ModuloPercorso {
+  numero: number;
   /** true se tutti i criteri Go/No-Go del modulo sono "sì" (vacuamente vero senza criteri). */
-  criteriaAllMet: boolean;
+  criteriSoddisfatti: boolean;
 }
 
-export interface FutureStudyBlock {
+export interface BloccoStudioFuturo {
   id: string;
-  start: number;
+  inizio: number;
 }
 
 /** Ordine di percorso: modulo → unità. */
-export function sortedUnits(units: readonly UnitRef[]): UnitRef[] {
-  return [...units].sort((a, b) => a.moduleOrder - b.moduleOrder || a.order - b.order);
+export function sortedUnits(units: readonly UnitaPercorso[]): UnitaPercorso[] {
+  return [...units].sort((a, b) => a.moduloNumero - b.moduloNumero || a.ordine - b.ordine);
 }
 
 /**
- * Insieme dei moduli aperti (FORMATO_CORSO §4). Se `modules` è assente, tutto è aperto.
- * Un modulo è aperto se è il primo oppure se il precedente ha tutti i criteri a sì
- * (e a sua volta è aperto: la chiusura si propaga in avanti).
+ * Stato di ogni modulo (FORMATO_CORSO §4) — UNICA implementazione della regola, usata anche dal parser.
+ * Il primo modulo è sempre aperto; un modulo è `bloccato` finché il precedente non è `passato`
+ * (tutti i criteri Go/No-Go a sì; senza criteri è passato); la chiusura si propaga in avanti.
  */
-export function openModules(modules: readonly ModuleRef[] | undefined): ((moduleOrder: number) => boolean) {
-  if (!modules || modules.length === 0) return () => true;
-  const sorted = [...modules].sort((a, b) => a.order - b.order);
-  const open = new Set<number>();
-  let previousPassed = true; // il primo modulo è sempre aperto
-  for (const m of sorted) {
-    if (previousPassed) open.add(m.order);
-    previousPassed = previousPassed && m.criteriaAllMet;
+export function statiModuli(moduli: readonly ModuloPercorso[]): Map<number, StatoModulo> {
+  const stati = new Map<number, StatoModulo>();
+  let precedentePassato = true; // il primo modulo è sempre aperto
+  for (const m of [...moduli].sort((a, b) => a.numero - b.numero)) {
+    stati.set(m.numero, !precedentePassato ? 'bloccato' : m.criteriSoddisfatti ? 'passato' : 'aperto');
+    precedentePassato = precedentePassato && m.criteriSoddisfatti;
   }
-  return (order) => open.has(order);
+  return stati;
+}
+
+/** Predicato "modulo aperto" per il puntatore. Senza moduli dichiarati, tutto è aperto. */
+export function openModules(modules: readonly ModuloPercorso[] | undefined): (numero: number) => boolean {
+  if (!modules || modules.length === 0) return () => true;
+  const stati = statiModuli(modules);
+  return (numero) => stati.has(numero) && stati.get(numero) !== 'bloccato';
 }
 
 /** Unità pendenti in ordine di percorso, solo nei moduli aperti. */
-export function pendingUnits(units: readonly UnitRef[], modules?: readonly ModuleRef[]): UnitRef[] {
+export function pendingUnits(units: readonly UnitaPercorso[], modules?: readonly ModuloPercorso[]): UnitaPercorso[] {
   const isOpen = openModules(modules);
-  return sortedUnits(units).filter((u) => PENDING_UNIT_STATES.has(u.state) && isOpen(u.moduleOrder));
+  return sortedUnits(units).filter((u) => STATI_UNITA_PENDENTI.has(u.stato) && isOpen(u.moduloNumero));
 }
 
 /** Unità corrente del corso = prima pendente, o null se il percorso è finito/bloccato. */
-export function currentUnit(units: readonly UnitRef[], modules?: readonly ModuleRef[]): UnitRef | null {
+export function currentUnit(units: readonly UnitaPercorso[], modules?: readonly ModuloPercorso[]): UnitaPercorso | null {
   return pendingUnits(units, modules)[0] ?? null;
 }
 
@@ -79,22 +84,22 @@ export function currentUnit(units: readonly UnitRef[], modules?: readonly Module
  * Ritorna una mappa blocco → unità.
  */
 export function assignPointer(
-  units: readonly UnitRef[],
-  futureBlocks: readonly FutureStudyBlock[],
-  modules?: readonly ModuleRef[],
+  units: readonly UnitaPercorso[],
+  futureBlocks: readonly BloccoStudioFuturo[],
+  modules?: readonly ModuloPercorso[],
 ): Map<string, string | null> {
   const pending = pendingUnits(units, modules);
-  const blocks = [...futureBlocks].sort((a, b) => a.start - b.start);
+  const blocks = [...futureBlocks].sort((a, b) => a.inizio - b.inizio);
   const out = new Map<string, string | null>();
   blocks.forEach((b, i) => out.set(b.id, pending[i]?.id ?? null));
   return out;
 }
 
 /** Progresso del corso = completate / totali (§11). */
-export function courseProgress(units: readonly UnitRef[]): { completed: number; total: number; ratio: number } {
-  const total = units.length;
-  const completed = units.filter((u) => u.state === 'completata').length;
-  return { completed, total, ratio: total === 0 ? 0 : completed / total };
+export function courseProgress(units: readonly UnitaPercorso[]): { completate: number; totali: number; rapporto: number } {
+  const totali = units.length;
+  const completate = units.filter((u) => u.stato === 'completata').length;
+  return { completate, totali, rapporto: totali === 0 ? 0 : completate / totali };
 }
 
 /** Progresso "Continua": min(0,95; minuti totali / (ore stimate × 60, o 180 se non stimate)). */
@@ -103,58 +108,58 @@ export function partialProgress(totalMinutes: number, estimatedHours?: number | 
   return Math.min(0.95, totalMinutes / denominator);
 }
 
-export interface ApplyOutcomeInput {
-  units: readonly UnitRef[];
+export interface InputEsito {
+  unita: readonly UnitaPercorso[];
   /** Unità pianificata sul blocco (o scelta nel setup). */
-  plannedUnitId: string;
-  outcome: Outcome;
+  unitaPianificataId: string;
+  esito: Esito;
   /** Minuti accreditati all'unità principale. */
-  minutes: number;
+  minuti: number;
   /** Per "Indietro": l'unità precedente, se indicata; altrimenti agisce sulla pianificata. */
-  previousUnitId?: string | null | undefined;
+  unitaPrecedenteId?: string | null | undefined;
 }
 
-export interface ApplyOutcomeResult {
-  units: UnitRef[];
+export interface RisultatoEsito {
+  unita: UnitaPercorso[];
   /** Stato risultante del blocco di studio (§11, tabella). */
-  blockState: 'completato' | 'parziale' | 'indietro' | 'saltato';
+  statoBlocco: 'completato' | 'parziale' | 'indietro' | 'saltato';
 }
 
 /**
  * Applica l'esito all'unità e restituisce lo stato del blocco (tabella §11).
  * Non tocca il puntatore: il chiamante lo ricalcola con `assignPointer`.
  */
-export function applyOutcome(input: ApplyOutcomeInput): ApplyOutcomeResult {
-  const { units, plannedUnitId, outcome, minutes, previousUnitId } = input;
-  const next = units.map((u) => ({ ...u }));
-  const planned = next.find((u) => u.id === plannedUnitId);
-  if (!planned) throw new Error(`applyOutcome: unità ${plannedUnitId} non trovata`);
+export function applyOutcome(input: InputEsito): RisultatoEsito {
+  const { unita, unitaPianificataId, esito, minuti, unitaPrecedenteId } = input;
+  const next = unita.map((u) => ({ ...u }));
+  const planned = next.find((u) => u.id === unitaPianificataId);
+  if (!planned) throw new Error(`applyOutcome: unità ${unitaPianificataId} non trovata`);
 
   // I minuti vanno sempre all'unità principale (§11, "Sempre").
-  planned.minutes += Math.max(0, minutes);
+  planned.minuti += Math.max(0, minuti);
 
-  switch (outcome) {
+  switch (esito) {
     case 'completata':
-      planned.state = 'completata';
-      planned.progress = 1;
-      return { units: next, blockState: 'completato' };
+      planned.stato = 'completata';
+      planned.progresso = 1;
+      return { unita: next, statoBlocco: 'completato' };
     case 'continua':
-      planned.state = 'parziale';
-      planned.progress = partialProgress(planned.minutes, planned.estimatedHours);
-      return { units: next, blockState: 'parziale' };
+      planned.stato = 'parziale';
+      planned.progresso = partialProgress(planned.minuti, planned.oreStimate);
+      return { unita: next, statoBlocco: 'parziale' };
     case 'indietro': {
-      const target = (previousUnitId && next.find((u) => u.id === previousUnitId)) || planned;
-      target.state = 'da_rivedere'; // progresso invariato
-      return { units: next, blockState: 'indietro' };
+      const target = (unitaPrecedenteId && next.find((u) => u.id === unitaPrecedenteId)) || planned;
+      target.stato = 'da_rivedere'; // progresso invariato
+      return { unita: next, statoBlocco: 'indietro' };
     }
     case 'salta':
-      planned.state = 'saltata'; // progresso invariato
-      return { units: next, blockState: 'saltato' };
+      planned.stato = 'saltata'; // progresso invariato
+      return { unita: next, statoBlocco: 'saltato' };
   }
 }
 
 /** Unità precedente nel percorso (ordine modulo → unità), o null se è la prima. */
-export function previousUnitInPath(units: readonly UnitRef[], unitId: string): UnitRef | null {
+export function previousUnitInPath(units: readonly UnitaPercorso[], unitId: string): UnitaPercorso | null {
   const sorted = sortedUnits(units);
   const i = sorted.findIndex((u) => u.id === unitId);
   return i > 0 ? (sorted[i - 1] ?? null) : null;

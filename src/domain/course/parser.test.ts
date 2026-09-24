@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  computeModuleStates,
-  CourseParseError,
+  ErroreImportCorso,
   extractLinks,
   parseCourse,
   parseEstimatedHours,
@@ -9,6 +8,7 @@ import {
   parseThreshold,
 } from './parser';
 import { local } from '../time';
+import { assignPointer, type UnitaPercorso } from '../pointer';
 
 /** Un modulo conforme al template di FORMATO_CORSO §2–§3 (due unità, una con tre sezioni). */
 const M1 = `# MODULO M1 — Tooling Moderno
@@ -128,7 +128,7 @@ const STRUTTURA = `# Syllabus Software Engineer 2026
 Testo libero.
 `;
 
-const opts = { courseId: 'corso-1', now: local(2026, 9, 22, 10, 0) };
+const opts = { corsoId: 'corso-1', now: local(2026, 9, 22, 10, 0) };
 
 describe('Import corso — SCENARI H1', () => {
   const zip = [
@@ -155,7 +155,7 @@ describe('Import corso — SCENARI H1', () => {
 
   it('un secondo import dello stesso ZIP crea un secondo corso identico (id diverso)', () => {
     const a = parseCourse(zip, opts);
-    const b = parseCourse(zip, { ...opts, courseId: 'corso-2' });
+    const b = parseCourse(zip, { ...opts, corsoId: 'corso-2' });
     expect(b.course.id).not.toBe(a.course.id);
     const strip = (o: unknown) => JSON.parse(JSON.stringify(o).replaceAll('corso-2', 'corso-1'));
     expect(strip(b.course)).toEqual(a.course);
@@ -165,11 +165,11 @@ describe('Import corso — SCENARI H1', () => {
   it('senza file struttura: titolo passato dal chiamante, altrimenti "Corso importato" (D-PARSE-1)', () => {
     const files = [{ name: 'M1-Tooling_Moderno.md', content: M1 }];
     expect(parseCourse(files, opts).course.titolo).toBe('Corso importato');
-    expect(parseCourse(files, { ...opts, title: 'Il mio corso' }).course.titolo).toBe('Il mio corso');
+    expect(parseCourse(files, { ...opts, titolo: 'Il mio corso' }).course.titolo).toBe('Il mio corso');
   });
 
   it('senza alcun file modulo → errore', () => {
-    expect(() => parseCourse([{ name: 'README.md', content: '# ciao' }], opts)).toThrow(CourseParseError);
+    expect(() => parseCourse([{ name: 'README.md', content: '# ciao' }], opts)).toThrow(ErroreImportCorso);
   });
 });
 
@@ -287,13 +287,6 @@ describe('Puntatore all\'import e stati dei moduli — FORMATO_CORSO §4', () =>
     expect(course.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
   });
 
-  it('un modulo senza criteri è "passato" e apre il successivo', () => {
-    expect(computeModuleStates([{ criteri: [] }, { criteri: [{ fatto: false }] }, { criteri: [] }])).toEqual([
-      'passato',
-      'aperto',
-      'bloccato',
-    ]);
-  });
 
   it('soglie: "≥8/10" → 0,8; "≥ 80%" → 0,8; assente → null', () => {
     expect(parseThreshold('quiz ≥8/10')).toBe(0.8);
@@ -302,5 +295,14 @@ describe('Puntatore all\'import e stati dei moduli — FORMATO_CORSO §4', () =>
     expect(parseEstimatedHours('~8 h')).toBe(8);
     expect(parseEstimatedHours('circa 6–8 ore')).toBe(7);
     expect(parseEstimatedHours('niente')).toBeNull();
+  });
+});
+
+describe('Vocabolario unico — unità importate e puntatore (D-NAMING-1)', () => {
+  it("un'unità importata è già un'UnitaPercorso: il puntatore la usa senza conversioni", () => {
+    const { course } = parseCourse([{ name: 'M1-Tooling_Moderno.md', content: M1 }], opts);
+    const unita: UnitaPercorso[] = course.moduli.flatMap((m) => m.unita); // verificato dal compilatore
+    const mappa = assignPointer(unita, [{ id: 'b1', inizio: local(2026, 9, 23, 9, 0) }]);
+    expect(mappa.get('b1')).toBe('corso-1:M1:U1.1');
   });
 });

@@ -14,20 +14,20 @@
  */
 import { MINUTE } from './time';
 
-export type Rating = 'niente' | 'difficile' | 'bene' | 'facile';
+export type Valutazione = 'niente' | 'difficile' | 'bene' | 'facile';
 
-export interface CardSchedule {
+export interface StatoCarta {
   /** Fattore di facilità (E-Factor). */
-  ease: number;
+  facilita: number;
   /** Intervallo corrente in giorni (può essere frazionario). */
-  intervalDays: number;
+  intervalloGiorni: number;
   /** Scadenza assoluta (epoch ms). */
-  dueAt: number;
+  scadenza: number;
 }
 
-export interface ReviewResult extends CardSchedule {
+export interface RisultatoRipasso extends StatoCarta {
   /** true = la carta va riproposta nella stessa sessione (solo "Niente"). */
-  requeue: boolean;
+  rimettiInCoda: boolean;
 }
 
 export const EASE_INITIAL = 2.5;
@@ -36,49 +36,49 @@ export const NIENTE_DELAY_MS = 10 * MINUTE;
 const DAY_MS = 24 * 60 * MINUTE;
 
 /** Carta appena creata: dovuta subito. */
-export function newCard(now: number): CardSchedule {
-  return { ease: EASE_INITIAL, intervalDays: 0, dueAt: now };
+export function newCard(now: number): StatoCarta {
+  return { facilita: EASE_INITIAL, intervalloGiorni: 0, scadenza: now };
 }
 
 const clampEase = (e: number): number => Math.max(EASE_MIN, Number(e.toFixed(4)));
 
-export function review(card: CardSchedule, rating: Rating, now: number): ReviewResult {
+export function review(card: StatoCarta, rating: Valutazione, now: number): RisultatoRipasso {
   switch (rating) {
     case 'niente': {
-      const ease = clampEase(card.ease - 0.2);
-      return { ease, intervalDays: 0, dueAt: now + NIENTE_DELAY_MS, requeue: true };
+      const facilita = clampEase(card.facilita - 0.2);
+      return { facilita, intervalloGiorni: 0, scadenza: now + NIENTE_DELAY_MS, rimettiInCoda: true };
     }
     case 'difficile': {
-      const ease = clampEase(card.ease - 0.15);
-      const intervalDays = Math.max(1, card.intervalDays * 1.2);
-      return { ease, intervalDays, dueAt: now + intervalDays * DAY_MS, requeue: false };
+      const facilita = clampEase(card.facilita - 0.15);
+      const intervalloGiorni = Math.max(1, card.intervalloGiorni * 1.2);
+      return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }
     case 'bene': {
-      const ease = clampEase(card.ease);
-      const intervalDays = Math.max(1, card.intervalDays * ease);
-      return { ease, intervalDays, dueAt: now + intervalDays * DAY_MS, requeue: false };
+      const facilita = clampEase(card.facilita);
+      const intervalloGiorni = Math.max(1, card.intervalloGiorni * facilita);
+      return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }
     case 'facile': {
-      const ease = clampEase(card.ease + 0.15);
-      const intervalDays = Math.max(1, card.intervalDays * ease * 1.3);
-      return { ease, intervalDays, dueAt: now + intervalDays * DAY_MS, requeue: false };
+      const facilita = clampEase(card.facilita + 0.15);
+      const intervalloGiorni = Math.max(1, card.intervalloGiorni * facilita * 1.3);
+      return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }
   }
 }
 
 /** Anteprima "prossima scadenza" mostrata accanto a ogni bottone (FUNZIONALITÀ §15). */
-export function previewAll(card: CardSchedule, now: number): Record<Rating, number> {
+export function previewAll(card: StatoCarta, now: number): Record<Valutazione, number> {
   return {
-    niente: review(card, 'niente', now).dueAt,
-    difficile: review(card, 'difficile', now).dueAt,
-    bene: review(card, 'bene', now).dueAt,
-    facile: review(card, 'facile', now).dueAt,
+    niente: review(card, 'niente', now).scadenza,
+    difficile: review(card, 'difficile', now).scadenza,
+    bene: review(card, 'bene', now).scadenza,
+    facile: review(card, 'facile', now).scadenza,
   };
 }
 
 /** Ripasso trasversale: carte scadute (dueAt ≤ now), dalle più scadute (§19). */
-export function dueCards<T extends { schedule: CardSchedule }>(cards: readonly T[], now: number): T[] {
+export function dueCards<T extends { schedule: StatoCarta }>(cards: readonly T[], now: number): T[] {
   return cards
-    .filter((c) => c.schedule.dueAt <= now)
-    .sort((a, b) => a.schedule.dueAt - b.schedule.dueAt);
+    .filter((c) => c.schedule.scadenza <= now)
+    .sort((a, b) => a.schedule.scadenza - b.schedule.scadenza);
 }

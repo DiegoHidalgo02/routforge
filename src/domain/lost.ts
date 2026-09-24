@@ -9,13 +9,13 @@
  * - Scadenza di recupero = fine − 50% della durata (senza durata: inizio + 30').
  */
 import { addLocalDays, endOfLocalDay, localDayKey, minutes, sameLocalDay, startOfLocalDay } from './time';
-import type { Block } from './types';
+import type { Blocco } from './types';
 
 export const LOST_GRACE_MS = minutes(30);
 
 /** Fine effettiva (§8): fine reale, o 23:59 locale del giorno d'inizio. */
-export function effectiveEnd(block: Pick<Block, 'start' | 'end' | 'hasTime'>): number {
-  return block.end ?? endOfLocalDay(block.start);
+export function effectiveEnd(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'>): number {
+  return block.fine ?? endOfLocalDay(block.inizio);
 }
 
 /**
@@ -23,7 +23,7 @@ export function effectiveEnd(block: Pick<Block, 'start' | 'end' | 'hasTime'>): n
  * giorno → data scelta; settimana → domenica della settimana; mese → ultimo giorno del mese.
  * Ritorna 00:00 locale di quel giorno.
  */
-export function horizonLastDay(start: number, horizon: NonNullable<Block['horizon']>): number {
+export function horizonLastDay(start: number, horizon: NonNullable<Blocco['orizzonte']>): number {
   const day0 = startOfLocalDay(start);
   const d = new Date(day0);
   switch (horizon) {
@@ -40,9 +40,9 @@ export function horizonLastDay(start: number, horizon: NonNullable<Block['horizo
 }
 
 /** true se oggi (giorno locale di `now`) è ancora entro l'orizzonte del todo. */
-export function todoWithinHorizon(block: Block, now: number): boolean {
-  const horizon = block.horizon ?? 'giorno';
-  const last = horizonLastDay(block.start, horizon);
+export function todoWithinHorizon(block: Blocco, now: number): boolean {
+  const horizon = block.orizzonte ?? 'giorno';
+  const last = horizonLastDay(block.inizio, horizon);
   return startOfLocalDay(now) <= last;
 }
 
@@ -52,17 +52,17 @@ export function todoWithinHorizon(block: Block, now: number): boolean {
  * - todo con orizzonte ≠ giorno e ancora entro l'orizzonte: no (rotola invece, §6);
  * - altrimenti: `programmato` e adesso > fine effettiva + 30'.
  */
-export function shouldMarkLost(block: Block, now: number): boolean {
-  if (block.state !== 'programmato') return false;
-  if (block.kind === 'evento') return false;
-  if (block.kind === 'todo' && (block.horizon ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now)) {
+export function shouldMarkLost(block: Blocco, now: number): boolean {
+  if (block.stato !== 'programmato') return false;
+  if (block.tipo === 'evento') return false;
+  if (block.tipo === 'todo' && (block.orizzonte ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now)) {
     return false;
   }
   return now > effectiveEnd(block) + LOST_GRACE_MS;
 }
 
 /** Istante esatto in cui il blocco diventa perso (utile a test e diagnostica). */
-export function lostAtInstant(block: Pick<Block, 'start' | 'end' | 'hasTime'>): number {
+export function lostAtInstant(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'>): number {
   return effectiveEnd(block) + LOST_GRACE_MS;
 }
 
@@ -70,10 +70,10 @@ export function lostAtInstant(block: Pick<Block, 'start' | 'end' | 'hasTime'>): 
  * Scadenza di recupero (§8): fine − 50% della durata; senza durata: inizio + 30'.
  * A quell'istante scatta la notifica di verifica se il blocco non è stato avviato né chiuso.
  */
-export function recoveryDeadline(block: Pick<Block, 'start' | 'end'>): number {
-  if (block.end === null) return block.start + minutes(30);
-  const duration = block.end - block.start;
-  return block.end - duration / 2;
+export function recoveryDeadline(block: Pick<Blocco, 'inizio' | 'fine'>): number {
+  if (block.fine === null) return block.inizio + minutes(30);
+  const duration = block.fine - block.inizio;
+  return block.fine - duration / 2;
 }
 
 /**
@@ -81,15 +81,15 @@ export function recoveryDeadline(block: Pick<Block, 'start' | 'end'>): number {
  * OPPURE (routine a cavallo di mezzanotte) l'istante corrente è dentro [inizio, fine].
  * Mai prima, mai dopo.
  */
-export function canCheckRoutine(block: Pick<Block, 'start' | 'end'>, now: number): boolean {
-  if (sameLocalDay(block.start, now)) return true;
-  if (block.end !== null && now >= block.start && now <= block.end) return true;
+export function canCheckRoutine(block: Pick<Blocco, 'inizio' | 'fine'>, now: number): boolean {
+  if (sameLocalDay(block.inizio, now)) return true;
+  if (block.fine !== null && now >= block.inizio && now <= block.fine) return true;
   return false;
 }
 
 /** Notifica "blocco perso" (§8): solo routine/studio, solo se la fine è entro le ultime 2 ore. */
-export function lostNotificationDue(block: Block, now: number): boolean {
-  if (block.kind !== 'routine' && block.kind !== 'studio') return false;
+export function lostNotificationDue(block: Blocco, now: number): boolean {
+  if (block.tipo !== 'routine' && block.tipo !== 'studio') return false;
   return now - effectiveEnd(block) <= 2 * 60 * minutes(1);
 }
 
@@ -97,20 +97,20 @@ export function lostNotificationDue(block: Block, now: number): boolean {
  * Esiti pendenti (§8): blocchi di studio `persi` negli ultimi 3 giorni o `programmati`
  * con fine reale passata; dal più recente; massimo 5.
  */
-export function pendingOutcomes(blocks: readonly Block[], now: number, max = 5): Block[] {
+export function pendingOutcomes(blocks: readonly Blocco[], now: number, max = 5): Blocco[] {
   const threeDaysAgo = addLocalDays(startOfLocalDay(now), -3);
   return blocks
-    .filter((b) => b.kind === 'studio')
+    .filter((b) => b.tipo === 'studio')
     .filter((b) => {
-      if (b.state === 'perso') return (b.lostAt ?? effectiveEnd(b)) >= threeDaysAgo;
-      if (b.state === 'programmato') return b.end !== null && b.end < now;
+      if (b.stato === 'perso') return (b.persoIl ?? effectiveEnd(b)) >= threeDaysAgo;
+      if (b.stato === 'programmato') return b.fine !== null && b.fine < now;
       return false;
     })
-    .sort((a, b) => b.start - a.start)
+    .sort((a, b) => b.inizio - a.inizio)
     .slice(0, max);
 }
 
 /** Comodo per i log/diagnostica: giorno locale del blocco (§1). */
-export function blockDay(block: Pick<Block, 'start'>): string {
-  return localDayKey(block.start);
+export function blockDay(block: Pick<Blocco, 'inizio'>): string {
+  return localDayKey(block.inizio);
 }
