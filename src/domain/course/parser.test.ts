@@ -22,6 +22,8 @@ const M1 = `# MODULO M1 — Tooling Moderno
 Questo modulo introduce gli strumenti del lavoro quotidiano.
 Seconda riga di introduzione.
 
+---
+
 ### Obiettivi di Apprendimento
 - **Configurare** un progetto con Vite
 - **Usare** npm scripts in modo consapevole
@@ -72,6 +74,8 @@ Vite nasce per velocizzare lo sviluppo: leggi [la guida ufficiale](https://vite.
 ### 📌 Test di fit opzionale
 Se hai già usato Vite, prova [il test](https://esempio.org/fit) e salta alla 1.2.
 
+---
+
 ### Verifica della Comprensione
 **Domande Socratiche di auto-valutazione** (rispondi a voce)
 1. Cosa fa \`npm install\` senza argomenti?
@@ -90,6 +94,8 @@ Se hai già usato Vite, prova [il test](https://esempio.org/fit) e salta alla 1.
 
 #### Riassunto di fine Modulo
 Hai un ambiente moderno funzionante.
+
+---
 
 ### Progetto del Modulo
 - **Titolo:** Toolbox personale
@@ -210,12 +216,16 @@ describe('Modulo — FORMATO_CORSO §2', () => {
     expect(m.noGo).toBe('Se il progetto non parte, ripeti la 1.1.');
   });
 
-  it('riassunto, progetto (prima risorsa del campo), test di fit', () => {
+  it('riassunto, progetto (prima risorsa del campo), test di fit; i separatori `---` restano fuori da intro, fit e riassunto', () => {
     expect(m.riassunto).toBe('Hai un ambiente moderno funzionante.');
     expect(m.progetto?.titolo).toBe('Toolbox personale');
     expect(m.progetto?.descrizione).toBe('una CLI che crea progetti da template.');
     expect(m.progetto?.risorsa?.url).toBe('https://esempio.org/progetto-m1');
     expect(m.testDiFit?.risorse[0]?.url).toBe('https://esempio.org/fit');
+    // Il separatore `---` che chiude la sezione non è contenuto (emerso dal confronto con M0, T-000)
+    expect(m.testDiFit?.testo).toBe(
+      'Se hai già usato Vite, prova [il test](https://esempio.org/fit) e salta alla 1.2.',
+    );
   });
 
   it('due unità in ordine; la seconda ha 3 sezioni → avviso "importata con 3 sezioni"', () => {
@@ -244,6 +254,8 @@ describe('Unità — FORMATO_CORSO §3', () => {
     expect(u.sezioni.map((s) => s.tipo)).toEqual(['teoria', 'studio', 'pratica', 'progetto']);
     expect(u.sezioni.map((s) => s.etichetta)).toEqual(['Teoria', 'Studio', 'Pratica', 'Mini progetto']);
     expect(u.sezioni[0]?.intestazione).toBe('Fondamenta');
+    expect(u.sezioni[1]?.intestazione).toBe('Visualizzazione');
+    expect(u.sezioni[2]?.intestazione).toBe('Testing & Debugging');
     expect(u.sezioni[3]?.intestazione).toBe('Mini Progetto Finale: "Toolbox CLI"');
     expect(u.sezioni.every((s) => s.stato === 'da_fare')).toBe(true);
   });

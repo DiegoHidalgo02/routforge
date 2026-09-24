@@ -19,15 +19,20 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `eslint`, `@eslint/js`, `typescript-eslint` | dev | lint (`npm run lint`), regole "recommended" | `any`, `@ts-ignore`, variabili inutilizzate verificati dal gate e non solo scritti in CLAUDE.md | D-LINT-1 |
 | `prettier` | dev | formato (`npm run format`, `npm run format:check`) | stile uniforme fra modelli e sessioni diverse | D-LINT-1 |
 
-## Previste (entrano nel task indicato; candidato A di `docs/02_ARCHITETTURA.md` §0, da confermare in T-000)
+## Previste (entrano nel task indicato; stack deciso in T-000, `docs/decisioni/D-STACK-1.md`)
 
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `dexie` | prevista | `src/data`, T-004 | IndexedDB con stesso codice su web e WebView; id globali e `updatedAt` per la sync | D-DATA-1 |
 | `fake-indexeddb` | prevista | dev, test di `src/data`, T-004 | repository testati senza browser | D-DATA-1 |
-| `fflate` | prevista | `src/app` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso | D-STACK-1 |
-| `react`, `react-dom`, `@types/react`, `@types/react-dom` | prevista | `src/ui`, T-006 | candidato A: riuso dell'export HTML/CSS del design | D-STACK-1 |
-| `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035 | build e web installabile | D-STACK-1 |
+| `fflate` | prevista | `src/app` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso; piccola, senza dipendenze, stesso codice su web e WebView | D-STACK-1 |
+| `react`, `react-dom`, `@types/react`, `@types/react-dom` | prevista | `src/ui`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
+| `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035 | build, CSS Modules nativi e web installabile | D-STACK-1 |
+| `react-router` | prevista | `src/ui`, T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
+| `lucide-react` | prevista | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
+| `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | prevista | `src/ui`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
+| `jsdom` | prevista | dev, test UI, T-006 | ambiente DOM per Vitest, solo nei test che uno scenario richiede (es. G3) | D-STACK-1 |
+| `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | prevista | dev, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3) | D-LINT-1, D-STACK-1 |
 | `@capacitor/core`, `@capacitor/cli`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-006 e T-021 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |
 | `@google/genai` | prevista | `src/platform` (client AI), T-026 | fornitore Gemini scelto dalle spec | D-AI-1 |

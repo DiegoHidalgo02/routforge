@@ -101,14 +101,16 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 20 | MECC §25 | Sorgente dell'istante di `updatedAt` per «ultimo vince» non specificata: orologi sfasati invertono l'esito | D-SYNC-1: decisione al CP4 |
 | 21 | FORMATO §1 | Numeri di modulo o unità duplicati nello ZIP: la spec tace, gli id del parser collidono | D-PARSE-3 **aperta**: decisione prima di T-003 |
 | 22 | `TASKS.md` vs `06_SUPERVISIONE.md` | CP2 e CP6 erano marcati sul task che il checkpoint **segue** (T-008, T-035): con il blocco meccanico dei task CPn il loop non li avrebbe mai avviati | Corretto: marcatori spostati sui task successivi (T-009, T-010); il checkpoint che segue un task è scritto nel testo del task |
+| 23 | FUNZ §14.6 vs MECC §18 (e MECC §18 al proprio interno) | Il riepilogo dell'Audio Flash-Trivia «con punteggio ed elenco delle sbagliate» (FUNZ §14.6 e paragrafo «Fine della pratica» di MECC §18) contro «Nessun punteggio», risultato = ascoltate/totali (tabella e paragrafo Trivia di MECC §18; MECC §20 e FUNZ §17.4 contano le playlist ascoltate) | D-TRIVIA-1: prevale il paragrafo specifico; riepilogo con ascoltate/totali e le due azioni, senza punteggio né sbagliate |
+| 24 | FORMATO §0 vs FORMATO §2–§3 | §0 dichiara `course-data.js` «risultato atteso della lettura» di M0/M1, ma il fixture si discosta dalle regole in quattro campi: intestazione «Teoria (Fondamenta)» (§3 mostra «Fondamenta»), «· mini-modulo» preso dalla parentesi della finestra di M1 (§2 la rimuove), intro ridotta al primo paragrafo più la riga guida degli obiettivi (§2 conserva i paragrafi introduttivi), link del test di fit ridotti al titolo | D-PARSE-2 estesa: vincono le regole esplicite; le quattro differenze sono annotate nel confronto `scripts/corso-esempio.test.mjs` (T-000); tutto il resto coincide |
 
 ## 7. Informazioni mancanti (non deducibili dalle spec)
 
 | Cosa | Impatto | Gestione |
 |---|---|---|
-| Stack tecnologico | Architettura | **Checkpoint 1** — proposta applicata per default (D-STACK-1), modificabile fino a T-006 |
+| Stack tecnologico | Architettura | **Deciso** in T-000 (D-STACK-1, 24/09/2026): React 19 + Vite PWA + Capacitor; veto dell'utente possibile fino a T-006 (CP1) |
 | Servizio di sincronizzazione (backend) | Passo 10 | **Checkpoint 4** — candidata: Supabase (auth email OTP) |
-| Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | Azione utente: `/design` in Claude Code o Export → ZIP in `claude-design/`; poi `npm run design:check` |
+| Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | **Importato e versionato** in `claude-design/` (24/09/2026): `npm run design:check` verde; divergenze design↔spec in `docs/STATO.md` |
 | Identificatori app (bundle id, nome, icona) | Capacitor | Default `com.routforge.app` / "RoutForge" (D-APP-1), modificabile |
 | Modello Gemini "più economico" di default | Impostazioni AI | Letto dalla lista modelli dell'API; ripiego al nome noto più economico |
 | Sorgente dell'istante di `updatedAt` per «ultimo vince» (orologio del dispositivo o del servizio) | Passo 10 | **Checkpoint 4** — D-SYNC-1 |

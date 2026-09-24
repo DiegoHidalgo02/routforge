@@ -7,7 +7,7 @@ paths:
 - Implementa le porte di `src/app/ports/`; importa da `app` (solo le porte) e da `domain`; mai da `ui` o `data` (INV-1).
 - Nessuna regola di business: un adapter traduce una chiamata di porta in una chiamata di plugin o di API del browser,
   e basta.
-- Ogni porta ha almeno un adapter web e uno nativo (Capacitor, se D-STACK-1 lo conferma); il web degrada senza errori
+- Ogni porta ha almeno un adapter web e uno nativo (Capacitor, D-STACK-1); il web degrada senza errori
   dove la capacità manca: notifiche solo a scheda aperta, niente sveglie, niente Non Disturbare
   (`docs/02_ARCHITETTURA.md` §6).
 - Un adapter non lancia eccezioni verso i servizi: registra l'errore per la Diagnostica e restituisce un esito

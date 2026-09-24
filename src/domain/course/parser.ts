@@ -7,8 +7,11 @@
  *
  * Decisione D-PARSE-1: senza file struttura il titolo è quello passato dal chiamante (chiesto
  * all'utente) o "Corso importato" — FORMATO_CORSO §1 prevale su MECC §16 ("primo H1 dei moduli").
- * Decisione D-PARSE-2: l'intestazione di sezione "Teoria (Fondamenta)" → "Fondamenta" (FORMATO §3, esempio);
- * in tutti gli altri casi è il testo dopo emoji e numero, verbatim.
+ * Decisione D-PARSE-2: l'intestazione di sezione "Teoria (Fondamenta)", "Studio (Visualizzazione)",
+ * "Pratica (Testing & Debugging)" → il contenuto della parentesi (FORMATO §3, esempio «Fondamenta»); in tutti gli
+ * altri casi è il testo dopo emoji e numero, verbatim (il mini progetto conserva «Mini Progetto Finale:»). Dove il
+ * fixture del design (course-data.js) si discosta da FORMATO §2–§3 vincono le regole: finestra senza parentesi,
+ * intro con tutti i paragrafi e il grassetto, test di fit con i link (confronto in scripts/corso-esempio.test.mjs).
  */
 import type { StatoUnita, StatoModulo } from '../types';
 import { statiModuli } from '../pointer';
@@ -158,6 +161,8 @@ const SECTION_ORDER: TipoSezione[] = ['teoria', 'studio', 'pratica', 'progetto']
 export const fileNameOf = (path: string): string => path.split(/[\\/]/).pop() ?? path;
 export const stripBold = (s: string): string => s.replace(/\*\*(.+?)\*\*/g, '$1').trim();
 const num = (s: string): number => Number(s.replace(',', '.'));
+/** Riga separatrice `---` (FORMATO §2–§3): chiude un blocco, non è mai contenuto. */
+const isSeparator = (line: string): boolean => /^---+\s*$/.test(line);
 
 /** Host di un URL http(s) senza `www.` (FORMATO §3). Regex e non `URL`: il dominio non usa API di piattaforma. */
 export function hostOf(url: string): string {
@@ -207,7 +212,7 @@ function splitBoldBlocks(lines: string[]): RawBlock[] {
   const blocks: RawBlock[] = [];
   let current: RawBlock | null = null;
   for (const line of lines) {
-    if (/^---+\s*$/.test(line)) {
+    if (isSeparator(line)) {
       current = null;
       continue;
     }
@@ -436,7 +441,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       else if (key === 'prerequisiti') fields.prerequisiti = value;
       else if (key === 'finestra indicativa') fields.finestra = value.replace(/\s*\([^)]*\)/g, '').trim();
       else fields.trasversali = value;
-    } else if (line.trim() !== '' && !/^---+\s*$/.test(line)) intro.push(line);
+    } else if (line.trim() !== '' && !isSeparator(line)) intro.push(line);
   }
   if (!fields.tipo) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Tipo" mancante` });
   if (!fields.prerequisiti) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Prerequisiti" mancante` });
@@ -460,7 +465,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
         .map(stripBold);
     } else if (/Test di fit/i.test(heading)) {
       const testo = chunk.lines
-        .filter((l) => l.trim() !== '')
+        .filter((l) => l.trim() !== '' && !isSeparator(l))
         .map(stripBold)
         .join('\n')
         .trim();
@@ -469,7 +474,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       verification = parseVerification(chunk.lines);
     } else if (/^Riassunto/i.test(heading)) {
       riassunto = chunk.lines
-        .filter((l) => l.trim() !== '' && !/^---+\s*$/.test(l))
+        .filter((l) => l.trim() !== '' && !isSeparator(l))
         .map(stripBold)
         .join('\n')
         .trim();

@@ -6,8 +6,8 @@
 
 1. In Claude Code, dentro il repo: `/design` → importa il progetto RoutForge (oppure, su claude.ai/design: Export → "Handoff to Claude Code" → "Send to local coding agent", o "Download as .zip" da scompattare in `claude-design/`).
 2. `npm run design:check` deve elencare **0 file mancanti** (vedi `claude-design/README.md` per l'elenco atteso).
-3. I file `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` dell'export sono il **corso di esempio** (FORMATO_CORSO §5): vanno copiati in `src/data/sample-course/` (T-005).
-4. `claude-design/design/course-data.js` è il risultato atteso del parser su M0+M1 (FORMATO_CORSO §0): diventa il fixture di riferimento di T-002.
+3. I file `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` dell'export sono il **corso di esempio** (FORMATO_CORSO §5, D-SAMPLE-1): copiati in `src/data/sample-course/` in T-000 (copia verificata dal gate, INV-19); T-005 li carica nell'app.
+4. `claude-design/design/course-data.js` è il risultato atteso del parser su M0+M1 (FORMATO_CORSO §0): confrontato in T-000 (`scripts/corso-esempio.test.mjs`, nel gate); coincide a meno di quattro differenze annotate, dove vincono le regole di FORMATO §2–§3 (D-PARSE-2).
 
 ## 1. Inventario delle schermate
 
@@ -16,14 +16,14 @@ Nomenclatura dell'export: `S<n> <Nome> Desktop|Mobile|Panel.dc.html` (Panel = pa
 
 | Schermata (design) | Sezione app | Spec di comportamento | Route | Contenuto obbligatorio |
 |---|---|---|---|---|
-| S20 Shell Desktop/Mobile | Navigazione | FUNZ §1 | — | Sezioni Oggi · +Crea · Statistiche · Profilo; dal logo utente: Notifiche (badge esiti pendenti), Diagnostica; nessuna schermata di benvenuto |
+| S20 Shell Desktop/Mobile | Navigazione | FUNZ §1 | — | Sezioni Oggi · +Crea · Statistiche · Profilo. Su mobile Profilo = menu dal logo utente (Corsi · Esiti da registrare con badge · Account e sincronizzazione · Impostazioni) e schermata S10; su desktop sidebar 240. Dal logo utente si raggiungono anche Notifiche (= «Esiti da registrare») e **Diagnostica** (FUNZ §1; assente nel menu dei mock: divergenza 16 in `docs/STATO.md`), che sta anche dentro Impostazioni (S22, FUNZ §23). Nessuna schermata di benvenuto; nessuna ricerca («Cerca ⌘K» dei mock non è in spec); nessun nome utente («Ciao», solo email) |
 | S1 Oggi Desktop/Mobile, 01 Oggi | Oggi | FUNZ §2, MECC §14, §15, §24 | `/` | Saluto «Ciao» → data dopo pochi secondi; segmentato Giorno·Settimana (mobile) / Giorno·Settimana·Mese (desktop); fascia senza orario in cima per priorità; blocchi cronologici; blocco Adesso/prossimo con stato; trascinamento solo todo senza orario (maniglia a sei punti); messaggio ritorno dopo assenza |
 | 10 Mese PDF Widget | Oggi (Mese), PDF, Widget | FUNZ §2, §10, §18 | `/?vista=mese` | Griglia mese con puntini dei tipi; su desktop elenco del giorno a lato; stato vuoto; visualizzatore PDF; widget Android |
 | S4 Crea Desktop/Mobile/Panel, 02 Crea | + Crea | FUNZ §3, MECC §2 | `/crea` | Quattro tipi nella stessa schermata; campi per tipo (tabella MECC §2); gradini di durata; orizzonte; priorità solo senza orario; checklist (todo); fasi (routine/evento); promemoria Auto/Off/Personalizzato con sveglie ≤ 7 h; senza orario → solo digest |
 | S5 Dettaglio Desktop/Mobile/Panel, 03 Dettaglio | Dettaglio attività | FUNZ §4–§6, MECC §3–§5 | `/attivita/:id` | Modifica/elimina/completa; spunta todo sempre; routine Fatta/Saltata solo nel giorno; revisione fasi a inversione (tocchi solo le non fatte + Conferma); follow-up per fasi saltate degli eventi; "Completa evento"; "Registra esito" e "Anticipa sessione" per lo studio; stato `concluso` per eventi passati |
 | S10 Corsi Desktop/Mobile, S11 Corso Panel, S11 Modulo Panel, 04 Corsi | Profilo → Corsi | FUNZ §9, FORMATO_CORSO §4 | `/corsi`, `/corsi/:id`, `/moduli/:id` | Import ZIP / corso di esempio con avvisi (max 5); percentuale unità completate e tempo dedicato; moduli con stato bloccato/aperto/passato, finestra indicativa, trasversali; criteri Go/No-Go (manuali e auto); progetto del modulo |
 | S12 Unità Panel | Unità | FUNZ §9.2, §10, §14; FORMATO §3 | `/unita/:id` | Concetto core (titolo + testo); 4 sezioni Teoria·Studio·Pratica·Mini progetto con risorse e descrizioni; VideoCard dal primo YouTube della sezione Studio; materiali tuoi (link/nota/PDF); file di codice (solo albero); "Inizia sessione" / ripasso / riprendi; genera quiz/flashcard/DevSwipe/Bug Hunter/Trivia; pratiche recenti |
-| S13 Extra Mobile/Panel | Contenuti extra dell'unità (da verificare all'import: materiali personali, file di codice, pratiche recenti) | FUNZ §10, §14.6 | — | Vedi S12; se S13 mostra un contenuto non previsto dalle spec, annotare la divergenza |
+| S13 Extra Mobile/Panel | Vista Mese (mobile), visualizzatore PDF, widget Android: sono i pannelli montati dalla tavola «10 Mese PDF Widget» (riga sopra), non contenuti extra dell'unità | FUNZ §2, §10; MECC §17, §21 | vedi tavola 10 | Mese: elenco ↔ mese dal bottone in testa, elenco del giorno scelto. PDF: testata (nome, unità, dimensione, pagine), «testo estratto» o «scansionato · passivo», apertura esterna. Widget 4×2 (MECC §21): sessione attiva, blocco adesso/prossimo, agenda di oggi (max 6 + «+N»), fino a 3 todo alta priorità senza orario, giorni del mese con carico, carte da ripassare, «+» → Crea (il mock mostra solo mese, agenda, prossimo blocco e «+»: divergenza 17 in `docs/STATO.md`) |
 | S15 Sessione Desktop/Mobile/Panel, 05 Sessione | Sessione di studio | FUNZ §11, MECC §10 | `/sessione/setup`, `/sessione` | Setup (cosa/quanto/modalità/iperfocus); timer con schede Materiale·AI·Note; pausa/ripresa; interruzioni; segmenti pomodoro; cambio unità; badge «Tempo extra +04:12»; iperfocus a schermo intero con ora di sblocco e conferma «Esci comunque/Resta»; banner "sessione in corso" nel resto dell'app; riepilogo con i quattro esiti, confidenza 1–5, nota, "conta nel piano", upload codice |
 | S8 Sveglia Mobile | Sveglia a schermo intero | FUNZ §7.2, MECC §13.1–13.2 | overlay nativo | Ora, titolo, orario e tipo del blocco; azioni del trigger (Inizia / Segna fatto / Registra esito / Apri il blocco) + Posticipa 10' |
 | S19 AI Desktop/Mobile/Panel, 06 AI e pratica | Assistente e pratica | FUNZ §14–§16, MECC §18–§19 | `/ai`, `/pratica/:id` | Chat globale e contestuale (unità/modulo/corso) in streaming interrompibile, con citazioni TEORIA/CODICE/NOTA/LINK/PDF; elenco conversazioni raggruppato per età con ambito, n. messaggi, data e stato vuoto; generazione 5–25 + difficoltà; quiz (4 opzioni, punteggio, %); flashcard con 4 bottoni e prossima scadenza accanto; DevSwipe a una mano (swipe dx/sx, vibrazione, spiegazione 2 righe); Bug Hunter (tocca la riga, 2 tentativi); Audio Flash-Trivia (play/pausa/salta/stop); riepilogo finale con «Rifai la pratica» / «Torna all'unità»; errori AI leggibili (chiave assente, quota, rete) |
@@ -50,6 +50,15 @@ Da mappare uno a uno all'import, con questi contratti minimi:
 | `CartaSwipe`, `BugHunterCodice`, `PlayerTrivia` | vedi FUNZ §14.3–§14.5 |
 | `Heatmap84`, `Indicatore`, `Barre` | statistiche |
 | `StatoVuoto` | settimana/mese/conversazioni/pratiche |
+
+**Mappa al design (verificata in T-000).** Nel catalogo `RoutForge Design System.dc.html`: Button, IconButton, Chip,
+Card (card attività = `CardAttivita`), StatCard, Sheet, HeaderRoot/HeaderDetail, BottomNav, Field · Select · Toggle ·
+Selezione (= `Segmentato`), NowBlock (= `BloccoAdesso`), DayLabel, Timeline, Archivio completate, WeekStrip · MonthGrid,
+SessionShell, CreateSheet (= `FormCrea`), Celebration. Solo nelle schermate, non nel catalogo: `Checklist` e
+`RevisioneFasi` (S5), `Timer` e `SheetEsito` (S15), `Flashcard`, `CartaSwipe`, `BugHunterCodice`, `PlayerTrivia` (S19),
+`Heatmap84`, `Indicatore`, `Barre` (S20 Statistiche), `StatoVuoto` (pattern di DESIGN.md §6, in S1, S10, S19, S20, S21).
+**Da creare nel design**: `ChipStato` non esiste come primitivo; lo stato di un blocco è reso da OutcomeRow (S5),
+dall'eyebrow del NowBlock e dalla resa della card (S1, §3 sotto): si implementa così, senza chip.
 
 ## 3. Stati visivi dei blocchi (MECC §1, §24)
 
@@ -95,9 +104,9 @@ Soglie e transizioni (§6–§9), regole del puntatore (§11), calcolo delle not
 
 ## 9. Verifica dell'handoff (da eseguire al Checkpoint 2, dopo l'import)
 
-- [ ] `npm run design:check` → 0 file mancanti
-- [ ] Ogni riga della tabella §1 ha un file di design corrispondente aperto e confrontato
-- [ ] Ogni componente di §2 esiste nel catalogo o è segnato come "da creare nel design"
-- [ ] Divergenze design↔spec elencate in `docs/STATO.md` e risolte a favore della spec
-- [ ] `tokens.css` copiato in `src/ui/styles/` senza modifiche
-- [ ] Prima schermata implementata (S1 Oggi) approvata visivamente dall'utente
+- [x] `npm run design:check` → 0 file mancanti (T-000, 24/09/2026: 46 presenti, 45 attesi)
+- [x] Ogni riga della tabella §1 ha un file di design corrispondente aperto e confrontato (T-000: tutte le 42 schermate, le tavole 01–10 e il catalogo)
+- [x] Ogni componente di §2 esiste nel catalogo o è segnato come "da creare nel design" (mappa in §2)
+- [x] Divergenze design↔spec elencate in `docs/STATO.md` e risolte a favore della spec (17 divergenze + note interne al design, riviste dal `spec-reviewer`; le schermate si implementano secondo le righe di §1)
+- [ ] `tokens.css` copiato in `src/ui/styles/` senza modifiche (T-006)
+- [ ] Prima schermata implementata (S1 Oggi) approvata visivamente dall'utente (CP2, dopo T-008)

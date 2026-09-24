@@ -26,7 +26,9 @@ nella scheda `docs/decisioni/D-STACK-1.md` (scelta, motivi, alternative scartate
 | C. React Native / Expo | Solo se il design richiede widget nativi non realizzabili in WebView (improbabile) |
 | D. Flutter | Solo se A–C falliscono i criteri; costo: riscrivere l'aspetto |
 
-Finché T-000 non è chiuso, il resto di questo documento descrive il **candidato A** e va adattato alla scelta.
+**Deciso in T-000 (24/09/2026): candidato A.** Motivi, alternative e dettagli che discendono dal design (CSS Modules su
+`tokens.css`, `lucide-react`, font locali, `react-router`) in `docs/decisioni/D-STACK-1.md`. Il resto del documento
+descrive lo stack scelto.
 
 ## 1. Strati e regola di dipendenza
 
@@ -36,14 +38,15 @@ src/
 │                practice, pointer, lost, nowBlock, course/parser. In arrivo: scheduler/ (occurrences, horizon, cycles),
 │                notifications/ (desiredSet, quietHours, digest), session/ (timer, outcome), stats, sync/ (merge).
 │                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
-├── data/        Persistenza locale (candidato A: Dexie/IndexedDB): schema, repository, migrazioni. Nessuna regola di business.
+├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.
+│                Già presente: sample-course/ (M0, M1 del corso di esempio, copia dell'export del design: D-SAMPLE-1).
 ├── app/         Servizi: SchedulerService (cicli §9), SessionService (timer §10), NotificationPlanner (§13),
 │                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
 │   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, Alarms, DoNotDisturb, Widget, FileSystem,
 │                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test
-├── ui/          Framework scelto in T-000 (candidato A: React 19): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
+├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
 │                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
-└── platform/    Adapter nativi dietro le porte (candidato A: Capacitor): LocalNotifications, AlarmScreen (full-screen intent),
+└── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
 ```
 
@@ -60,7 +63,7 @@ del runner e in quattro fusi diversi (Rome, Los Angeles, Kolkata a mezz'ora, Auc
 ottobre 2026 (`time.test.ts`). Il fuso del processo resta un globale implicito: il dominio è puro rispetto all'orologio,
 non rispetto al fuso (D-TIME-1; al cambio di fuso vale l'ora locale di parete e i blocchi futuri si riancorano, D-TIME-2).
 
-## 3. Modello di persistenza (T-004 — candidato A: Dexie)
+## 3. Modello di persistenza (T-004 — Dexie, D-DATA-1 confermata in T-000)
 
 Tabelle Dexie (una per entità di MECC §1); campi comuni: `id` (UUID v4), `createdAt`, `updatedAt`, `deletedAt|null`.
 Nomi di tabelle e campi in italiano come nel dominio (D-NAMING-1).
@@ -108,8 +111,12 @@ resta fuori dal dominio.
 - Stato: store leggero (Zustand o `useSyncExternalStore` su Dexie live queries) — deciso in T-006.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
 - Nessun colore/spaziatura fuori da `claude-design/design/tokens.css`.
+- Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `src/ui/styles/tokens.css`
+  (copia di `claude-design/design/tokens.css`), niente Tailwind né stili inline con valori; icone `lucide-react` (tratto
+  1.75); font Manrope e IBM Plex Mono locali (`@fontsource`); rotte con `react-router`. Le schermate dei mock si
+  ricreano come componenti: Panel + cornice mobile/desktop, come nell'export.
 
-## 6. Piattaforma (candidato A: Capacitor)
+## 6. Piattaforma (Capacitor, D-STACK-1)
 
 | Capacità | Web | Android | iOS | Note |
 |---|---|---|---|---|
@@ -121,17 +128,18 @@ resta fuori dal dominio.
 | TTS (Trivia) | Web Speech API | `@capacitor-community/text-to-speech` | idem | §18 |
 | Schermo acceso | Wake Lock API | plugin keep-awake | idem | §10.4 |
 
-## 7. Comandi di scaffold per T-006 (candidato A; da adattare alla decisione di T-000)
+## 7. Comandi di scaffold per T-006 (stack deciso in T-000, D-STACK-1)
 
 ```bash
 npm create vite@latest . -- --template react-ts        # nel repo esistente (mantieni package.json esistente: fondi gli script)
-npm i react react-dom
-npm i -D @vitejs/plugin-react vite vite-plugin-pwa @types/react @types/react-dom
+npm i react react-dom react-router lucide-react @fontsource/manrope @fontsource/ibm-plex-mono
+npm i -D @vitejs/plugin-react vite vite-plugin-pwa @types/react @types/react-dom jsdom
+npm i -D eslint-plugin-react-hooks eslint-plugin-jsx-a11y
 npm i @capacitor/core @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
 npm i dexie
 npx cap add android            # richiede Android Studio (Checkpoint 3); iOS richiede un Mac
-cp claude-design/design/tokens.css src/ui/styles/tokens.css
+cp claude-design/design/tokens.css src/ui/styles/tokens.css   # senza modifiche (INV: nessun valore fuori dai token)
 ```
 Ogni pacchetto è già «previsto» in `docs/DIPENDENZE.md`: all'installazione la riga passa a `dev`/`runtime`.
 Il gate resta `npm run verify`; ai test di dominio si aggiungono test dei servizi (adapter finti) e, per la UI,
@@ -152,6 +160,7 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 | Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`), mostrarne lo stato in Diagnostica, ricordare il backup | T-004, T-006, T-032 |
 | Gate eseguito a ogni fine turno (hook Stop) più lento man mano che crescono i test (UI in particolare) | loop agentico | quando `npm run verify` supera ~60 s, separare `verify` (dominio + unità + regole) da `verify:completo` (UI) e usare il primo nell'hook | quando serve |
 | Lib `DOM` visibile al dominio | purezza del dominio | **risolto** (D-TS-1): la radice compila con `ES2022`; `ui` e `platform` avranno il proprio `tsconfig` in T-006 | fatto |
+| Font caricati da Google Fonts nei mock del design | offline (CONTESTO §3), privacy | font impacchettati in locale con `@fontsource` (D-STACK-1); nessuna richiesta di rete per l'aspetto | T-006 |
 
 ## 9. Invarianti e verifiche automatiche
 

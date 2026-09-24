@@ -10,6 +10,9 @@ paths:
   `docs/STATO.md` (`docs/03_HANDOFF_DESIGN_CODE.md`).
 - Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata di
   `claude-design/design/tokens.css`); nessun valore hardcoded.
+- Stack (D-STACK-1): React 19 + Vite; componenti `.tsx` con CSS Modules che usano solo `var(--…)`; niente Tailwind né
+  stili inline con valori (i mock li hanno solo per l'anteprima); icone da `lucide-react` (tratto 1.75); font locali
+  (`@fontsource`); rotte con `react-router`. Ogni schermata si ricrea come Panel + cornice mobile/desktop, come nell'export.
 - Ogni testo visibile è una chiave i18n nelle sei lingue (FUNZ §22), notifiche incluse; i valori del dominio
   (`in_corso`) non si mostrano mai direttamente.
 - Riduzione animazioni e scala del testo di sistema sempre rispettate; nessun numero di versione in nessuna

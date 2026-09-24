@@ -7,7 +7,7 @@
 | ID | Quando | Cosa decide l'utente | Default se non risponde |
 |---|---|---|---|
 | **CP0 Tempo** | **Deciso il 24/09/2026** | Ora locale di parete: al cambio di fuso le attività future restano alla stessa ora e si riancorano (D-TIME-2, `docs/decisioni/D-TIME-2.md`). Marcatori tolti da T-004 e T-011 | — |
-| **CP1 Stack** (informativo) | Alla chiusura di T-000 (dopo l'import del design) | Nulla da approvare: lo stack lo sceglie l'agente e lo motiva in `docs/01_DECISIONI.md` (D-STACK-1). L'utente legge la decisione in `docs/STATO.md` e può porre il veto prima di T-006 | La decisione dell'agente vale |
+| **CP1 Stack** (informativo) | **Decisione scritta il 24/09/2026** alla chiusura di T-000: candidato A (React 19 + Vite PWA + Capacitor), `docs/decisioni/D-STACK-1.md` | Nulla da approvare: l'utente legge la decisione in `docs/STATO.md` e può porre il veto prima di T-006 | La decisione dell'agente vale |
 | **CP2 Prima schermata** | Dopo T-008 (Oggi) | Approvazione visiva rispetto a S1 Oggi (mobile+desktop) e divergenze design↔spec | Non si passa oltre finché non approvata |
 | **CP3 Nativo** | Prima di T-021 (notifiche native/sveglie) e T-023 (widget) | Android Studio installato? Dispositivo di test? iOS rinviato (serve un Mac)? | Solo Android; iOS rinviato |
 | **CP4 Sync** | Prima di T-033 | Backend (Supabase o altro), progetto/chiavi, cifratura della chiave Gemini, sorgente dell'orologio per `updatedAt` (D-SYNC-1), chiave Gemini nel file di backup (D-BACKUP-1) | Nessun default: senza risposta il passo 10 resta fermo |
