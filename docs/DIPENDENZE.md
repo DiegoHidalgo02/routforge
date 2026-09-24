@@ -31,7 +31,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `react-router` | prevista | `src/ui`, T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
 | `lucide-react` | prevista | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
 | `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | prevista | `src/ui`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
-| `jsdom` | prevista | dev, test UI, T-006 | ambiente DOM per Vitest, solo nei test che uno scenario richiede (es. G3) | D-STACK-1 |
+| `jsdom` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | ambiente DOM per Vitest | D-STACK-1 |
 | `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | prevista | dev, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3) | D-LINT-1, D-STACK-1 |
 | `@capacitor/core`, `@capacitor/cli`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-006 e T-021 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |

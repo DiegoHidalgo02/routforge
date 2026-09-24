@@ -133,7 +133,7 @@ resta fuori dal dominio.
 ```bash
 npm create vite@latest . -- --template react-ts        # nel repo esistente (mantieni package.json esistente: fondi gli script)
 npm i react react-dom react-router lucide-react @fontsource/manrope @fontsource/ibm-plex-mono
-npm i -D @vitejs/plugin-react vite vite-plugin-pwa @types/react @types/react-dom jsdom
+npm i -D @vitejs/plugin-react vite vite-plugin-pwa @types/react @types/react-dom
 npm i -D eslint-plugin-react-hooks eslint-plugin-jsx-a11y
 npm i @capacitor/core @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
@@ -153,7 +153,7 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 | Comportamento al cambio di fuso (D-TIME-2) | schema dati, generazione occorrenze, sync fra dispositivi in fusi diversi | **deciso**: ora locale di parete; campi ora di parete e fuso (T-004), riancoraggio delle occorrenze (T-011) come passo del ciclo prima dell'estensione (T-013), sync con ora di parete (T-033) | T-004, T-011, T-013, T-033 |
 | Orologi dei dispositivi e «ultimo vince» (MECC §25) | sync: `updatedAt` dal dispositivo; due orologi sfasati invertono l'esito di un conflitto | sorgente dell'istante decisa al **CP4** (D-SYNC-1); test di fusione con orologi sfasati in T-033 | prima di T-033 |
 | Chiave AI nella sync (MECC §25) e nel backup (MECC §22 + §1) | privacy dell'utente | cifratura lato client per la sync (D-SYNC-1); esclusione o cifratura nel backup (D-BACKUP-1) | CP4, prima di T-030 e T-033 |
-| Numeri di modulo/unità duplicati nello ZIP | id del parser in collisione | decisione D-PARSE-3 e test | prima di T-003 |
+| Numeri di modulo/unità duplicati nello ZIP | id del parser in collisione | **deciso** (D-PARSE-3, T-003): duplicato saltato con avviso, test nel parser | fatto |
 | Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | hash → intero a 32 bit, gestione collisioni, test dedicato | T-019 |
 | Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la riconciliazione all'avvio (ciclo §9) le ricrea; la Diagnostica mostra lo stato del permesso | T-019, T-021 |
 | Doze (Android): le notifiche `allowWhileIdle` possono scattare al massimo una volta ogni 9 minuti per app | trigger ravvicinati (pre, inizio, verifica) | test su dispositivo con Doze; per le sveglie usare le API di allarme esatto | T-021 |

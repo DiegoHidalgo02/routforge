@@ -77,8 +77,8 @@ Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19
 
 ## Conseguenze
 
-- `docs/DIPENDENZE.md`: righe «previste» confermate e completate (router, icone, font, `jsdom`, plugin ESLint):
-  entrano in T-006 senza altre decisioni (D-DEP-1).
+- `docs/DIPENDENZE.md`: righe «previste» confermate e completate (router, icone, font, plugin ESLint): entrano in T-006
+  senza altre decisioni (D-DEP-1); `jsdom` e `@testing-library/react` solo con il primo test UI richiesto da uno scenario (G3).
 - `docs/02_ARCHITETTURA.md` §0, §1, §3, §5, §6, §7 e `.claude/rules/ui.md`, `.claude/rules/piattaforma.md` aggiornati.
 - `tsconfig` separato per `ui` e `platform` con lib `DOM` (D-TS-1) in T-006.
 - D-DATA-1 confermata; D-I18N-1 invariata (libreria decisa in T-031).

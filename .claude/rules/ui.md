@@ -7,7 +7,7 @@ paths:
 - Importa da `app` e `domain`; mai da `data` o `platform` (INV-1).
 - Nessuna regola di business nei componenti: stati, soglie e transizioni arrivano dai servizi o dal dominio. Il
   comportamento viene dalle spec, l'aspetto dal design: se divergono vince la spec e la divergenza va in
-  `docs/STATO.md` (`docs/03_HANDOFF_DESIGN_CODE.md`).
+  `docs/03_HANDOFF_DESIGN_CODE.md` §10 (conteggio in `docs/STATO.md`).
 - Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata di
   `claude-design/design/tokens.css`); nessun valore hardcoded.
 - Stack (D-STACK-1): React 19 + Vite; componenti `.tsx` con CSS Modules che usano solo `var(--…)`; niente Tailwind né
