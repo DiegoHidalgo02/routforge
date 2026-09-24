@@ -4,8 +4,8 @@
 
 ## 0. Scelta dello stack (T-000, decide l'agente dopo l'import del design)
 
-Procedura: (1) `/design` → import completo; `npm run design:check` = 0 mancanti; (2) leggere `design/HANDOFF.md`,
-`design/DESIGN.md`, `design/tokens.css`, `design/support.js`, `design/course-data.js` e almeno S1, S4, S15, S20
+Procedura: (1) `/design` → import completo; `npm run design:check` = 0 mancanti; (2) leggere `claude-design/HANDOFF.md`,
+`claude-design/design/DESIGN.md`, `claude-design/design/tokens.css`, `claude-design/support.js`, `claude-design/design/course-data.js` e almeno S1, S4, S15, S20
 mobile+desktop; (3) valutare i candidati con i criteri sotto; (4) scrivere la decisione in `docs/01_DECISIONI.md` e
 nella scheda `docs/decisioni/D-STACK-1.md` (scelta, motivi, alternative scartate) e in `docs/STATO.md`; (5) adattare §3, §6 e §7 di questo documento,
 `docs/DIPENDENZE.md` (righe «previste») e `.claude/rules/ui.md`, `.claude/rules/piattaforma.md`.
@@ -42,7 +42,7 @@ src/
 │   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, Alarms, DoNotDisturb, Widget, FileSystem,
 │                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test
 ├── ui/          Framework scelto in T-000 (candidato A: React 19): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
-│                Impostazioni), componenti, hook. Solo token di `design/tokens.css`.
+│                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
 └── platform/    Adapter nativi dietro le porte (candidato A: Capacitor): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
 ```
@@ -58,7 +58,7 @@ verificabili in isolamento e che ogni ciclo sia idempotente. Un meccanismo puro 
 parametro) si testa con date fisse (`local(2026, 9, 23, 7, 0)`) in qualsiasi fuso orario: in CI la suite gira nel fuso
 del runner e in quattro fusi diversi (Rome, Los Angeles, Kolkata a mezz'ora, Auckland) e attraversa il cambio d'ora di
 ottobre 2026 (`time.test.ts`). Il fuso del processo resta un globale implicito: il dominio è puro rispetto all'orologio,
-non rispetto al fuso (D-TIME-1; il comportamento al cambio di fuso è il CP0, D-TIME-2).
+non rispetto al fuso (D-TIME-1; al cambio di fuso vale l'ora locale di parete e i blocchi futuri si riancorano, D-TIME-2).
 
 ## 3. Modello di persistenza (T-004 — candidato A: Dexie)
 
@@ -68,8 +68,8 @@ Nomi di tabelle e campi in italiano come nel dominio (D-NAMING-1).
 | Tabella | Chiavi/indici principali | Note |
 |---|---|---|
 | `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId`, `moduloId`, `unitaId`, ordine | Albero import; `unita.markdown` integrale (fonte AI) |
-| `ricorrenze` | `corsoId?`, `attiva` | Definizioni routine/studio con fasi (template con id stabili), promemoria, date, date saltate |
-| `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId+inizio` (univoco), `stato`, `tipo`, `corsoId` | Un record per occorrenza; `giornoLocale` calcolato all'inserimento per la vista Giorno in < 0,5 s |
+| `ricorrenze` | `corsoId?`, `attiva` | Definizioni routine/studio con fasi (template con id stabili), promemoria, date, date saltate; orario di parete e fuso di calcolo (D-TIME-2) |
+| `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId+inizio` (univoco), `stato`, `tipo`, `corsoId` | Un record per occorrenza; `giornoLocale` calcolato all'inserimento per la vista Giorno in < 0,5 s; per i blocchi futuri anche orario di parete e fuso, per il riancoraggio (D-TIME-2) |
 | `sessioni` | `avvio`, `bloccoId?` | Focus, pause, segmenti, interruzioni (incl. "iperfocus"), minuti per unità, tipo di chiusura |
 | `logFasi` | chiave occorrenza (`ricorrenzaId+inizio` o `eventoId`) | Riscrittura idempotente (§5) |
 | `mazzi`, `carte` | `unitaId`, `carte.scadenza` | Stato SM-2 per carta (`facilita`, `intervalloGiorni`, `scadenza`, come `StatoCarta` del dominio) |
@@ -107,7 +107,7 @@ resta fuori dal dominio.
   Impostazioni; dettaglio come pannello laterale su desktop (S5 Panel) e schermata su mobile (S5 Mobile).
 - Stato: store leggero (Zustand o `useSyncExternalStore` su Dexie live queries) — deciso in T-006.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
-- Nessun colore/spaziatura fuori da `design/tokens.css`.
+- Nessun colore/spaziatura fuori da `claude-design/design/tokens.css`.
 
 ## 6. Piattaforma (candidato A: Capacitor)
 
@@ -131,7 +131,7 @@ npm i @capacitor/core @capacitor/app @capacitor/local-notifications @capacitor/f
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
 npm i dexie
 npx cap add android            # richiede Android Studio (Checkpoint 3); iOS richiede un Mac
-cp design/tokens.css src/ui/styles/tokens.css
+cp claude-design/design/tokens.css src/ui/styles/tokens.css
 ```
 Ogni pacchetto è già «previsto» in `docs/DIPENDENZE.md`: all'installazione la riga passa a `dev`/`runtime`.
 Il gate resta `npm run verify`; ai test di dominio si aggiungono test dei servizi (adapter finti) e, per la UI,
@@ -142,7 +142,7 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 
 | Rischio | Dove colpisce | Cosa prevedere | Quando |
 |---|---|---|---|
-| Comportamento al cambio di fuso (D-TIME-2) | schema dati, generazione occorrenze, sync fra dispositivi in fusi diversi | decisione al **CP0**; il dominio **esistente** lavora su istanti e resta valido in entrambi i casi, ma T-011 dipende dalla scelta (l'opzione B aggiunge il riancoraggio al cambio di fuso) | prima di T-004 e T-011 |
+| Comportamento al cambio di fuso (D-TIME-2) | schema dati, generazione occorrenze, sync fra dispositivi in fusi diversi | **deciso**: ora locale di parete; campi ora di parete e fuso (T-004), riancoraggio delle occorrenze (T-011) come passo del ciclo prima dell'estensione (T-013), sync con ora di parete (T-033) | T-004, T-011, T-013, T-033 |
 | Orologi dei dispositivi e «ultimo vince» (MECC §25) | sync: `updatedAt` dal dispositivo; due orologi sfasati invertono l'esito di un conflitto | sorgente dell'istante decisa al **CP4** (D-SYNC-1); test di fusione con orologi sfasati in T-033 | prima di T-033 |
 | Chiave AI nella sync (MECC §25) e nel backup (MECC §22 + §1) | privacy dell'utente | cifratura lato client per la sync (D-SYNC-1); esclusione o cifratura nel backup (D-BACKUP-1) | CP4, prima di T-030 e T-033 |
 | Numeri di modulo/unità duplicati nello ZIP | id del parser in collisione | decisione D-PARSE-3 e test | prima di T-003 |

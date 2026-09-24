@@ -1,18 +1,21 @@
-// Verifica che l'export di Claude Design sia presente in design/ (Handoff §0).
+// Verifica che l'export di Claude Design sia presente in claude-design/ (Handoff §0).
 // Esce con codice 1 se manca qualcosa: usato da `npm run design:check`.
+// La cartella del repository si chiama claude-design/ per non confondersi con la sottocartella "design/"
+// interna all'export (tokens.css, DESIGN.md, course-data.js): l'import atterra uno a uno, senza spostare nulla.
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const designDir = join(root, 'design');
+const designDir = join(root, 'claude-design');
+const SOTTOCARTELLA_EXPORT = 'design';
 
-// Elenco atteso (nomi dal progetto di design). Percorsi alternativi ammessi: alla radice di design/
-// oppure in design/design/ e design/spec/ come nell'export.
+// Elenco atteso (nomi dal progetto di design), relativo a claude-design/. Per i tre file della sottocartella
+// interna dell'export è ammessa anche la radice di claude-design/ (export scompattato a mano senza sottocartelle).
 const expected = [
-  ['design/tokens.css', 'tokens.css'],
-  ['design/DESIGN.md', 'DESIGN.md'],
-  ['design/course-data.js', 'course-data.js'],
+  [`${SOTTOCARTELLA_EXPORT}/tokens.css`, 'tokens.css'],
+  [`${SOTTOCARTELLA_EXPORT}/DESIGN.md`, 'DESIGN.md'],
+  [`${SOTTOCARTELLA_EXPORT}/course-data.js`, 'course-data.js'],
   ['HANDOFF.md'],
   ['support.js'],
   ['RoutForge Design System.dc.html'],
@@ -77,11 +80,13 @@ const present = new Set(walk(designDir));
 const found = (rel) => [...present].some((p) => p === rel || p.endsWith('/' + rel));
 
 const missing = expected.filter((alts) => !alts.some(found));
-console.log(`design/: ${present.size} file presenti, ${expected.length} attesi, ${missing.length} file mancanti`);
+console.log(
+  `claude-design/: ${present.size} file presenti, ${expected.length} attesi, ${missing.length} file mancanti`,
+);
 for (const m of missing) console.log('  - ' + m.join('  oppure  '));
 if (missing.length > 0) {
   console.log(
-    "\nImporta il design con /design in Claude Code oppure scompatta l'export in design/ (vedi design/README.md).",
+    "\nImporta il design con /design in Claude Code (destinazione claude-design/) oppure scompatta l'export in claude-design/ (vedi claude-design/README.md).",
   );
   process.exit(1);
 }

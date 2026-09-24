@@ -12,7 +12,7 @@ iOS, web installabile. Un solo utente, dati sul dispositivo, tutto offline trann
 3. `docs/spec/RoutForge_MECCANISMI.md` — regole esatte: stati, soglie, algoritmi
 4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile
 5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (54 scenari): un task è finito solo se i suoi scenari passano
-6. `design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design.
+6. `claude-design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design.
 
 Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e regole in una pagina),
 `docs/01_DECISIONI.md` (registro; schede delle decisioni ad alto impatto in `docs/decisioni/`), `docs/02_ARCHITETTURA.md`,
@@ -39,7 +39,7 @@ Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e 
 src/domain/     meccanismi puri: nessun import da UI, DB, piattaforma. Testabili in isolamento (CONTESTO §3)
 src/data/       persistenza locale (scelta in T-000; candidato Dexie/IndexedDB); ogni record: id UUID, createdAt, updatedAt, deletedAt
 src/app/        servizi che orchestrano dominio + dati: scheduler, sessione, notifiche, puntatore, sync
-src/ui/         schermate e componenti (framework scelto in T-000 dopo l'import del design); SOLO token di design/tokens.css
+src/ui/         schermate e componenti (framework scelto in T-000 dopo l'import del design); SOLO token di claude-design/design/tokens.css
 src/platform/   adapter nativi dietro interfacce (candidato Capacitor: notifiche, sveglie, Non Disturbare, widget, file system, TTS)
 ```
 Regola di dipendenza: `ui → app → data → domain`; `platform` è usato solo da `app` tramite interfacce.
@@ -49,7 +49,7 @@ Tempo: ogni istante è epoch ms; il giorno è quello **locale** (`src/domain/tim
 `domain`: il "now" arriva sempre come parametro (rende tutto testabile). Direzione delle dipendenze e purezza del
 dominio sono **verificate dal gate** (`scripts/architettura.test.mjs`). Le regole specifiche di ogni strato sono in
 `.claude/rules/` (caricate quando leggi o modifichi file corrispondenti: per uno strato ancora vuoto leggile prima di creare il primo file); gli invarianti e la loro verifica in `docs/INVARIANTI.md`.
-Comportamento al cambio di fuso: **CP0**, aperto (`docs/decisioni/D-TIME-2.md`).
+Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-TIME-2.md`): i blocchi futuri si riancorano, il passato resta.
 
 ## 4. Convenzioni
 
@@ -72,7 +72,7 @@ Comportamento al cambio di fuso: **CP0**, aperto (`docs/decisioni/D-TIME-2.md`).
   In Claude Code il comando di progetto è `/gate` (non `/verify`: è già un comando integrato di Claude Code con un altro scopo).
 - `npm test` / `npm run test:watch` — Vitest. `npm run check` — solo `tsc`. `npm run lint` — ESLint.
   `npm run format` — Prettier (nel gate: `format:check`).
-- `npm run design:check` — verifica che l'export del design sia presente in `design/`.
+- `npm run design:check` — verifica che l'export del design sia presente in `claude-design/`.
 
 ## 6. Ciclo di un task (loop agentico, dettagli in `docs/05_LOOP_AGENTICO.md`)
 

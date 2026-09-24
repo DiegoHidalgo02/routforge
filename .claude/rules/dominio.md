@@ -11,6 +11,9 @@ paths:
   TypeScript della radice è `ES2022` senza `DOM` (D-TS-1).
 - Confini di giorno solo con `src/domain/time.ts` (`localDayKey`, `startOfLocalDay`, `endOfLocalDay`,
   `addLocalDays`); nei test le date con `local(y, m, d, h, min)`. Mai costanti a 24 ore per decidere il giorno (D-TIME-1).
+- Le attività pianificate sono definite dall'ora locale di parete (D-TIME-2): gli istanti si generano con il
+  costruttore `Date` locale del processo, che è il fuso corrente del dispositivo, e si conserva l'ora di parete accanto
+  agli istanti; il fuso corrente arriva come dato dalla porta `Clock` di `app`, mai da `Intl` nel dominio.
 - Nomi in italiano come nelle spec per tipi, attributi e valori (`in_corso`, `non_iniziata`); in inglese per file,
   cartelle, funzioni e variabili (`lost.ts`, `scheduler/occurrences.ts`, `assignPointer`) (D-NAMING-1, INV-12).
   Nessun sinonimo di un attributo esistente: prima cerca in `types.ts`.

@@ -1,6 +1,6 @@
 # RoutForge — Guida operativa per Diego
 
-23 settembre 2026 · Diego
+23 settembre 2026, aggiornata il 24 settembre 2026 · Diego
 
 > Copia versionata della guida. La versione viva, modificabile e commentabile, è il documento condiviso
 > "RoutForge — Guida operativa per Diego": https://claude.ai/code/artifact/a0f36568-af5d-4acc-bfe7-90cd8bd8ac7a
@@ -32,7 +32,7 @@ Le fasi da 0 a 5 preparano l'ambiente; da lì in poi si gira nel ciclo della fas
 | 1 Progetto sul PC | una volta | 10 min | tutti i test verdi, repository su GitHub |
 | 2 VS Code | una volta | 10 min | estensioni attive, hook visibili |
 | 3a Pulizia | una volta, poi ogni tanto | 15–30 min | nessun accumulo di altri progetti dentro RoutForge |
-| 3b Plugin e skill | una volta | 15–20 min | plugin e skill installati solo nel progetto |
+| 3b Plugin | una volta | 5 min | plugin dichiarati dal repository e installati alla prima apertura |
 | 4 Import design | una volta (e a ogni modifica del design) | 5–10 min | `design:check` con 0 file mancanti |
 | 5 Task T-000 | una volta | 20–40 min (lo fa l'agente) | stack scelto e motivato |
 | 6 Ciclo di sessione | ogni sessione | 1–3 task a sessione | task chiusi, test verdi, commit |
@@ -47,26 +47,18 @@ Le fasi da 0 a 5 preparano l'ambiente; da lì in poi si gira nel ciclo della fas
 - Blocco con `text` che inizia con `/`: va nel **prompt di Claude Code** (pannello dell'estensione o terminale dopo aver scritto `claude`).
 - **Verifica**: il risultato che devi vedere prima di passare al passo successivo.
 
-## Se hai già avviato il progetto: applica l'aggiornamento del 24/09/2026
+## Stato al 24 settembre 2026 e da dove riprendere
 
-Se hai già un repository RoutForge sul PC (con plugin installati, design importato o `/impeccable init` eseguito), **non riestrarre lo ZIP sopra la cartella**: sovrascriveresti il tuo lavoro. Applica invece i commit nuovi con la patch, che git inserisce sopra i tuoi.
+Il repository è in `C:\Users\hidal\Downloads\routforge\routforge` con la cronologia git. Fatto: fondamenta verificate in due passate (`docs/AUDIT_FOUNDATION.md`), gate `npm run verify` con typecheck, lint, formato e 102 test, CP0 deciso (ora locale di parete, D-TIME-2), plugin dichiarati dal repository, cartella dell'export del design rinominata `claude-design/`, commit `e67b04e` e successivi.
 
-1. Salva `routforge-aggiornamento-2026-09-24.patch` nella cartella Download.
-2. Nel terminale di VS Code, dentro la cartella del progetto:
+Da fare, in ordine:
 
-```powershell
-git status
-git am --3way "$env:USERPROFILE\Downloads\routforge-aggiornamento-2026-09-24.patch"
-npm run verify
-```
+1. **Remote e CI**: Fase 1, passo 6 (`gh repo create …`), poi `git push`. La CI non è mai partita.
+2. **Plugin**: alla prossima apertura di Claude Code conferma l'installazione dei plugin dichiarati (Fase 3b).
+3. **Design**: Fase 4. Il progetto Claude Design contiene 43 file su 45: i due moduli del corso di esempio (`M0-Riattivazione_JavaScript.md`, `M1-Tooling_Moderno.md`) vanno copiati a mano in `claude-design/spec/`.
+4. **T-000** con Fable 5.1 (Fase 5). Nel frattempo, senza il design, l'agente può fare `/task T-011` e poi `/task T-012` con Opus 5.5.
 
-3. Se `git status` mostra file modificati non salvati, prima fai un commit (`git add -A` e `git commit -m "lavoro locale"`), poi applica la patch.
-4. Se `git am` segnala un conflitto: `git am --abort` per tornare com'eri, poi incolla il messaggio in Claude Code chiedendo di risolverlo.
-5. Se il tuo repository non ha la cronologia git di RoutForge (cartella ricreata a mano), usa lo ZIP: estrailo in una cartella temporanea e copia nel progetto `src/`, `scripts/`, `docs/` e `CLAUDE.md`.
-
-**Verifica.** `npm run verify` è verde (88 test con la sola prima passata del 24/09, 102 con la seconda); `git log --oneline -5` mostra in cima i commit dell'audit; esiste `docs/AUDIT_FOUNDATION.md`.
-
-**Dove riprendere.** Se eri arrivato a `/impeccable init` (Fase 4, passo 3): completa la Fase 4, poi la Fase 5 (T-000). Prima di T-004 e T-011 l'agente si fermerà al **CP0** (Fase 7). Controlla anche con `git status` quali file ha creato `/impeccable init`, e salvali con un commit: non erano in `docs/`.
+Checkpoint che restano: CP1 (informativo) e CP2–CP6 (Fase 7).
 
 ## Fase 0 — Prerequisiti sul PC
 
@@ -111,7 +103,7 @@ claude               # al primo avvio: accedi con l'account del piano Max, poi e
 
 ## Fase 1 — Il progetto sul PC
 
-Alla fine di questa fase il repository è in `C:\dev\routforge`, tutti i test passano e c'è una copia privata su GitHub. Usa lo **ZIP più recente** di questa conversazione: include i comandi `/stato` e `/gate`, lo script di pulizia `audit:claude` e i fine riga LF.
+Alla fine di questa fase il repository è sul PC, tutti i test passano e c'è una copia privata su GitHub. Se il repository c'è già (oggi è in `C:\Users\hidal\Downloads\routforge\routforge`, con la cronologia git), salta ai passi 4–6: i passi 1–3 servono solo a un'installazione da zero.
 
 1. Scarica `routforge.zip` nella cartella Download.
 2. Estrailo in una cartella **non sincronizzata** da OneDrive (Desktop e Documenti spesso lo sono): `node_modules` e `.git` contengono migliaia di file.
@@ -186,11 +178,7 @@ Per i subagent non esiste più un comando dedicato: dalla versione 2.1.198 di Cl
 Elenca i subagent di progetto disponibili in questa sessione, con nome e modello. Non modificare nulla.
 ```
 
-Poi, nel terminale, controlla che i tre file si leggano senza errori:
-
-```powershell
-claude plugin validate .claude/agents
-```
+I tre subagent stanno in `.claude/agents/`: se la domanda ne elenca meno di tre, apri i file e controlla il frontmatter (`name`, `description`, `tools`).
 
 9. Scrivi `/` e guarda l'elenco dei comandi, poi fai una domanda di prova:
 
@@ -202,7 +190,7 @@ Qual è il prossimo task secondo docs/STATO.md? Rispondi in una riga, senza modi
 
 - `Ctrl+Shift+B` termina con tutti i test passati e nessun *failed*.
 - `/hooks` elenca un hook **SessionStart** e un hook **Stop**.
-- La domanda sui subagent elenca **spec-reviewer** e **design-checker** (modello ereditato dalla sessione) e **test-writer** (Sonnet); `claude plugin validate .claude/agents` non segnala errori.
+- La domanda sui subagent elenca **spec-reviewer** e **design-checker** (modello ereditato dalla sessione) e **test-writer** (Sonnet).
 - Digitando `/` compaiono i comandi di progetto **/task**, **/gate**, **/scenario**, **/stato**, **/handoff**. (Il gate si chiama `/gate` perché `/verify` è già una skill integrata di Claude Code, con un altro scopo.)
 - La risposta di prova indica **T-000** (import del design e scelta dello stack).
 
@@ -300,88 +288,41 @@ Lo script non tocca mai plugin, impostazioni, CLAUDE.md, server MCP e skill sinc
 - `npm run audit:claude` riporta **nessuno** sotto "Conflitti con RoutForge".
 - Dopo qualche sessione di lavoro, `/skill-doctor` mostra cosa non hai mai usato: è il candidato per la prossima pulizia.
 
-## Fase 3b — Plugin e skill di Claude Code (ambito progetto)
+## Fase 3b — Plugin di Claude Code (dichiarati dal repository)
 
-Il minimo per partire sono **Superpowers** e **Ponytail**; gli altri si aggiungono anche dopo. Ogni comando `/plugin` va inviato come **messaggio separato** nel prompt di Claude Code. Alla domanda sull'ambito scegli sempre **Project**: il plugin viene registrato in `.claude/settings.json` del repository e si attiva solo in RoutForge.
+Dal 24/09/2026 i plugin di RoutForge sono dichiarati in `.claude/settings.json` (`enabledPlugins` e `extraKnownMarketplaces`): **superpowers**, **ponytail**, **claude-council**, **mattpocock-skills** e **impeccable** attivi; **security-guidance** e **frontend-design** spenti in questo progetto. Non devi più installarli uno per uno con ambito Project: la dichiarazione vale per ogni copia del repository.
 
-| Strumento | Priorità | Cosa ti dà nel progetto |
-| --- | --- | --- |
-| Superpowers | subito | brainstorm → piano → esecuzione con TDD per i task grandi |
-| Ponytail | subito | meno codice e meno astrazioni, `/ponytail-review` prima dei commit grandi |
-| claude-council | subito se hai fatto `codex login` | seconda opinione di Codex ai checkpoint |
-| Skill di Pocock (grill-me, git-guardrails) | consigliata | piani interrogati a fondo, blocco dei comandi git distruttivi |
-| Impeccable | prima dello sviluppo della UI | qualità e fedeltà visiva delle schermate |
-| Graphify | opzionale | grafo del progetto interrogabile, meno token per rileggere le spec |
-
-1. **Superpowers** (prompt di Claude Code; all'installazione scegli ambito **Project**):
+1. Apri Claude Code nella cartella del progetto. Se un plugin dichiarato non è ancora installato sul PC, Claude Code propone di installarlo dalla sua marketplace: **conferma**.
+2. Controlla:
 
 ```text
-/plugin install superpowers@claude-plugins-official
+/plugin
 ```
 
-2. **Ponytail** (due messaggi separati; all'installazione scegli ambito **Project**):
-
-```text
-/plugin marketplace add DietrichGebert/ponytail
-```
-
-```text
-/plugin install ponytail@ponytail
-```
-
-3. **claude-council** (tre messaggi separati; all'installazione scegli ambito **Project**; l'ultimo controlla che Codex risponda):
-
-```text
-/plugin marketplace add hex/claude-marketplace
-```
-
-```text
-/plugin install claude-council
-```
+3. Se non hai ancora fatto l'accesso a Codex (Fase 0), fallo ora, poi verifica il council:
 
 ```text
 /claude-council:status
 ```
 
-4. **Skill di Pocock** (terminale di VS Code). Non installare la skill `handoff`: il progetto ha già il suo comando `/handoff`. Senza `-g` le skill restano nel progetto, e `-a claude-code` evita copie per altri agenti; se chiede come installare, su Windows scegli la **copia** invece del collegamento simbolico.
-
-```powershell
-npx skills add mattpocock/skills --skill grill-me --skill git-guardrails-claude-code -a claude-code
-```
-
-5. **Impeccable**: installalo ora, solo per Claude Code e solo in questo progetto; il comando `/impeccable init` lo esegui dopo l'import del design (Fase 4).
-
-```powershell
-npx impeccable install --providers=claude --scope=project
-```
-
-6. **Graphify** (opzionale, richiede pipx dalla Fase 0):
-
-```powershell
-pipx install graphifyy
-graphify install --project
-```
-
-7. Ricarica Claude Code perché carichi i plugin: scrivi `/exit` e riapri il pannello (oppure `Ctrl+Shift+P` → "Developer: Reload Window").
-8. Alcune installazioni aggiungono file al repository. Chiedi all'agente di salvarli:
-
-```text
-Controlla git status e fai un commit dei file aggiunti dall'installazione di plugin e skill, con messaggio "chore: plugin e skill". Non modificare altro.
-```
+4. Impeccable si inizializza **dopo** l'import del design (Fase 4, passo 3). Graphify resta una skill a livello utente (`~/.claude/skills/graphify`), scelta tua: non crea conflitti.
+5. Se i plugin non compaiono subito, ricarica Claude Code: `/exit` e riapri il pannello (oppure `Ctrl+Shift+P` → "Developer: Reload Window").
 
 **Verifica.**
 
-- `/plugin` elenca **superpowers**, **ponytail** e **claude-council** come attivi, con ambito **Project**.
-- `.claude/settings.json` contiene `enabledPlugins` con i tre plugin, e il commit "chore: plugin e skill" li ha salvati.
+- `/plugin` elenca **superpowers**, **ponytail**, **claude-council**, **mattpocock-skills** e **impeccable** come attivi.
 - `/claude-council:status` mostra Codex come disponibile.
-- `npm run audit:claude` non mostra nuove voci a livello utente rispetto alla Fase 3a.
-- `npm run verify` è ancora verde e `git status` è pulito.
+- `npm run audit:claude` non riporta conflitti; `npm run verify` è verde; `git status` è pulito.
 
-Se un comando di installazione non viene riconosciuto, il nome del plugin potrebbe essere cambiato: la sezione 1 di `docs/04_STRUMENTI.md` riporta repository e comandi da ricontrollare.
+Le copie precedenti del repository sul Desktop hanno registrazioni di plugin proprie: non contano per questa cartella.
 
 ## Fase 4 — Import del design da Claude Design
 
-Alla fine di questa fase tutti i 45 file del progetto di design sono nella cartella `design/` e `npm run design:check` segnala 0 mancanti. Questo sblocca il task T-000, dove l'agente sceglie lo stack.
+Alla fine di questa fase tutti i 45 file del progetto di design sono nella cartella `claude-design/` e `npm run design:check` segnala 0 mancanti. Questo sblocca il task T-000, dove l'agente sceglie lo stack. L'export si versiona in git (D-DESIGN-1).
+
+**Perché la cartella si chiama `claude-design/`.** L'export porta con sé una sottocartella `design/` (con `tokens.css`, `DESIGN.md`, `course-data.js`). Per non confonderla con la cartella del repository, quest'ultima si chiama `claude-design/` e riproduce il progetto uno a uno: i percorsi nei documenti sono `claude-design/design/tokens.css`, `claude-design/HANDOFF.md`, `claude-design/S1 Oggi Mobile.dc.html`, `claude-design/spec/M0-….md`.
+
+Il progetto Claude Design «# RoutForge product design» (`https://claude.ai/design/p/8acfd054-2d68-41a6-8623-3f201d476f98`) è già raggiungibile dal tuo PC tramite il server MCP `claude-design`. Al 24/09/2026 contiene **43 dei 45 file** attesi: mancano i due moduli del corso di esempio, `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` (FORMATO_CORSO §5), che vanno copiati a mano in `claude-design/spec/` da dove li hai.
 
 **Via principale: comando `/design`.**
 
@@ -391,50 +332,51 @@ Alla fine di questa fase tutti i 45 file del progetto di design sono nella carte
 /design
 ```
 
-2. Scegli il progetto **RoutForge**. Se chiede una cartella di destinazione, indica `design/`.
+2. Scegli il progetto **# RoutForge product design**. Se chiede una cartella di destinazione, indica `claude-design/`.
 3. Se i file finiscono in un'altra cartella, chiedi all'agente di spostarli:
 
 ```text
-Sposta tutti i file appena importati da Claude Design dentro design/, mantenendo le sottocartelle (design/, spec/). Non modificare il contenuto dei file e non fare commit.
+Sposta tutti i file appena importati da Claude Design dentro claude-design/, mantenendo le sottocartelle dell'export (design/, spec/). Non modificare il contenuto dei file e non fare commit.
 ```
 
-**Via manuale, se `/design` non è disponibile.**
+**Via alternativa: export con un prompt in Claude Design.** Su claude.ai/design apri il progetto, incolla questo prompt nella chat, poi usa Export → «Download as .zip» (o «Handoff to Claude Code» → «Send to local coding agent») e scompatta lo ZIP dentro `claude-design/`:
 
-1. Apri il progetto su claude.ai/design → **Export** → **Download as .zip**.
-2. Estrai lo ZIP dentro `design/`:
+```text
+Prepara l'export di questo progetto per il repository RoutForge. Mantieni esattamente questa struttura e questi nomi di file, senza rinominare nulla:
+- alla radice: HANDOFF.md, support.js, "RoutForge Design System.dc.html", le tappe "01 Oggi.dc.html" … "10 Mese PDF Widget.dc.html" e le schermate S1 Oggi (Desktop, Mobile), S4 Crea (Desktop, Mobile, Panel), S5 Dettaglio (Desktop, Mobile, Panel), S8 Sveglia Mobile, S10 Corsi (Desktop, Mobile), S11 Corso Panel, S11 Modulo Panel, S12 Unità Panel, S13 Extra (Mobile, Panel), S15 Sessione (Desktop, Mobile, Panel), S19 AI (Desktop, Mobile, Panel), S20 Shell (Desktop, Mobile), S20 Statistiche Panel, S21 Notifiche Panel, S22 Impostazioni Panel, tutte con estensione .dc.html;
+- nella sottocartella design/: tokens.css, DESIGN.md, course-data.js;
+- nella sottocartella spec/: M0-Riattivazione_JavaScript.md e M1-Tooling_Moderno.md (il corso di esempio); se non sono nel progetto, dimmelo invece di inventarli.
+Non modificare il contenuto dei file: il repository li usa come fonte per l'aspetto; il comportamento viene dalle specifiche del repository. Al termine elenca i file esportati con la dimensione.
+```
 
 ```powershell
-Expand-Archive -Path "$env:USERPROFILE\Downloads\<nome-export>.zip" -DestinationPath C:\dev\routforge\design
+Expand-Archive -Path "$env:USERPROFILE\Downloads\<nome-export>.zip" -DestinationPath C:\Users\hidal\Downloads\routforge\routforge\claude-design
 ```
 
 **Poi, in entrambi i casi:**
 
-1. Controlla che non manchi nulla:
+1. Copia i due moduli del corso di esempio in `claude-design/spec/`, se l'export non li conteneva.
+2. Controlla che non manchi nulla (lo script cerca i file in tutto `claude-design/`, a qualsiasi profondità):
 
 ```powershell
 npm run design:check
 ```
 
-2. Se il controllo elenca dei file mancanti, confronta i nomi: spesso cambia solo una sottocartella. Lo script cerca i file in tutto `design/`, a qualsiasi profondità.
-3. Esegui l'inizializzazione di Impeccable (Fase 3b, passo 5). Quando chiede il contesto di design, indica `design/DESIGN.md` e `design/tokens.css`.
+3. Inizializza Impeccable. Quando chiede il contesto di design, indica `claude-design/design/DESIGN.md` e `claude-design/design/tokens.css`.
 
 ```text
 /impeccable init
 ```
 
-4. Opzionale, se hai installato Graphify: crea il primo grafo del progetto.
-
-```text
-/graphify .
-```
+4. Opzionale, con Graphify: `/graphify .`.
 
 **Verifica.**
 
 - `npm run design:check` stampa **0 file mancanti**.
-- Esistono `design/tokens.css`, `design/DESIGN.md`, `design/HANDOFF.md` e i due moduli del corso di esempio `M0-Riattivazione_JavaScript.md` e `M1-Tooling_Moderno.md`.
+- Esistono `claude-design/design/tokens.css`, `claude-design/design/DESIGN.md`, `claude-design/HANDOFF.md`, `claude-design/design/course-data.js` e i due moduli `M0…`/`M1…` in `claude-design/spec/`.
 - `git status` mostra i file di design come nuovi: è normale, il commit lo fa l'agente in T-000.
 
-Il design non si modifica mai dal repository. Se cambi qualcosa in Claude Design, rifai l'import con `/design` e chiedi all'agente di riallineare le schermate già costruite.
+Il design non si modifica mai dal repository. Se cambi qualcosa in Claude Design, rifai l'import e chiedi all'agente di riallineare le schermate già costruite.
 
 ## Fase 5 — Primo task: T-000 e scelta dello stack
 
@@ -462,7 +404,7 @@ Seleziona **Claude Fable 5.1** dall'elenco.
 | Installazione di una dipendenza del progetto (`npm install <nome>`) | Consenti se il pacchetto è già «previsto» in `docs/DIPENDENZE.md` (il gate lo verifica); altrimenti chiedi il motivo e la decisione registrata |
 | Cancellazioni fuori dal repo, `git push --force`, `git reset --hard`, lettura di `.env`, installazioni globali | Rifiuta e chiedi perché servono |
 
-4. Mentre lavora non devi fare nulla. L'agente, nell'ordine: controlla i file di design, annota le **divergenze design ↔ spec** in `docs/STATO.md`, esegue il parser sui moduli M0 e M1 e lo confronta con `design/course-data.js`, sceglie lo stack, aggiorna l'architettura e fa il commit.
+4. Mentre lavora non devi fare nulla. L'agente, nell'ordine: controlla i file di design, annota le **divergenze design ↔ spec** in `docs/STATO.md`, esegue il parser sui moduli M0 e M1 e lo confronta con `claude-design/design/course-data.js`, sceglie lo stack, aggiorna l'architettura e fa il commit.
 5. Quando finisce, leggi il suo riassunto di cinque righe. Poi apri questi due punti:
     - `docs/STATO.md` → sezioni "Fatto", "Divergenze design ↔ spec" e "Checkpoint in attesa";
     - `docs/01_DECISIONI.md` → riga **D-STACK-1** (scelta, motivi, alternative scartate).
@@ -503,7 +445,7 @@ Ogni sessione chiude da 1 a 3 task con lo stesso schema: apri, `/task next`, leg
 | "Fable 5.1 (piano) → Opus 5.5 (codice)" | prima sessione con **Fable 5.1**: `/task <ID>` scrive il piano in `docs/piani/<ID>.md` e si ferma; poi `/model` → **Opus 5.5** e di nuovo `/task <ID>` per il codice |
 | **R** (rischioso: dati, plugin nativi, sync) | attività **snapshot**: Terminale → Esegui attività… → snapshot |
 | **M** (meccanico) | puoi delegarlo a OpenCode (Fase 8) |
-| **CPn** (checkpoint prima di iniziare) | vai alla Fase 7 |
+| **CPn** (checkpoint prima di iniziare) | vai alla Fase 7; finché il marcatore resta sulla riga, `/task` e il loop si fermano da soli |
 
 Fable 5.1 serve solo per T-000 e per i piani di T-013, T-019 e T-033: consuma più in fretta i limiti settimanali. Se il gate resta rosso dopo due tentativi, sali di un gradino: Haiku → Sonnet → Opus 5.5 → Opus 5.5 con sforzo più alto (lo scegli dal selettore `/model`) → Fable 5.1. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
 
@@ -548,7 +490,7 @@ In alternativa: Terminale → Esegui attività… → **loop agentico (3 task)**
 
 ## Fase 7 — I checkpoint
 
-In tutto il progetto l'agente si ferma per te sette volte, più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, toglie il marcatore **CPn** dalle righe dei task in `docs/TASKS.md` (finché resta, il loop non avvia quei task), cancella la riga e riprende.
+In tutto il progetto l'agente si ferma per te sei volte (il CP0 è già deciso), più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, toglie il marcatore **CPn** dalle righe dei task in `docs/TASKS.md` (finché resta, il loop non avvia quei task), cancella la riga e riprende.
 
 **Procedura, uguale per tutti.**
 
@@ -562,9 +504,9 @@ CP3: ho Android Studio installato e un telefono Android con debug USB attivo. iO
 
 | Checkpoint | Quando | Cosa prepari | Cosa rispondi |
 | --- | --- | --- | --- |
-| **CP0 Tempo** | prima di T-004 e T-011 | leggi D-TIME-2 in `docs/01_DECISIONI.md` | "CP0: istante assoluto" (in viaggio una routine delle 07:00 si sposta con il fuso) oppure "CP0: ora locale" (resta alle 07:00 ovunque) |
+| **CP0 Tempo** | **deciso il 24/09/2026**: ora locale di parete (in viaggio una routine delle 07:00 resta alle 07:00) | — | nulla: l'agente lo realizza in T-004, T-011, T-013, T-019, T-033 (`docs/decisioni/D-TIME-2.md`) |
 | **CP1 Stack** (informativo) | fine di T-000 | leggi D-STACK-1 in `docs/01_DECISIONI.md` | nulla se sei d'accordo; il veto (Fase 5, passo 6) entro T-006 |
-| **CP2 Prima schermata** | dopo T-008 (schermata Oggi) | avvia l'app con il comando indicato in `docs/STATO.md` (di solito `npm run dev`); aprila nel browser; `F12` poi `Ctrl+Shift+M` per la vista mobile; confrontala con `S1 Oggi Mobile` e `S1 Oggi Desktop` in `design/` | "CP2: approvata" oppure l'elenco delle differenze; puoi chiedere prima un controllo al subagent **design-checker** |
+| **CP2 Prima schermata** | dopo T-008 (schermata Oggi) | avvia l'app con il comando indicato in `docs/STATO.md` (di solito `npm run dev`); aprila nel browser; `F12` poi `Ctrl+Shift+M` per la vista mobile; confrontala con `S1 Oggi Mobile` e `S1 Oggi Desktop` in `claude-design/` | "CP2: approvata" oppure l'elenco delle differenze; puoi chiedere prima un controllo al subagent **design-checker** |
 | **CP3 Nativo** | prima di T-021 (notifiche e sveglie) e T-023 (widget) | Android Studio (`winget install Google.AndroidStudio`) con un SDK installato; un telefono Android con Opzioni sviluppatore → Debug USB, oppure un emulatore | cosa hai a disposizione; iOS resta rinviato finché non hai un Mac |
 | **CP4 Sync** | prima di T-033 | scelta del servizio di sincronizzazione (candidato: Supabase, account gratuito); URL e chiave del progetto **solo** in un file `.env.local`, mai nei messaggi | il servizio scelto e se cifrare la chiave Gemini prima della sincronizzazione (consigliato: sì) |
 | **CP5 AI** | prima di T-026 | una chiave Gemini da Google AI Studio, da inserire solo nelle Impostazioni dell'app quando esistono; i test automatici usano risposte simulate | conferma o correggi D-QUIZ-1 (come si considera superato il criterio "Domande socratiche") |
@@ -648,7 +590,7 @@ Quasi tutti i problemi del primo avvio sono di PATH, permessi di PowerShell o ca
 | L'hook Stop dice "Dipendenze non installate" oppure `'tsc' non è riconosciuto` | manca `node_modules` (cartella nuova o pulita) | `npm ci`, poi `npm run verify` |
 | `scripts/loop.sh` compare sempre come modificato in `git status` anche senza toccarlo | bit di esecuzione del file e `core.fileMode` su Windows | `git config core.fileMode false` **prima** di `git add`: l'indice conserva il bit di esecuzione e lo script resta eseguibile su macOS/Linux; se lo hai già aggiunto, `git update-index --chmod=+x scripts/loop.sh` |
 | Il gate è rosso su "format" o "lint" senza che tu abbia cambiato il comportamento | file non formattato o regola ESLint violata | `npm run format`, poi `npm run lint` e leggi il messaggio; in VS Code le estensioni consigliate formattano al salvataggio |
-| `design:check` elenca ancora file mancanti | export incompleto o nomi diversi | chiedi all'agente di confrontare l'elenco atteso con i file presenti e di dirti cosa manca davvero; se serve, riesporta |
+| `design:check` elenca ancora file mancanti | export incompleto o nomi diversi; i due moduli M0/M1 non sono nel progetto Claude Design | copia `M0-Riattivazione_JavaScript.md` e `M1-Tooling_Moderno.md` in `claude-design/spec/`; per il resto chiedi all'agente di confrontare l'elenco atteso con i file presenti; se serve, riesporta |
 | Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Opus 5.5; `/compact`; nel loop usa `-MaxTasks 1` |
 | Codex risponde "quota esaurita" | piano gratuito OpenAI | usa il subagent spec-reviewer e rimanda la revisione di Codex |
 | Un'estensione non si trova in Antigravity | marketplace diverso (Open VSX) | per questo progetto usa VS Code |
@@ -685,16 +627,15 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 - [ ] Skill e plugin di altri progetti spenti in RoutForge; il superfluo archiviato
 - [ ] Nessun conflitto di nome e `/context` più leggero in una nuova sessione
 
-**Fase 3b — Plugin e skill (ambito progetto)**
+**Fase 3b — Plugin (dichiarati dal repository)**
 
-- [ ] Superpowers e Ponytail installati con ambito Project
-- [ ] claude-council installato con ambito Project; `/claude-council:status` vede Codex
-- [ ] Skill grill-me e git-guardrails senza `-g`, Impeccable con `--scope=project`, Graphify se lo vuoi
-- [ ] Commit "chore: plugin e skill" fatto dall'agente
+- [ ] Alla prima apertura di Claude Code, installazione dei plugin dichiarati confermata; `/plugin` elenca superpowers, ponytail, claude-council, mattpocock-skills, impeccable
+- [ ] `codex login` fatto; `/claude-council:status` vede Codex
+- [ ] `npm run audit:claude` senza conflitti
 
 **Fase 4 — Design**
 
-- [ ] Design importato in `design/`; `npm run design:check` → 0 mancanti
+- [ ] Design importato in `claude-design/` (43 file dal progetto) e `M0…`/`M1…` copiati in `claude-design/spec/`; `npm run design:check` → 0 mancanti
 - [ ] `/impeccable init` eseguito; `/graphify .` se usi Graphify
 
 **Fase 5 — T-000**

@@ -2,7 +2,7 @@
 
 Leggi e applica **`CLAUDE.md`**: vale identico per te. In sintesi:
 
-- Fonti di verità: `docs/spec/*` (precedenza: SCENARI > FORMATO_CORSO > MECCANISMI > FUNZIONALITA > CONTESTO); aspetto → `design/`.
+- Fonti di verità: `docs/spec/*` (precedenza: SCENARI > FORMATO_CORSO > MECCANISMI > FUNZIONALITA > CONTESTO); aspetto → `claude-design/`.
 - Non modificare `docs/spec/`. Non inventare requisiti. Ambiguità → decisione annotata in `docs/01_DECISIONI.md`.
 - `src/domain` è puro (niente I/O, niente `Date.now()`): il "now" è sempre un parametro.
 - Claude Code carica le regole di strato in `.claude/rules/*.md` quando legge o modifica file corrispondenti; tu leggile

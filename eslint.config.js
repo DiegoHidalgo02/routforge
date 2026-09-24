@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['node_modules/', 'dist/', 'coverage/', 'design/']),
+  globalIgnores(['node_modules/', 'dist/', 'coverage/', 'claude-design/']),
   js.configs.recommended,
   tseslint.configs.recommended,
   {

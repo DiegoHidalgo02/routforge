@@ -30,10 +30,12 @@ quattro fusi). Una libreria aggiungerebbe una dipendenza senza risolvere il prob
 
 - Nei test le date si costruiscono con `local(y, m, d, h, min)`: mai `Date.UTC`, mai costanti a 24 ore per i confini
   di giorno (le durate in ms, come gli intervalli SM-2, vanno bene).
-- Il fuso del processo è un globale implicito: il dominio è puro rispetto all'orologio, non rispetto al fuso. Per questo
-  la CI esegue la suite in fusi diversi, incluso uno a mezz'ora.
-- Se D-TIME-2 sceglierà l'ora locale di parete, ricorrenze e blocchi dovranno memorizzare anche ora di parete e fuso:
-  schema (T-004) e occorrenze (T-011) dipendono da quella scelta.
+- Il fuso del processo è un globale implicito: il dominio è puro rispetto all'orologio, non rispetto al fuso. Per
+  D-TIME-2 quel fuso è anche il riferimento voluto: le regole usano l'ora locale corrente del dispositivo. La CI esegue
+  la suite in fusi diversi, incluso uno a mezz'ora.
+- D-TIME-2 ha scelto l'ora locale di parete: ricorrenze e blocchi futuri memorizzano anche giorno locale, orario di
+  parete e fuso di calcolo (T-004) e si riancorano al cambio di fuso (T-011, T-013). Gli istanti restano epoch ms e il
+  giorno resta quello locale: questa decisione non cambia.
 
 ## Verifica
 

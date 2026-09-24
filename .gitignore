@@ -11,4 +11,4 @@ coverage/
 Thumbs.db
 # Export del design: i file dell'export (tokens.css, .dc.html, spec/) SI VERSIONANO (D-DESIGN-1);
 # restano fuori solo gli ZIP scaricati da Claude Design
-design/export/*.zip
+claude-design/export/*.zip

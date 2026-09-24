@@ -3,7 +3,7 @@
 node_modules
 dist
 coverage
-design
+claude-design
 docs
 *.md
 package-lock.json

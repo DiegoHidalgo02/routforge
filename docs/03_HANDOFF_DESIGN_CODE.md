@@ -1,13 +1,13 @@
 # RoutForge — Handoff Design → Code
 
-*Ciò che Claude Code deve sapere per costruire l'interfaccia senza perdere informazioni. Due fonti, una regola: **come appare** → export di Claude Design in `design/` (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, `S*.dc.html`); **come si comporta** → spec in `docs/spec/`. Se il design mostra un comportamento diverso dalla spec, vince la spec e la differenza va annotata in `docs/STATO.md` (sezione "Divergenze design") per essere corretta in Claude Design.*
+*Ciò che Claude Code deve sapere per costruire l'interfaccia senza perdere informazioni. Due fonti, una regola: **come appare** → export di Claude Design in `claude-design/` (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, `S*.dc.html`); **come si comporta** → spec in `docs/spec/`. Se il design mostra un comportamento diverso dalla spec, vince la spec e la differenza va annotata in `docs/STATO.md` (sezione "Divergenze design") per essere corretta in Claude Design.*
 
 ## 0. Prerequisito: portare il design nel repo
 
-1. In Claude Code, dentro il repo: `/design` → importa il progetto RoutForge (oppure, su claude.ai/design: Export → "Handoff to Claude Code" → "Send to local coding agent", o "Download as .zip" da scompattare in `design/`).
-2. `npm run design:check` deve elencare **0 file mancanti** (vedi `design/README.md` per l'elenco atteso).
+1. In Claude Code, dentro il repo: `/design` → importa il progetto RoutForge (oppure, su claude.ai/design: Export → "Handoff to Claude Code" → "Send to local coding agent", o "Download as .zip" da scompattare in `claude-design/`).
+2. `npm run design:check` deve elencare **0 file mancanti** (vedi `claude-design/README.md` per l'elenco atteso).
 3. I file `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` dell'export sono il **corso di esempio** (FORMATO_CORSO §5): vanno copiati in `src/data/sample-course/` (T-005).
-4. `design/course-data.js` è il risultato atteso del parser su M0+M1 (FORMATO_CORSO §0): diventa il fixture di riferimento di T-002.
+4. `claude-design/design/course-data.js` è il risultato atteso del parser su M0+M1 (FORMATO_CORSO §0): diventa il fixture di riferimento di T-002.
 
 ## 1. Inventario delle schermate
 
@@ -70,8 +70,8 @@ Da mappare uno a uno all'import, con questi contratti minimi:
 
 ## 5. Regole visive
 
-- `design/tokens.css` è l'**unica** fonte di colori, tipografia, spaziature, raggi, ombre: nessun valore hardcoded in `src/ui`.
-- `design/DESIGN.md` governa gerarchia, densità, iconografia e tono dei testi; i testi visibili sono chiavi i18n nelle sei lingue (FUNZ §22), notifiche incluse.
+- `claude-design/design/tokens.css` è l'**unica** fonte di colori, tipografia, spaziature, raggi, ombre: nessun valore hardcoded in `src/ui`.
+- `claude-design/design/DESIGN.md` governa gerarchia, densità, iconografia e tono dei testi; i testi visibili sono chiavi i18n nelle sei lingue (FUNZ §22), notifiche incluse.
 - Stati vuoti espliciti dove la spec li nomina (settimana, mese, conversazioni).
 - Il numero di versione non compare in nessuna schermata (FUNZ §23).
 

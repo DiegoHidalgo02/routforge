@@ -88,7 +88,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 7 | FUNZ | Rimandi ai paragrafi sfalsati di uno (§8→§7, §10→§9, §12→§11, §13→§12, §16→§15, §23→§8.7) | Cosmetico; spec non modificate |
 | 8 | MECC §25 | La chiave Gemini viene sincronizzata sul servizio remoto | Raccomandazione (non requisito): cifrarla lato client prima dell'invio — decisione al Checkpoint 4 |
 | 9 | CONTESTO §1 | Lo Studio deve poter generalizzare Corso→Modulo→Unità | Il dominio usa `moduloNumero`/`ordine` generici sull'unità; la gerarchia a tre livelli resta il caso di riferimento (D-STUDIO-1) |
-| 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2 **aperta**: decisione al CP0, prima di T-004 e T-011 (`docs/decisioni/D-TIME-2.md`) |
+| 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2: **ora locale di parete**, decisa dall'utente al CP0 il 24/09 (`docs/decisioni/D-TIME-2.md`) |
 | 11 | `CLAUDE.md`, `AUDIT_FOUNDATION.md` §12 | Dichiaravano «45 scenari»; SCENARI ne contiene 54 | Corretto (24/09); `docs/TRACCIABILITA.md` li elenca tutti e il gate verifica la corrispondenza (D-TRACC-1) |
 | 12 | `STATO.md` vs `TASKS.md`, `06_SUPERVISIONE.md` | T-011 e T-012 «possono partire subito», ma T-011 è marcato CP0 | Corretto: attendono il CP0 |
 | 13 | `02_ARCHITETTURA.md` §1, §3 | Parser «in arrivo» sebbene esista; carte con `ease`/`intervalDays`/`dueAt` contro D-NAMING-1 | Corretto: nomi italiani (`facilita`, `intervalloGiorni`, `scadenza`) |
@@ -108,7 +108,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 |---|---|---|
 | Stack tecnologico | Architettura | **Checkpoint 1** — proposta applicata per default (D-STACK-1), modificabile fino a T-006 |
 | Servizio di sincronizzazione (backend) | Passo 10 | **Checkpoint 4** — candidata: Supabase (auth email OTP) |
-| Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | Azione utente: `/design` in Claude Code o Export → ZIP in `design/`; poi `npm run design:check` |
+| Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | Azione utente: `/design` in Claude Code o Export → ZIP in `claude-design/`; poi `npm run design:check` |
 | Identificatori app (bundle id, nome, icona) | Capacitor | Default `com.routforge.app` / "RoutForge" (D-APP-1), modificabile |
 | Modello Gemini "più economico" di default | Impostazioni AI | Letto dalla lista modelli dell'API; ripiego al nome noto più economico |
 | Sorgente dell'istante di `updatedAt` per «ultimo vince» (orologio del dispositivo o del servizio) | Passo 10 | **Checkpoint 4** — D-SYNC-1 |

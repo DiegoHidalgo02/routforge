@@ -9,7 +9,7 @@ paths:
   comportamento viene dalle spec, l'aspetto dal design: se divergono vince la spec e la divergenza va in
   `docs/STATO.md` (`docs/03_HANDOFF_DESIGN_CODE.md`).
 - Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata di
-  `design/tokens.css`); nessun valore hardcoded.
+  `claude-design/design/tokens.css`); nessun valore hardcoded.
 - Ogni testo visibile è una chiave i18n nelle sei lingue (FUNZ §22), notifiche incluse; i valori del dominio
   (`in_corso`) non si mostrano mai direttamente.
 - Riduzione animazioni e scala del testo di sistema sempre rispettate; nessun numero di versione in nessuna

@@ -55,7 +55,7 @@ App personale, un utente, più dispositivi (Android, iOS, web installabile), off
 | `.github/workflows/ci.yml` | `npm ci`, `verify`, test in 3 fusi | Sì |
 | `.vscode/` | estensioni, impostazioni, attività | Sì |
 | `.gitignore`, `.gitattributes`, `.editorconfig` | LF forzato, segreti esclusi | Sì |
-| `design/` | solo `README.md` in questo repository | Atteso: l'export è sul PC dell'utente |
+| `claude-design/` | solo `README.md` in questo repository | Atteso: l'export è sul PC dell'utente |
 
 ## 4. Gap analysis (Fase 4)
 
@@ -117,7 +117,7 @@ Nessuno script errato.
 ```text
 routforge/
 ├── docs/                    spec (sola lettura) + documenti operativi + AUDIT_FOUNDATION.md + piani/
-├── design/                  export di Claude Design (sul PC dell'utente)
+├── claude-design/                  export di Claude Design (sul PC dell'utente)
 ├── src/
 │   ├── domain/              meccanismi puri — vocabolario unico (D-NAMING-1)
 │   │   └── course/          parser del corso (usa statiModuli del puntatore)
@@ -228,5 +228,7 @@ nel repository, così che Fable 5.1 e Opus 5.5 possano continuare il lavoro l'un
 noti (Vitest, `docs/DIPENDENZE.md`). Non eseguibile qui: CI (nessun remote), `design:check` con l'export reale, hook e
 regole in una sessione nuova di Claude Code.
 
-**Aperto dopo questa passata**: CP0 (D-TIME-2); D-BACKUP-1 e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3
-(prima di T-003); plugin con ambito progetto, remote e prima CI, commit di questa passata (azioni dell'utente).
+**Aperto dopo questa passata**: D-BACKUP-1 e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3 (prima di T-003);
+remote e prima CI (utente); import del design in `claude-design/` più i due file M0/M1 del corso di esempio (utente).
+Chiusi il 24/09 stesso: CP0 (ora locale di parete, D-TIME-2), commit della passata (`e67b04e`), plugin dichiarati nel
+repository, lista `permissions.ask` su impostazioni e hook, cartella dell'export rinominata `claude-design/`.

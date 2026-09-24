@@ -11,7 +11,7 @@ Passo 1 di 10 (CONTESTO §6). Foundation verificata e protetta dal gate (`docs/A
 ```bash
 npm ci
 npm run verify          # gate unico: typecheck + lint + formato + test (dominio e regole del repository)
-npm run design:check    # verifica l'export di Claude Design in design/
+npm run design:check    # verifica l'export di Claude Design in claude-design/
 claude                  # Claude Code: poi /task next
 ```
 In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B` esegue il gate.
@@ -25,7 +25,7 @@ In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B`
 - `docs/01_DECISIONI.md` + `docs/decisioni/` — registro delle decisioni e schede di quelle ad alto impatto
 - `docs/AUDIT_FOUNDATION.md` — audit della struttura portante e roadmap
 - `docs/GUIDA_OPERATIVA.md` — **i passi da fare tu**, dall'installazione al ciclo di sessione (copia della guida condivisa)
-- `design/` — export di Claude Design (aspetto)
+- `claude-design/` — export di Claude Design (aspetto)
 - `src/domain/` — meccanismi puri testati in isolamento
 - `.claude/` — configurazione di Claude Code (permessi, hook, comandi, subagent, skill, regole per strato in `rules/`)
 - `.vscode/` — estensioni consigliate, impostazioni e attività (gate, loop, snapshot)
