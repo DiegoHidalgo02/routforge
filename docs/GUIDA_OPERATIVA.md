@@ -29,7 +29,7 @@ Le fasi da 0 a 5 preparano l'ambiente; da lì in poi si gira nel ciclo della fas
 | Fase | Quando | Tempo stimato | Risultato |
 | --- | --- | --- | --- |
 | 0 Prerequisiti | una volta | 30–45 min | strumenti installati e verificati |
-| 1 Progetto sul PC | una volta | 10 min | 77 test verdi, repository su GitHub |
+| 1 Progetto sul PC | una volta | 10 min | tutti i test verdi, repository su GitHub |
 | 2 VS Code | una volta | 10 min | estensioni attive, hook visibili |
 | 3a Pulizia | una volta, poi ogni tanto | 15–30 min | nessun accumulo di altri progetti dentro RoutForge |
 | 3b Plugin e skill | una volta | 15–20 min | plugin e skill installati solo nel progetto |
@@ -46,6 +46,27 @@ Le fasi da 0 a 5 preparano l'ambiente; da lì in poi si gira nel ciclo della fas
 - Blocco con `powershell`: va nel **terminale integrato di VS Code** (menu Terminale → Nuovo terminale).
 - Blocco con `text` che inizia con `/`: va nel **prompt di Claude Code** (pannello dell'estensione o terminale dopo aver scritto `claude`).
 - **Verifica**: il risultato che devi vedere prima di passare al passo successivo.
+
+## Se hai già avviato il progetto: applica l'aggiornamento del 24/09/2026
+
+Se hai già un repository RoutForge sul PC (con plugin installati, design importato o `/impeccable init` eseguito), **non riestrarre lo ZIP sopra la cartella**: sovrascriveresti il tuo lavoro. Applica invece i commit nuovi con la patch, che git inserisce sopra i tuoi.
+
+1. Salva `routforge-aggiornamento-2026-09-24.patch` nella cartella Download.
+2. Nel terminale di VS Code, dentro la cartella del progetto:
+
+```powershell
+git status
+git am --3way "$env:USERPROFILE\Downloads\routforge-aggiornamento-2026-09-24.patch"
+npm run verify
+```
+
+3. Se `git status` mostra file modificati non salvati, prima fai un commit (`git add -A` e `git commit -m "lavoro locale"`), poi applica la patch.
+4. Se `git am` segnala un conflitto: `git am --abort` per tornare com'eri, poi incolla il messaggio in Claude Code chiedendo di risolverlo.
+5. Se il tuo repository non ha la cronologia git di RoutForge (cartella ricreata a mano), usa lo ZIP: estrailo in una cartella temporanea e copia nel progetto `src/`, `scripts/`, `docs/` e `CLAUDE.md`.
+
+**Verifica.** `npm run verify` è verde con 88 test; `git log --oneline -5` mostra in cima i commit dell'audit; esiste `docs/AUDIT_FOUNDATION.md`.
+
+**Dove riprendere.** Se eri arrivato a `/impeccable init` (Fase 4, passo 3): completa la Fase 4, poi la Fase 5 (T-000). Prima di T-004 e T-011 l'agente si fermerà al **CP0** (Fase 7). Controlla anche con `git status` quali file ha creato `/impeccable init`, e salvali con un commit: non erano in `docs/`.
 
 ## Fase 0 — Prerequisiti sul PC
 
@@ -90,7 +111,7 @@ claude               # al primo avvio: accedi con l'account del piano Max, poi e
 
 ## Fase 1 — Il progetto sul PC
 
-Alla fine di questa fase il repository è in `C:\dev\routforge`, i 77 test passano e c'è una copia privata su GitHub. Usa lo **ZIP più recente** di questa conversazione: include i comandi `/stato` e `/gate`, lo script di pulizia `audit:claude` e i fine riga LF.
+Alla fine di questa fase il repository è in `C:\dev\routforge`, tutti i test passano e c'è una copia privata su GitHub. Usa lo **ZIP più recente** di questa conversazione: include i comandi `/stato` e `/gate`, lo script di pulizia `audit:claude` e i fine riga LF.
 
 1. Scarica `routforge.zip` nella cartella Download.
 2. Estrailo in una cartella **non sincronizzata** da OneDrive (Desktop e Documenti spesso lo sono): `node_modules` e `.git` contengono migliaia di file.
@@ -130,7 +151,7 @@ gh repo create routforge --private --source . --push
 
 **Verifica.**
 
-- `npm run verify` termina con **Tests 77 passed (77)**.
+- `npm run verify` termina con **Tests N passed (N)** e nessun *failed* (al 24/09/2026 N = 88; il numero cresce con il progetto).
 - `git status` dice *nothing to commit, working tree clean*; `git log` mostra la cronologia, con il commit più recente in alto.
 - `gh repo view --web` apre la pagina del repository; nella scheda **Actions** il primo controllo (CI) diventa verde in 1–2 minuti.
 
@@ -179,7 +200,7 @@ Qual è il prossimo task secondo docs/STATO.md? Rispondi in una riga, senza modi
 
 **Verifica.**
 
-- `Ctrl+Shift+B` termina con **Tests 77 passed (77)**.
+- `Ctrl+Shift+B` termina con tutti i test passati e nessun *failed*.
 - `/hooks` elenca un hook **SessionStart** e un hook **Stop**.
 - La domanda sui subagent elenca **spec-reviewer** e **design-checker** (modello ereditato dalla sessione) e **test-writer** (Sonnet); `claude plugin validate .claude/agents` non segnala errori.
 - Digitando `/` compaiono i comandi di progetto **/task**, **/gate**, **/scenario**, **/stato**, **/handoff**. (Il gate si chiama `/gate` perché `/verify` è già una skill integrata di Claude Code, con un altro scopo.)
@@ -527,7 +548,7 @@ In alternativa: Terminale → Esegui attività… → **loop agentico (3 task)**
 
 ## Fase 7 — I checkpoint
 
-In tutto il progetto l'agente si ferma per te sei volte, più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, cancella la riga e riprende.
+In tutto il progetto l'agente si ferma per te sette volte, più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, cancella la riga e riprende.
 
 **Procedura, uguale per tutti.**
 
@@ -541,6 +562,7 @@ CP3: ho Android Studio installato e un telefono Android con debug USB attivo. iO
 
 | Checkpoint | Quando | Cosa prepari | Cosa rispondi |
 | --- | --- | --- | --- |
+| **CP0 Tempo** | prima di T-004 e T-011 | leggi D-TIME-2 in `docs/01_DECISIONI.md` | "CP0: istante assoluto" (in viaggio una routine delle 07:00 si sposta con il fuso) oppure "CP0: ora locale" (resta alle 07:00 ovunque) |
 | **CP1 Stack** (informativo) | fine di T-000 | leggi D-STACK-1 in `docs/01_DECISIONI.md` | nulla se sei d'accordo; il veto (Fase 5, passo 6) entro T-006 |
 | **CP2 Prima schermata** | dopo T-008 (schermata Oggi) | avvia l'app con il comando indicato in `docs/STATO.md` (di solito `npm run dev`); aprila nel browser; `F12` poi `Ctrl+Shift+M` per la vista mobile; confrontala con `S1 Oggi Mobile` e `S1 Oggi Desktop` in `design/` | "CP2: approvata" oppure l'elenco delle differenze; puoi chiedere prima un controllo al subagent **design-checker** |
 | **CP3 Nativo** | prima di T-021 (notifiche e sveglie) e T-023 (widget) | Android Studio (`winget install Google.AndroidStudio`) con un SDK installato; un telefono Android con Opzioni sviluppatore → Debug USB, oppure un emulatore | cosa hai a disposizione; iOS resta rinviato finché non hai un Mac |
@@ -644,7 +666,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 - [ ] ZIP più recente estratto in `C:\dev\routforge`
 - [ ] Identità git globale impostata
-- [ ] `npm ci` e `npm run verify` → 77 test passati
+- [ ] `npm ci` e `npm run verify` → tutti i test passati
 - [ ] Repository privato su GitHub con la CI verde
 
 **Fase 2 — VS Code**

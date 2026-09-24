@@ -2,7 +2,7 @@
 
 *Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart).*
 
-**Data**: 2026-09-22 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (77 test, 9 file)
+**Data**: 2026-09-24 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (88 test, 11 file)
 
 ## Fatto
 - T-001 Dominio puro: `time`, `types`, `sm2` (I1), `streak` (C2), `pomodoro` (D3), `practice` (I2, I3), `pointer` (C1, C2, C3 + moduli bloccati), `lost` (A1, A2, B2, B3, B4, B7, E2, C6), `nowBlock` (G1, G2, E3). Suite eseguita in 4 fusi orari e attraverso il cambio d'ora di ottobre 2026.
@@ -14,10 +14,14 @@
 
 - Isolamento degli strumenti: comando `/verify` rinominato `/gate` (conflitto con la skill integrata `/verify`); `scripts/audit-claude.mjs` (`npm run audit:claude`) per inventario, conflitti di nome e archiviazione reversibile degli accumuli di livello utente; installazioni con ambito progetto in `docs/04_STRUMENTI.md` §5.
 
+- **Audit della foundation** (`docs/AUDIT_FOUNDATION.md`): vocabolario del dominio unificato (D-NAMING-1), regola dei moduli unica (D-MODULI-1), test architetturale nel gate, rischi di piattaforma documentati (ARCHITETTURA §8), CP0 sul fuso orario (D-TIME-2).
+
 ## In corso
 - Nessun task in corso.
 
 ## Problemi aperti
+- **CP0 da decidere prima di T-004 e T-011**: comportamento dei blocchi al cambio di fuso (D-TIME-2).
+- Il contenuto creato da `/impeccable init` non è nel repository di riferimento (non era in `docs/`): da salvare con un commit sul PC dell'utente.
 - L'export di Claude Design non è nel repo: `npm run design:check` segnala 45 file mancanti. Serve l'azione dell'utente (`/design` in Claude Code, o Export → ZIP in `design/`). Finché manca, T-000 non può chiudersi e T-003/T-004/T-006 restano in attesa.
 - D-QUIZ-1 da confermare al CP5 (criterio Go/No-Go "auto").
 

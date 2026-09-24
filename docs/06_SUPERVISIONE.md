@@ -6,6 +6,7 @@
 
 | ID | Quando | Cosa decide l'utente | Default se non risponde |
 |---|---|---|---|
+| **CP0 Tempo** | Prima di T-004 (schema dati) e T-011 (occorrenze) | Al cambio di fuso orario (viaggio) i blocchi restano allo stesso **istante assoluto** (MECCANISMI §1) o alla stessa **ora locale** (CONTESTO §3)? Vedi D-TIME-2 | Nessun default: senza risposta T-004 e T-011 restano fermi |
 | **CP1 Stack** (informativo) | Alla chiusura di T-000 (dopo l'import del design) | Nulla da approvare: lo stack lo sceglie l'agente e lo motiva in `docs/01_DECISIONI.md` (D-STACK-1). L'utente legge la decisione in `docs/STATO.md` e può porre il veto prima di T-006 | La decisione dell'agente vale |
 | **CP2 Prima schermata** | Dopo T-008 (Oggi) | Approvazione visiva rispetto a S1 Oggi (mobile+desktop) e divergenze design↔spec | Non si passa oltre finché non approvata |
 | **CP3 Nativo** | Prima di T-021 (notifiche native/sveglie) e T-023 (widget) | Android Studio installato? Dispositivo di test? iOS rinviato (serve un Mac)? | Solo Android; iOS rinviato |

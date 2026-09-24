@@ -81,6 +81,8 @@ Il **registro notifiche** (chiave logica → id nativo) sta in una tabella `regi
   (D4); tick derivato dagli istanti assoluti, non da contatori.
 - **NotificationPlanner.desiredSet(now)** — calcola l'insieme desiderato (§13.3) in modo deterministico
   (id = hash di trigger+anticipo+blocco); l'adapter fa `cancel(registro − desiderato)` e `schedule(desiderato − registro)`.
+  **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**; l'hash deve produrre un intero in
+  [-2147483648, 2147483647] (chiave logica testuale → id numerico nel registro), gestendo le collisioni.
 - **CoursePointer.recompute(corsoId)** — `assignPointer` sui blocchi futuri `programmati` del corso; chiamato dopo
   ogni esito, marcatura persa di studio, generazione, import.
 
@@ -118,3 +120,15 @@ cp design/tokens.css src/ui/styles/tokens.css
 ```
 Il gate resta `npm run verify`; ai test di dominio si aggiungono test dei servizi (adapter finti) e, per la UI,
 Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinamento).
+
+## 8. Rischi architetturali noti (audit del 24/09/2026)
+
+| Rischio | Dove colpisce | Cosa prevedere | Quando |
+|---|---|---|---|
+| Comportamento al cambio di fuso (D-TIME-2) | schema dati, generazione occorrenze, sync fra dispositivi in fusi diversi | decisione al **CP0**; il dominio lavora su istanti e regge entrambe le scelte | prima di T-004 e T-011 |
+| Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | hash → intero a 32 bit, gestione collisioni, test dedicato | T-019 |
+| Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la riconciliazione all'avvio (ciclo §9) le ricrea; la Diagnostica mostra lo stato del permesso | T-019, T-021 |
+| Doze (Android): le notifiche `allowWhileIdle` possono scattare al massimo una volta ogni 9 minuti per app | trigger ravvicinati (pre, inizio, verifica) | test su dispositivo con Doze; per le sveglie usare le API di allarme esatto | T-021 |
+| Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`), mostrarne lo stato in Diagnostica, ricordare il backup | T-004, T-006, T-032 |
+| Gate eseguito a ogni fine turno (hook Stop) più lento man mano che crescono i test (UI in particolare) | loop agentico | quando `npm run verify` supera ~60 s, separare `verify` (dominio + unità) da `verify:completo` (UI) e usare il primo nell'hook | quando serve |
+| Lib `DOM` abilitata anche per `src/domain` nel tsconfig | purezza del dominio | già coperto da `scripts/architettura.test.mjs`; in T-006 valutare tsconfig per strato | T-006 |

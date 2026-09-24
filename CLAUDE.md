@@ -44,12 +44,15 @@ Regola di dipendenza: `ui → app → data → domain`; `platform` è usato solo
 Lo **stack** (UI, persistenza, shell nativa) lo decide l'agente nel task T-000 **dopo** aver importato e letto tutto
 l'export di Claude Design, con la procedura di `docs/02_ARCHITETTURA.md` §0; finché T-000 è aperto non si scaffolda la UI.
 Tempo: ogni istante è epoch ms; il giorno è quello **locale** (`src/domain/time.ts`). Mai `Date.now()` dentro
-`domain`: il "now" arriva sempre come parametro (rende tutto testabile).
+`domain`: il "now" arriva sempre come parametro (rende tutto testabile). Direzione delle dipendenze e purezza del
+dominio sono **verificate dal gate** (`scripts/architettura.test.mjs`). Comportamento al cambio di fuso: **CP0**, aperto.
 
 ## 4. Convenzioni
 
-- TypeScript `strict`, niente `any`, niente `// @ts-ignore`. Nomi del dominio in **italiano come nelle spec**
-  (`Blocco`, `Unità`, `perso`, `parziale`, `Ricorrenza`): il codice deve essere cercabile con le stesse parole.
+- TypeScript `strict`, niente `any`, niente `// @ts-ignore`.
+- **Vocabolario (D-NAMING-1)**: tipi, attributi e valori del dominio in **italiano come nelle spec** (`Blocco`,
+  `stato`, `inizio`, `UnitaPercorso`, `'perso'`); funzioni e verbi tecnici possono restare in inglese
+  (`assignPointer`, `parseCourse`). Un concetto = un nome: niente sinonimi inglesi di un attributo già italiano.
 - Commenti in italiano; in testa a ogni modulo di dominio: fonte (§) e scenari coperti.
 - Test accanto al codice: `x.test.ts`; ogni `describe` cita il paragrafo o lo scenario (`'Persi — SCENARI B2'`).
 - Nessun `Date.now()`, `Math.random()`, I/O o `console.log` in `src/domain`.

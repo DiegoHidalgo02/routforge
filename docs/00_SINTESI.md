@@ -87,6 +87,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 6 | MECC §14 | "Adesso" per routine senza durata | D-NOW-1: fine effettiva = 23:59 |
 | 7 | FUNZ | Rimandi ai paragrafi sfalsati di uno (§8→§7, §10→§9, §12→§11, §13→§12, §16→§15, §23→§8.7) | Cosmetico; spec non modificate |
 | 8 | MECC §25 | La chiave Gemini viene sincronizzata sul servizio remoto | Raccomandazione (non requisito): cifrarla lato client prima dell'invio — decisione al Checkpoint 4 |
+| 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2 **aperta**: decisione al CP0, prima di T-004 e T-011 |
 | 9 | CONTESTO §1 | Lo Studio deve poter generalizzare Corso→Modulo→Unità | Il dominio usa `moduleOrder`/`order` generici; la gerarchia a tre livelli resta il caso di riferimento (D-STUDIO-1) |
 
 ## 7. Informazioni mancanti (non deducibili dalle spec)
