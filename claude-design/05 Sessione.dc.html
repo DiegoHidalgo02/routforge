@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#8AAAF6}
+</style>
+</helmet>
+<section data-screen-label="Sessione di studio · setup, timer, esito" style="padding:40px;display:flex;flex-direction:column;gap:24px">
+  <header style="display:flex;flex-direction:column;gap:8px;max-width:820px">
+    <span style="font:600 11px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">RoutForge · FUNZIONALITA §12 · §13 puntatore · §14 streak</span>
+    <h1 style="margin:0;font:600 28px/1.2 var(--font-ui)">Sessione di studio · setup, timer, esito</h1>
+  </header>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · setup</figcaption><dc-import name="S15 Sessione Mobile" view="setup" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · timer in corso · Materiale</figcaption><dc-import name="S15 Sessione Mobile" view="timer" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · timer in pausa</figcaption><dc-import name="S15 Sessione Mobile" view="timer" timer-state="paused" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · oltre la durata (tempo extra)</figcaption><dc-import name="S15 Sessione Mobile" view="timer" timer-state="overrun" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · esito (debrief)</figcaption><dc-import name="S15 Sessione Mobile" view="debrief" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · conferma</figcaption><dc-import name="S15 Sessione Mobile" view="done" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · iperfocus a schermo intero (uscita bloccata)</figcaption><dc-import name="S15 Sessione Mobile" view="iperfocus" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · iperfocus · tentativo di uscita</figcaption><dc-import name="S15 Sessione Mobile" view="iperfocus" exit="tentativo" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · iperfocus · interruzione registrata</figcaption><dc-import name="S15 Sessione Mobile" view="iperfocus" exit="registrata" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · timer con Materiale + AI/Note</figcaption><dc-import name="S15 Sessione Desktop" view="timer" hint-size="1280px,800px"></dc-import></figure>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>

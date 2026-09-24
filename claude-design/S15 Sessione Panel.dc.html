@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+::-webkit-scrollbar{display:none}
+textarea::placeholder,input::placeholder{color:#636975}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rf-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes rf-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S14–S16 Sessione" style="position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;background:#141820;color:#fff;font-family:var(--font-ui);overflow:hidden">
+
+  <sc-if value="{{ isSetup }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 0 8px;flex:none">
+      <button aria-label="Indietro" style="width:40px;height:40px;border-radius:999px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    </div>
+    <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:8px 20px 28px;display:flex;flex-direction:column;gap:24px;max-width:560px;width:100%;box-sizing:border-box;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="height:20px;padding:0 7px;border-radius:999px;background:#2A1F45;color:#B794FD;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;align-self:flex-start">Studio</span>
+        <h1 style="margin:0;font:600 22px/28px var(--font-ui);letter-spacing:-.01em">Sessione di studio</h1>
+        <span style="display:flex;align-items:center;gap:8px;font:500 13px/18px var(--font-ui);color:{{ sourceColor }}">{{ sourceIcon }}<span style="flex:1;min-width:0">{{ sourceText }}</span></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg>{{ unitHeading }}</span><sc-if value="{{ canChange }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleUnits }}" style="height:28px;padding:0 8px;border-radius:8px;background:transparent;border:0;color:#fff;font:600 12px var(--font-ui);cursor:pointer" style-hover="background:#1E232C">{{ changeLabel }}</button></sc-if><sc-if value="{{ unitLocked }}" hint-placeholder-val="{{ true }}"><span style="font:12px/14px var(--font-ui);color:#636975">assegnata dal puntatore</span></sc-if></div>
+        <sc-for list="{{ unitOptions }}" as="u" hint-placeholder-count="1">
+          <button onClick="{{ u.pick }}" style="border-radius:12px;background:#1E232C;border:1px solid {{ u.border }};padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:#fff;text-align:left;cursor:pointer;width:100%;box-sizing:border-box;transition:border-color .15s;animation:rf-in .18s ease-out" style-hover="border-color:#3A404B">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="flex:1;min-width:0;white-space:nowrap;font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#6E96F2">Modulo <span style="font:600 10px var(--font-num)">{{ u.mod }}</span> · Unità <span style="font:600 10px var(--font-num)">{{ u.n }}</span></span><span style="flex:none;font:500 11px var(--font-ui);color:#636975">{{ u.tag }}</span></div>
+            <span style="font:600 15px/20px var(--font-ui);text-wrap:pretty">{{ u.title }}</span>
+            <span style="font:12px/16px var(--font-ui);color:#959CA8">Syllabus Software Engineer 2026 · <span style="font:500 12px var(--font-num)">{{ u.progress }}</span></span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"></path><path d="M12 7v5l3 2"></path></svg>Durata</span><span style="font:500 12px/14px var(--font-num);color:#959CA8">fine prevista <span style="color:#fff">{{ endTime }}</span></span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ durations }}" as="d" hint-placeholder-count="5"><button onClick="{{ d.pick }}" style="height:32px;min-width:44px;padding:0 12px;border-radius:999px;background:{{ d.bg }};border:1px solid {{ d.border }};color:{{ d.color }};font:{{ d.weight }} 12px var(--font-num);cursor:pointer;transition:background .15s,border-color .15s">{{ d.label }}</button></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>Modalità</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ modes }}" as="m" hint-placeholder-count="4"><button onClick="{{ m.pick }}" style="height:32px;padding:0 12px;border-radius:999px;background:{{ m.bg }};border:1px solid {{ m.border }};color:{{ m.color }};font:{{ m.weight }} 12px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px">{{ m.label }}<sc-if value="{{ m.hasNum }}" hint-placeholder-val="{{ false }}"><span style="font:500 12px var(--font-num)">{{ m.num }}</span></sc-if></button></sc-for>
+        </div>
+      </div>
+      <button onClick="{{ toggleHyper }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0;background:none;border:0;color:#fff;cursor:pointer;text-align:left;width:100%"><span style="display:flex;flex-direction:column;gap:2px"><span style="font:500 14px/18px var(--font-ui)">Iperfocus</span><span style="font:12px/16px var(--font-ui);color:#636975;text-wrap:pretty">Schermo intero, uscita bloccata</span></span><span style="width:44px;height:26px;flex:none;border-radius:999px;background:{{ hyperBg }};position:relative;display:inline-block;transition:background .2s"><span style="position:absolute;top:2px;left:{{ hyperKnob }}px;width:22px;height:22px;border-radius:999px;background:{{ hyperKnobColor }};transition:left .2s"></span></span></button>
+      <sc-if value="{{ hyperOn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;box-sizing:border-box;flex:none;border-radius:10px;background:#34311E;color:#FACC15;font:500 13px/18px var(--font-ui);animation:rf-in .18s ease-out;text-wrap:pretty"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"></path><path d="M12 9v4M12 17h.01"></path></svg><span style="flex:1;min-width:0">Non Disturbare non concesso: l'iperfocus vale comunque, senza silenziare il telefono.</span><button style="height:28px;padding:0 10px;border-radius:8px;background:transparent;border:1px solid #FACC15;color:#FACC15;font:600 12px var(--font-ui);cursor:pointer;flex:none">Concedi</button></div>
+      </sc-if>
+    </div>
+    <div style="flex:none;padding:12px 20px;border-top:1px solid #292E37;display:flex;gap:8px;background:#141820;justify-content:center"><button onClick="{{ start }}" style="flex:1;max-width:520px;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6);display:inline-flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE"><svg viewBox="0 0 24 24" width="14" height="14" fill="#0A0D13"><path d="M6 3l14 9-14 9z"></path></svg>Inizia · <span style="font:600 14px var(--font-num)">{{ durationLabel }}</span></button></div>
+  </sc-if>
+
+  <sc-if value="{{ isTimer }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;display:flex;flex-direction:column;gap:{{ topGap }}px;padding:{{ topPad }};border-bottom:1px solid #292E37;background:{{ topBg }};transition:background .3s">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button aria-label="Riduci" onClick="{{ minimize }}" style="width:40px;height:40px;border-radius:999px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0;flex:none" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 14px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Event loop visualizzato (l’esperimento che ripara il file rotto)</span><span style="font:12px/16px var(--font-ui);color:#959CA8">Modulo <span style="font:500 12px var(--font-num)">00</span> · Unità <span style="font:500 12px var(--font-num)">0.7</span> · {{ sourceShort }}</span></span>
+        <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px"><span style="display:flex;align-items:baseline;gap:8px"><span style="font:600 26px/28px var(--font-num);font-variant-numeric:tabular-nums;color:{{ timerColor }};letter-spacing:-.02em">{{ timerText }}</span><span style="font:500 12px var(--font-num);color:#959CA8">{{ timerMeta }}</span></span>{{ stateBadge }}
+            <button aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}" style="width:40px;height:40px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37">{{ pauseIcon }}</button>
+            <button onClick="{{ finish }}" style="height:40px;padding:0 16px;border-radius:10px;background:#6E96F2;color:#0A0D13;border:0;font:600 13px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Termina</button>
+          </div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ isNarrow }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:16px;padding:4px 4px 0">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+            <span style="font:600 44px/48px var(--font-num);font-variant-numeric:tabular-nums;color:{{ timerColor }};letter-spacing:-.03em;transition:color .3s">{{ timerText }}</span>
+            <span style="display:flex;align-items:center;gap:8px;font:500 12px var(--font-num);color:#959CA8">{{ timerMeta }}{{ stateBadge }}</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}" style="width:44px;height:44px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37">{{ pauseIcon }}</button>
+            <button onClick="{{ finish }}" style="height:44px;padding:0 16px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Termina</button>
+          </div>
+        </div>
+        <div style="height:3px;border-radius:999px;background:#292E37;overflow:hidden;margin-top:4px"><div style="width:{{ pct }}%;height:100%;border-radius:999px;background:{{ barColor }};transition:width .3s"></div></div>
+      </sc-if>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:{{ toolsPad }}">
+        <sc-if value="{{ isPomodoro }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border-radius:999px;background:#1E232C;border:1px solid #292E37;font:500 11px var(--font-num);color:#959CA8"><sc-for list="{{ segments }}" as="sg" hint-placeholder-count="6"><span style="width:{{ sg.w }}px;height:6px;border-radius:2px;background:{{ sg.bg }}"></span></sc-for><span style="margin-left:4px;color:#fff">{{ segLabel }}</span></span><button onClick="{{ skipSegment }}" style="height:32px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#fff;font:600 12px var(--font-ui);cursor:pointer" style-hover="background:#1E232C">Salta segmento</button></sc-if>
+        <button onClick="{{ addInterruption }}" style="height:32px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#fff;font:600 12px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px" style-hover="background:#1E232C"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg>Interruzione <span style="font:500 11px var(--font-num);color:#959CA8">{{ interruptions }}</span></button>
+        <button style="height:32px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#fff;font:600 12px var(--font-ui);cursor:pointer" style-hover="background:#1E232C">Cambia unità</button>
+        <sc-if value="{{ hyperOn }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-ui);letter-spacing:.04em;text-transform:uppercase"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Iperfocus</span></sc-if>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ cols }};min-width:0">
+      <div style="display:flex;flex-direction:column;min-height:0;min-width:0;border-right:{{ splitBorder }}">
+        <sc-if value="{{ isNarrow }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:6px;padding:12px 20px 0;flex:none">
+            <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.pick }}" style="height:32px;padding:0 14px;border-radius:999px;background:{{ t.bg }};border:1px solid {{ t.border }};color:{{ t.color }};font:{{ t.weight }} 12px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s">{{ t.label }}<sc-if value="{{ t.hasCount }}" hint-placeholder-val="{{ false }}"><span style="font:500 11px var(--font-num);color:{{ t.countColor }}">{{ t.count }}</span></sc-if></button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px;padding:14px 24px 0;flex:none;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Materiale</div>
+        </sc-if>
+
+        <sc-if value="{{ showMaterial }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:16px {{ padX }}px 28px;display:flex;flex-direction:column;gap:20px;animation:rf-in .18s ease-out;max-width:720px;box-sizing:border-box">
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Concetto core</span><div style="border-radius:12px;background:#1E232C;padding:14px 16px;border-left:3px solid #6E96F2"><p style="margin:0;font:500 15px/22px var(--font-ui);text-wrap:pretty">Nel tuo file ColorCode sull'event loop il codice chiama la funzione sbagliata e rende false tutte le annotazioni — nessuno l'ha mai eseguito. È il caso di studio perfetto del modulo: qui l'asincronia smette di essere magia e diventa un modello meccanico (call stack, task queue, microtask queue) che sai girare a mano. Senza questo modello, promises e async/await (unità 0.8) restano sintassi vuota — è la priorità alta dichiarata in diagnosi.</p></div></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><span style="height:20px;padding:0 7px;border-radius:6px;background:#1E232C;color:#fff;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Teoria</span>Fondamenta</span>
+              <a href="https://javascript.info/event-loop" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">Event loop: microtasks and macrotasks — javascript.info</span><span style="font:12px/16px var(--font-ui);color:#959CA8">javascript.info</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+              <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">Il modello completo con le regole di priorità (i microtask vengono svuotati TUTTI prima del prossimo task). Traccia a mano gli esempi del capitolo col tuo formato stato-per-iterazione: stack | coda task | coda microtask, riga per riga. È la traccia manuale che in diagnosi risulta il tuo strumento più efficace.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><span style="height:20px;padding:0 7px;border-radius:6px;background:#1E232C;color:#fff;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Studio</span>Visualizzazione</span>
+              <a href="https://www.youtube.com/watch?v=8aGhZQkoFbQ" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">What the heck is the event loop anyway? — Philip Roberts, JSConf EU</span><span style="font:12px/16px var(--font-ui);color:#959CA8">youtube.com · 26 min</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+              <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">IL talk di riferimento mondiale sull'event loop (26 minuti, tutto animato). Philip Roberts costruisce il modello mentale della singola corsia e delle code visivamente, dal vivo. È la spiegazione che rende il concetto tuo per sempre; guardalo con il quaderno accanto e ferma il video per anticipare la prossima mossa.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><span style="height:20px;padding:0 7px;border-radius:6px;background:#1E232C;color:#fff;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Pratica</span>Testing & Debugging</span>
+              <a href="http://latentflip.com/loupe/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">Loupe — visualizzatore live dell'event loop (Philip Roberts)</span><span style="font:12px/16px var(--font-ui);color:#959CA8">latentflip.com</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+              <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">Lo strumento che esegue codice VERO mostrando stack, coda e Web API in movimento. Flusso di lavoro: scrivi un frammento (log sincroni, setTimeout a zero, catene), PREVEDI l'ordine dei log sul quaderno, premi play, osserva. È il tuo formato-esperimento elevato a laboratorio. Poi l'atto riparatore: riapri il TUO file event loop di ColorCode, eseguilo com'è, osserva perché le annotazioni sono false, correggi con la data.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><span style="height:20px;padding:0 7px;border-radius:6px;background:#1E232C;color:#fff;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Mini progetto</span>Batteria di previsioni: 10 su Loupe</span>
+              <a href="https://dev.to/lydiahallie/javascript-visualized-event-loop-3dif" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">JavaScript Visualized: Event Loop — Lydia Hallie (dev.to)</span><span style="font:12px/16px var(--font-ui);color:#959CA8">dev.to</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+              <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">Usando l'articolo animato di Lydia Hallie come riferimento delle regole, crea un documento nel repo di studio con 10 frammenti a difficoltà crescente. Loupe visualizza solo call stack + Web API + coda dei task (setTimeout) — non le promise/microtask; in questa unità la batteria è solo macrotask (sincroni + setTimeout); i frammenti con promise si aggiungono DOPO l'unità 0.8. Registro degli errori: ogni previsione sbagliata è una crepa del modello da rispiegare.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Tuoi</span><a href="#" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path></svg><span style="flex:1;min-width:0;font:500 14px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Registro previsioni event loop.pdf</span></a></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showAiLeft }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:rf-in .18s ease-out">
+            <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:center"><span style="height:28px;padding:0 10px;border-radius:999px;background:#1E232C;border:1px solid #292E37;font:500 12px/28px var(--font-ui);color:#959CA8;display:inline-flex;align-items:center;gap:6px">Ambito · <span style="color:#fff">Unità 0.7</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#959CA8" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></span></div>
+              <div style="align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:16px 16px 4px 16px;background:#6E96F2;color:#0A0D13;font:14px/20px var(--font-ui);text-wrap:pretty">In quale ordine escono i log di: codice sincrono, un setTimeout a zero e una promise già risolta?</div>
+              <div style="align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:8px">
+                <div style="padding:10px 14px;border-radius:16px 16px 16px 4px;background:#1E232C;font:14px/21px var(--font-ui);text-wrap:pretty">Prima il codice sincrono, poi la callback della promise, per ultimo il setTimeout. La promise risolta accoda un microtask, e i microtask vengono svuotati tutti prima che il prossimo task (il timer) entri nella corsia.<span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:6px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">1</span><span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:4px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">2</span></div>
+                <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+                  <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dal corso · Unità 0.7 › Concetto core</span></span>
+                  <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">2</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tuoi · Registro previsioni event loop.pdf, p. 14</span></span>
+                </div>
+              </div>
+            </div>
+            <div style="flex:none;padding:8px 20px 16px;display:flex;gap:8px;align-items:flex-end"><div style="flex:1;min-height:44px;border-radius:12px;background:#1E232C;border:1px solid #292E37;display:flex;align-items:center;padding:0 14px;color:#636975;font:14px var(--font-ui)">Chiedi sull'unità…</div><button aria-label="Invia" style="width:44px;height:44px;border-radius:12px;background:#6E96F2;border:0;color:#0A0D13;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showNotesLeft }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 20px 20px;gap:10px;animation:rf-in .18s ease-out">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Note della sessione · markdown</span><span style="font:500 11px var(--font-num);color:#636975">salvate <span style="color:#22C55E">●</span></span></div>
+            <textarea placeholder="Scrivi mentre studi…" style="flex:1;min-height:160px;resize:none;border-radius:12px;background:#1E232C;border:1px solid #292E37;padding:12px 14px;color:#fff;font:14px/21px var(--font-ui);outline:0;box-sizing:border-box" style-focus="border-color:#6E96F2">- Una sola corsia: call stack
+- Web API → coda dei task (setTimeout)
+- **Microtask** (promise) si svuotano TUTTI prima del prossimo task
+- Previsione da verificare su Loupe: 3 setTimeout a 0 in un loop</textarea>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
+          <div style="display:flex;gap:6px;padding:12px 20px 0;flex:none">
+            <sc-for list="{{ sideTabs }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.pick }}" style="height:32px;padding:0 14px;border-radius:999px;background:{{ t.bg }};border:1px solid {{ t.border }};color:{{ t.color }};font:{{ t.weight }} 12px var(--font-ui);cursor:pointer;transition:background .15s">{{ t.label }}</button></sc-for>
+          </div>
+          <sc-if value="{{ showAiRight }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:rf-in .18s ease-out">
+              <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;justify-content:center"><span style="height:28px;padding:0 10px;border-radius:999px;background:#1E232C;border:1px solid #292E37;font:500 12px/28px var(--font-ui);color:#959CA8;display:inline-flex;align-items:center;gap:6px">Ambito · <span style="color:#fff">Unità 0.7</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#959CA8" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></span></div>
+                <div style="align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:16px 16px 4px 16px;background:#6E96F2;color:#0A0D13;font:14px/20px var(--font-ui);text-wrap:pretty">In quale ordine escono i log di: codice sincrono, un setTimeout a zero e una promise già risolta?</div>
+                <div style="align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:8px">
+                  <div style="padding:10px 14px;border-radius:16px 16px 16px 4px;background:#1E232C;font:14px/21px var(--font-ui);text-wrap:pretty">Prima il codice sincrono, poi la callback della promise, per ultimo il setTimeout. La promise risolta accoda un microtask, e i microtask vengono svuotati tutti prima che il prossimo task (il timer) entri nella corsia.<span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:6px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">1</span><span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:4px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">2</span></div>
+                  <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+                    <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dal corso · Unità 0.7 › Concetto core</span></span>
+                    <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">2</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tuoi · Registro previsioni event loop.pdf, p. 14</span></span>
+                  </div>
+                </div>
+              </div>
+              <div style="flex:none;padding:8px 20px 16px;display:flex;gap:8px;align-items:flex-end"><div style="flex:1;min-height:44px;border-radius:12px;background:#1E232C;border:1px solid #292E37;display:flex;align-items:center;padding:0 14px;color:#636975;font:14px var(--font-ui)">Chiedi sull'unità…</div><button aria-label="Invia" style="width:44px;height:44px;border-radius:12px;background:#6E96F2;border:0;color:#0A0D13;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showNotesRight }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 20px 20px;gap:10px;animation:rf-in .18s ease-out">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Note della sessione · markdown</span><span style="font:500 11px var(--font-num);color:#636975">salvate <span style="color:#22C55E">●</span></span></div>
+              <textarea placeholder="Scrivi mentre studi…" style="flex:1;min-height:160px;resize:none;border-radius:12px;background:#1E232C;border:1px solid #292E37;padding:12px 14px;color:#fff;font:14px/21px var(--font-ui);outline:0;box-sizing:border-box" style-focus="border-color:#6E96F2">- Una sola corsia: call stack
+- Web API → coda dei task (setTimeout)
+- **Microtask** (promise) si svuotano TUTTI prima del prossimo task</textarea>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHyper }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="S15 Timer iperfocus" style="position:absolute;inset:0;background:#0A0D13;display:flex;flex-direction:column;z-index:4">
+      <div style="flex:none;display:flex;align-items:center;gap:8px;padding:16px 20px 0">
+        <span style="display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-ui);letter-spacing:.04em;text-transform:uppercase"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Iperfocus</span>
+        <span style="margin-left:auto;font:12px var(--font-ui);color:#636975">Non Disturbare attivo</span>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center">
+        <div style="display:flex;flex-direction:column;gap:6px;max-width:300px">
+          <span style="font:600 15px/20px var(--font-ui)">Event loop visualizzato (l’esperimento che ripara il file rotto)</span>
+          <span style="font:12px/16px var(--font-ui);color:#959CA8">Modulo <span style="font:500 12px var(--font-num)">00</span> · Unità <span style="font:500 12px var(--font-num)">0.7</span> · {{ sourceShort }}</span>
+        </div>
+        <span style="font:600 44px/48px var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:{{ timerColor }}">{{ timerText }}</span>
+        <div style="width:100%;max-width:280px;height:3px;border-radius:999px;background:#292E37;overflow:hidden"><div style="width:{{ pct }}%;height:100%;border-radius:999px;background:{{ barColor }}"></div></div>
+        <span style="font:500 12px var(--font-num);color:#959CA8">{{ timerMeta }}</span>
+        <span style="font:13px/18px var(--font-ui);color:#959CA8;max-width:280px">{{ hyperUnlock }}</span>
+      </div>
+      <div style="flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 20px 16px">
+        <button onClick="{{ addInterruption }}" style="height:32px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#fff;font:600 12px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px" style-hover="background:#1E232C"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg>Interruzione <span style="font:500 11px var(--font-num);color:#959CA8">{{ interruptions }}</span></button>
+        <button onClick="{{ askExit }}" style="height:32px;padding:0 12px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#959CA8;font:600 12px var(--font-ui);cursor:pointer" style-hover="background:#1E232C;color:#fff">Esci</button>
+      </div>
+      <sc-if value="{{ hyperExitDone }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:16px;right:16px;bottom:16px;min-height:48px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:#34311E;color:#FACC15;font:500 13px/18px var(--font-ui);box-sizing:border-box">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg>
+          <span>Interruzione «iperfocus» registrata · conta come uscita d'emergenza</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hyperExitAsk }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(10,13,19,.72);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;z-index:7">
+          <div data-screen-label="Uscita bloccata" style="width:100%;max-width:{{ sheetMax }};background:#1E232C;border:1px solid #292E37;border-bottom:0;border-radius:24px 24px 0 0;padding:8px 20px 20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -12px 32px rgba(0,0,0,.45);box-sizing:border-box;animation:rf-up .3s cubic-bezier(.4,0,.2,1)">
+            <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:0 auto"></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 18px/24px var(--font-ui)">Uscita bloccata</span><span style="font:13px/18px var(--font-ui);color:#959CA8">{{ hyperUnlock }}. Uscire adesso registra un'interruzione «iperfocus» e conta come uscita d'emergenza.</span></div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ forceExit }}" style="flex:1;height:44px;border-radius:12px;background:transparent;border:0;color:#FA4F4D;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#331E25">Esci comunque</button>
+              <button onClick="{{ stay }}" style="flex:1;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Resta</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDebrief }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(10,13,19,.6);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;z-index:5">
+      <div data-screen-label="S16 Debrief" style="width:100%;max-width:{{ sheetMax }};background:#1E232C;border:1px solid #292E37;border-bottom:0;border-radius:24px 24px 0 0;padding:8px 20px 20px;display:flex;flex-direction:column;gap:16px;animation:rf-up .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -12px 32px rgba(0,0,0,.45);box-sizing:border-box">
+        <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:0 auto"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 18px/24px var(--font-ui)">Com'è andata?</span><span style="font:13px/18px var(--font-ui);color:#959CA8"><span style="font:500 13px var(--font-num)">{{ debriefTime }}</span> · Unità <span style="font:500 13px var(--font-num)">2.4</span>{{ debriefExtra }}</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <sc-for list="{{ outcomes }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.pick }}" style="min-height:64px;padding:10px 12px;border-radius:12px;background:{{ o.bg }};border:1px solid {{ o.border }};color:{{ o.color }};text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:background .15s,border-color .15s" style-hover="border-color:#3A404B"><span style="display:flex;align-items:center;gap:8px;font:600 14px var(--font-ui)">{{ o.icon }}{{ o.label }}</span><span style="font:12px/16px var(--font-ui);color:{{ o.subColor }}">{{ o.sub }}</span></button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Quanto ti senti sicuro</span><span style="font:500 12px var(--font-num);color:#959CA8">{{ confidenceLabel }}</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+            <sc-for list="{{ confidence }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.pick }}" style="height:40px;border-radius:10px;background:{{ c.bg }};border:1px solid {{ c.border }};color:{{ c.color }};font:{{ c.weight }} 14px var(--font-num);cursor:pointer;transition:background .15s">{{ c.n }}</button></sc-for>
+          </div>
+        </div>
+        <textarea placeholder="Una nota sulla sessione (facoltativa)" style="min-height:56px;resize:none;border-radius:10px;background:#141820;border:1px solid #292E37;padding:10px 14px;color:#fff;font:14px/20px var(--font-ui);outline:0;box-sizing:border-box" style-focus="border-color:#6E96F2"></textarea>
+        <button onClick="{{ toggleCounts }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:0;background:none;border:0;color:#fff;cursor:pointer;text-align:left;width:100%"><span style="display:flex;flex-direction:column;gap:2px"><span style="font:500 14px/18px var(--font-ui)">Conta nel piano</span><span style="font:12px/16px var(--font-ui);color:#636975;text-wrap:pretty">{{ countsNote }}</span></span><span style="width:44px;height:26px;flex:none;border-radius:999px;background:{{ countsBg }};position:relative;display:inline-block;transition:background .2s"><span style="position:absolute;top:2px;left:{{ countsKnob }}px;width:22px;height:22px;border-radius:999px;background:{{ countsKnobColor }};transition:left .2s"></span></span></button>
+        <button style="display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:10px;background:#141820;border:1px dashed #292E37;color:#959CA8;font:500 13px var(--font-ui);cursor:pointer;text-align:left;width:100%;box-sizing:border-box" style-hover="border-color:#3A404B;color:#fff"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg><span style="flex:1">Carica il codice prodotto <span style="color:#636975">· file o ZIP, per l'AI</span></span></button>
+        <div style="display:flex;gap:8px;padding-top:4px">
+          <button onClick="{{ backToTimer }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37;color:#fff">Continua a studiare</button>
+          <button onClick="{{ register }}" disabled="{{ registerDisabled }}" style="flex:1;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;opacity:{{ registerOpacity }};transition:opacity .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Registra esito</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:#141820;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:40px;z-index:6;animation:rf-in .3s ease-out">
+      <span style="width:64px;height:64px;border-radius:999px;background:#163029;color:#22C55E;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" style="stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 22px/28px var(--font-ui);letter-spacing:-.01em">{{ doneTitle }}</span><span style="font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:320px">{{ doneText }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;border-radius:12px;background:#1E232C;padding:12px 14px;box-sizing:border-box;text-align:left">
+        <span style="display:flex;justify-content:space-between;font:13px var(--font-ui);color:#959CA8">Durata<span style="font:500 13px var(--font-num);color:#fff">{{ debriefTime }}</span></span>
+        <span style="display:flex;justify-content:space-between;font:13px var(--font-ui);color:#959CA8">Sicurezza<span style="font:500 13px var(--font-num);color:#fff">{{ confidenceLabel }}</span></span>
+        <span style="display:flex;justify-content:space-between;font:13px var(--font-ui);color:#959CA8">Puntatore<span style="font:500 13px var(--font-ui);color:#6E96F2">{{ pointerText }}</span></span>
+      </div>
+      <button onClick="{{ restart }}" style="height:44px;padding:0 24px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer;margin-top:8px" style-hover="background:#292E37">Torna a Oggi</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:780},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;setup&quot;,&quot;options&quot;:[&quot;setup&quot;,&quot;timer&quot;,&quot;iperfocus&quot;,&quot;debrief&quot;,&quot;done&quot;],&quot;tsType&quot;:&quot;'setup' | 'timer' | 'iperfocus' | 'debrief' | 'done'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;exit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;tentativo&quot;,&quot;registrata&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Iperfocus (SCENARI D5)&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;material&quot;,&quot;options&quot;:[&quot;material&quot;,&quot;ai&quot;,&quot;notes&quot;],&quot;tsType&quot;:&quot;'material' | 'ai' | 'notes'&quot;,&quot;section&quot;:&quot;Stato iniziale · mobile&quot;},&quot;timerState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;running&quot;,&quot;options&quot;:[&quot;running&quot;,&quot;paused&quot;,&quot;overrun&quot;],&quot;tsType&quot;:&quot;'running' | 'paused' | 'overrun'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;source&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;routine&quot;,&quot;options&quot;:[&quot;routine&quot;,&quot;free&quot;,&quot;recovery&quot;],&quot;tsType&quot;:&quot;'routine' | 'free' | 'recovery'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;continuous&quot;,&quot;options&quot;:[&quot;continuous&quot;,&quot;p25&quot;,&quot;p50&quot;,&quot;p90&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;hyper&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;wide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;}}">
+class Component extends DCLogic {
+  DUR = [5, 10, 15, 25, 45, 60, 90];
+  UNITS = [
+    { mod: '00', n: '0.7', title: 'Event loop visualizzato (l\'esperimento che ripara il file rotto)', tag: 'dal puntatore', progress: '6 / 13 unità' },
+    { mod: '00', n: '0.6', title: '`this` ricostruito (esperimenti 9–10)', tag: 'ripeti', progress: 'fatta ven 18 set' },
+    { mod: '00', n: '0.8', title: 'Promises, async/await, error handling (esperimenti 11–12 + il gap squalificante)', tag: 'salta avanti', progress: 'da fare' }
+  ];
+  OUT = [
+    { id: 'done', label: 'Completata', sub: 'Il puntatore passa alla 2.5', d: 'M20 6 9 17l-5-5' },
+    { id: 'continue', label: 'Continua', sub: 'Resta sulla 2.4 la prossima volta', d: 'M5 12h14M13 6l6 6-6 6' },
+    { id: 'back', label: 'Indietro', sub: 'Ripeti la 2.3', d: 'M19 12H5M11 18l-6-6 6-6' },
+    { id: 'skip', label: 'Salta', sub: 'Passa oltre senza completare', d: 'M5 4l10 8-10 8zM19 5v14' }
+  ];
+  svg(d, color, size = 16, w = 1.75) { return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: color, style: { strokeWidth: w, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, d.split('|').map((p, i) => React.createElement('path', { key: i, d: p }))); }
+  constructor(p) { super(p); this.state = this.initial(p); }
+  initial(p) {
+    const view = p.view || 'setup';
+    const src = p.source || 'routine';
+    const hyperFull = view === 'iperfocus';
+    return { view: hyperFull ? 'timer' : view === 'done' ? 'done' : view, hyperFull, exit: hyperFull ? (p.exit || 'no') : 'no', unit: 0, showUnits: false, duration: src === 'routine' ? 45 : 50, mode: p.mode || 'continuous', hyper: hyperFull || p.hyper === true || p.hyper === 'true', interruptions: 0, seg: 2, counts: true, tab: p.tab || 'material', sideTab: 'ai', paused: p.timerState === 'paused', overrun: p.timerState === 'overrun', outcome: view === 'done' ? 'done' : null, confidence: view === 'done' ? 4 : 0 };
+  }
+  componentDidUpdate(prev) { if (prev.view !== this.props.view || prev.exit !== this.props.exit || prev.tab !== this.props.tab || prev.timerState !== this.props.timerState || prev.source !== this.props.source || prev.mode !== this.props.mode || prev.hyper !== this.props.hyper) this.setState(this.initial(this.props)); }
+  renderVals() {
+    const s = this.state, wide = this.props.wide === true || this.props.wide === 'true', src = this.props.source || 'routine';
+    const sel = { bg: '#fff', border: '#fff', color: '#0A0D13', weight: 600 }, def = { bg: '#141820', border: '#292E37', color: '#959CA8', weight: 500 };
+    const sourceMap = { routine: { text: 'Da routine · Ripasso Modulo 0 · 16:00', short: 'routine 16:00', color: '#959CA8', icon: 'm17 2 4 4-4 4|M3 11v-1a4 4 0 0 1 4-4h14|m7 22-4-4 4-4|M21 13v1a4 4 0 0 1-4 4H3' }, free: { text: 'Sessione libera · dall\'unità', short: 'sessione libera', color: '#959CA8', icon: 'M6 3l14 9-14 9z' }, recovery: { text: 'Recupero · occorrenza di ven 11 set saltata', short: 'recupero', color: '#FACC15', icon: 'M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8|M3 3v5h5|M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16|M16 16h5v5' } }[src];
+    const endMin = 16 * 60 + s.duration, endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+    const fmt = m => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m / 60}h`) : `${m} min`;
+    const isRoutineSrc = src === 'routine';
+    const durList = isRoutineSrc ? [[45, 'Della routine · 45']] : [[25, '25'], [50, '50'], [90, '90'], [-1, 'Personalizzata'], [0, 'Cronometro']];
+    const durations = durList.map(([d, label]) => { const on = d === s.duration; return { label, ...(on ? sel : def), pick: () => this.setState({ duration: d }) }; });
+    const durationNote = isRoutineSrc ? 'Ancorata all\'orologio: finisce alle 16:45 anche se metti in pausa. Ritardo registrato dall\'inizio previsto.' : s.duration === 0 ? 'Cronometro: nessuna fine, chiudi tu la sessione.' : src === 'recovery' ? 'Recupero: durata a scelta, il ritardo resta registrato.' : 'Ancorata al focus: le pause allungano la fine.';
+    const modeList = [['continuous', 'Continua', ''], ['p25', 'Pomodoro', '25 · 5'], ['p50', 'Pomodoro', '50 · 10'], ['p90', 'Pomodoro', '90 · 20']];
+    const modes = modeList.map(([id, label, num]) => { const on = s.mode === id; return { label, num, hasNum: !!num, ...(on ? sel : def), pick: () => this.setState({ mode: id }) }; });
+    const isPomodoro = s.mode !== 'continuous';
+    const pomo = { p25: [25, 5], p50: [50, 10], p90: [90, 20] }[s.mode] || [25, 5];
+    const total = s.duration > 0 ? s.duration : 120;
+    const segs = []; let left = total; while (left > 0 && segs.length < 12) { segs.push(['s', Math.min(pomo[0], left)]); left -= pomo[0]; if (left > 0) { segs.push(['p', Math.min(pomo[1], left)]); left -= pomo[1]; } }
+    const segments = segs.map(([k, m], i) => ({ w: Math.max(6, Math.round(m / 5)), bg: i < s.seg ? (k === 's' ? '#6E96F2' : '#2E4785') : i === s.seg ? (k === 's' ? '#6E96F2' : '#3A404B') : '#292E37' }));
+    const pomodoroNote = `Segmenti ${segs.map(([k, m]) => m).join(' / ')} tassellano ${s.duration > 0 ? fmt(s.duration) : '4 cicli'} · avanzano da soli, «salta» congela il focus del segmento · ogni segmento può avere un'unità diversa`;
+    const unitLocked = isRoutineSrc;
+    const unitOptions = (s.showUnits ? this.UNITS : [this.UNITS[s.unit]]).map((u, i) => ({ ...u, tag: isRoutineSrc && i === 0 ? 'dal puntatore' : u.tag, border: s.showUnits && (this.UNITS.indexOf(u) === s.unit) ? '#fff' : '#292E37', pick: () => !unitLocked && this.setState({ unit: this.UNITS.indexOf(u), showUnits: false }) }));
+    const timerText = s.overrun ? '+04:12' : s.paused ? '24:19' : '24:19';
+    const timerColor = s.overrun ? '#6E96F2' : s.paused ? '#959CA8' : '#fff';
+    const timerMeta = s.overrun ? 'oltre i 45 min · 49:12 totali' : 'restano · di 45 min';
+    const stateBadge = s.overrun ? React.createElement('span', { style: { height: 20, padding: '0 7px', borderRadius: 999, background: '#1C2439', color: '#6E96F2', font: '600 10px/1 var(--font-ui)', letterSpacing: '.04em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center' } }, 'Tempo extra') : s.paused ? React.createElement('span', { style: { height: 20, padding: '0 7px', borderRadius: 999, background: '#1E232C', color: '#959CA8', font: '600 10px/1 var(--font-ui)', letterSpacing: '.04em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center' } }, 'In pausa') : React.createElement('span', { style: { width: 8, height: 8, borderRadius: 999, background: '#22C55E', animation: 'rf-pulse 2s ease-in-out infinite', display: 'inline-block' } });
+    const tabs = [{ id: 'material', label: 'Materiale' }, { id: 'ai', label: 'AI', count: '2', countColor: '#6E96F2' }, { id: 'notes', label: 'Note' }].map(t => { const on = s.tab === t.id; return { ...t, hasCount: !!t.count, ...(on ? sel : def), countColor: on ? '#0A0D13' : '#6E96F2', pick: () => this.setState({ tab: t.id }) }; });
+    const sideTabs = [{ id: 'ai', label: 'AI' }, { id: 'notes', label: 'Note' }].map(t => { const on = s.sideTab === t.id; return { ...t, ...(on ? sel : def), pick: () => this.setState({ sideTab: t.id }) }; });
+    const outcomes = this.OUT.map(o => { const on = s.outcome === o.id; return { label: o.label, sub: o.sub, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', color: on ? '#0A0D13' : '#fff', subColor: on ? '#3A404B' : '#959CA8', icon: this.svg(o.d, on ? '#0A0D13' : '#959CA8', 16, 2), pick: () => this.setState({ outcome: o.id }) }; });
+    const confidence = [1, 2, 3, 4, 5].map(n => { const on = s.confidence === n; return { n: String(n), bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', color: on ? '#0A0D13' : '#fff', weight: on ? 600 : 500, pick: () => this.setState({ confidence: n }) }; });
+    const confLabels = ['—', 'per niente', 'poco', 'abbastanza', 'sicuro', 'molto sicuro'];
+    const out = this.OUT.find(o => o.id === s.outcome);
+    return {
+      isSetup: s.view === 'setup', isTimer: (s.view === 'timer' || s.view === 'debrief') && !s.hyperFull, isDebrief: s.view === 'debrief', isDone: s.view === 'done',
+      isHyper: s.hyperFull, hyperExitAsk: s.exit === 'tentativo', hyperExitDone: s.exit === 'registrata',
+      askExit: () => this.setState({ exit: 'tentativo' }), stay: () => this.setState({ exit: 'no' }), forceExit: () => this.setState({ exit: 'registrata' }),
+      hyperUnlock: 'L\u2019uscita si sblocca alle 16:45',
+      isWide: wide, isNarrow: !wide, cols: wide ? 'minmax(0,1fr) 400px' : 'minmax(0,1fr)', splitBorder: wide ? '1px solid #292E37' : '0', padX: wide ? 24 : 20,
+      topGap: wide ? 0 : 10, topPad: wide ? '10px 12px 10px 8px' : '8px 12px 14px 8px', topBg: s.overrun ? '#161C28' : '#141820',
+      sourceText: sourceMap.text, sourceShort: sourceMap.short, sourceColor: sourceMap.color, sourceIcon: this.svg(sourceMap.icon, sourceMap.color, 14),
+      unitOptions, toggleUnits: () => this.setState(x => ({ showUnits: !x.showUnits })), changeLabel: s.showUnits ? 'Chiudi' : 'Scegli', canChange: !unitLocked, unitLocked,
+      unitHeading: isRoutineSrc ? 'Unità proposta dal puntatore' : src === 'recovery' ? 'Unità dell\'occorrenza' : 'Cosa studiare · unità, corso o niente',
+      durations, durationLabel: s.duration > 0 ? fmt(s.duration) : s.duration === 0 ? 'cronometro' : 'durata libera', endTime: s.duration > 0 ? endTime : '—', durationNote,
+      modes, isPomodoro, pomodoroNote, segments, segLabel: `${s.seg + 1} / ${segs.length}`, skipSegment: () => this.setState(x => ({ seg: Math.min(segs.length - 1, x.seg + 1) })),
+      hyperOn: s.hyper, toggleHyper: () => this.setState(x => ({ hyper: !x.hyper })), hyperBg: s.hyper ? '#6E96F2' : '#292E37', hyperKnob: s.hyper ? 20 : 2, hyperKnobColor: s.hyper ? '#0A0D13' : '#959CA8',
+      notifyNote: isRoutineSrc ? 'La verifica di metà durata si cancella all\'avvio · avviso a fine sessione e invito a registrare l\'esito 10 min dopo la fine' : 'Ti avviso a fine sessione per registrare l\'esito',
+      interruptions: String(s.interruptions), addInterruption: () => this.setState(x => ({ interruptions: x.interruptions + 1 })), toolsPad: wide ? '8px 12px 0 60px' : '10px 4px 0',
+      counts: s.counts, toggleCounts: () => this.setState(x => ({ counts: !x.counts })), countsBg: s.counts ? '#6E96F2' : '#292E37', countsKnob: s.counts ? 20 : 2, countsKnobColor: s.counts ? '#0A0D13' : '#959CA8',
+      countsNote: s.counts ? (isRoutineSrc ? 'L\'esito agisce sull\'unità e sul puntatore' : 'Crea un blocco di studio retroattivo e muove il puntatore') : 'Resta solo nelle statistiche di focus: unità e puntatore non cambiano',
+      start: () => this.setState({ view: 'timer' }),
+      timerText, timerColor, timerMeta, stateBadge, pct: s.overrun ? 100 : 46, barColor: s.overrun ? '#6E96F2' : '#6E96F2',
+      pauseLabel: s.paused ? 'Riprendi' : 'Pausa', pauseIcon: s.paused ? React.createElement('svg', { viewBox: '0 0 24 24', width: 16, height: 16, fill: '#fff' }, React.createElement('path', { d: 'M6 3l14 9-14 9z' })) : this.svg('M8 5v14|M16 5v14', '#fff', 16, 2.25),
+      togglePause: () => this.setState(x => ({ paused: !x.paused })), minimize: () => {}, finish: () => this.setState({ view: 'debrief' }),
+      tabs, showMaterial: wide || s.tab === 'material', showAiLeft: !wide && s.tab === 'ai', showNotesLeft: !wide && s.tab === 'notes',
+      sideTabs, showAiRight: s.sideTab === 'ai', showNotesRight: s.sideTab === 'notes',
+      outcomes, confidence, confidenceLabel: confLabels[s.confidence], debriefTime: s.overrun ? '49 min' : '21 min', debriefExtra: s.overrun ? ' · tempo extra +4 min' : '', sheetMax: wide ? '560px' : 'none',
+      registerDisabled: !s.outcome, registerOpacity: s.outcome ? 1 : .4, backToTimer: () => this.setState({ view: 'timer' }), register: () => this.setState({ view: 'done' }),
+      doneTitle: out ? `Esito · ${out.label}` : 'Esito registrato', doneText: 'La card su Oggi è spuntata. La prossima occorrenza proporrà l\'unità giusta.', pointerText: out ? out.sub : '', restart: () => this.setState(this.initial({ ...this.props, view: 'setup' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

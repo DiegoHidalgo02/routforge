@@ -18,7 +18,7 @@
 - Nessun task in corso. La seconda passata è nel commit `e67b04e`.
 
 ## Problemi aperti
-- L'export di Claude Design non è nel repo: `npm run design:check` segnala 45 file mancanti. La cartella di destinazione è `claude-design/` (rinominata il 24/09 per non confonderla con la sottocartella `design/` dell'export). Il progetto Claude Design è raggiungibile dal server MCP `claude-design` e contiene 43 dei 45 file: mancano `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` (corso di esempio, FORMATO §5), da recuperare dall'utente. Import: `/design` in Claude Code, oppure Export → ZIP scompattato in `claude-design/` (guida, Fase 4). Finché manca, T-000 non può chiudersi. L'export va versionato (D-DESIGN-1).
+- Export di Claude Design **completo in `claude-design/` (24/09)**: `npm run design:check` = 0 mancanti. 43 file dal server MCP `claude-design`, ciascuno identico byte per byte alla dimensione nel progetto (etag del 24/09); `spec/M0-Riattivazione_JavaScript.md` e `spec/M1-Tooling_Moderno.md` (corso di esempio, FORMATO §5) aggiunti dall'utente perché assenti dal progetto di design. Ancora da versionare (D-DESIGN-1): non committato.
 - Plugin di Claude Code: dichiarati nel repository il 24/09 (`.claude/settings.json`: `enabledPlugins` + `extraKnownMarketplaces`): superpowers, ponytail, claude-council, mattpocock-skills, impeccable attivi; security-guidance e frontend-design spenti qui. Alla prossima apertura Claude Code propone di installare i mancanti (ponytail, impeccable): confermare, poi `/plugin` e `npm run audit:claude`. Le copie precedenti del repo sul Desktop hanno registrazioni proprie, irrilevanti per questa cartella.
 - `/impeccable init` non è ancora stato eseguito in questa copia del repository: va fatto dopo l'import del design (guida, Fase 4).
 - Nessun remote git in questo checkout: la CI non ha mai girato (`gh repo create … --push`, guida Fase 1).
@@ -29,10 +29,10 @@
 - Decisioni aperte: D-QUIZ-1 (CP5); D-BACKUP-1 chiave AI nel file di backup e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3 numeri duplicati di modulo/unità nello ZIP (prima di T-003).
 
 ## Divergenze design ↔ spec
-- (nessuna rilevata: il design non è ancora stato importato)
+- (nessuna rilevata finora: la verifica dell'handoff, `docs/03_HANDOFF_DESIGN_CODE.md` §9, si fa in T-000)
 
 ## Prossimo task
-- **T-000** Import del design e scelta dello stack (decide l'agente, `docs/02_ARCHITETTURA.md` §0; scheda `docs/decisioni/D-STACK-1.md`). Prerequisito: l'utente esegue `/design` nel repo.
+- **T-000** Import del design e scelta dello stack (decide l'agente, `docs/02_ARCHITETTURA.md` §0; scheda `docs/decisioni/D-STACK-1.md`). Import fatto (design:check verde): restano lettura completa dell'export, verifica dell'handoff, D-STACK-1, copia di M0/M1 in `src/data/sample-course/` e confronto del parser con `course-data.js`.
 - In parallelo a T-000, senza dipendenze dal design: **T-011** (occorrenze con ora di parete) e poi **T-012** (orizzonte todo) sono dominio puro e possono partire subito (`/task T-011`, modello Opus 5.5). T-003, T-004, T-005 e T-006 attendono T-000.
 
 ## Checkpoint in attesa
