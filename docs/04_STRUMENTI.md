@@ -69,4 +69,7 @@ Regola: **tutto ciò che è di RoutForge vive nel progetto** (`.claude/` del rep
 | `~/.claude/CLAUDE.md` e i suoi `@import` | istruzioni di progetto solo in `CLAUDE.md` del repo | sposta nel progetto giusto ciò che non è universale; controlla con `/memory` |
 | Server MCP di ambito utente | nessuno richiesto da RoutForge | `/mcp` o `claude mcp remove <nome> -s user` |
 
+
+**Fiducia nelle marketplace di terze parti (D-TOOLS-2).** `extraKnownMarketplaces` in `.claude/settings.json` fa proporre a chiunque apra il repository l'installazione di ponytail, claude-council e impeccable dai rispettivi repository GitHub, al ramo corrente e senza versione fissata. È la stessa fiducia già accordata installandoli sul PC. Prima di aggiornare o aggiungere una marketplace, guardare il repository sorgente; per revocare, plugin a `false` e marketplace rimossa.
+
 Strumenti di controllo: `npm run audit:claude` (inventario completo, conflitti di nome, archiviazione e ripristino), `/context` (peso di skill, memoria e MCP nel contesto), `/skill-doctor` (skill e plugin mai usati).

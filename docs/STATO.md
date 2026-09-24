@@ -25,6 +25,7 @@
 - `scripts/loop.sh` compare sempre come modificato su Windows (bit di esecuzione): `git config core.fileMode false` **prima** di `git add`, così l'indice conserva il modo 100755 e lo script resta eseguibile su macOS/Linux (se già aggiunto: `git update-index --chmod=+x scripts/loop.sh`).
 - `npm audit`: due avvisi moderati su `@vitest/mocker` (redirect mock del dev server, non usato); correzione solo con Vitest 5 → task dedicato, non urgente (`docs/DIPENDENZE.md`).
 - Permessi di Claude Code: `.claude/settings.json` e `.claude/hooks/**` sono in `permissions.ask` dal 24/09: modificarli richiede una conferma esplicita, anche in modalità loop.
+- Marketplace di terze parti dichiarate nel repository (ponytail, hex, impeccable): fiducia esplicita, senza versione fissata (D-TOOLS-2); revocabile mettendo il plugin a `false`.
 - Decisioni aperte: D-QUIZ-1 (CP5); D-BACKUP-1 chiave AI nel file di backup e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3 numeri duplicati di modulo/unità nello ZIP (prima di T-003).
 
 ## Divergenze design ↔ spec
