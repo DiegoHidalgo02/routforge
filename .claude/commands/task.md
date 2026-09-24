@@ -1,13 +1,16 @@
 ---
 description: Esegui un task del backlog (docs/TASKS.md) con il ciclo completo: analisi → test → codice → verify → docs → commit
-argument-hint: "[T-0NN | next]"
+argument-hint: "[T-0NN | next] [loop]"
 ---
-Esegui il task `$ARGUMENTS` (se `next` o vuoto: il primo task con stato `aperto` in `docs/TASKS.md`
-le cui dipendenze sono `fatto`).
+Argomenti: `$ARGUMENTS`. Il primo è l'ID del task (`T-0NN`), oppure `next` o vuoto = il primo task con stato
+`aperto` in `docs/TASKS.md` le cui dipendenze sono `fatto`. Se c'è anche la parola `loop`, sei stato avviato dal
+loop semi-autonomo (`scripts/loop.ps1`): il modello l'ha già scelto il loop dalla colonna **Modello**, quindi non
+chiedere conferme e non attendere risposte; se serve una decisione umana scrivi `CHECKPOINT:` o `BLOCCO:` in
+`docs/STATO.md`, fai commit e termina.
 
 Procedura obbligatoria:
 1. Leggi `docs/STATO.md`, la riga del task in `docs/TASKS.md`, i paragrafi di spec e gli scenari che cita.
-   Se la colonna **Modello** indica un modello diverso da quello di questa sessione, dillo in una riga
+   Se la colonna **Modello** indica un modello diverso da quello di questa sessione (e non sei in modalità `loop`), dillo in una riga
    ("Questo task è previsto per <modello>: vuoi cambiare con /model prima che inizi?") e attendi la risposta.
    **Task in due fasi** (colonna "Fable 5.1 (piano) → Opus 5.5 (codice)"):
    - se `docs/piani/<ID>.md` NON esiste → fase piano (sessione Fable): scrivi in quel file un piano completo

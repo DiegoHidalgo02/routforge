@@ -30,16 +30,21 @@ claude                       # nel terminale integrato di VS Code (o dal pannell
 Claude legge lo stato, pianifica, implementa, verifica, aggiorna i documenti e committa. Tu leggi il riassunto di 5 righe e lanci il successivo.
 
 ### B. Semi-autonoma (una sequenza di task senza intervento)
-`scripts/loop.ps1` (Windows) / `scripts/loop.sh` esegue `claude -p "/task next" --permission-mode acceptEdits`
-in ciclo finché: tutti i task sono `fatto`, oppure `docs/STATO.md` contiene `CHECKPOINT:` o `BLOCCO:`, oppure si
-raggiunge il numero massimo di iterazioni. Lo script crea da solo il tag `pre-loop-<data>`: per tornare indietro `git switch -c recupero pre-loop-<data>`.
-Da VS Code: *Terminale → Esegui attività… → loop agentico (3 task)*.
+`scripts/loop.ps1` (Windows) / `scripts/loop.sh` a ogni giro chiede a `scripts/prossimo-task.mjs` il prossimo task
+(stessa regola di `/task next`) e **il modello dalla colonna Modello** di `docs/TASKS.md`, compresi i task in due
+fasi (Fable per il piano se `docs/piani/<ID>.md` non esiste, Opus per il codice se esiste). Poi esegue
+`claude -p "/task <ID> loop" --model <modello> --permission-mode acceptEdits`.
+
+Si ferma da solo quando: `docs/STATO.md` contiene `CHECKPOINT:` o `BLOCCO:`; non ci sono task eseguibili; il prossimo
+passo usa **Fable 5.1** (per non consumare la quota settimanale senza che tu lo sappia: eseguilo a mano, oppure
+rilancia con `-ConsentiFable`); il gate è rosso; un giro non ha prodotto commit (evita ripetizioni infinite).
+Crea il tag `pre-loop-<data>` all'avvio e un tag `snapshot-<ID>-<data>` prima di ogni task **R**.
 ```
-pwsh scripts/loop.ps1 -MaxTasks 5 -Model sonnet
+pwsh -File scripts/loop.ps1 -MaxTasks 5
+pwsh -File scripts/loop.ps1 -MaxTasks 5 -ConsentiFable     # include T-000 e le fasi di piano
 ```
-Il loop usa un solo modello: lancialo solo su task consecutivi con lo stesso valore nella colonna **Modello**.
-Ogni iterazione è una sessione nuova: il contesto arriva da `CLAUDE.md` + hook SessionStart + `docs/STATO.md`
-(principio di continuità). Non usare mai `--dangerously-skip-permissions`.
+Ogni giro è una sessione nuova: il contesto arriva da `CLAUDE.md` + hook SessionStart + `docs/STATO.md`.
+Non usare mai `--dangerously-skip-permissions`.
 
 ### C. Revisione indipendente (fine di ogni passo del piano)
 - In Claude Code: `/claude-council:ask "Rivedi <file> rispetto a docs/spec/RoutForge_MECCANISMI.md §8"` → risposte di Codex (gpt-5.6-terra) affiancate.

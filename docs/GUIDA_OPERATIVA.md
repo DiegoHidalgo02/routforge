@@ -513,13 +513,13 @@ git push
 
 9. Ogni 10 task circa, se usi Graphify, aggiorna il grafo con `/graphify .`.
 
-**Modalità semi-autonoma (dopo i primi 5–10 task).** Quando ti fidi del processo, fai girare più task di fila. Il loop si ferma da solo a un checkpoint, a un blocco o con il gate rosso, e crea prima un tag git per tornare indietro.
+**Modalità semi-autonoma (dopo i primi 5–10 task).** Quando ti fidi del processo, fai girare più task di fila. A ogni task il loop **sceglie da solo il modello** dalla colonna Modello, compresi i task in due fasi. Si ferma a un checkpoint, a un blocco, con il gate rosso, se un giro non produce commit e **prima di ogni passo con Fable 5.1**, per non consumare la quota settimanale a tua insaputa. Crea un tag git all'avvio e prima di ogni task rischioso.
 
 ```powershell
-pwsh -File scripts/loop.ps1 -MaxTasks 3 -Model sonnet
+pwsh -File scripts/loop.ps1 -MaxTasks 3
 ```
 
-Il loop usa un solo modello: lancialo solo su task consecutivi che nella colonna **Modello** hanno lo stesso valore.
+Per lasciargli usare anche Fable 5.1 (T-000 e le fasi di piano), aggiungi `-ConsentiFable`.
 
 In alternativa: Terminale → Esegui attività… → **loop agentico (3 task)**. Alla fine leggi `docs/STATO.md` e `git log --oneline -10`.
 

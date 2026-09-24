@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 // Nessun DOM necessario per il dominio: ambiente "node" (più veloce).
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.mjs'],
     environment: 'node',
   },
 });
