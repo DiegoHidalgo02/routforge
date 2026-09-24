@@ -5,15 +5,16 @@
 //   Claude riceve l'errore e continua a lavorare finché il gate è verde.
 // - Salta silenziosamente se non esiste package.json (repo non ancora pronto)
 //   o se il file .claude/hooks/SKIP_VERIFY esiste (fase "rosso" voluta del TDD).
+// - Senza node_modules il gate non può girare: lo dice chiaramente invece di fallire su "tsc non trovato".
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 
 let input = '';
 try {
-  input = (await import('node:fs')).readFileSync(0, 'utf8');
+  input = readFileSync(0, 'utf8');
 } catch {
   /* nessun input */
 }
@@ -27,6 +28,12 @@ try {
 if (event.stop_hook_active) process.exit(0);
 if (!existsSync(join(root, 'package.json'))) process.exit(0);
 if (existsSync(join(root, '.claude/hooks/SKIP_VERIFY'))) process.exit(0);
+if (!existsSync(join(root, 'node_modules'))) {
+  process.stderr.write(
+    'Dipendenze non installate: il gate `npm run verify` non può girare. Esegui `npm ci` e rilancia la verifica.\n',
+  );
+  process.exit(2);
+}
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const res = spawnSync(npm, ['run', 'verify', '--silent'], {

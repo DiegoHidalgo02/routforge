@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ErroreImportCorso,
   extractLinks,
+  hostOf,
   parseCourse,
   parseEstimatedHours,
   parseModule,
@@ -140,32 +141,34 @@ describe('Import corso — SCENARI H1', () => {
   ];
 
   it('il corso ha 2 moduli in ordine 1, 3; il .txt è ignorato; M2 senza intestazione genera un avviso ed è saltato', () => {
-    const { course, warnings } = parseCourse(zip, opts);
-    expect(course.moduli.map((m) => m.numero)).toEqual([1, 3]);
-    expect(course.moduli.map((m) => m.nn)).toEqual(['01', '03']);
-    expect(warnings.some((w) => w.file === 'M2-Rotto.md' && /intestazione di modulo mancante/.test(w.messaggio))).toBe(true);
-    expect(warnings.some((w) => /M9/.test(w.messaggio))).toBe(false);
+    const { corso, avvisi } = parseCourse(zip, opts);
+    expect(corso.moduli.map((m) => m.numero)).toEqual([1, 3]);
+    expect(corso.moduli.map((m) => m.nn)).toEqual(['01', '03']);
+    expect(avvisi.some((w) => w.file === 'M2-Rotto.md' && /intestazione di modulo mancante/.test(w.messaggio))).toBe(
+      true,
+    );
+    expect(avvisi.some((w) => /M9/.test(w.messaggio))).toBe(false);
   });
 
   it('titolo e sottotitolo vengono dal file struttura (percorso appiattito)', () => {
-    const { course } = parseCourse(zip, opts);
-    expect(course.titolo).toBe('Syllabus Software Engineer 2026');
-    expect(course.sottotitolo).toBe('Percorso autodidatta in 5 moduli');
+    const { corso } = parseCourse(zip, opts);
+    expect(corso.titolo).toBe('Syllabus Software Engineer 2026');
+    expect(corso.sottotitolo).toBe('Percorso autodidatta in 5 moduli');
   });
 
   it('un secondo import dello stesso ZIP crea un secondo corso identico (id diverso)', () => {
     const a = parseCourse(zip, opts);
     const b = parseCourse(zip, { ...opts, corsoId: 'corso-2' });
-    expect(b.course.id).not.toBe(a.course.id);
+    expect(b.corso.id).not.toBe(a.corso.id);
     const strip = (o: unknown) => JSON.parse(JSON.stringify(o).replaceAll('corso-2', 'corso-1'));
-    expect(strip(b.course)).toEqual(a.course);
-    expect(b.warnings).toEqual(a.warnings);
+    expect(strip(b.corso)).toEqual(a.corso);
+    expect(b.avvisi).toEqual(a.avvisi);
   });
 
   it('senza file struttura: titolo passato dal chiamante, altrimenti "Corso importato" (D-PARSE-1)', () => {
     const files = [{ name: 'M1-Tooling_Moderno.md', content: M1 }];
-    expect(parseCourse(files, opts).course.titolo).toBe('Corso importato');
-    expect(parseCourse(files, { ...opts, titolo: 'Il mio corso' }).course.titolo).toBe('Il mio corso');
+    expect(parseCourse(files, opts).corso.titolo).toBe('Corso importato');
+    expect(parseCourse(files, { ...opts, titolo: 'Il mio corso' }).corso.titolo).toBe('Il mio corso');
   });
 
   it('senza alcun file modulo → errore', () => {
@@ -174,7 +177,7 @@ describe('Import corso — SCENARI H1', () => {
 });
 
 describe('Modulo — FORMATO_CORSO §2', () => {
-  const { module: m, warnings } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
+  const { modulo: m, avvisi } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
   if (!m) throw new Error('modulo atteso');
 
   it('intestazione, campi in grassetto, finestra senza parentesi, trasversali, intro', () => {
@@ -195,7 +198,12 @@ describe('Modulo — FORMATO_CORSO §2', () => {
 
   it('criteri Go/No-Go: suffisso rimosso, "Domande socratiche" è auto con soglia 0,8, [x] già fatto', () => {
     expect(m.criteri).toHaveLength(3);
-    expect(m.criteri[0]).toEqual({ testo: 'Domande socratiche superate (quiz ≥8/10)', auto: true, soglia: 0.8, fatto: false });
+    expect(m.criteri[0]).toEqual({
+      testo: 'Domande socratiche superate (quiz ≥8/10)',
+      auto: true,
+      soglia: 0.8,
+      fatto: false,
+    });
     expect(m.criteri[1]?.auto).toBe(false);
     expect(m.criteri[1]?.testo).toBe('Il progetto parte con `npm run dev`');
     expect(m.criteri[2]?.fatto).toBe(true);
@@ -213,8 +221,8 @@ describe('Modulo — FORMATO_CORSO §2', () => {
   it('due unità in ordine; la seconda ha 3 sezioni → avviso "importata con 3 sezioni"', () => {
     expect(m.unita.map((u) => u.numero)).toEqual(['1.1', '1.2']);
     expect(m.unita[1]?.sezioni.map((s) => s.tipo)).toEqual(['teoria', 'studio', 'progetto']);
-    expect(warnings.map((w) => w.messaggio)).toContain('unità 1.2 importata con 3 sezioni');
-    expect(warnings).toHaveLength(1);
+    expect(avvisi.map((w) => w.messaggio)).toContain('unità 1.2 importata con 3 sezioni');
+    expect(avvisi).toHaveLength(1);
   });
 
   it('il modulo che apre il corso è "aperto"; il markdown integrale è conservato (Self-Critique inclusa)', () => {
@@ -224,7 +232,7 @@ describe('Modulo — FORMATO_CORSO §2', () => {
 });
 
 describe('Unità — FORMATO_CORSO §3', () => {
-  const { module: m } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
+  const { modulo: m } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
   const u = m!.unita[0]!;
 
   it('concetto core con titolo e testo separati', () => {
@@ -253,7 +261,7 @@ describe('Unità — FORMATO_CORSO §3', () => {
     expect(u.sezioni[3]?.descrizione).toBe('una CLI con tre comandi.');
   });
 
-  it('ore stimate e difficoltà lette ovunque nell\'unità; stato iniziale non iniziata', () => {
+  it("ore stimate e difficoltà lette ovunque nell'unità; stato iniziale non iniziata", () => {
     expect(u.oreStimate).toBe(6);
     expect(u.difficolta).toBe('media');
     expect(m!.unita[1]?.oreStimate).toBe(7); // "6–8 ore" → media
@@ -267,26 +275,37 @@ describe('Unità — FORMATO_CORSO §3', () => {
     expect(teoria.descrizione.startsWith('Vite nasce per velocizzare')).toBe(true);
   });
 
+  it('host: senza www, minuscolo, senza porta né credenziali; URL non http → vuoto', () => {
+    expect(hostOf('https://www.Example.org:8080/x?y#z')).toBe('example.org');
+    expect(hostOf('http://user:pw@host.it/')).toBe('host.it');
+    expect(hostOf('ftp://x.org/')).toBe('');
+    // Dominio internazionalizzato conservato com'è (con `new URL` sarebbe punycode): scelta voluta, host leggibile
+    expect(hostOf('https://münchen.de/x')).toBe('münchen.de');
+  });
+
   it('youtu.be e shorts sono video incorporabili', () => {
-    expect(extractLinks('[a](https://youtu.be/xyz) [b](https://www.youtube.com/shorts/q1) [c](https://vimeo.com/1)').map((r) => r.youtube)).toEqual([true, true, false]);
+    expect(
+      extractLinks('[a](https://youtu.be/xyz) [b](https://www.youtube.com/shorts/q1) [c](https://vimeo.com/1)').map(
+        (r) => r.youtube,
+      ),
+    ).toEqual([true, true, false]);
   });
 });
 
-describe('Puntatore all\'import e stati dei moduli — FORMATO_CORSO §4', () => {
+describe("Puntatore all'import e stati dei moduli — FORMATO_CORSO §4", () => {
   it('unità corrente = prima unità del primo modulo aperto; M3 è bloccato perché M1 ha criteri non fatti', () => {
-    const { course } = parseCourse(
+    const { corso } = parseCourse(
       [
         { name: 'M1-Tooling_Moderno.md', content: M1 },
         { name: 'M3-Backend.md', content: M3 },
       ],
       opts,
     );
-    expect(course.numeroUnita).toBe(3);
-    expect(course.unitaCompletate).toBe(0);
-    expect(course.unitaCorrenteId).toBe('corso-1:M1:U1.1');
-    expect(course.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
+    expect(corso.numeroUnita).toBe(3);
+    expect(corso.unitaCompletate).toBe(0);
+    expect(corso.unitaCorrenteId).toBe('corso-1:M1:U1.1');
+    expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
   });
-
 
   it('soglie: "≥8/10" → 0,8; "≥ 80%" → 0,8; assente → null', () => {
     expect(parseThreshold('quiz ≥8/10')).toBe(0.8);
@@ -300,8 +319,8 @@ describe('Puntatore all\'import e stati dei moduli — FORMATO_CORSO §4', () =>
 
 describe('Vocabolario unico — unità importate e puntatore (D-NAMING-1)', () => {
   it("un'unità importata è già un'UnitaPercorso: il puntatore la usa senza conversioni", () => {
-    const { course } = parseCourse([{ name: 'M1-Tooling_Moderno.md', content: M1 }], opts);
-    const unita: UnitaPercorso[] = course.moduli.flatMap((m) => m.unita); // verificato dal compilatore
+    const { corso } = parseCourse([{ name: 'M1-Tooling_Moderno.md', content: M1 }], opts);
+    const unita: UnitaPercorso[] = corso.moduli.flatMap((m) => m.unita); // verificato dal compilatore
     const mappa = assignPointer(unita, [{ id: 'b1', inizio: local(2026, 9, 23, 9, 0) }]);
     expect(mappa.get('b1')).toBe('corso-1:M1:U1.1');
   });

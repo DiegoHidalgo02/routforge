@@ -10,6 +10,8 @@ Regole:
 - Un `describe` per scenario, titolo `'<Meccanismo> — SCENARI <ID>'`; ogni `it` cita la frase dello scenario.
 - Date e ore locali con `local(y, m, d, h, min)` di `src/domain/time.ts`; mai `Date.now()`.
 - Il test importa dal modulo di dominio previsto da `CLAUDE.md` §3 (crealo vuoto se manca, con firma minima
-  e `throw new Error('non implementato')`).
+  e `throw new Error('non implementato')`) e lo esporta da `src/domain/index.ts`.
 - Copri i valori esatti della spec (minuti, giorni, conteggi) e almeno un caso limite per scenario.
+- Aggiorna la riga di ogni scenario toccato in `docs/TRACCIABILITA.md` (file di test, stato `parziale`): il gate
+  rifiuta un test che nomina uno scenario senza riga coerente.
 - Non scrivere codice di produzione oltre la firma; riporta l'elenco dei test creati.

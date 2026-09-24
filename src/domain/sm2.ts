@@ -76,9 +76,7 @@ export function previewAll(card: StatoCarta, now: number): Record<Valutazione, n
   };
 }
 
-/** Ripasso trasversale: carte scadute (dueAt ≤ now), dalle più scadute (§19). */
-export function dueCards<T extends { schedule: StatoCarta }>(cards: readonly T[], now: number): T[] {
-  return cards
-    .filter((c) => c.schedule.scadenza <= now)
-    .sort((a, b) => a.schedule.scadenza - b.schedule.scadenza);
+/** Ripasso trasversale: carte con scadenza ≤ adesso, dalle più scadute (§19). */
+export function dueCards<T extends { sm2: StatoCarta }>(cards: readonly T[], now: number): T[] {
+  return cards.filter((c) => c.sm2.scadenza <= now).sort((a, b) => a.sm2.scadenza - b.sm2.scadenza);
 }

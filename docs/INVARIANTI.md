@@ -1,0 +1,26 @@
+# RoutForge — Invarianti
+
+*Proprietà che devono restare vere mentre il progetto cresce: chi le impone e come si verificano. Ogni regola che una
+macchina può verificare è verificata: `npm run verify` esegue tutte le voci marcate «gate». Le regole solo scritte sono
+marcate «manuale», con chi le controlla. Un invariante nuovo si aggiunge qui con la sua verifica; un invariante che
+cambia richiede una decisione in `docs/01_DECISIONI.md`. Prima di aggiungerne uno: può essere un test?*
+
+| ID | Invariante | Fonte | Verifica | Dove |
+|---|---|---|---|---|
+| INV-1 | Direzione delle dipendenze: `ui → app`, `app → data`, `data → domain`, tutti possono usare `domain`; `platform` importa solo le porte di `app` e `domain`; nessun altro import fra strati | CLAUDE.md §3, ARCHITETTURA §1, D-ARCH-1 | gate | `scripts/architettura.test.mjs` |
+| INV-2 | `src/domain` è puro, test inclusi: nessun `Date.now()`, `new Date()` senza argomenti, `Math.random()`, `console`, API del browser, `fetch`, timer; nessun pacchetto esterno (i test importano solo `vitest`); lib TypeScript `ES2022` senza `DOM` | CONTESTO §3, CLAUDE.md §4, D-ARCH-1, D-TS-1 | gate | `scripts/architettura.test.mjs`, `tsconfig.json` |
+| INV-3 | Ogni modulo di `src/domain` è esportato da `src/domain/index.ts`: un solo punto d'ingresso, nessun modulo orfano | ARCHITETTURA §1 | gate | `scripts/architettura.test.mjs` |
+| INV-4 | Il "now" è un parametro: nessuna funzione di dominio legge l'orologio; i confini di giorno passano da `src/domain/time.ts`, mai da costanti a 24 ore | CONTESTO §3, D-TIME-1 | gate per l'orologio (INV-2); manuale per l'aritmetica (`spec-reviewer`) | `src/domain/time.ts` |
+| INV-5 | `docs/spec/**` non si modifica mai | CLAUDE.md §1 | permessi di Claude Code (`deny`), VS Code `readonlyInclude`; manuale per gli altri agenti | `.claude/settings.json`, `.vscode/settings.json` |
+| INV-6 | Ogni `describe` in `src/**/*.test.ts` cita un paragrafo (§), un file di spec, uno scenario o una decisione | CLAUDE.md §4 | gate | `scripts/tracciabilita.test.mjs` |
+| INV-7 | Ogni scenario di SCENARI ha una riga in `docs/TRACCIABILITA.md` con un task esistente; un test che nomina uno scenario compare nella sua riga | CONTESTO §3, D-TRACC-1 | gate | `scripts/tracciabilita.test.mjs` |
+| INV-8 | Ogni pacchetto di `package.json` è registrato in `docs/DIPENDENZE.md` con motivo e decisione; nessuna «prevista» è installata | CLAUDE.md §2, D-DEP-1 | gate | `scripts/dipendenze.test.mjs` |
+| INV-9 | Nessuna chiave o token nei file del repository; `.env*` ignorati da git e non leggibili dall'agente | CLAUDE.md §8, D-SEC-1 | gate (pattern) + `.gitignore` + permessi | `scripts/segreti.test.mjs`, `.claude/settings.json` |
+| INV-10 | Niente `any`, niente `@ts-ignore`, niente variabili inutilizzate; codice formattato da Prettier | CLAUDE.md §4, D-LINT-1 | gate | `eslint.config.js`, `.prettierrc.json` |
+| INV-11 | Un solo gate, `npm run verify`, identico in locale, nell'hook `Stop` e in CI; la CI ripete i test in quattro fusi orari, uno a mezz'ora | D-TEST-1, ARCHITETTURA §2 | per costruzione | `package.json`, `.claude/hooks/stop-verify.mjs`, `.github/workflows/ci.yml` |
+| INV-12 | Vocabolario unico: tipi, attributi e valori del dominio in italiano come nelle spec; i valori con spazi usano `_` (`in_corso`, `non_iniziata`); nomi di file, cartelle, funzioni, servizi e porte in inglese | CLAUDE.md §4, D-NAMING-1 | manuale (`spec-reviewer`, revisione indipendente su `types.ts`) | `src/domain/types.ts` |
+| INV-13 | Una regola di spec è scritta una sola volta, nel dominio; i servizi orchestrano, non decidono | CLAUDE.md §2, D-MODULI-1 | manuale (revisione) | — |
+| INV-14 | Ogni record persistito ha `id` (UUID), `createdAt`, `updatedAt`, `deletedAt`; le eliminazioni sono tombstone | MECC §1, §25, D-DATA-1 | **da automatizzare in T-004** (test dello schema) | `src/data` (futuro) |
+| INV-15 | I cicli dello scheduler seguono l'ordine di MECC §9 e sono idempotenti: una seconda esecuzione senza cambiamenti non scrive nulla | MECC §9, CONTESTO §3 | **da automatizzare in T-013** (test «seconda esecuzione») | `src/app` (futuro) |
+| INV-16 | Nessuna operazione di notifica, widget o sync blocca o fa fallire l'app: gli adapter di `platform` non propagano eccezioni ai servizi | CONTESTO §3 | **da automatizzare da T-019 e T-021** (test con adapter che falliscono) | `src/platform` (futuro) |
+| INV-17 | La chiave AI e le credenziali non entrano mai nel dominio, nei log, nei test o nei documenti; il contesto AI esclude i file segreti di MECC §17 | CLAUDE.md §8, MECC §17 | gate parziale (INV-9); manuale (`/security-review` sui task AI, file, backup, sync) | — |

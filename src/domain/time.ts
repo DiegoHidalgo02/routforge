@@ -53,14 +53,7 @@ export function addLocalDays(ms: number, n: number): number {
 }
 
 /** Costruttore comodo per test e fixture: data/ora LOCALE. Mese 1-based. */
-export function local(
-  y: number,
-  month1: number,
-  day: number,
-  h = 0,
-  min = 0,
-  s = 0,
-): number {
+export function local(y: number, month1: number, day: number, h = 0, min = 0, s = 0): number {
   return new Date(y, month1 - 1, day, h, min, s, 0).getTime();
 }
 

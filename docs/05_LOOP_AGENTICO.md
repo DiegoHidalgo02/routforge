@@ -5,20 +5,20 @@
 ## 1. Il ciclo
 
 ```
-docs/TASKS.md ──► /task next ──► Analisi (spec + scenari) ──► Test rossi ──► Implementazione
-      ▲                                                                         │
-      │                                                                         ▼
- aggiorna TASKS/STATO ◄── Commit ◄── Auto-revisione ◄── npm run verify (verde) ◄─┘
+docs/TASKS.md ──► /task next ──► Analisi (spec + scenari + regole di strato) ──► Test rossi ──► Implementazione
+      ▲                                                                                        │
+      │                                                                                        ▼
+ aggiorna TASKS/TRACCIABILITA/STATO ◄── Commit ◄── Auto-revisione (+ revisione indipendente se alto impatto, §7)
       │                                              ▲                │ rosso
-      │                                              └── correzione ◄─┘
+      │                                              └── correzione ◄─┘ ◄── npm run verify (verde)
       └────────── prossimo task (o CHECKPOINT: si ferma e scrive in docs/STATO.md)
 ```
 
 Quattro garanzie meccaniche, non solo istruzioni:
-1. **SessionStart hook** (`.claude/hooks/session-start.mjs`): ogni sessione parte con `docs/STATO.md` e i prossimi task già nel contesto.
-2. **Stop hook** (`.claude/hooks/stop-verify.mjs`): Claude non può chiudere il turno con `npm run verify` rosso (esce con codice 2 e riceve l'errore). Per una fase "rossa" voluta del TDD crea il file `.claude/hooks/SKIP_VERIFY` e rimuovilo subito dopo.
+1. **SessionStart hook** (`.claude/hooks/session-start.mjs`): ogni sessione parte con `docs/STATO.md` e i prossimi task già nel contesto; le regole di strato in `.claude/rules/` si caricano quando tocchi i file a cui si applicano.
+2. **Stop hook** (`.claude/hooks/stop-verify.mjs`): Claude non può chiudere il turno con `npm run verify` rosso (esce con codice 2 e riceve l'errore). Per una fase "rossa" voluta del TDD crea il file `.claude/hooks/SKIP_VERIFY` e rimuovilo subito dopo. Senza `node_modules` l'hook lo dice chiaramente: `npm ci`.
 3. **Permessi** (`.claude/settings.json`): edit accettati automaticamente, comandi npm/git di lettura e commit permessi, comandi distruttivi negati, `docs/spec/` in sola lettura.
-4. **Gate unico** `npm run verify` = typecheck + test, identico in locale, nell'hook e in CI (`.github/workflows/ci.yml`).
+4. **Gate unico** `npm run verify` = typecheck + lint + formato + test, compresi i test del repository (architettura, tracciabilità degli scenari, registro delle dipendenze, segreti: `scripts/*.test.mjs`), identico in locale, nell'hook e in CI (`.github/workflows/ci.yml`). Elenco delle proprietà verificate in `docs/INVARIANTI.md`.
 
 ## 2. Modalità di esecuzione
 
@@ -36,7 +36,8 @@ fasi (Fable per il piano se `docs/piani/<ID>.md` non esiste, Opus per il codice 
 `claude -p "/task <ID> loop" --model <modello> --permission-mode acceptEdits`.
 
 Si ferma da solo quando: `docs/STATO.md` contiene `CHECKPOINT:` o `BLOCCO:`; non ci sono task eseguibili; il prossimo
-passo usa **Fable 5.1** (per non consumare la quota settimanale senza che tu lo sappia: eseguilo a mano, oppure
+task è marcato **CPn** (checkpoint non ancora deciso: il marcatore si toglie dalla riga quando la decisione è
+registrata in `docs/01_DECISIONI.md`); il prossimo passo usa **Fable 5.1** (per non consumare la quota settimanale senza che tu lo sappia: eseguilo a mano, oppure
 rilancia con `-ConsentiFable`); il gate è rosso; un giro non ha prodotto commit (evita ripetizioni infinite).
 Crea il tag `pre-loop-<data>` all'avvio e un tag `snapshot-<ID>-<data>` prima di ogni task **R**.
 ```
@@ -45,8 +46,10 @@ pwsh -File scripts/loop.ps1 -MaxTasks 5 -ConsentiFable     # include T-000 e le 
 ```
 Ogni giro è una sessione nuova: il contesto arriva da `CLAUDE.md` + hook SessionStart + `docs/STATO.md`.
 Non usare mai `--dangerously-skip-permissions`.
+Da verificare al primo giro (assunzioni non documentate da Claude Code): che `claude -p` espanda il comando di progetto
+`/task` e che l'hook Stop giri anche in modalità non interattiva. In ogni caso il loop rilancia `npm run verify` da solo.
 
-### C. Revisione indipendente (fine di ogni passo del piano)
+### C. Revisione indipendente (fine di ogni passo del piano e modifiche ad alto impatto, §7)
 - In Claude Code: `/claude-council:ask "Rivedi <file> rispetto a docs/spec/RoutForge_MECCANISMI.md §8"` → risposte di Codex (gpt-5.6-terra) affiancate.
 - Oppure in un secondo terminale di VS Code (o nel pannello dell'estensione Codex): `codex review` sul diff.
 - Per l'aspetto: subagent `design-checker`; per la conformità: subagent `spec-reviewer` (`.claude/agents/`).
@@ -74,10 +77,40 @@ Regole di convivenza: un solo agente scrive sul branch `main`; gli altri lavoran
 ## 5. Convenzioni di chiusura di un task
 
 - `docs/TASKS.md`: stato `fatto`, con i test che lo dimostrano.
+- `docs/TRACCIABILITA.md`: righe degli scenari del task aggiornate (test, stato); `docs/DIPENDENZE.md` se sono entrati pacchetti.
 - `docs/STATO.md`: Fatto / In corso / Problemi aperti / Prossimo / Checkpoint.
 - Commit: `tipo(ambito): descrizione (scenari)`; un commit per task, o più commit piccoli con il gate verde ognuno.
 - A fine sessione lunga: `/handoff` (comando di progetto) → `docs/handoff/<data>.md`.
 
 ## 6. Quando il loop si ferma da solo
 
-`CHECKPOINT:` (decisione umana, `docs/06_SUPERVISIONE.md`), `BLOCCO: informazione necessaria`, gate rosso per tre iterazioni consecutive sullo stesso task, dipendenze native mancanti (Android Studio, Mac per iOS).
+`CHECKPOINT:` (decisione umana, `docs/06_SUPERVISIONE.md`), `BLOCCO: informazione necessaria` (incluso un pacchetto non registrato in `docs/DIPENDENZE.md`), gate rosso per tre iterazioni consecutive sullo stesso task, dipendenze native mancanti (Android Studio, Mac per iOS).
+
+## 7. Modifiche ad alto impatto → revisione indipendente (D-REVIEW-1)
+
+Il processo è proporzionato al rischio. Per ogni task vale il ciclo di §1: leggi → capisci → pianifica → controllo
+architetturale (regole di strato in `.claude/rules/`, `docs/INVARIANTI.md`) → implementa → test → gate → documenta →
+rileggi il diff.
+
+Sono **ad alto impatto** le modifiche a: confini fra strati e `DIPENDENZE_AMMESSE` in `scripts/architettura.test.mjs`;
+in `src/domain/types.ts` le rinomine, le rimozioni e i cambi di semantica di campi o valori esistenti (le aggiunte
+additive coerenti con le spec, come un tipo `Ricorrenza` nuovo, restano nell'auto-revisione); schema di persistenza e migrazioni; porte di `src/app/ports` (nuove o
+cambiate); modello delle notifiche (id, riconciliazione); sync; sicurezza (chiave AI, backup, file dell'utente);
+astrazioni trasversali; refactoring su più strati.
+
+Per queste, prima del commit:
+1. chi implementa scrive in `docs/STATO.md` (In corso) cosa è cambiato e perché, con le decisioni `D-…` aggiornate e, se
+   ad alto impatto, la scheda in `docs/decisioni/`;
+2. un revisore che **non** ha scritto il codice rivede diff e documenti: l'altro modello (Fable 5.1 ↔ Opus 5.5 con
+   `/model`, o in una sessione separata) oppure Codex (`codex review`); in modalità loop, dove l'altro modello non è
+   disponibile, il subagent `spec-reviewer` nella stessa sessione, e la revisione dell'altro modello si fa a fine passo (§2.C);
+3. le divergenze si risolvono nel codice o nella decisione, mai ignorandole; se il revisore ha ragione su un requisito,
+   vince il requisito;
+4. si aggiornano `docs/02_ARCHITETTURA.md`, `docs/INVARIANTI.md`, le schede in `docs/decisioni/` e
+   `docs/TRACCIABILITA.md`;
+5. si rilancia `npm run verify`.
+
+Fable 5.1 e Opus 5.5 non sono «primo agente → secondo agente»: entrambi implementano, rivedono, fanno refactoring e
+debugging. La colonna Modello di `docs/TASKS.md` sceglie chi **inizia** un task in base a costo e difficoltà; la
+revisione incrociata è ciò che rende il lavoro dell'uno continuabile dall'altro. Le modifiche banali (testi, bug
+locali, test aggiuntivi) non passano da qui.

@@ -87,8 +87,20 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 6 | MECC §14 | "Adesso" per routine senza durata | D-NOW-1: fine effettiva = 23:59 |
 | 7 | FUNZ | Rimandi ai paragrafi sfalsati di uno (§8→§7, §10→§9, §12→§11, §13→§12, §16→§15, §23→§8.7) | Cosmetico; spec non modificate |
 | 8 | MECC §25 | La chiave Gemini viene sincronizzata sul servizio remoto | Raccomandazione (non requisito): cifrarla lato client prima dell'invio — decisione al Checkpoint 4 |
-| 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2 **aperta**: decisione al CP0, prima di T-004 e T-011 |
-| 9 | CONTESTO §1 | Lo Studio deve poter generalizzare Corso→Modulo→Unità | Il dominio usa `moduleOrder`/`order` generici; la gerarchia a tre livelli resta il caso di riferimento (D-STUDIO-1) |
+| 9 | CONTESTO §1 | Lo Studio deve poter generalizzare Corso→Modulo→Unità | Il dominio usa `moduloNumero`/`ordine` generici sull'unità; la gerarchia a tre livelli resta il caso di riferimento (D-STUDIO-1) |
+| 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2 **aperta**: decisione al CP0, prima di T-004 e T-011 (`docs/decisioni/D-TIME-2.md`) |
+| 11 | `CLAUDE.md`, `AUDIT_FOUNDATION.md` §12 | Dichiaravano «45 scenari»; SCENARI ne contiene 54 | Corretto (24/09); `docs/TRACCIABILITA.md` li elenca tutti e il gate verifica la corrispondenza (D-TRACC-1) |
+| 12 | `STATO.md` vs `TASKS.md`, `06_SUPERVISIONE.md` | T-011 e T-012 «possono partire subito», ma T-011 è marcato CP0 | Corretto: attendono il CP0 |
+| 13 | `02_ARCHITETTURA.md` §1, §3 | Parser «in arrivo» sebbene esista; carte con `ease`/`intervalDays`/`dueAt` contro D-NAMING-1 | Corretto: nomi italiani (`facilita`, `intervalloGiorni`, `scadenza`) |
+| 14 | `02_ARCHITETTURA.md` §2 vs `ci.yml` | Quattro fusi con Kolkata nel documento, tre nella CI | CI con Kolkata (fuso a mezz'ora); INV-11 |
+| 15 | `.gitignore` vs guida Fase 4 / T-000 | Versionare o no l'export del design: mai deciso | D-DESIGN-1: si versiona; ignorati solo gli ZIP |
+| 16 | `.claude/settings.json` vs guida Fase 5, `06_SUPERVISIONE.md` | `npm install` auto-approvato, ma la supervisione ferma l'agente sulle dipendenze non previste | D-DEP-1: registro `docs/DIPENDENZE.md` verificato dal gate; senza riga il gate è rosso |
+| 17 | `04_STRUMENTI.md` §5 vs ambiente reale | Plugin previsti con ambito progetto, abilitati a livello utente | Azione dell'utente (`STATO.md`, problemi aperti) |
+| 18 | `parser.ts`, `sm2.ts` | Campi `module`/`course`/`warnings`/`schedule` rimasti in inglese dopo D-NAMING-1 | Corretto (`modulo`, `corso`, `avvisi`, `sm2`) |
+| 19 | MECC §22 con §1 | Il file di backup (“tutto tranne il registro notifiche”) conterrebbe la chiave Gemini in chiaro | D-BACKUP-1 **aperta**: decisione al CP4 |
+| 20 | MECC §25 | Sorgente dell'istante di `updatedAt` per «ultimo vince» non specificata: orologi sfasati invertono l'esito | D-SYNC-1: decisione al CP4 |
+| 21 | FORMATO §1 | Numeri di modulo o unità duplicati nello ZIP: la spec tace, gli id del parser collidono | D-PARSE-3 **aperta**: decisione prima di T-003 |
+| 22 | `TASKS.md` vs `06_SUPERVISIONE.md` | CP2 e CP6 erano marcati sul task che il checkpoint **segue** (T-008, T-035): con il blocco meccanico dei task CPn il loop non li avrebbe mai avviati | Corretto: marcatori spostati sui task successivi (T-009, T-010); il checkpoint che segue un task è scritto nel testo del task |
 
 ## 7. Informazioni mancanti (non deducibili dalle spec)
 
@@ -99,6 +111,9 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | Azione utente: `/design` in Claude Code o Export → ZIP in `design/`; poi `npm run design:check` |
 | Identificatori app (bundle id, nome, icona) | Capacitor | Default `com.routforge.app` / "RoutForge" (D-APP-1), modificabile |
 | Modello Gemini "più economico" di default | Impostazioni AI | Letto dalla lista modelli dell'API; ripiego al nome noto più economico |
+| Sorgente dell'istante di `updatedAt` per «ultimo vince» (orologio del dispositivo o del servizio) | Passo 10 | **Checkpoint 4** — D-SYNC-1 |
+| Chiave Gemini nel file di backup (in chiaro per MECC §22) | Passo 9 | **Checkpoint 4** — D-BACKUP-1 |
+| Numeri di modulo/unità duplicati nello ZIP del corso | Passo 1 (T-003) | D-PARSE-3, proposta: duplicato saltato con avviso |
 
 ## 8. Priorità (ordine di costruzione, CONTESTO §6)
 

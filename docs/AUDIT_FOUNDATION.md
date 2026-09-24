@@ -1,5 +1,7 @@
 # RoutForge — Audit della foundation
 
+*Nota: §0–§12 descrivono lo stato al commit `87ab66a` (prima passata); ciò che è cambiato dopo è in §13.*
+
 *24 settembre 2026. Base analizzata: repository al commit `7eda970` più il `docs/` inviato dall'utente (identico byte per byte a quello del repository: `/impeccable init` non ha modificato `docs/`). Fonte primaria: `docs/spec/`. Questo documento non sostituisce le spec: dice se la struttura portante le regge.*
 
 ## 0. Verdetto
@@ -192,9 +194,39 @@ Integrazioni .......................... T-021 notifiche native e sveglie (CP3) �
     ↓
 Funzionalità di completamento ......... T-029 statistiche · T-030 backup · T-031 lingue · T-032 impostazioni e diagnostica
     ↓
-Test end-to-end ....................... tutti i 45 scenari di SCENARI.md coperti; revisione di fine passo (spec-reviewer + Codex)
+Test end-to-end ....................... tutti i 54 scenari di SCENARI.md coperti (docs/TRACCIABILITA.md); revisione di fine passo (spec-reviewer + Codex)
     ↓
 Hardening ............................. /security-review su AI, file, backup, sync · Oggi < 0,5 s su 500 blocchi · archiviazione persistente · Doze e sveglie esatte su dispositivo
     ↓
 Pronto per la produzione .............. T-035 build Android firmata + PWA (CP6) · T-036 iOS (serve un Mac)
 ```
+
+## 13. Seconda passata (24 settembre 2026, «Foundation Constitution»)
+
+Base: commit `87ab66a`. Obiettivo: rendere meccaniche le regole solo scritte e persistere la conoscenza architetturale
+nel repository, così che Fable 5.1 e Opus 5.5 possano continuare il lavoro l'uno dell'altro. Nessun codice applicativo aggiunto.
+
+| Cosa | Perché | Dove |
+|---|---|---|
+| Gate esteso: typecheck + lint + formato + test | `any` e `@ts-ignore` vietati solo a parole; stile divergente fra modelli | D-LINT-1, `eslint.config.js`, `.prettierrc.json` |
+| Lib `DOM` tolta dalla radice; `hostOf` del parser senza `URL` | purezza del dominio verificata anche dal compilatore | D-TS-1, `tsconfig.json`, `src/domain/course/parser.ts` |
+| Matrice dei 54 scenari + test nel gate | conteggio errato (45), H3 senza task per la cascata, nessun legame test ↔ scenario | D-TRACC-1, `docs/TRACCIABILITA.md`, `scripts/tracciabilita.test.mjs`, T-037 |
+| Registro delle dipendenze + test nel gate | supervisione sulle dipendenze senza meccanismo | D-DEP-1, `docs/DIPENDENZE.md`, `scripts/dipendenze.test.mjs` |
+| Test dei segreti nel gate | `CLAUDE.md` §8 senza verifica | D-SEC-1, `scripts/segreti.test.mjs` |
+| Invarianti con la loro verifica | proprietà da preservare sparse in più documenti | `docs/INVARIANTI.md` |
+| Schede delle decisioni ad alto impatto | contesto e conseguenze assenti dal registro | `docs/decisioni/` (D-ARCH-1, D-TIME-1, D-TIME-2, D-DATA-1, D-NAMING-1, D-STACK-1) |
+| Regole per strato caricate quando servono | regole di strato assenti dal contesto dell'agente | D-RULES-1, `.claude/rules/` |
+| Revisione indipendente per le modifiche ad alto impatto | continuità Fable ↔ Opus senza proprietario | D-REVIEW-1, `05_LOOP_AGENTICO.md` §7 |
+| Test architetturale esteso ai test del dominio e al barrel | i test del dominio potevano leggere l'orologio; moduli orfani possibili | `scripts/architettura.test.mjs` |
+| Residui inglesi nel parser corretti (`modulo`, `corso`, `avvisi`, `sm2`) | D-NAMING-1 incompleta | `src/domain/course/parser.ts`, `src/domain/sm2.ts` |
+| CI con Kolkata; hook robusti | fuso a mezz'ora assente; hook Stop opaco senza `node_modules`; STATO troncato a 4.000 caratteri | `ci.yml`, `.claude/hooks/` |
+| Il loop non avvia un task marcato **CPn** | il loop si fermava solo su una riga `CHECKPOINT:` in STATO: T-004 sarebbe partito senza il CP0 | `scripts/prossimo-task.mjs` + test |
+| Otto incoerenze documentali corrette, tre ambiguità di spec registrate | `00_SINTESI.md` §6, righe 11–21 | vari |
+| Revisione indipendente della seconda passata (D-REVIEW-1 applicata a sé stessa) | 1 rilievo grave (CP2/CP6 sul task sbagliato, `00_SINTESI.md` §6 riga 22), 8 medi e 9 minori applicati; resta all'utente la lista `permissions.ask` per `.claude/settings.json` e `.claude/hooks/**` | `docs/STATO.md` (problemi aperti) |
+
+**Validazione**: `npm run verify` verde (14 file, 102 test); ESLint e Prettier puliti; `npm audit` con due avvisi moderati
+noti (Vitest, `docs/DIPENDENZE.md`). Non eseguibile qui: CI (nessun remote), `design:check` con l'export reale, hook e
+regole in una sessione nuova di Claude Code.
+
+**Aperto dopo questa passata**: CP0 (D-TIME-2); D-BACKUP-1 e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3
+(prima di T-003); plugin con ambito progetto, remote e prima CI, commit di questa passata (azioni dell'utente).

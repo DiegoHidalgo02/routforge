@@ -16,5 +16,7 @@ in `spec/` (incluse `M0-Riattivazione_JavaScript.md` e `M1-Tooling_Moderno.md` =
 
 ## Regole
 - Questi file sono **fonte per l'aspetto**; per il comportamento valgono `docs/spec/`.
+- L'export **si versiona in git** (D-DESIGN-1): è una fonte di verità e deve essere disponibile a ogni agente e a
+  ogni sessione, non solo sul PC dell'utente. Restano fuori solo gli ZIP scaricati (`design/export/*.zip`).
 - Non si modificano a mano: si cambia il design in Claude Design e si reimporta (`/design-sync`).
 - `tokens.css` viene copiato in `src/ui/styles/tokens.css` in T-006 senza modifiche.

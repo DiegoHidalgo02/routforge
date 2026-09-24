@@ -13,7 +13,13 @@ const read = (p) => {
   }
 };
 
+// STATO.md è contesto tecnico, non un diario: se supera il limite va accorciato, non solo troncato qui.
+const LIMITE = 12_000;
 const stato = read('docs/STATO.md').trim();
+const statoMostrato =
+  stato.length > LIMITE
+    ? `${stato.slice(0, LIMITE)}\n[… docs/STATO.md troncato: leggilo per intero e accorcialo]`
+    : stato;
 const tasks = read('docs/TASKS.md');
 const open = tasks
   .split('\n')
@@ -22,11 +28,11 @@ const open = tasks
 
 const lines = [
   '=== RoutForge · stato di lavoro (docs/STATO.md) ===',
-  stato.slice(0, 4000) || '(docs/STATO.md mancante)',
+  statoMostrato || '(docs/STATO.md mancante)',
   '',
   '=== Prossimi task aperti (docs/TASKS.md) ===',
   ...(open.length ? open : ['(nessun task aperto trovato)']),
   '',
-  'Regole: CLAUDE.md · gate: npm run verify · fermati solo ai checkpoint di docs/06_SUPERVISIONE.md',
+  'Regole: CLAUDE.md + .claude/rules/ per lo strato che tocchi · invarianti: docs/INVARIANTI.md · gate: npm run verify · fermati solo ai checkpoint di docs/06_SUPERVISIONE.md',
 ];
 process.stdout.write(lines.join('\n') + '\n');

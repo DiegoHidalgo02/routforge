@@ -15,10 +15,7 @@ import { localDayKey, minutes } from './time';
 import type { Blocco } from './types';
 
 export type StatoAdesso =
-  | { tipo: 'tra'; minutiAllInizio: number }
-  | { tipo: 'adesso' }
-  | { tipo: 'recupera' }
-  | { tipo: 'orario_passato' };
+  { tipo: 'tra'; minutiAllInizio: number } | { tipo: 'adesso' } | { tipo: 'recupera' } | { tipo: 'orario_passato' };
 
 export interface SelezioneAdesso {
   blocco: Blocco;

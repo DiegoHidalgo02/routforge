@@ -56,10 +56,10 @@ describe('Ripasso trasversale (§19)', () => {
   it('raccoglie le carte con scadenza ≤ adesso, dalle più scadute', () => {
     const now = local(2026, 9, 22, 10, 0);
     const cards = [
-      { id: 'a', schedule: { facilita: 2.5, intervalloGiorni: 1, scadenza: now + DAY } },
-      { id: 'b', schedule: { facilita: 2.5, intervalloGiorni: 1, scadenza: now - 2 * DAY } },
-      { id: 'c', schedule: { facilita: 2.5, intervalloGiorni: 1, scadenza: now } },
-      { id: 'd', schedule: { facilita: 2.5, intervalloGiorni: 1, scadenza: now - DAY } },
+      { id: 'a', sm2: { facilita: 2.5, intervalloGiorni: 1, scadenza: now + DAY } },
+      { id: 'b', sm2: { facilita: 2.5, intervalloGiorni: 1, scadenza: now - 2 * DAY } },
+      { id: 'c', sm2: { facilita: 2.5, intervalloGiorni: 1, scadenza: now } },
+      { id: 'd', sm2: { facilita: 2.5, intervalloGiorni: 1, scadenza: now - DAY } },
     ];
     expect(dueCards(cards, now).map((c) => c.id)).toEqual(['b', 'd', 'c']);
   });

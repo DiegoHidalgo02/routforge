@@ -1,0 +1,11 @@
+# Prettier formatta solo il codice e le configurazioni del progetto.
+# I documenti (docs/, *.md) restano come li scrive l'autore: le spec non si toccano mai.
+node_modules
+dist
+coverage
+design
+docs
+*.md
+package-lock.json
+# File JSON con commenti (formato di VS Code): fuori dal controllo
+.vscode

@@ -65,7 +65,7 @@ describe('Adesso — SCENARI E3 (evento tutto il giorno)', () => {
   });
 });
 
-describe('Adesso — blocchi terminali esclusi', () => {
+describe('Adesso — MECCANISMI §14 (blocchi terminali esclusi)', () => {
   it('completati, saltati e persi non sono candidati', () => {
     const done = mk('D', 'routine', 9, 10, { stato: 'completato' });
     const lost = mk('L', 'studio', 9, 10, { stato: 'perso' });

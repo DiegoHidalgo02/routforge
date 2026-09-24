@@ -13,8 +13,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Gate unico (INV-11): typecheck + lint + formato + test, identico a locale e hook Stop
       - run: npm run verify
-      # Robustezza al fuso orario (CONTESTO §3): la stessa suite in tre fusi diversi
+      # Robustezza al fuso orario (CONTESTO §3, D-TIME-1): la stessa suite in quattro fusi diversi dal runner,
+      # incluso uno a mezz'ora (Kolkata) e uno che attraversa il cambio d'ora in direzione opposta (Auckland)
       - run: TZ=Europe/Rome npm test
       - run: TZ=America/Los_Angeles npm test
+      - run: TZ=Asia/Kolkata npm test
       - run: TZ=Pacific/Auckland npm test

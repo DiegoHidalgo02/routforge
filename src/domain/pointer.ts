@@ -74,7 +74,10 @@ export function pendingUnits(units: readonly UnitaPercorso[], modules?: readonly
 }
 
 /** Unità corrente del corso = prima pendente, o null se il percorso è finito/bloccato. */
-export function currentUnit(units: readonly UnitaPercorso[], modules?: readonly ModuloPercorso[]): UnitaPercorso | null {
+export function currentUnit(
+  units: readonly UnitaPercorso[],
+  modules?: readonly ModuloPercorso[],
+): UnitaPercorso | null {
   return pendingUnits(units, modules)[0] ?? null;
 }
 
@@ -96,7 +99,11 @@ export function assignPointer(
 }
 
 /** Progresso del corso = completate / totali (§11). */
-export function courseProgress(units: readonly UnitaPercorso[]): { completate: number; totali: number; rapporto: number } {
+export function courseProgress(units: readonly UnitaPercorso[]): {
+  completate: number;
+  totali: number;
+  rapporto: number;
+} {
   const totali = units.length;
   const completate = units.filter((u) => u.stato === 'completata').length;
   return { completate, totali, rapporto: totali === 0 ? 0 : completate / totali };

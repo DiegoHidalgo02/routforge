@@ -2,10 +2,13 @@ node_modules/
 dist/
 coverage/
 .claude/settings.local.json
+# Interruttore locale del gate nell'hook Stop (fase rossa del TDD): mai versionato
+.claude/hooks/SKIP_VERIFY
 .env
 .env.*
 *.log
 .DS_Store
 Thumbs.db
-# Export del design: NON versionare i file .dc.html pesanti finché non si decide (vedi design/README.md)
+# Export del design: i file dell'export (tokens.css, .dc.html, spec/) SI VERSIONANO (D-DESIGN-1);
+# restano fuori solo gli ZIP scaricati da Claude Design
 design/export/*.zip

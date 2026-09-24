@@ -11,14 +11,7 @@
 export type TipoBlocco = 'todo' | 'evento' | 'routine' | 'studio';
 
 /** Stati di un blocco (§1). I primi due sono aperti, gli altri terminali. */
-export type StatoBlocco =
-  | 'programmato'
-  | 'in_corso'
-  | 'completato'
-  | 'parziale'
-  | 'indietro'
-  | 'saltato'
-  | 'perso';
+export type StatoBlocco = 'programmato' | 'in_corso' | 'completato' | 'parziale' | 'indietro' | 'saltato' | 'perso';
 
 /** Stati di un'unità (§1). Le prime tre sono "pendenti" e alimentano il puntatore. */
 export type StatoUnita = 'non_iniziata' | 'parziale' | 'da_rivedere' | 'completata' | 'saltata';
@@ -65,8 +58,4 @@ export const STATI_TERMINALI: ReadonlySet<StatoBlocco> = new Set([
 ]);
 
 /** Stati "pendenti" di un'unità: alimentano il puntatore (§1, §11). */
-export const STATI_UNITA_PENDENTI: ReadonlySet<StatoUnita> = new Set([
-  'non_iniziata',
-  'parziale',
-  'da_rivedere',
-]);
+export const STATI_UNITA_PENDENTI: ReadonlySet<StatoUnita> = new Set(['non_iniziata', 'parziale', 'da_rivedere']);

@@ -6,9 +6,12 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run check && npm run test",
+    "verify": "npm run check && npm run lint && npm run format:check && npm run test",
     "design:check": "node scripts/check-design.mjs",
     "audit:claude": "node scripts/audit-claude.mjs"
   },
@@ -16,7 +19,11 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
     "typescript": "^5.6.0",
+    "typescript-eslint": "^8.70.1",
     "vitest": "^3.0.0"
   }
 }

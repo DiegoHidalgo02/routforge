@@ -21,7 +21,18 @@
 // (/plugin, /skills, /mcp, /memory): lo script li elenca soltanto.
 // Nessuna cancellazione: "archiviare" = spostare in una cartella fuori da ~/.claude.
 // =============================================================================
-import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,8 +45,26 @@ const PROGETTO = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Skill integrate in Claude Code: un nome uguale le sostituisce o le confonde.
 // Elenco dalla documentazione ufficiale (settembre 2026), non esaustivo.
-const NOMI_INTEGRATI = ['verify', 'run', 'run-skill-generator', 'debug', 'batch', 'loop', 'code-review', 'review',
-  'doctor', 'claude-api', 'security-review', 'init', 'status', 'skill-doctor', 'design', 'compact', 'model', 'context'];
+const NOMI_INTEGRATI = [
+  'verify',
+  'run',
+  'run-skill-generator',
+  'debug',
+  'batch',
+  'loop',
+  'code-review',
+  'review',
+  'doctor',
+  'claude-api',
+  'security-review',
+  'init',
+  'status',
+  'skill-doctor',
+  'design',
+  'compact',
+  'model',
+  'context',
+];
 
 // --- Piccoli helper ----------------------------------------------------------
 const leggiJson = (p) => {
@@ -46,7 +75,11 @@ const leggiJson = (p) => {
   }
 };
 const elencaCartelle = (dir) =>
-  existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() || d.isSymbolicLink()).map((d) => d.name) : [];
+  existsSync(dir)
+    ? readdirSync(dir, { withFileTypes: true })
+        .filter((d) => d.isDirectory() || d.isSymbolicLink())
+        .map((d) => d.name)
+    : [];
 
 /** Tutti i file .md sotto `dir`, con percorso relativo (per i comandi in sottocartelle). */
 function fileMd(dir) {
@@ -139,12 +172,17 @@ function inventario() {
     claudeMd = {
       righe: testo.split('\n').length,
       byte: statSync(claudeMdPath).size,
-      importazioni: testo.split('\n').filter((l) => /^\s*@\S+/.test(l)).map((l) => l.trim()),
+      importazioni: testo
+        .split('\n')
+        .filter((l) => /^\s*@\S+/.test(l))
+        .map((l) => l.trim()),
     };
   }
 
   const settings = leggiJson(join(CLAUDE_UTENTE, 'settings.json')) ?? {};
-  const pluginAttivi = Object.entries(settings.enabledPlugins ?? {}).filter(([, v]) => v === true).map(([k]) => k);
+  const pluginAttivi = Object.entries(settings.enabledPlugins ?? {})
+    .filter(([, v]) => v === true)
+    .map(([k]) => k);
   const hookUtente = Object.keys(settings.hooks ?? {});
 
   // Registro dei plugin installati: forma non documentata → lettura difensiva.
@@ -152,7 +190,8 @@ function inventario() {
   const pluginInstallati = [];
   for (const [nome, v] of Object.entries(registro?.plugins ?? {})) {
     const installazioni = Array.isArray(v) ? v : [v];
-    for (const i of installazioni) pluginInstallati.push({ nome, ambito: i?.scope ?? '?', progetto: i?.projectPath ?? '' });
+    for (const i of installazioni)
+      pluginInstallati.push({ nome, ambito: i?.scope ?? '?', progetto: i?.projectPath ?? '' });
   }
 
   // Server MCP: ~/.claude.json contiene quelli di ambito utente e quelli per progetto.
@@ -168,7 +207,9 @@ function inventario() {
     ['~/.codex/skills', join(HOME, '.codex', 'skills')],
     ['~/.config/opencode/skills', join(HOME, '.config', 'opencode', 'skills')],
   ].map(([etichetta, p]) => ({ etichetta, numero: elencaCartelle(p).filter((n) => !n.startsWith('.')).length }));
-  const agentsMdGlobali = [join(HOME, '.codex', 'AGENTS.md'), join(HOME, '.config', 'opencode', 'AGENTS.md')].filter(existsSync);
+  const agentsMdGlobali = [join(HOME, '.codex', 'AGENTS.md'), join(HOME, '.config', 'opencode', 'AGENTS.md')].filter(
+    existsSync,
+  );
 
   // Lato progetto: cosa definisce RoutForge (serve per trovare i conflitti di nome).
   const progettoSkill = elencaCartelle(join(PROGETTO, '.claude', 'skills'));
@@ -178,9 +219,27 @@ function inventario() {
   const settingsLocali = leggiJson(join(PROGETTO, '.claude', 'settings.local.json')) ?? {};
 
   return {
-    skill, sincronizzate, comandi, agenti, regole, claudeMd, settings, pluginAttivi, hookUtente,
-    pluginInstallati, mcpUtente, progettiConMcp, altri, agentsMdGlobali,
-    progetto: { skill: progettoSkill, comandi: progettoComandi, agenti: progettoAgenti, settingsProgetto, settingsLocali },
+    skill,
+    sincronizzate,
+    comandi,
+    agenti,
+    regole,
+    claudeMd,
+    settings,
+    pluginAttivi,
+    hookUtente,
+    pluginInstallati,
+    mcpUtente,
+    progettiConMcp,
+    altri,
+    agentsMdGlobali,
+    progetto: {
+      skill: progettoSkill,
+      comandi: progettoComandi,
+      agenti: progettoAgenti,
+      settingsProgetto,
+      settingsLocali,
+    },
   };
 }
 
@@ -189,13 +248,18 @@ function stampa(inv) {
   const riga = (s = '') => console.log(s);
   const elenco = (voci) => {
     if (voci.length === 0) return riga('   (nessuno)');
-    for (const v of voci) riga(`   - ${v.nome}${v.collegamento ? ' [collegamento]' : ''}  ${kb(v.byte)}${v.descrizione ? '  — ' + v.descrizione : ''}`);
+    for (const v of voci)
+      riga(
+        `   - ${v.nome}${v.collegamento ? ' [collegamento]' : ''}  ${kb(v.byte)}${v.descrizione ? '  — ' + v.descrizione : ''}`,
+      );
   };
 
   riga('=== LIVELLO UTENTE (~/.claude): si carica in OGNI progetto ===');
   riga(`\n1. Skill personali: ${inv.skill.length}`);
   elenco(inv.skill);
-  riga(`\n2. Skill sincronizzate da claude.ai: ${inv.sincronizzate.length}${inv.sincronizzate.length ? ' → ' + inv.sincronizzate.join(', ') : ''}`);
+  riga(
+    `\n2. Skill sincronizzate da claude.ai: ${inv.sincronizzate.length}${inv.sincronizzate.length ? ' → ' + inv.sincronizzate.join(', ') : ''}`,
+  );
   riga('   (si gestiscono su claude.ai o con "syncClaudeAiSkills": false nelle impostazioni utente)');
   riga(`\n3. Comandi personali: ${inv.comandi.length}`);
   elenco(inv.comandi);
@@ -209,12 +273,16 @@ function stampa(inv) {
     riga(`   ${inv.claudeMd.righe} righe, ${kb(inv.claudeMd.byte)}`);
     for (const imp of inv.claudeMd.importazioni) riga(`   importa: ${imp}  ← si carica anche in RoutForge`);
   }
-  riga(`\n7. Plugin attivi a livello utente (settings.json): ${inv.pluginAttivi.length}${inv.pluginAttivi.length ? ' → ' + inv.pluginAttivi.join(', ') : ''}`);
+  riga(
+    `\n7. Plugin attivi a livello utente (settings.json): ${inv.pluginAttivi.length}${inv.pluginAttivi.length ? ' → ' + inv.pluginAttivi.join(', ') : ''}`,
+  );
   riga(`   Plugin nel registro di installazione: ${inv.pluginInstallati.length}`);
-  for (const p of inv.pluginInstallati) riga(`   - ${p.nome}  ambito: ${p.ambito}${p.progetto ? '  progetto: ' + p.progetto : ''}`);
+  for (const p of inv.pluginInstallati)
+    riga(`   - ${p.nome}  ambito: ${p.ambito}${p.progetto ? '  progetto: ' + p.progetto : ''}`);
   riga(`\n8. Hook a livello utente: ${inv.hookUtente.length ? inv.hookUtente.join(', ') : 'nessuno'}`);
   riga(`\n9. Server MCP di ambito utente: ${inv.mcpUtente.length ? inv.mcpUtente.join(', ') : 'nessuno'}`);
-  if (inv.progettiConMcp.length) riga(`   Altri progetti con server MCP propri: ${inv.progettiConMcp.length} (restano confinati a quei progetti)`);
+  if (inv.progettiConMcp.length)
+    riga(`   Altri progetti con server MCP propri: ${inv.progettiConMcp.length} (restano confinati a quei progetti)`);
   riga('\n10. Altri agenti (solo conteggi):');
   for (const a of inv.altri) riga(`   - ${a.etichetta}: ${a.numero}`);
   for (const p of inv.agentsMdGlobali) riga(`   - istruzioni globali: ${p}`);
@@ -225,19 +293,34 @@ function stampa(inv) {
   const personali = [...inv.skill, ...inv.comandi];
   const conflitti = [];
   for (const v of personali) {
-    if (nomiProgetto.has(v.nome)) conflitti.push(`${v.tipo} personale "${v.nome}" ha lo stesso nome di un comando di RoutForge: può oscurarlo`);
-    if (NOMI_INTEGRATI.includes(v.nome)) conflitti.push(`${v.tipo} personale "${v.nome}" ha il nome di un comando integrato di Claude Code`);
+    if (nomiProgetto.has(v.nome))
+      conflitti.push(`${v.tipo} personale "${v.nome}" ha lo stesso nome di un comando di RoutForge: può oscurarlo`);
+    if (NOMI_INTEGRATI.includes(v.nome))
+      conflitti.push(`${v.tipo} personale "${v.nome}" ha il nome di un comando integrato di Claude Code`);
   }
-  for (const a of inv.agenti) if (inv.progetto.agenti.includes(a.nome)) conflitti.push(`subagent personale "${a.nome}" ha lo stesso nome di uno di RoutForge`);
-  for (const n of nomiProgetto) if (NOMI_INTEGRATI.includes(n)) conflitti.push(`comando di RoutForge "${n}" ha il nome di un comando integrato: rinominalo`);
+  for (const a of inv.agenti)
+    if (inv.progetto.agenti.includes(a.nome))
+      conflitti.push(`subagent personale "${a.nome}" ha lo stesso nome di uno di RoutForge`);
+  for (const n of nomiProgetto)
+    if (NOMI_INTEGRATI.includes(n))
+      conflitti.push(`comando di RoutForge "${n}" ha il nome di un comando integrato: rinominalo`);
   if (conflitti.length === 0) riga('   nessuno');
   else for (const c of conflitti) riga(`   ! ${c}`);
 
   // --- Cosa è già nascosto solo in RoutForge ---
-  const override = { ...(inv.progetto.settingsProgetto.skillOverrides ?? {}), ...(inv.progetto.settingsLocali.skillOverrides ?? {}) };
-  const spenti = Object.entries(override).filter(([, v]) => v === 'off').map(([k]) => k);
-  const pluginSpenti = Object.entries({ ...(inv.progetto.settingsProgetto.enabledPlugins ?? {}), ...(inv.progetto.settingsLocali.enabledPlugins ?? {}) })
-    .filter(([, v]) => v === false).map(([k]) => k);
+  const override = {
+    ...(inv.progetto.settingsProgetto.skillOverrides ?? {}),
+    ...(inv.progetto.settingsLocali.skillOverrides ?? {}),
+  };
+  const spenti = Object.entries(override)
+    .filter(([, v]) => v === 'off')
+    .map(([k]) => k);
+  const pluginSpenti = Object.entries({
+    ...(inv.progetto.settingsProgetto.enabledPlugins ?? {}),
+    ...(inv.progetto.settingsLocali.enabledPlugins ?? {}),
+  })
+    .filter(([, v]) => v === false)
+    .map(([k]) => k);
   riga('\n=== GIÀ ISOLATO IN ROUTFORGE ===');
   riga(`   skill spente qui (skillOverrides "off"): ${spenti.length ? spenti.join(', ') : 'nessuna'}`);
   riga(`   plugin spenti qui (enabledPlugins false): ${pluginSpenti.length ? pluginSpenti.join(', ') : 'nessuno'}`);
@@ -249,7 +332,12 @@ function stampa(inv) {
   if (candidati.length) {
     riga('   Prova a vuoto (non sposta nulla):');
     riga('     node scripts/audit-claude.mjs --archivia tutto');
-    riga(`   Esempio mirato: node scripts/audit-claude.mjs --archivia ${candidati.slice(0, 2).map((v) => `${v.tipo}:${v.nome}`).join(',')} --conferma`);
+    riga(
+      `   Esempio mirato: node scripts/audit-claude.mjs --archivia ${candidati
+        .slice(0, 2)
+        .map((v) => `${v.tipo}:${v.nome}`)
+        .join(',')} --conferma`,
+    );
   }
   riga('   In Claude Code: /context (peso in contesto), /skill-doctor (skill mai usate), /plugin, /mcp, /memory.');
 }
@@ -274,14 +362,19 @@ function archivia(spec, conferma) {
   let scelti;
   if (spec === 'tutto') scelti = tutti;
   else {
-    const richieste = spec.split(',').map((s) => s.trim()).filter(Boolean);
+    const richieste = spec
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     scelti = [];
     for (const r of richieste) {
       const [tipo, ...resto] = r.split(':');
       const nome = resto.join(':');
       const trovato = tutti.find((v) => v.tipo === tipo && v.nome === nome);
       if (!trovato) {
-        console.error(`Non trovato: "${r}". Formato: skill:nome, comando:nome, agente:nome, regola:nome (vedi l'inventario).`);
+        console.error(
+          `Non trovato: "${r}". Formato: skill:nome, comando:nome, agente:nome, regola:nome (vedi l'inventario).`,
+        );
         process.exitCode = 1;
       } else scelti.push(trovato);
     }
@@ -295,13 +388,24 @@ function archivia(spec, conferma) {
   const archivio = join(HOME, '.claude-archivio', timbro);
   const voci = scelti.map((v) => ({ ...v, destinazione: join(archivio, relative(CLAUDE_UTENTE, v.percorso)) }));
 
-  console.log(conferma ? `Sposto ${voci.length} elementi in ${archivio}` : `PROVA A VUOTO — sposterei ${voci.length} elementi in ${archivio}:`);
+  console.log(
+    conferma
+      ? `Sposto ${voci.length} elementi in ${archivio}`
+      : `PROVA A VUOTO — sposterei ${voci.length} elementi in ${archivio}:`,
+  );
   for (const v of voci) console.log(`   ${v.tipo} ${v.nome}`);
   if (!conferma) return console.log('\nPer eseguire davvero aggiungi --conferma. Nulla è stato modificato.');
 
   for (const v of voci) sposta(v.percorso, v.destinazione);
   // File di ripristino: tiene la mappa originale → archivio (fuori da ~/.claude, non viene letto da Claude Code).
-  writeFileSync(join(archivio, 'ripristino.json'), JSON.stringify(voci.map(({ percorso, destinazione, tipo, nome }) => ({ tipo, nome, percorso, destinazione })), null, 2));
+  writeFileSync(
+    join(archivio, 'ripristino.json'),
+    JSON.stringify(
+      voci.map(({ percorso, destinazione, tipo, nome }) => ({ tipo, nome, percorso, destinazione })),
+      null,
+      2,
+    ),
+  );
   console.log(`\nFatto. Per annullare: node scripts/audit-claude.mjs --ripristina "${archivio}"`);
   console.log('Riavvia la sessione di Claude Code (o apri una sessione nuova) per vedere il risultato.');
 }

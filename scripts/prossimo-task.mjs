@@ -31,7 +31,10 @@ export function leggiTask(testo) {
   for (const riga of testo.split('\n')) {
     if (!/^\|\s*T-\d+/.test(riga)) continue;
     // Colonne: ID | Task | Spec | Scenari | Dipende da | Modello | Stato
-    const c = riga.split('|').slice(1, -1).map((x) => x.trim());
+    const c = riga
+      .split('|')
+      .slice(1, -1)
+      .map((x) => x.trim());
     if (c.length !== 7) continue; // riga malformata: meglio ignorarla che indovinare
     const [idCell, titolo, , , dipende, modello, stato] = c;
     const id = /T-\d+/.exec(idCell)[0];
@@ -58,7 +61,20 @@ export function prossimoTask(testoTasks, pianoEsiste) {
   const t = tutti.find((x) => x.stato === 'aperto' && x.dipendenze.every((d) => fatti.has(d)));
   if (!t) {
     const aperti = tutti.filter((x) => x.stato === 'aperto').length;
-    return { trovato: false, motivo: aperti === 0 ? 'nessun task aperto' : 'task aperti con dipendenze non ancora fatte' };
+    return {
+      trovato: false,
+      motivo: aperti === 0 ? 'nessun task aperto' : 'task aperti con dipendenze non ancora fatte',
+    };
+  }
+
+  // Un task marcato **CPn** aspetta una decisione dell'utente (docs/06_SUPERVISIONE.md): il loop non lo avvia
+  // finché il marcatore resta sulla riga; si toglie quando la decisione è registrata in docs/01_DECISIONI.md.
+  const checkpoint = t.marcatori.find((m) => /^CP\d+$/.test(m));
+  if (checkpoint) {
+    return {
+      trovato: false,
+      motivo: `${t.id} richiede il checkpoint ${checkpoint} (docs/06_SUPERVISIONE.md): decidi, registra la decisione e togli il marcatore dalla riga`,
+    };
   }
 
   let etichetta = t.modello;

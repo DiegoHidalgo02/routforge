@@ -13,7 +13,7 @@ describe('Tempo locale — CONTESTO §3 (fuso e ora legale non spostano i blocch
     expect([end.getHours(), end.getMinutes()]).toEqual([23, 59]);
   });
 
-  it('addLocalDays conserva l\'ora di parete attraverso il cambio d\'ora', () => {
+  it("addLocalDays conserva l'ora di parete attraverso il cambio d'ora", () => {
     const sat = local(2026, 10, 24, 7, 0); // sabato, ora legale
     const sun = new Date(addLocalDays(sat, 1)); // domenica: le lancette tornano indietro
     const mon = new Date(addLocalDays(sat, 2));
@@ -21,7 +21,7 @@ describe('Tempo locale — CONTESTO §3 (fuso e ora legale non spostano i blocch
     expect([mon.getDate(), mon.getHours()]).toEqual([26, 7]);
   });
 
-  it('routine senza durata il giorno del cambio d\'ora → persa alle 00:29 del giorno dopo', () => {
+  it("routine senza durata il giorno del cambio d'ora → persa alle 00:29 del giorno dopo", () => {
     const lostAt = new Date(lostAtInstant({ inizio: local(2026, 10, 25, 7, 0), fine: null, conOrario: true }));
     expect([lostAt.getDate(), lostAt.getHours(), lostAt.getMinutes()]).toEqual([26, 0, 29]);
   });

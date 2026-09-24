@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  scoreBugHunter,
-  scoreBugHunterExercise,
-  scoreDevSwipe,
-  verdictFromSwipe,
-  type Verdetto,
-} from './practice';
+import { scoreBugHunter, scoreBugHunterExercise, scoreDevSwipe, verdictFromSwipe, type Verdetto } from './practice';
 
 describe('DevSwipe — SCENARI I2', () => {
   it('mazzo di 10 carte, 3 errori → 7/10 e le 3 sbagliate vengono riproposte', () => {

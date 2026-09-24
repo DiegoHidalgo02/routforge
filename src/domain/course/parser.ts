@@ -139,7 +139,12 @@ const HOURS_RANGE = /(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(?:h|ore)\
 const DIFFICULTY = /Difficolt[àa]\s*:\s*(alta|media|bassa)/i;
 const YOUTUBE = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)/i;
 
-const SECTION_BY_EMOJI: Record<string, TipoSezione> = { '📖': 'teoria', '📺': 'studio', '🛠': 'pratica', '🏗': 'progetto' };
+const SECTION_BY_EMOJI: Record<string, TipoSezione> = {
+  '📖': 'teoria',
+  '📺': 'studio',
+  '🛠': 'pratica',
+  '🏗': 'progetto',
+};
 const SECTION_LABEL: Record<TipoSezione, string> = {
   teoria: 'Teoria',
   studio: 'Studio',
@@ -154,12 +159,10 @@ export const fileNameOf = (path: string): string => path.split(/[\\/]/).pop() ??
 export const stripBold = (s: string): string => s.replace(/\*\*(.+?)\*\*/g, '$1').trim();
 const num = (s: string): number => Number(s.replace(',', '.'));
 
+/** Host di un URL http(s) senza `www.` (FORMATO §3). Regex e non `URL`: il dominio non usa API di piattaforma. */
 export function hostOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return '';
-  }
+  const m = /^https?:\/\/(?:[^@/?#]*@)?([^/?#:]+)/i.exec(url);
+  return m ? m[1]!.toLowerCase().replace(/^www\./, '') : '';
 }
 
 export function extractLinks(text: string): RisorsaImportata[] {
@@ -191,7 +194,6 @@ export function parseThreshold(text: string): number | null {
   const pct = /[≥>]=?\s*(\d+)\s*%/.exec(text);
   return pct ? Number(pct[1]) / 100 : null;
 }
-
 
 // ------------------------------------------------------------------ sezione di un'unità
 
@@ -348,7 +350,12 @@ function chunkByHeadings(lines: string[]): { head: string[]; chunks: Chunk[] } {
 
 /** Liste numerate sotto un grassetto, fino al prossimo grassetto o intestazione (FORMATO §2). */
 function parseVerification(lines: string[]): Pick<ModuloImportato, 'domande' | 'esercizi' | 'criteri' | 'noGo'> {
-  const out: Pick<ModuloImportato, 'domande' | 'esercizi' | 'criteri' | 'noGo'> = { domande: [], esercizi: [], criteri: [], noGo: '' };
+  const out: Pick<ModuloImportato, 'domande' | 'esercizi' | 'criteri' | 'noGo'> = {
+    domande: [],
+    esercizi: [],
+    criteri: [],
+    noGo: '',
+  };
   let mode: 'domande' | 'esercizi' | 'criteri' | 'nogo' | null = null;
   for (const line of lines) {
     const boldStart = /^\*\*\s*([^*]+?)\s*\*\*\s*(.*)$/.exec(line);
@@ -399,8 +406,8 @@ function parseProject(lines: string[]): ModuloImportato['progetto'] {
 }
 
 export interface RisultatoImportModulo {
-  module: ModuloImportato | null;
-  warnings: AvvisoImport[];
+  modulo: ModuloImportato | null;
+  avvisi: AvvisoImport[];
 }
 
 export function parseModule(file: FileCorso, courseId: string): RisultatoImportModulo {
@@ -410,7 +417,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
   const headerIndex = lines.findIndex((l) => MODULE_HEADER.test(l));
   if (headerIndex < 0) {
     warnings.push({ file: name, messaggio: 'intestazione di modulo mancante, file saltato' });
-    return { module: null, warnings };
+    return { modulo: null, avvisi: warnings };
   }
   const header = MODULE_HEADER.exec(lines[headerIndex]!)!;
   const numero = Number(header[1]);
@@ -447,14 +454,25 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       const u = parseUnit(id, numero, unita.length + 1, chunk.headerLine, chunk.lines, name, warnings);
       if (u) unita.push(u);
     } else if (/^Obiettivi di Apprendimento/i.test(heading)) {
-      obiettivi = chunk.lines.map((l) => BULLET.exec(l)?.[1]).filter((s): s is string => !!s).map(stripBold);
+      obiettivi = chunk.lines
+        .map((l) => BULLET.exec(l)?.[1])
+        .filter((s): s is string => !!s)
+        .map(stripBold);
     } else if (/Test di fit/i.test(heading)) {
-      const testo = chunk.lines.filter((l) => l.trim() !== '').map(stripBold).join('\n').trim();
+      const testo = chunk.lines
+        .filter((l) => l.trim() !== '')
+        .map(stripBold)
+        .join('\n')
+        .trim();
       testDiFit = { testo, risorse: extractLinks(chunk.lines.join('\n')) };
     } else if (/^Verifica della Comprensione/i.test(heading)) {
       verification = parseVerification(chunk.lines);
     } else if (/^Riassunto/i.test(heading)) {
-      riassunto = chunk.lines.filter((l) => l.trim() !== '' && !/^---+\s*$/.test(l)).map(stripBold).join('\n').trim();
+      riassunto = chunk.lines
+        .filter((l) => l.trim() !== '' && !/^---+\s*$/.test(l))
+        .map(stripBold)
+        .join('\n')
+        .trim();
     } else if (/^Progetto del Modulo/i.test(heading)) {
       progetto = parseProject(chunk.lines);
     }
@@ -480,25 +498,23 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
     markdown: file.content,
     stato: 'aperto',
   };
-  return { module, warnings };
+  return { modulo: module, avvisi: warnings };
 }
 
 // ------------------------------------------------------------------ corso
 
 export interface RisultatoImportCorso {
-  course: CorsoImportato;
-  warnings: AvvisoImport[];
+  corso: CorsoImportato;
+  avvisi: AvvisoImport[];
 }
 
 /**
  * Importa un corso da un elenco di file. Solo i `.md` vengono letti; i percorsi sono appiattiti al nome;
- * serve almeno un file modulo, altrimenti `CourseParseError`. Ogni chiamata produce un corso nuovo.
+ * serve almeno un file modulo, altrimenti `ErroreImportCorso`. Ogni chiamata produce un corso nuovo.
  */
 export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): RisultatoImportCorso {
   const warnings: AvvisoImport[] = [];
-  const md = files
-    .map((f) => ({ name: fileNameOf(f.name), content: f.content }))
-    .filter((f) => /\.md$/i.test(f.name));
+  const md = files.map((f) => ({ name: fileNameOf(f.name), content: f.content })).filter((f) => /\.md$/i.test(f.name));
 
   const moduleFiles = md
     .filter((f) => MODULE_FILE.test(f.name))
@@ -521,19 +537,21 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   const moduli: ModuloImportato[] = [];
   for (const { file } of moduleFiles) {
     const r = parseModule(file, opts.corsoId);
-    warnings.push(...r.warnings);
-    if (r.module) moduli.push(r.module);
+    warnings.push(...r.avvisi);
+    if (r.modulo) moduli.push(r.modulo);
   }
   if (moduli.length === 0) throw new ErroreImportCorso('Nessun modulo con intestazione valida');
 
   // Stati dei moduli: stessa regola del puntatore (pointer.ts → statiModuli), nessuna copia locale.
-  const stati = statiModuli(moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: m.criteri.every((c) => c.fatto) })));
+  const stati = statiModuli(
+    moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: m.criteri.every((c) => c.fatto) })),
+  );
   for (const m of moduli) m.stato = stati.get(m.numero) ?? 'bloccato';
   const firstOpen = moduli.find((m) => m.stato !== 'bloccato');
   const unitaCorrenteId = firstOpen?.unita[0]?.id ?? null;
 
   return {
-    course: {
+    corso: {
       id: opts.corsoId,
       titolo,
       sottotitolo,
@@ -543,7 +561,7 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
       unitaCompletate: 0,
       unitaCorrenteId,
     },
-    warnings,
+    avvisi: warnings,
   };
 }
 

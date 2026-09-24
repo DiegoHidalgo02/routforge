@@ -74,7 +74,13 @@ describe('Esiti — SCENARI C3', () => {
 
   it('poi Salta su 1.1 → 1.1 saltata, esce dal percorso; prossima = 1.2', () => {
     let unita = applyOutcome({ unita: course(), unitaPianificataId: '1.1', esito: 'completata', minuti: 60 }).unita;
-    unita = applyOutcome({ unita, unitaPianificataId: '1.2', esito: 'indietro', minuti: 30, unitaPrecedenteId: '1.1' }).unita;
+    unita = applyOutcome({
+      unita,
+      unitaPianificataId: '1.2',
+      esito: 'indietro',
+      minuti: 30,
+      unitaPrecedenteId: '1.1',
+    }).unita;
     const r = applyOutcome({ unita, unitaPianificataId: '1.1', esito: 'salta', minuti: 0 });
     expect(r.statoBlocco).toBe('saltato');
     expect(r.unita.find((u) => u.id === '1.1')?.stato).toBe('saltata');

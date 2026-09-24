@@ -7,7 +7,12 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "[markdown]": { "files.trimTrailingWhitespace": false },
+  "[markdown]": { "files.trimTrailingWhitespace": false, "editor.formatOnSave": false },
+
+  // --- Formato e lint come nel gate (D-LINT-1): Prettier al salvataggio, ESLint nel pannello Problemi
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": ["javascript", "typescript"],
 
   // --- Le spec sono di sola lettura anche per te (le modifichi solo di proposito)
   "files.readonlyInclude": { "docs/spec/**": true },

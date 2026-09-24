@@ -5,6 +5,8 @@
     "openai.chatgpt",             // Codex: revisore indipendente (piano gratuito, quota limitata)
     "vitest.explorer",            // Test Explorer: esegui/debug dei test Vitest dal pannello Testing
     "editorconfig.editorconfig",  // Applica .editorconfig (LF, 2 spazi, UTF-8)
+    "esbenp.prettier-vscode",     // Prettier al salvataggio, stesso formato del gate (D-LINT-1)
+    "dbaeumer.vscode-eslint",     // ESLint nel pannello Problemi, stesse regole del gate
     "eamodio.gitlens"             // Storia dei commit dell'agente riga per riga
   ]
 }

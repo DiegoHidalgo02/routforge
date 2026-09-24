@@ -27,7 +27,7 @@ describe('Streak — MECCANISMI §12 / SCENARI C2', () => {
     expect(s.conteggio).toBe(1);
   });
 
-  it('valore mostrato: 0 se l\'ultimo giorno contato non è oggi né ieri', () => {
+  it("valore mostrato: 0 se l'ultimo giorno contato non è oggi né ieri", () => {
     const s = creditStreak(EMPTY_STREAK, local(2026, 9, 20, 9, 30));
     expect(currentStreak(s, local(2026, 9, 21, 8, 0))).toBe(1); // ieri
     expect(currentStreak(s, local(2026, 9, 22, 8, 0))).toBe(0); // due giorni dopo

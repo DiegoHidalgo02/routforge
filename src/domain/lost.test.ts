@@ -22,7 +22,7 @@ const block = (over: Partial<Blocco>): Blocco => ({
 
 describe('Persi — SCENARI B2 (routine 07:00–08:00 di mercoledì)', () => {
   const b = block({});
-  it('non è persa alle 08:29, lo è dalle 08:30 (fine + 30\')', () => {
+  it("non è persa alle 08:29, lo è dalle 08:30 (fine + 30')", () => {
     expect(shouldMarkLost(b, local(2026, 9, 23, 8, 29))).toBe(false);
     expect(shouldMarkLost(b, local(2026, 9, 23, 8, 31))).toBe(true);
     expect(lostAtInstant(b)).toBe(local(2026, 9, 23, 8, 30));
@@ -46,7 +46,7 @@ describe('Routine notturna — SCENARI B3 (sabato 23:00 → domenica 01:00)', ()
 
 describe('Routine senza durata — SCENARI B4 (07:00, senza fine)', () => {
   const b = block({ fine: null });
-  it('verifica a inizio + 30\'; persa alle 00:29 del giorno dopo', () => {
+  it("verifica a inizio + 30'; persa alle 00:29 del giorno dopo", () => {
     expect(recoveryDeadline(b)).toBe(local(2026, 9, 23, 7, 30));
     expect(lostAtInstant(b)).toBe(local(2026, 9, 24, 0, 29));
     expect(shouldMarkLost(b, local(2026, 9, 23, 23, 0))).toBe(false);

@@ -46,5 +46,8 @@ max 5 (esiti pendenti); 2 ore (notifica "perso"); 60 voci / 120 caratteri (check
 
 ## Metodo
 1. Parti dallo scenario (SCENARI) → risali al § di MECCANISMI → conferma il senso in FUNZIONALITA.
-2. Estrai i valori numerici esatti e scrivili nel test prima del codice.
-3. Se la spec tace, decidi il minimo coerente e annota `D-xxx` in `docs/01_DECISIONI.md`.
+2. Guarda la riga dello scenario in `docs/TRACCIABILITA.md`: dice in quale modulo vive, quale task lo realizza e quali
+   test lo citano già (così non duplichi una regola esistente e sai quale riga aggiornare).
+3. Estrai i valori numerici esatti e scrivili nel test prima del codice.
+4. Se la spec tace, decidi il minimo coerente e annota `D-xxx` in `docs/01_DECISIONI.md` (scheda in `docs/decisioni/`
+   se ad alto impatto); le contraddizioni già note sono in `docs/00_SINTESI.md` §6.

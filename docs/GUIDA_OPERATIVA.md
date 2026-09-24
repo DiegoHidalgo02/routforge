@@ -64,7 +64,7 @@ npm run verify
 4. Se `git am` segnala un conflitto: `git am --abort` per tornare com'eri, poi incolla il messaggio in Claude Code chiedendo di risolverlo.
 5. Se il tuo repository non ha la cronologia git di RoutForge (cartella ricreata a mano), usa lo ZIP: estrailo in una cartella temporanea e copia nel progetto `src/`, `scripts/`, `docs/` e `CLAUDE.md`.
 
-**Verifica.** `npm run verify` è verde con 88 test; `git log --oneline -5` mostra in cima i commit dell'audit; esiste `docs/AUDIT_FOUNDATION.md`.
+**Verifica.** `npm run verify` è verde (88 test con la sola prima passata del 24/09, 102 con la seconda); `git log --oneline -5` mostra in cima i commit dell'audit; esiste `docs/AUDIT_FOUNDATION.md`.
 
 **Dove riprendere.** Se eri arrivato a `/impeccable init` (Fase 4, passo 3): completa la Fase 4, poi la Fase 5 (T-000). Prima di T-004 e T-011 l'agente si fermerà al **CP0** (Fase 7). Controlla anche con `git status` quali file ha creato `/impeccable init`, e salvali con un commit: non erano in `docs/`.
 
@@ -151,7 +151,7 @@ gh repo create routforge --private --source . --push
 
 **Verifica.**
 
-- `npm run verify` termina con **Tests N passed (N)** e nessun *failed* (al 24/09/2026 N = 88; il numero cresce con il progetto).
+- `npm run verify` termina con **Tests N passed (N)** e nessun *failed* (al 24/09/2026 N = 102; il numero cresce con il progetto). Prima dei test girano typecheck, ESLint e il controllo del formato: se uno di questi fallisce, il messaggio dice quale.
 - `git status` dice *nothing to commit, working tree clean*; `git log` mostra la cronologia, con il commit più recente in alto.
 - `gh repo view --web` apre la pagina del repository; nella scheda **Actions** il primo controllo (CI) diventa verde in 1–2 minuti.
 
@@ -459,7 +459,7 @@ Seleziona **Claude Fable 5.1** dall'elenco.
 | Richiesta | Risposta |
 | --- | --- |
 | Lettura di file, `npm`, `node`, `git status/diff/log/add/commit`, creazione di cartelle dentro il repo | Consenti (anche "non chiedere più" per i comandi di sola lettura) |
-| Installazione di una dipendenza del progetto (`npm install <nome>`) | Consenti solo se l'agente ne spiega il motivo |
+| Installazione di una dipendenza del progetto (`npm install <nome>`) | Consenti se il pacchetto è già «previsto» in `docs/DIPENDENZE.md` (il gate lo verifica); altrimenti chiedi il motivo e la decisione registrata |
 | Cancellazioni fuori dal repo, `git push --force`, `git reset --hard`, lettura di `.env`, installazioni globali | Rifiuta e chiedi perché servono |
 
 4. Mentre lavora non devi fare nulla. L'agente, nell'ordine: controlla i file di design, annota le **divergenze design ↔ spec** in `docs/STATO.md`, esegue il parser sui moduli M0 e M1 e lo confronta con `design/course-data.js`, sceglie lo stack, aggiorna l'architettura e fa il commit.
@@ -548,7 +548,7 @@ In alternativa: Terminale → Esegui attività… → **loop agentico (3 task)**
 
 ## Fase 7 — I checkpoint
 
-In tutto il progetto l'agente si ferma per te sette volte, più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, cancella la riga e riprende.
+In tutto il progetto l'agente si ferma per te sette volte, più gli eventuali blocchi: te ne accorgi perché in cima a `docs/STATO.md` compare una riga `CHECKPOINT:` o `BLOCCO:`. Rispondi in Claude Code; l'agente registra la decisione in `docs/01_DECISIONI.md`, toglie il marcatore **CPn** dalle righe dei task in `docs/TASKS.md` (finché resta, il loop non avvia quei task), cancella la riga e riprende.
 
 **Procedura, uguale per tutti.**
 
@@ -645,6 +645,9 @@ Quasi tutti i problemi del primo avvio sono di PATH, permessi di PowerShell o ca
 | `pwsh` non riconosciuto | manca PowerShell 7 | `winget install Microsoft.PowerShell`, oppure `powershell -File scripts\loop.ps1` |
 | L'agente non chiude il turno e ripete che il gate è rosso | un test che non riesce a far passare | premi `Esc`; esegui tu `npm run verify` e leggi l'errore; chiedi "trova la causa radice, non il sintomo" oppure una revisione di Codex (Fase 8) |
 | I test "passano" ma il task sembra incompleto | file `.claude/hooks/SKIP_VERIFY` dimenticato: il gate è disattivato | `Remove-Item .claude\hooks\SKIP_VERIFY`, poi `npm run verify` |
+| L'hook Stop dice "Dipendenze non installate" oppure `'tsc' non è riconosciuto` | manca `node_modules` (cartella nuova o pulita) | `npm ci`, poi `npm run verify` |
+| `scripts/loop.sh` compare sempre come modificato in `git status` anche senza toccarlo | bit di esecuzione del file e `core.fileMode` su Windows | `git config core.fileMode false` **prima** di `git add`: l'indice conserva il bit di esecuzione e lo script resta eseguibile su macOS/Linux; se lo hai già aggiunto, `git update-index --chmod=+x scripts/loop.sh` |
+| Il gate è rosso su "format" o "lint" senza che tu abbia cambiato il comportamento | file non formattato o regola ESLint violata | `npm run format`, poi `npm run lint` e leggi il messaggio; in VS Code le estensioni consigliate formattano al salvataggio |
 | `design:check` elenca ancora file mancanti | export incompleto o nomi diversi | chiedi all'agente di confrontare l'elenco atteso con i file presenti e di dirti cosa manca davvero; se serve, riesporta |
 | Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Opus 5.5; `/compact`; nel loop usa `-MaxTasks 1` |
 | Codex risponde "quota esaurita" | piano gratuito OpenAI | usa il subagent spec-reviewer e rimanda la revisione di Codex |
