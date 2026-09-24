@@ -91,8 +91,8 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
     }
   });
 
-  it('oggi il prossimo task è T-003 con Sonnet 5 (T-000 chiuso il 24/09/2026)', () => {
-    expect(prossimoTask(reale, nessunPiano)).toMatchObject({ id: 'T-003', modello: 'Sonnet 5' });
+  it('oggi il prossimo task è T-004 con Opus 5.5 (T-003 chiuso il 24/09/2026)', () => {
+    expect(prossimoTask(reale, nessunPiano)).toMatchObject({ id: 'T-004', modello: 'Opus 5.5' });
   });
 });
 

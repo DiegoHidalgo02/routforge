@@ -2,9 +2,10 @@
 
 *Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart). Contesto tecnico, non un diario.*
 
-**Data**: 2026-09-24 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (106 test, 15 file: typecheck + lint + formato + test)
+**Data**: 2026-09-24 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (111 test, 16 file: typecheck + lint + formato + test)
 
 ## Fatto
+- **T-003 (24/09)** Lettura ZIP nel layer applicativo: `src/app/courseImport.ts` (`importCourseFromZip`, `fflate` `unzipSync`/`strFromU8`) estrae i file dallo ZIP e li inoltra a `parseCourse` senza duplicare la logica di filtro/appiattimento (già nel dominio); `ErroreImportCorso` propaga leggibile per uno ZIP senza moduli. **D-PARSE-3 applicata**: modulo o unità con numero duplicato → il secondo viene saltato con avviso, come un'intestazione illeggibile (`src/domain/course/parser.ts`, 2 test nuovi). H1 verificato end-to-end da uno ZIP binario reale (`src/app/courseImport.test.ts`, 3 test) oltre che a livello di dominio: riga H1 di `docs/TRACCIABILITA.md` → `coperto`. Il titolo chiesto all'utente quando manca `00_struttura` resta responsabilità della UI (non ancora scaffoldata, T-006): questo livello si limita a inoltrare `opts.titolo` a `parseCourse` (D-PARSE-1, invariata). `fflate` passata da `prevista` a `runtime` in `docs/DIPENDENZE.md`.
 - **T-000 (24/09)** Import del design e stack: export letto per intero (HANDOFF, DESIGN.md, tokens.css, support.js, course-data.js, 42 schermate, tavole 01–10, catalogo); **D-STACK-1 decisa** (candidato A: React 19 + Vite PWA + Capacitor; Dexie e fflate confermati; CSS Modules su `tokens.css`, `lucide-react`, font locali `@fontsource`, `react-router`; scheda `docs/decisioni/D-STACK-1.md`); handoff verificato (`docs/03_HANDOFF_DESIGN_CODE.md` §9) con **17 divergenze design ↔ spec** (sotto); M0/M1 copiati in `src/data/sample-course/` e letti dal parser **senza avvisi**, output uguale a `course-data.js` a meno delle quattro differenze annotate (`scripts/corso-esempio.test.mjs`, nel gate, INV-19; D-PARSE-2 estesa: FORMATO §0 vs §2–§3); corretto il parser (il separatore `---` finiva nel testo del test di fit); decisioni D-SAMPLE-1 (corso di esempio = M0+M1) e D-TRIVIA-1 (riepilogo Trivia senza punteggio: MECC §18 prevale su FUNZ §14.6); revisione indipendente del `spec-reviewer` applicata; `docs/02_ARCHITETTURA.md`, `DIPENDENZE.md`, regole `ui`/`piattaforma` allineate allo stack.
 - T-001 Dominio puro: `time`, `types`, `sm2` (I1), `streak` (C2), `pomodoro` (D3), `practice` (I2, I3), `pointer` (C1, C2, C3 + moduli bloccati), `lost` (A1, A2, B2, B3, B4, B7, E2, C6), `nowBlock` (G1, G2, E3). Suite eseguita in più fusi orari e attraverso il cambio d'ora di ottobre 2026.
 - T-002 Parser del corso `src/domain/course/parser.ts` (FORMATO_CORSO §1–§4, MECC §16): H1 e template §2–§3 su fixture sintetiche (21 test); fedeltà ai file reali M0/M1 e a `course-data.js` verificata in T-000.
@@ -29,7 +30,7 @@
 - `npm audit`: due avvisi moderati su `@vitest/mocker` (redirect mock del dev server, non usato); correzione solo con Vitest 5 → task dedicato, non urgente (`docs/DIPENDENZE.md`).
 - Permessi di Claude Code: `.claude/settings.json` e `.claude/hooks/**` sono in `permissions.ask` dal 24/09: modificarli richiede una conferma esplicita, anche in modalità loop.
 - Marketplace di terze parti dichiarate nel repository (ponytail, hex, impeccable): fiducia esplicita, senza versione fissata (D-TOOLS-2); revocabile mettendo il plugin a `false`.
-- Decisioni aperte: D-QUIZ-1 (CP5); D-BACKUP-1 chiave AI nel file di backup e sorgente dell'orologio di `updatedAt` (CP4); D-PARSE-3 numeri duplicati di modulo/unità nello ZIP (proposta minima registrata: si applica all'avvio di T-003).
+- Decisioni aperte: D-QUIZ-1 (CP5); D-BACKUP-1 chiave AI nel file di backup e sorgente dell'orologio di `updatedAt` (CP4).
 
 ## Divergenze design ↔ spec
 *Rilevate in T-000 (24/09/2026) leggendo tutte le schermate. Vince la spec: il codice segue le righe di `docs/03_HANDOFF_DESIGN_CODE.md` §1; i mock vanno corretti in Claude Design.*
@@ -54,8 +55,8 @@
 *Note interne al design (non contraddicono la spec; da segnalare a Claude Design)*: il tipo «studio» è blu primary in S4 Crea e S22 Notifiche, viola cat-study in S1, S5, S8, S21; dati inventati contro la regola «niente titoli inventati» di HANDOFF (S15 debrief «Unità 2.4 / 2.5 / 2.3», S5 studio «Modulo 00 · Unità 0.1» con il titolo della 0.7 e «0 / 6 unità», S20 Studio «Ultime unità» con titoli non del corso, S10 `warnings` che attribuisce a `M1-Tooling_Moderno.md` un'unità «importata con 3 sezioni» mentre M1 si importa senza avvisi); DESIGN.md §6 cita la scadenza «Quando capita» che S4 non ha (S4 vince); S15 e DESIGN.md §5 mostrano l'intestazione del mini progetto senza il prefisso «Mini Progetto Finale:» che FORMATO §3 conserva e S11 Modulo mostra intero (il parser lo conserva; la UI lo mostra intero); `course-data.js` si discosta dalle regole di FORMATO §2–§3 in quattro campi pur essendo dichiarato «risultato atteso» in FORMATO §0 (intestazione «Teoria (Fondamenta)», finestra di M1 «· mini-modulo», intro ridotta al primo paragrafo, link del test di fit ridotti al titolo): D-PARSE-2 estesa, differenze annotate in `scripts/corso-esempio.test.mjs`.
 
 ## Prossimo task
-- **T-003** (Sonnet 5): lettura ZIP con `fflate` → `parseCourse`; all'avvio applicare D-PARSE-3 (proposta minima: duplicato saltato con avviso).
-- **T-004** (Opus 5.5): schema Dexie con ora di parete (D-TIME-2); ora sbloccato da T-000.
+- **T-004 R** (Opus 5.5): schema Dexie con ora di parete (D-TIME-2); dipendenze (T-000, T-001) fatte.
+- **T-005** (Sonnet 5) attende T-003 (fatto) e T-004.
 - In parallelo, dominio puro senza dipendenze: **T-011** (Opus 5.5) e poi **T-012**.
 - T-006 attende T-004: fino ad allora l'utente può porre il veto sullo stack (CP1).
 

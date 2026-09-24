@@ -12,6 +12,9 @@
  * altri casi è il testo dopo emoji e numero, verbatim (il mini progetto conserva «Mini Progetto Finale:»). Dove il
  * fixture del design (course-data.js) si discosta da FORMATO §2–§3 vincono le regole: finestra senza parentesi,
  * intro con tutti i paragrafi e il grassetto, test di fit con i link (confronto in scripts/corso-esempio.test.mjs).
+ * Decisione D-PARSE-3: due file modulo con lo stesso numero, o due intestazioni "Unità X.Y" nello stesso file,
+ * produrrebbero id in collisione (`corso:M1`, `corso:M1:U1.1`); FORMATO §1 tace. Il duplicato successivo viene
+ * saltato con un avviso, come un'intestazione illeggibile: il primo vince, nessuna rinumerazione automatica.
  */
 import type { StatoUnita, StatoModulo } from '../types';
 import { statiModuli } from '../pointer';
@@ -447,6 +450,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
   if (!fields.prerequisiti) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Prerequisiti" mancante` });
 
   const unita: UnitaImportata[] = [];
+  const numeriUnitaVisti = new Set<string>();
   let obiettivi: string[] = [];
   let verification: ReturnType<typeof parseVerification> = { domande: [], esercizi: [], criteri: [], noGo: '' };
   let riassunto = '';
@@ -457,7 +461,13 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
     const heading = chunk.heading.trim();
     if (UNIT_HEADER_ANY.test(chunk.headerLine)) {
       const u = parseUnit(id, numero, unita.length + 1, chunk.headerLine, chunk.lines, name, warnings);
-      if (u) unita.push(u);
+      if (u && numeriUnitaVisti.has(u.numero)) {
+        // Unità X.Y duplicata nello stesso file (D-PARSE-3): saltata come un'intestazione illeggibile.
+        warnings.push({ file: name, messaggio: `unità ${u.numero}: numero duplicato, saltata` });
+      } else if (u) {
+        numeriUnitaVisti.add(u.numero);
+        unita.push(u);
+      }
     } else if (/^Obiettivi di Apprendimento/i.test(heading)) {
       obiettivi = chunk.lines
         .map((l) => BULLET.exec(l)?.[1])
@@ -540,10 +550,18 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   }
 
   const moduli: ModuloImportato[] = [];
+  const numeriModuloVisti = new Set<number>();
   for (const { file } of moduleFiles) {
     const r = parseModule(file, opts.corsoId);
     warnings.push(...r.avvisi);
-    if (r.modulo) moduli.push(r.modulo);
+    if (!r.modulo) continue;
+    if (numeriModuloVisti.has(r.modulo.numero)) {
+      // Numero di modulo duplicato fra file diversi (D-PARSE-3): saltato come un'intestazione illeggibile.
+      warnings.push({ file: file.name, messaggio: `modulo ${r.modulo.numero}: numero duplicato, file saltato` });
+      continue;
+    }
+    numeriModuloVisti.add(r.modulo.numero);
+    moduli.push(r.modulo);
   }
   if (moduli.length === 0) throw new ErroreImportCorso('Nessun modulo con intestazione valida');
 

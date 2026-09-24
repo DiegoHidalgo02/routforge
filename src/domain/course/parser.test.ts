@@ -182,6 +182,58 @@ describe('Import corso — SCENARI H1', () => {
   });
 });
 
+describe('Moduli e unità duplicati — MECC §16, FORMATO_CORSO §1 (D-PARSE-3)', () => {
+  const M1_A = `# MODULO M1 — Prima versione
+
+**Tipo:** NUOVO CONTENUTO
+**Prerequisiti:** —
+
+#### Unità 1.1 — Uno
+**🎯 Concetto Core: x**
+testo
+`;
+  const M1_B = `# MODULO M1 — Seconda versione (duplicata)
+
+**Tipo:** NUOVO CONTENUTO
+**Prerequisiti:** —
+
+#### Unità 1.1 — Due
+**🎯 Concetto Core: y**
+testo
+`;
+
+  it('due file M1-… con lo stesso numero: il secondo è saltato con avviso, il primo vince', () => {
+    const files = [
+      { name: 'M1-A.md', content: M1_A },
+      { name: 'M1-B.md', content: M1_B },
+    ];
+    const { corso, avvisi } = parseCourse(files, opts);
+    expect(corso.moduli).toHaveLength(1);
+    expect(corso.moduli[0]?.titolo).toBe('Prima versione');
+    expect(avvisi.some((w) => w.file === 'M1-B.md' && /modulo 1: numero duplicato/.test(w.messaggio))).toBe(true);
+  });
+
+  it('due intestazioni «Unità 1.1» nello stesso file: la seconda è saltata con avviso, la prima vince', () => {
+    const dup = `# MODULO M1 — Con unità duplicata
+
+**Tipo:** NUOVO CONTENUTO
+**Prerequisiti:** —
+
+#### Unità 1.1 — Prima
+**🎯 Concetto Core: x**
+testo
+
+#### Unità 1.1 — Ripetuta
+**🎯 Concetto Core: y**
+testo
+`;
+    const { modulo, avvisi } = parseModule({ name: 'M1.md', content: dup }, 'corso-1');
+    expect(modulo?.unita).toHaveLength(1);
+    expect(modulo?.unita[0]?.titolo).toBe('Prima');
+    expect(avvisi.some((w) => /unità 1\.1: numero duplicato/.test(w.messaggio))).toBe(true);
+  });
+});
+
 describe('Modulo — FORMATO_CORSO §2', () => {
   const { modulo: m, avvisi } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
   if (!m) throw new Error('modulo atteso');
