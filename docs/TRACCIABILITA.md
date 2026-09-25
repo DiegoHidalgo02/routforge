@@ -20,7 +20,7 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | A2 | MECC §4, §6 | domain/scheduler/horizon (slot libero) · domain/lost · app/scheduler | T-001, T-012 | src/domain/lost.test.ts | parziale |
 | A3 | MECC §3, §4 | domain/checklist · app/notifications · ui Dettaglio | T-009 | — | nessuno |
 | A4 | MECC §13.5 | domain/notifications/digest · app/notifications | T-020 | — | nessuno |
-| A5 | MECC §2, §6, §21, §24 | domain/ordering · ui Oggi · platform/widget | T-007, T-008, T-023 | — | nessuno |
+| A5 | MECC §2, §6, §21, §24 | domain/ordering · app/activities · ui Oggi · platform/widget | T-007, T-008, T-023 | src/domain/ordering.test.ts, src/app/activities.test.ts | parziale |
 | B1 | MECC §7 | domain/scheduler/occurrences · app/scheduler | T-011, T-013 | — | nessuno |
 | B2 | MECC §3, §8 | domain/lost (finestra di spunta, marcatura) · ui Dettaglio | T-001, T-009 | src/domain/lost.test.ts | parziale |
 | B3 | MECC §3, §7, §8, §14 | domain/lost · domain/scheduler/occurrences (fine ≤ inizio → giorno dopo) | T-001, T-011 | src/domain/lost.test.ts | parziale |

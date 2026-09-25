@@ -19,6 +19,25 @@ export type StatoUnita = 'non_iniziata' | 'parziale' | 'da_rivedere' | 'completa
 /** Orizzonte di un todo (§6). */
 export type Orizzonte = 'giorno' | 'settimana' | 'mese';
 
+/** Priorità di un todo senza orario (§2, §6). */
+export type Priorita = 'alta' | 'normale' | 'bassa';
+
+/** Voce della checklist di un todo (§4): nasce non spuntata. */
+export interface VoceChecklist {
+  testo: string;
+  fatta: boolean;
+}
+
+/** Un anticipo del promemoria personalizzato (§13.1): minuti prima dell'inizio (0 = all'inizio), sveglia o notifica. */
+export interface AnticipoPromemoria {
+  minuti: number;
+  sveglia: boolean;
+}
+
+/** Promemoria per istanza o per definizione (§2, §13.1): Auto / Off / Personalizzato. */
+export type Promemoria =
+  { modo: 'auto' } | { modo: 'off' } | { modo: 'personalizzato'; anticipi: AnticipoPromemoria[] };
+
 /** Stato di un modulo del corso (FORMATO_CORSO §4). */
 export type StatoModulo = 'bloccato' | 'aperto' | 'passato';
 
@@ -48,6 +67,19 @@ export interface Blocco {
   ricorrenzaId?: string | null;
   /** Istante della marcatura "perso" (§8); assente se mai perso. */
   persoIl?: number | null;
+  // Campi della creazione (§2): assenti nei blocchi di prova dei meccanismi che non li usano.
+  titolo?: string;
+  note?: string;
+  /** Solo todo senza orario (§2). */
+  priorita?: Priorita;
+  /** Solo todo (§2, §4). */
+  checklist?: VoceChecklist[];
+  /** Solo eventi (§2). */
+  luogo?: string;
+  /** Solo eventi: il template delle fasi sta sul blocco, che è la sua definizione (§2, §5). */
+  fasi?: FaseTemplate[];
+  /** Override per istanza (§2); le occorrenze di routine ereditano quello della ricorrenza (§7). */
+  promemoria?: Promemoria;
 }
 
 /**
@@ -89,6 +121,8 @@ export interface Ricorrenza extends OraDiParete {
   corsoId: string | null;
   /** Template delle fasi (§5); vuoto per le routine di studio (§2). */
   fasi: FaseTemplate[];
+  /** Override sulla definizione, ereditato dalle istanze (§2). */
+  promemoria: Promemoria;
 }
 
 /** Stato terminale = non più aperto (§1). */

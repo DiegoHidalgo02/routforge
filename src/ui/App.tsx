@@ -2,6 +2,7 @@
 import { LucideProvider } from 'lucide-react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { Courses } from './Courses';
+import { Create } from './Create';
 import { ProfileMenu } from './ProfileMenu';
 import { Section } from './Section';
 import { Shell } from './Shell';
@@ -14,7 +15,7 @@ export function App() {
         <Routes>
           <Route element={<Shell />}>
             <Route index element={<Section titolo="oggi" inizio={<ProfileMenu variante="logo" />} />} />
-            <Route path="crea" element={<Section titolo="crea" />} />
+            <Route path="crea" element={<Create />} />
             <Route path="statistiche" element={<Section titolo="statistiche" />} />
             <Route path="corsi" element={<Courses />} />
             <Route path="notifiche" element={<Section titolo="notifiche" indietro />} />
