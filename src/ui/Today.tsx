@@ -159,15 +159,21 @@ export function Today() {
           </button>
         )}
         <Segmentato viste={VISTE} vista={vista} vai={vai} className={s.soloDesktop} />
-        <button
-          type="button"
-          className={`${s.iconaMese} ${s.soloMobile}`}
-          aria-label={t('mese')}
-          aria-pressed={vista === 'mese'}
-          onClick={() => vai({ vista: vista === 'mese' ? 'giorno' : 'mese' })}
-        >
-          <CalendarDays size={16} />
-        </button>
+        {/* Su mobile le viste si scelgono solo con le tre icone in alto a destra (S1 Mobile) */}
+        <div className={`${s.iconeVista} ${s.soloMobile}`} role="group" aria-label={t('vista')}>
+          {VISTE.map((v) => (
+            <button
+              key={v.vista}
+              type="button"
+              className={s.iconaVista}
+              aria-label={t(v.chiave)}
+              aria-pressed={vista === v.vista}
+              onClick={() => vai({ vista: v.vista })}
+            >
+              <IconaVista vista={v.vista} />
+            </button>
+          ))}
+        </div>
         <div className={`${s.frecce} ${s.soloDesktop}`}>
           <button type="button" className={s.freccia} aria-label={t(FRECCE[vista][0])} onClick={() => scorri(-1)}>
             <ChevronLeft size={15} />
@@ -185,7 +191,7 @@ export function Today() {
         {vista === 'mese' && <h2 className={`${s.meseMobile} ${s.soloMobile}`}>{etichettaPeriodo}</h2>}
         {vista !== 'mese' && (
           <>
-            {/* Su mobile la striscia sta anche nella Settimana, con sotto il segmentato (S1, DESIGN.md §6) */}
+            {/* Su mobile la striscia sta anche nella Settimana (S1) */}
             <div className={`${s.striscia} ${vista === 'settimana' ? s.soloMobile : ''}`}>
               {settimana.map((g) => {
                 const primo = dayLoad(blocchi(g)).tipi[0];
@@ -207,7 +213,6 @@ export function Today() {
                 );
               })}
             </div>
-            <Segmentato viste={VISTE.slice(0, 2)} vista={vista} vai={vai} className={s.soloMobile} />
           </>
         )}
         {vista === 'giorno' && (
@@ -401,6 +406,31 @@ function Segmentato(p: {
         </button>
       ))}
     </div>
+  );
+}
+
+// Icone delle viste disegnate nel mock (calendario con righe, colonne o griglia), tratto come LucideProvider
+const TRACCIATI: Record<Vista, string> = {
+  giorno: 'M16 2v4M8 2v4M3 10h18M7 14h10M7 18h6',
+  settimana: 'M16 2v4M8 2v4M3 10h18M9 10v11M15 10v11',
+  mese: 'M16 2v4M8 2v4M3 10h18M3 15.5h18M9 10v11M15 10v11',
+};
+function IconaVista({ vista }: { vista: Vista }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d={TRACCIATI[vista]} />
+    </svg>
   );
 }
 
