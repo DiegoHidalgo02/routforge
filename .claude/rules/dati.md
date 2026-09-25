@@ -9,7 +9,7 @@ paths:
 - Ogni tabella ha `id` (UUID v4, o deterministico dove l'identità è logica: occorrenza = slot della ricorrenza, log
   fasi = blocco, preferenze e registro notifiche = chiave, dato dal chiamante; nessun indice univoco), `createdAt`,
   `updatedAt` (epoch ms), `deletedAt | null`; si scrive e si elimina solo con `src/data/repository.ts` (`save`,
-  `saveBlock`, `remove`): l'eliminazione è una tombstone minima, mai una cancellazione fisica, salvo `registroNotifiche`
+  `saveBlock`, `saveCourse`, `remove`): l'eliminazione è una tombstone minima, mai una cancellazione fisica, salvo `registroNotifiche`
   (derivato, mai in backup né sync: T-019) (D-DATA-1, D-DATA-2, INV-14; nel gate: `src/data/db.test.ts`; Dexie diretto
   solo nei test).
 - Nomi di tabelle e campi in italiano come nel dominio (`facilita`, `scadenza`, `giornoLocale`); elenco in

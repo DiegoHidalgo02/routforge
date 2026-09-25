@@ -77,7 +77,7 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 
 | Tabella | Indici (oltre a `id`) | Note |
 |---|---|---|
-| `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId` su ogni livello sotto il corso; `moduloId`, `unitaId`, `sezioneId` verso il genitore | Albero import; `unita.markdown` integrale (fonte AI). Non si salvano i campi che il dominio calcola: stato dei moduli, conteggi, unità corrente |
+| `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId` su ogni livello sotto il corso; `moduloId`, `unitaId`, `sezioneId` verso il genitore | Albero import; `unita.markdown` integrale (fonte AI). Non si salvano i campi che il dominio calcola: stato dei moduli, conteggi, unità corrente. `saveCourse` scrive l'albero in una transazione; risorsa = sezione + posizione (`…:R1`); `corsi.esempio` marca il corso di esempio (D-IMPORT-1) |
 | `ricorrenze` | `corsoId` | Tipo `Ricorrenza` del dominio: giorni, ora di parete e fuso (D-TIME-2), date, date saltate, fasi (template con id stabili); promemoria in T-019. «Attiva» si calcola (fine assente o ≥ oggi, §7): IndexedDB non indicizza i booleani |
 | `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId`, `stato`, `tipo`, `corsoId` | Un record per occorrenza, con id = slot della ricorrenza (D-DATA-2): resta lo stesso se l'utente la sposta (C4) e la generazione la ritrova con `get`. `giornoLocale`, `orarioInizio`, `orarioFine` e `fuso` li deriva `saveBlock` dagli istanti e li conserva se gli istanti non cambiano (D-TIME-2) |
 | `sessioni` | `avvio`, `bloccoId` | Focus, pause, segmenti, interruzioni (incl. "iperfocus"), minuti per unità, tipo di chiusura |

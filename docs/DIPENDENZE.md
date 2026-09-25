@@ -27,7 +27,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `react`, `react-dom`, `@types/react`, `@types/react-dom` | prevista | `src/ui`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
-| `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035 | build, CSS Modules nativi e web installabile | D-STACK-1 |
+| `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035; l'import `?raw` del corso di esempio (T-005, `src/app/raw.d.ts`) oggi lo risolve Vitest, che include Vite | build, CSS Modules nativi e web installabile | D-STACK-1 |
 | `react-router` | prevista | `src/ui`, T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
 | `lucide-react` | prevista | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
 | `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | prevista | `src/ui`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |

@@ -11,6 +11,11 @@ export default defineConfig([
   js.configs.recommended,
   tseslint.configs.recommended,
   {
+    // Omettere campi con la destrutturazione (`const { stato, ...riga } = modulo`) è il modo di non salvare ciò che
+    // il dominio calcola (D-DATA-2, `saveCourse`): le variabili sorelle del resto non contano come inutilizzate.
+    rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }] },
+  },
+  {
     // Script Node (ESM) e hook di Claude Code: globali di Node che ESLint non conosce da solo.
     files: ['scripts/**/*.mjs', '.claude/hooks/**/*.mjs'],
     languageOptions: { globals: { process: 'readonly', console: 'readonly', URL: 'readonly' } },

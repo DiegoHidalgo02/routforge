@@ -8,9 +8,11 @@
  * - `remove` lascia una tombstone minima (MECC §25: le eliminazioni si registrano e si propagano).
  * - `saveBlock` deriva giorno locale e ora di parete dagli istanti nel fuso del processo (D-TIME-2); se gli istanti
  *   non cambiano li conserva: un blocco passato non cambia giorno né orario dopo un viaggio (CONTESTO §3).
+ * - `saveCourse` salva l'albero di un corso importato in una sola transazione (MECC §16, D-IMPORT-1).
  * Il tempo arriva come parametro: `now` e, per i blocchi, il fuso corrente letto dalla porta Clock di `app`.
  */
 import Dexie from 'dexie';
+import type { CorsoImportato } from '../domain/course/parser';
 import { localDayKey, localTimeKey } from '../domain/time';
 import type { OraDiParete } from '../domain/types';
 import type { CampiComuni, RoutForgeDb, Tabelle, Tombstone } from './db';
@@ -18,6 +20,9 @@ import type { CampiComuni, RoutForgeDb, Tabelle, Tombstone } from './db';
 // La lib della radice è ES2022 senza DOM (D-TS-1): si dichiara solo la parte di Web Crypto che si usa.
 // ponytail: randomUUID vuole un contesto sicuro (https, localhost, WebView Android); iOS da verificare in T-036.
 declare const crypto: { randomUUID(): string };
+
+/** UUID v4: id dei record senza identità logica e del corso nuovo di ogni import (MECC §16). */
+export const newId = (): string => crypto.randomUUID();
 
 type NomeTabella = keyof Tabelle;
 type RigaBlocco = Tabelle['blocchi'];
@@ -53,7 +58,7 @@ export async function save<K extends Exclude<NomeTabella, 'blocchi'>>(
 ): Promise<Tabelle[K]> {
   const t = tabella(db, nome);
   return db.transaction('rw', t, async () => {
-    const id = dati.id ?? crypto.randomUUID();
+    const id = dati.id ?? newId();
     const prev = await t.get(id);
     const rec = { ...dati, id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null } as Tabelle[K];
     await t.put(rec);
@@ -75,7 +80,7 @@ export async function remove<K extends NomeTabella>(db: RoutForgeDb, nome: K, id
 /** Crea o aggiorna un blocco; `fuso` è il fuso corrente del dispositivo (D-TIME-2). */
 export async function saveBlock(db: RoutForgeDb, dati: DatiBlocco, now: number, fuso: string): Promise<RigaBlocco> {
   return db.transaction('rw', db.blocchi, async () => {
-    const id = dati.id ?? crypto.randomUUID();
+    const id = dati.id ?? newId();
     const prev = await db.blocchi.get(id);
     const derivato = {
       giornoLocale: localDayKey(dati.inizio),
@@ -103,6 +108,33 @@ export async function saveBlock(db: RoutForgeDb, dati: DatiBlocco, now: number, 
     const rec: RigaBlocco = { ...dati, ...ora, id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null };
     await db.blocchi.put(rec);
     return rec;
+  });
+}
+
+/**
+ * Salva l'albero di un corso importato: tutto o niente, un errore non lascia un corso a metà (D-IMPORT-1). Gli id sono
+ * quelli del parser, deterministici da `corso.id`; una risorsa è la sua sezione più la posizione (`…:teoria:R1`).
+ * Ciò che il dominio calcola (stato dei moduli, conteggi, unità corrente) non si salva (D-DATA-2). `esempio` marca
+ * il corso di esempio incluso (D-SAMPLE-1).
+ */
+export async function saveCourse(db: RoutForgeDb, corso: CorsoImportato, now: number, esempio = false): Promise<void> {
+  const { id: corsoId, titolo, sottotitolo, importatoIl } = corso;
+  // Le `save` interne diventano sotto-transazioni di questa: un errore annulla tutto.
+  await db.transaction('rw', [db.corsi, db.moduli, db.unita, db.sezioni, db.risorse], async () => {
+    await save(db, 'corsi', { id: corsoId, titolo, sottotitolo, importatoIl, esempio }, now);
+    for (const { unita, stato, ...modulo } of corso.moduli) {
+      await save(db, 'moduli', { ...modulo, corsoId }, now);
+      for (const { sezioni, ...u } of unita) {
+        await save(db, 'unita', { ...u, corsoId, moduloId: modulo.id }, now);
+        for (const [i, { risorse, ...sezione }] of sezioni.entries()) {
+          await save(db, 'sezioni', { ...sezione, corsoId, unitaId: u.id, ordine: i + 1 }, now);
+          for (const [j, r] of risorse.entries()) {
+            const riga = { ...r, id: `${sezione.id}:R${j + 1}`, corsoId, sezioneId: sezione.id, ordine: j + 1 };
+            await save(db, 'risorse', riga, now);
+          }
+        }
+      }
+    }
   });
 }
 

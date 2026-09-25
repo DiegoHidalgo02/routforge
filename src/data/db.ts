@@ -41,7 +41,8 @@ type Riga<T> = T & CampiComuni;
 
 /** Record vivi per tabella. Ciò che il dominio calcola (stato dei moduli, conteggi, unità corrente) non si salva. */
 export interface Tabelle {
-  corsi: Riga<Pick<CorsoImportato, 'id' | 'titolo' | 'sottotitolo' | 'importatoIl'>>;
+  /** `esempio`: il corso di esempio incluso (badge «Esempio» di S10, D-SAMPLE-1); booleano, quindi senza indice. */
+  corsi: Riga<Pick<CorsoImportato, 'id' | 'titolo' | 'sottotitolo' | 'importatoIl'> & { esempio: boolean }>;
   moduli: Riga<Omit<ModuloImportato, 'unita' | 'stato'> & { corsoId: string }>;
   unita: Riga<Omit<UnitaImportata, 'sezioni'> & { corsoId: string; moduloId: string }>;
   sezioni: Riga<Omit<SezioneImportata, 'risorse'> & { corsoId: string; unitaId: string; ordine: number }>;

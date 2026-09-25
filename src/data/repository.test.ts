@@ -1,10 +1,11 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { parseCourse } from '../domain/course/parser';
 import type { Blocco } from '../domain/types';
 import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
-import { blocksOfDay, get, list, remove, save, saveBlock } from './repository';
+import { blocksOfDay, get, list, remove, save, saveBlock, saveCourse } from './repository';
 
 const ROMA = 'Europe/Rome';
 const T0 = local(2026, 9, 24, 8, 0);
@@ -157,5 +158,69 @@ describe("Log fasi: id = blocco dell'occorrenza — MECC §5, D-DATA-2", () => {
     expect(await get(db, 'logFasi', 'b-1')).toBeUndefined();
     const terzo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1' }, local(2026, 9, 24, 9, 2));
     expect([terzo.createdAt, terzo.deletedAt]).toEqual([T0, null]);
+  });
+});
+
+/** Un modulo con due unità, tre sezioni e quattro risorse: basta a vedere la forma di ogni riga (FORMATO_CORSO §2–§3). */
+const MODULO = `# MODULO M1 — Tooling
+
+#### Unità 1.1 — Node
+**📖 Teoria**
+- [Guida](https://esempio.org/guida)
+- [API](https://esempio.org/api)
+
+**🛠 Pratica**
+- [Esercizi](https://esempio.org/esercizi)
+
+#### Unità 1.2 — npm
+**📖 Teoria**
+- [npm](https://esempio.org/npm)
+`;
+const corsoDi = (corsoId: string) =>
+  parseCourse([{ name: 'M1-Tooling.md', content: MODULO }], { corsoId, now: T0 }).corso;
+
+describe('Albero del corso — MECC §16, D-DATA-2 (D-IMPORT-1)', () => {
+  it('una riga per nodo, senza i campi che il dominio calcola; risorsa = sezione + posizione', async () => {
+    const corso = corsoDi('c-1');
+    await saveCourse(db, corso, T0);
+    const corsoId = 'c-1';
+    const comuni = { createdAt: T0, updatedAt: T0, deletedAt: null };
+    expect(await list(db, 'corsi')).toEqual([
+      { id: corsoId, titolo: corso.titolo, sottotitolo: corso.sottotitolo, importatoIl: T0, esempio: false, ...comuni },
+    ]);
+    // Lo stato del modulo si calcola dai criteri (FORMATO §4) e i figli hanno righe proprie: nessuno dei due nella riga
+    const { unita, stato, ...modulo } = corso.moduli[0]!;
+    expect(await list(db, 'moduli')).toEqual([{ ...modulo, corsoId, ...comuni }]);
+    for (const { sezioni, ...u } of unita) {
+      expect(await get(db, 'unita', u.id)).toEqual({ ...u, corsoId, moduloId: modulo.id, ...comuni });
+      for (const [i, { risorse, ...s }] of sezioni.entries()) {
+        expect(await get(db, 'sezioni', s.id)).toEqual({ ...s, corsoId, unitaId: u.id, ordine: i + 1, ...comuni });
+        for (const [j, r] of risorse.entries()) {
+          const id = `${s.id}:R${j + 1}`;
+          expect(await get(db, 'risorse', id)).toEqual({
+            ...r,
+            id,
+            corsoId,
+            sezioneId: s.id,
+            ordine: j + 1,
+            ...comuni,
+          });
+        }
+      }
+    }
+    // Nessuna riga oltre all'albero: 2 unità, 3 sezioni, 4 risorse; l'ordine dei link resta quello del file
+    const quante = async (nome: 'unita' | 'sezioni' | 'risorse') => (await list(db, nome)).length;
+    expect([await quante('unita'), await quante('sezioni'), await quante('risorse')]).toEqual([2, 3, 4]);
+    expect(await get(db, 'risorse', 'c-1:M1:U1.1:teoria:R2')).toMatchObject({ titolo: 'API', ordine: 2 });
+  });
+
+  it('tutto o niente: un errore a metà non lascia un corso a metà', async () => {
+    const corso = corsoDi('c-rotto');
+    // Una funzione non si può salvare in IndexedDB (DataCloneError): l'errore arriva all'ultima unità
+    corso.moduli[0]!.unita[1]!.titolo = (() => 'npm') as unknown as string;
+    await expect(saveCourse(db, corso, T0)).rejects.toThrow();
+    for (const nome of ['corsi', 'moduli', 'unita', 'sezioni', 'risorse'] as const) {
+      expect(await list(db, nome)).toEqual([]);
+    }
   });
 });
