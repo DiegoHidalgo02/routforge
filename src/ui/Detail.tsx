@@ -315,7 +315,8 @@ export function Detail() {
           className={`${s.azione} ${s.secondaria} ${s.larga}`}
           onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
         >
-          {t('annullaSpunta')}
+          {/* Il ritorno indietro è «Riapri» come per il todo (scelta dell'utente, divergenza 23: vince il design) */}
+          {t('riapri')}
         </button>
       );
     else if (b.stato !== 'saltato')
