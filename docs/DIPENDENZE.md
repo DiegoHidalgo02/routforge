@@ -21,19 +21,22 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `fflate` | runtime | `src/app/courseImport.ts` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso; piccola, senza dipendenze, stesso codice su web e WebView | D-STACK-1 |
 | `dexie` | runtime | `src/data` (schema v1 e repository), T-004 | IndexedDB con stesso codice su web e WebView; id globali e `updatedAt` per la sync. I suoi tipi citano API DOM: senza la lib `DOM` (D-TS-1) restano comunque stretti sui metodi usati (verificato in T-004) | D-DATA-1 |
 | `fake-indexeddb` | dev | test di `src/data` (`import 'fake-indexeddb/auto'`), T-004 | repository testati senza browser | D-DATA-1 |
+| `react`, `react-dom` | runtime | `src/ui` e `src/main.tsx`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
+| `@types/react`, `@types/react-dom` | dev | tipi di React per `tsconfig.dom.json`, T-006 | typecheck della UI | D-STACK-1 |
+| `vite`, `@vitejs/plugin-react` | dev | `npm run dev`, `npm run build` (`vite.config.ts`), T-006; l'import `?raw` del corso di esempio (T-005). Vite resta alla 7 (Vitest 3 accetta fino alla 7: la 8 con Vitest 5, task dedicato), quindi `@vitejs/plugin-react` 5 (la 6 richiede Vite 8) | build, CSS Modules nativi, un solo Vite condiviso con Vitest | D-STACK-1 |
+| `react-router` | runtime | `src/ui/App.tsx` (rotte della shell), T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
+| `lucide-react` | runtime | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
+| `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | runtime | `src/main.tsx`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
+| `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | dev | `eslint.config.js`, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3). `jsx-a11y` 6.10.2 dichiara ESLint fino alla 9: `overrides` in `package.json` gli passa ESLint 10 (il suo codice non usa le API rimosse dalla 10, verificato in T-006); l'override si toglie quando il plugin dichiara la 10 | D-LINT-1, D-STACK-1 |
 
 ## Previste (entrano nel task indicato; stack deciso in T-000, `docs/decisioni/D-STACK-1.md`)
 
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
-| `react`, `react-dom`, `@types/react`, `@types/react-dom` | prevista | `src/ui`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
-| `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035; l'import `?raw` del corso di esempio (T-005, `src/app/raw.d.ts`) oggi lo risolve Vitest, che include Vite | build, CSS Modules nativi e web installabile | D-STACK-1 |
-| `react-router` | prevista | `src/ui`, T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
-| `lucide-react` | prevista | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
-| `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | prevista | `src/ui`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
+| `vite-plugin-pwa` | prevista | dev, web installabile (manifest e service worker), T-035: nome e icona arrivano con CP6 | PWA sulla stessa build di Vite | D-STACK-1 |
 | `jsdom` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | ambiente DOM per Vitest | D-STACK-1 |
-| `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | prevista | dev, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3) | D-LINT-1, D-STACK-1 |
-| `@capacitor/core`, `@capacitor/cli`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-006 e T-021 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
+| `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-021 (prima capacità nativa: `cap init`, `cap add android` dopo CP3) e T-035 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
+| `@capacitor-community/keep-awake` | prevista | `src/platform`, T-021 (schermo acceso durante la sessione, MECC §10.4; sul web Wake Lock API, T-017) | lo schermo non si spegne durante la sessione | D-STACK-1 |
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |
 | `@google/genai` | prevista | `src/platform` (client AI), T-026 | fornitore Gemini scelto dalle spec | D-AI-1 |
 | `i18next` | prevista | `src/ui`, T-031 | sei lingue da file JSON | D-I18N-1 |

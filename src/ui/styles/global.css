@@ -1,0 +1,25 @@
+/* Base dell'app (D-STACK-1): solo i token di tokens.css. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Focus visibile su ogni controllo (HANDOFF: i mock non lo mostrano). `:root` alza la specificità sopra le ombre dei
+   componenti (FAB, primary), che altrimenti coprirebbero l'anello; il contorno trasparente compare a contrasto forzato. */
+:root :focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--ring-focus);
+}

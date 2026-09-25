@@ -4,6 +4,8 @@ node_modules
 dist
 coverage
 claude-design
+# Copia non modificata dei token del design (INV-20): il formato resta quello dell'export
+src/ui/styles/tokens.css
 docs
 *.md
 package-lock.json

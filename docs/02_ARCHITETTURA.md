@@ -114,7 +114,10 @@ resta fuori dal dominio.
 
 - Router con le sezioni di FUNZ §1: Oggi (`/`), Crea (`/crea`), Statistiche, Profilo/Corsi, Notifiche, Diagnostica,
   Impostazioni; dettaglio come pannello laterale su desktop (S5 Panel) e schermata su mobile (S5 Mobile).
-- Stato: store leggero (Zustand o `useSyncExternalStore` su Dexie live queries) — deciso in T-006.
+- Stato: nessuna libreria; `useSyncExternalStore` sulle query live di Dexie esposte da `app` (deciso in T-006, D-STACK-1).
+- Shell (T-006, D-UI-1): `src/ui/Shell.tsx` (BottomNav; da 1024 px sidebar 240), menu del logo utente `src/ui/ProfileMenu.tsx`,
+  rotte in `src/ui/App.tsx`; testi con `t()` di `src/ui/i18n` (sei JSON, lingua da `pickLanguage`, MECC §23); punto di
+  composizione `src/main.tsx` (font, token, lingua, archiviazione persistente), fuori dagli strati.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
 - Nessun colore/spaziatura fuori da `claude-design/design/tokens.css`.
 - Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `src/ui/styles/tokens.css`
@@ -134,23 +137,24 @@ resta fuori dal dominio.
 | TTS (Trivia) | Web Speech API | `@capacitor-community/text-to-speech` | idem | §18 |
 | Schermo acceso | Wake Lock API | plugin keep-awake | idem | §10.4 |
 
-## 7. Comandi di scaffold per T-006 (stack deciso in T-000, D-STACK-1)
+## 7. Comandi di scaffold (T-006 fatto il 25/09/2026; Capacitor in T-021, PWA in T-035)
 
 ```bash
-npm create vite@latest . -- --template react-ts        # nel repo esistente (mantieni package.json esistente: fondi gli script)
+# T-006 (fatto): UI web
 npm i react react-dom react-router lucide-react @fontsource/manrope @fontsource/ibm-plex-mono
-npm i -D @vitejs/plugin-react vite vite-plugin-pwa @types/react @types/react-dom
-npm i -D eslint-plugin-react-hooks eslint-plugin-jsx-a11y
-npm i @capacitor/core @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
+npm i -D @types/react @types/react-dom vite@7 @vitejs/plugin-react@5 eslint-plugin-react-hooks eslint-plugin-jsx-a11y
+cp claude-design/design/tokens.css src/ui/styles/tokens.css   # senza modifiche (INV-20, scripts/token.test.mjs)
+# T-021 (prima capacità nativa, dopo CP3)
+npm i @capacitor/core @capacitor/android @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
-npm i dexie
-npx cap add android            # richiede Android Studio (Checkpoint 3); iOS richiede un Mac
-cp claude-design/design/tokens.css src/ui/styles/tokens.css   # senza modifiche (INV: nessun valore fuori dai token)
+npx cap add android            # richiede Android Studio; iOS richiede un Mac
+# T-035: PWA installabile (manifest con nome e icona di CP6)
+npm i -D vite-plugin-pwa
 ```
-Ogni pacchetto è già «previsto» in `docs/DIPENDENZE.md`: all'installazione la riga passa a `dev`/`runtime`.
-Il gate resta `npm run verify`; ai test di dominio si aggiungono test dei servizi (adapter finti) e, per la UI,
-Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinamento). ESLint e Prettier sono già nel gate
-(D-LINT-1): T-006 aggiunge le regole del framework e un `tsconfig` con lib `DOM` per `ui` e `platform` (D-TS-1).
+Vite resta alla 7 finché Vitest è alla 3 (`docs/DIPENDENZE.md`). Ogni pacchetto è «previsto» in `docs/DIPENDENZE.md`:
+all'installazione la riga passa a `dev`/`runtime`. Il gate resta `npm run verify`: `check` esegue i due tsconfig (radice senza
+DOM; `tsconfig.dom.json` per `ui`, `platform` e `main.tsx`, D-TS-1), il lint include hook di React e accessibilità e ferma
+anche gli avvisi (D-LINT-1). Per la UI, Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinamento).
 
 ## 8. Rischi architetturali noti (audit del 24/09/2026)
 
@@ -163,10 +167,10 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 | Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | hash → intero a 32 bit, gestione collisioni, test dedicato | T-019 |
 | Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la riconciliazione all'avvio (ciclo §9) le ricrea; la Diagnostica mostra lo stato del permesso | T-019, T-021 |
 | Doze (Android): le notifiche `allowWhileIdle` possono scattare al massimo una volta ogni 9 minuti per app | trigger ravvicinati (pre, inizio, verifica) | test su dispositivo con Doze; per le sveglie usare le API di allarme esatto | T-021 |
-| Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`) al primo avvio, mostrarne lo stato in Diagnostica, ricordare il backup | T-006 (serve la lib `DOM` e l'avvio dell'app, assenti in T-004), T-032 |
+| Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`) al primo avvio, mostrarne lo stato in Diagnostica, ricordare il backup | richiesta all'avvio in `src/main.tsx` (T-006, fatto); stato in Diagnostica (T-032) |
 | Gate eseguito a ogni fine turno (hook Stop) più lento man mano che crescono i test (UI in particolare) | loop agentico | quando `npm run verify` supera ~60 s, separare `verify` (dominio + unità + regole) da `verify:completo` (UI) e usare il primo nell'hook | quando serve |
-| Lib `DOM` visibile al dominio | purezza del dominio | **risolto** (D-TS-1): la radice compila con `ES2022`; `ui` e `platform` avranno il proprio `tsconfig` in T-006 | fatto |
-| Font caricati da Google Fonts nei mock del design | offline (CONTESTO §3), privacy | font impacchettati in locale con `@fontsource` (D-STACK-1); nessuna richiesta di rete per l'aspetto | T-006 |
+| Lib `DOM` visibile al dominio | purezza del dominio | **risolto** (D-TS-1): la radice compila con `ES2022`; `ui` e `platform` hanno `tsconfig.dom.json` (T-006) | fatto |
+| Font caricati da Google Fonts nei mock del design | offline (CONTESTO §3), privacy | font impacchettati in locale con `@fontsource` (D-STACK-1); nessuna richiesta di rete per l'aspetto | fatto (T-006) |
 
 ## 9. Invarianti e verifiche automatiche
 

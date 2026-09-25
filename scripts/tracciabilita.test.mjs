@@ -7,7 +7,7 @@
 //    in docs/TASKS.md e uno stato fra `nessuno`, `parziale`, `coperto`.
 // 2. Una riga `parziale`/`coperto` cita file di test esistenti che nominano lo scenario.
 // 3. Un test che nomina uno scenario ("SCENARI B2") compare nella riga di quello scenario, mai `nessuno`.
-// 4. Ogni `describe` (in src/**/*.test.ts e scripts/**/*.test.mjs) cita un paragrafo (§), un file di spec,
+// 4. Ogni `describe` (in src/**/*.test.ts(x) e scripts/**/*.test.mjs) cita un paragrafo (§), un file di spec,
 //    uno scenario, una decisione, un invariante o un documento di docs/.
 // =============================================================================
 import { describe, expect, it } from 'vitest';
@@ -46,7 +46,7 @@ export function righeMatrice(testo) {
     out.push({
       id,
       task: task.match(/T-\d{3}/g) ?? [],
-      test: test.match(/[\w./-]+\.test\.(?:ts|mjs)/g) ?? [],
+      test: test.match(/[\w./-]+\.test\.(?:tsx?|mjs)/g) ?? [],
       stato,
     });
   }
@@ -145,6 +145,10 @@ describe('Tracciabilità — CONTESTO §3, docs/TRACCIABILITA.md (INV-6, INV-7)'
     const righe = righeMatrice('| A1 | §6 | domain/lost | T-001, T-012 | src/domain/lost.test.ts | parziale |');
     expect(righe).toEqual([
       { id: 'A1', task: ['T-001', 'T-012'], test: ['src/domain/lost.test.ts'], stato: 'parziale' },
+    ]);
+    // I test della UI sono .test.tsx (G3): il nome non va troncato in .test.ts
+    expect(righeMatrice('| G3 | §15 | ui | T-015 | src/ui/Oggi.test.tsx | parziale |')[0]?.test).toEqual([
+      'src/ui/Oggi.test.tsx',
     ]);
     const codice = [
       "describe('Persi — SCENARI B2 / B3', () => {});",

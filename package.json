@@ -5,8 +5,10 @@
   "description": "RoutForge — app di organizzazione e studio (calendario, scheduler, sessioni, corsi, pratica AI, statistiche, sync)",
   "type": "module",
   "scripts": {
-    "check": "tsc --noEmit",
-    "lint": "eslint .",
+    "dev": "vite",
+    "build": "vite build",
+    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.dom.json",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -18,17 +20,34 @@
   "engines": {
     "node": ">=20"
   },
+  "overrides": {
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^10.11.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
     "prettier": "^3.9.9",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.70.1",
+    "vite": "^7.3.6",
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
     "dexie": "^4.4.6",
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0"
   }
 }

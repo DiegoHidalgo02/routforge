@@ -1,0 +1,141 @@
+/* Menu del logo utente (S1 Oggi Mobile «menu», S20 Shell Desktop). Popover nativo agganciato a chi lo apre con
+   l'ancoraggio CSS; dove il browser non lo supporta resta al centro dello schermo (comportamento del popover). */
+.logo {
+  anchor-name: --menu-logo;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.logo:hover {
+  background: var(--color-surface-3);
+}
+
+/* Area di tocco 44 anche se il bottone misura 40 (DESIGN.md §4) */
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: calc((40px - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+.riga {
+  anchor-name: --menu-riga;
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.riga:hover {
+  background: var(--color-surface-2);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+}
+
+/* Logomark più piccolo nell'avatar da 30, come l'avatar del menu di S1 */
+.avatar svg {
+  width: auto;
+  height: 13px;
+}
+
+.menu {
+  width: 264px;
+  box-sizing: border-box;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  box-shadow: var(--shadow-menu);
+}
+
+.menu:popover-open {
+  display: flex;
+  flex-direction: column;
+  /* I keyframe stanno in tokens.css (globali): global() impedisce ai CSS Modules di rinominarli */
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+/* Sotto il logo di Oggi il menu scende dall'alto, come i reveal di S1 (commento di rf-in in tokens.css) */
+@keyframes dallAlto {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.sotto:popover-open {
+  animation-name: dallAlto;
+}
+
+@supports (position-area: bottom) {
+  .menu {
+    inset: auto;
+    margin: 0;
+  }
+
+  .sotto {
+    position-anchor: --menu-logo;
+    position-area: bottom span-right;
+    margin-top: var(--space-2);
+  }
+
+  .sopra {
+    position-anchor: --menu-riga;
+    position-area: top span-right;
+    margin-bottom: var(--space-2);
+  }
+}
+
+.voce {
+  min-height: var(--size-row);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  font: 500 var(--text-md) var(--font-ui);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.voce:hover {
+  background: var(--color-surface-3);
+}
+
+.voce svg {
+  color: var(--color-text-2);
+}

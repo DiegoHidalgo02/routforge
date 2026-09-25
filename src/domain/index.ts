@@ -9,3 +9,4 @@ export * from './pointer';
 export * from './lost';
 export * from './nowBlock';
 export * from './course/parser';
+export * from './language';

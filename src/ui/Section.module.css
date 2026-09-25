@@ -1,0 +1,55 @@
+/* Intestazione di sezione (S20 Shell): titolo 20 su mobile, 22 su desktop; indietro come IconButton di S20 Mobile. */
+.intestazione {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.titolo {
+  margin: 0;
+  font: 600 var(--text-xl-2) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.indietro {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  margin-left: calc(-1 * var(--space-2));
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.indietro:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+/* Area di tocco 44 anche se il bottone misura 40 (DESIGN.md §4) */
+.indietro::after {
+  content: '';
+  position: absolute;
+  inset: calc((40px - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+/* Desktop da 1024 px (D-UI-1) */
+@media (min-width: 1024px) {
+  .soloMobile {
+    display: none;
+  }
+
+  .titolo {
+    font-size: var(--text-3xl);
+  }
+}

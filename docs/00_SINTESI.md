@@ -108,7 +108,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 
 | Cosa | Impatto | Gestione |
 |---|---|---|
-| Stack tecnologico | Architettura | **Deciso** in T-000 (D-STACK-1, 24/09/2026): React 19 + Vite PWA + Capacitor; veto dell'utente possibile fino a T-006 (CP1) |
+| Stack tecnologico | Architettura | **Deciso** in T-000 (D-STACK-1, 24/09/2026): React 19 + Vite PWA + Capacitor; CP1 chiuso senza veto (25/09/2026), applicato da T-006 |
 | Servizio di sincronizzazione (backend) | Passo 10 | **Checkpoint 4** — candidata: Supabase (auth email OTP) |
 | Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | **Importato e versionato** in `claude-design/` (24/09/2026): `npm run design:check` verde; divergenze design↔spec in `docs/03_HANDOFF_DESIGN_CODE.md` §10 |
 | Identificatori app (bundle id, nome, icona) | Capacitor | Default `com.routforge.app` / "RoutForge" (D-APP-1), modificabile |

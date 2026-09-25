@@ -1,0 +1,15 @@
+{
+  // UI, piattaforma e punto di composizione (D-TS-1): lib DOM e JSX. Dominio, dati e app restano verificati anche dalla
+  // radice, senza DOM e con `exactOptionalPropertyTypes`, che qui è spento: le prop opzionali delle librerie React
+  // (`NavLink.className`) non dichiarano `| undefined`, mentre le classi dei CSS Modules sono `string | undefined`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "resolveJsonModule": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/ui", "src/platform", "src/main.tsx"],
+  "exclude": []
+}

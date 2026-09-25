@@ -11,6 +11,7 @@ Passo 1 di 10 (CONTESTO §6). Foundation verificata e protetta dal gate (`docs/A
 ```bash
 npm ci
 npm run verify          # gate unico: typecheck + lint + formato + test (dominio e regole del repository)
+npm run dev             # l'app nel browser (Vite); npm run build per la build web in dist/
 npm run design:check    # verifica l'export di Claude Design in claude-design/
 claude                  # Claude Code: poi /task next
 ```

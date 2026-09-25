@@ -4,6 +4,8 @@
 // vivono in scripts/architettura.test.mjs, un solo posto.
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
@@ -14,6 +16,12 @@ export default defineConfig([
     // Omettere campi con la destrutturazione (`const { stato, ...riga } = modulo`) è il modo di non salvare ciò che
     // il dominio calcola (D-DATA-2, `saveCourse`): le variabili sorelle del resto non contano come inutilizzate.
     rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }] },
+  },
+  {
+    // UI React (D-STACK-1, T-006): regole degli hook e accessibilità di base (CONTESTO §3). Nel gate gli avvisi
+    // contano come errori (`--max-warnings 0` in `npm run lint`).
+    files: ['src/ui/**/*.{ts,tsx}', 'src/main.tsx'],
+    extends: [reactHooks.configs.flat.recommended, jsxA11y.flatConfigs.recommended],
   },
   {
     // Script Node (ESM) e hook di Claude Code: globali di Node che ESLint non conosce da solo.

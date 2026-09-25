@@ -1,7 +1,7 @@
 # D-STACK-1 — Stack applicativo (UI, build, shell nativa)
 
-**Stato**: decisa il 24/09/2026 (T-000, dopo la lettura completa dell'export del design); si applica da T-006. Veto
-dell'utente possibile prima di T-006 (CP1, `docs/06_SUPERVISIONE.md`). Riga nel registro: `docs/01_DECISIONI.md`.
+**Stato**: decisa il 24/09/2026 (T-000, dopo la lettura completa dell'export del design); applicata da T-006 (25/09/2026):
+CP1 chiuso senza veto (`docs/06_SUPERVISIONE.md`). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 
@@ -43,8 +43,10 @@ Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19
 - **Test UI**: Vitest + `@testing-library/react` + `jsdom`, solo dove uno scenario lo richiede (G3); il resto si verifica
   a livello di servizio (regole di `src/app`).
 - **Lint**: `eslint-plugin-react-hooks` e `eslint-plugin-jsx-a11y` entrano nel gate in T-006 (D-LINT-1).
-- **Stato della UI**: rinviato a T-006 (`docs/02_ARCHITETTURA.md` §5); candidati `dexie-react-hooks` (`useLiveQuery`)
-  o Zustand.
+- **Stato della UI** (deciso in T-006): nessuna libreria; `useSyncExternalStore` di React sulle query live di Dexie
+  (`liveQuery`, già in `dexie`) esposte dai servizi di `app`, dalla prima schermata con dati (T-038). Scartati
+  `dexie-react-hooks` (un pacchetto per un hook di poche righe; la UI non importa da `data`, INV-1) e Zustand (un secondo
+  archivio accanto a IndexedDB).
 
 ## Motivazione (criteri di `docs/02_ARCHITETTURA.md` §0, in ordine di peso)
 
@@ -84,6 +86,10 @@ Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19
 - D-DATA-1 confermata; D-I18N-1 invariata (libreria decisa in T-031).
 - Vincoli per T-006 e per ogni schermata: nessun valore fuori da `tokens.css`; font locali; `prefers-reduced-motion`;
   focus visibile (`--ring-focus`); nessun numero di versione nelle schermate (FUNZ §23).
+- Applicata in T-006 (25/09/2026): React 19, Vite 7 (la versione accettata da Vitest 3) con `@vitejs/plugin-react` 5,
+  `react-router`, `lucide-react`, `@fontsource`, regole ESLint (`jsx-a11y` con `overrides` per ESLint 10,
+  `docs/DIPENDENZE.md`). `vite-plugin-pwa` entra in T-035 (il manifest vuole nome e icona di CP6) e Capacitor in T-021
+  (prima capacità nativa, dopo CP3): nessun codice li usava ancora.
 - Se il veto dell'utente cambia lo stack prima di T-006, si aggiornano solo le righe previste e i documenti citati:
   nessun codice dipende ancora dalla scelta.
 

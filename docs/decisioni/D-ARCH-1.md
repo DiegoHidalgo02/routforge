@@ -37,4 +37,7 @@ il "now" è un parametro. Le capacità native esistono per i servizi solo come i
 
 ## Verifica
 
-`scripts/architettura.test.mjs` (INV-1, INV-2, INV-3); `tsconfig.json`.
+`scripts/architettura.test.mjs` (INV-1, INV-2, INV-3); `tsconfig.json`. Da T-006 (25/09/2026) il test controlla anche i
+pacchetti legati a uno strato (`PACCHETTI_DI_STRATO`: `dexie*` solo in `data`, Capacitor e client AI solo in `platform`,
+React e librerie UI solo in `ui`) e vieta a ogni strato di importare file di `src` fuori dagli strati (`src/main.tsx` è il
+punto di composizione: importa gli strati, nessuno lo importa).

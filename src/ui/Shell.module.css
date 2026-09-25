@@ -1,0 +1,186 @@
+/* Shell (S20 Shell, S1 Oggi; DESIGN.md §6): BottomNav su mobile, sidebar 240 da 1024 px (D-UI-1). Solo token; gli
+   scarti fuori dalla scala dei mock (10, 5, 2 px) vanno al token più vicino (docs/03_HANDOFF_DESIGN_CODE.md §10). */
+.shell {
+  min-height: 100dvh;
+}
+
+/* Padding di pagina: sotto, 56 della BottomNav + 25 + safe area (DESIGN.md §6) più l'aria sopra la barra */
+.main {
+  padding: calc(env(safe-area-inset-top) + var(--space-5)) max(var(--space-page), env(safe-area-inset-right))
+    calc(var(--size-nav-pill) + var(--space-6) + var(--space-8) + env(safe-area-inset-bottom))
+    max(var(--space-page), env(safe-area-inset-left));
+}
+
+.sidebar {
+  display: none;
+}
+
+/* BottomNav: pill 56 × 264 centrata, FAB al centro (surface con ombra nav, come il catalogo); z-index 4 come nei mock:
+   sopra il NowBlock sticky (3), sotto banner della sessione (5) e toast (6) */
+.bottomNav {
+  position: fixed;
+  z-index: 4;
+  bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 264px;
+  height: var(--size-nav-pill);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-nav);
+}
+
+.tab {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-2);
+  font: 500 var(--text-2xs) / var(--leading-tight) var(--font-ui);
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.tab:hover,
+.tab[aria-current='page'] {
+  color: var(--color-text);
+}
+
+.fab {
+  width: var(--size-fab);
+  height: var(--size-fab);
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-fab);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.fab:hover {
+  background: var(--color-primary-hover);
+}
+
+.fab:active {
+  background: var(--color-primary-active);
+}
+
+/* Desktop (D-UI-1) */
+@media (min-width: 1024px) {
+  .shell {
+    height: 100dvh;
+    display: grid;
+    grid-template-columns: var(--size-sidebar) minmax(0, 1fr);
+  }
+
+  .main {
+    overflow: auto;
+    padding: var(--space-6) var(--space-8) var(--space-8);
+  }
+
+  .bottomNav {
+    display: none;
+  }
+
+  .sidebar {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-5) var(--space-4);
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+  }
+}
+
+.marchio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3) var(--space-4);
+  font: 700 var(--text-lg-2) var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.logo {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-control-sm);
+  background: var(--color-primary);
+  color: var(--color-text);
+}
+
+.voci,
+.fondo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fondo {
+  margin-top: auto;
+}
+
+/* Altezze minime, non fisse: con la scala del testo di sistema l'etichetta può andare a capo */
+.voce {
+  min-height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--color-text-2);
+  font: 500 var(--text-md) var(--font-ui);
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.voce:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.voce[aria-current='page'] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.crea {
+  min-height: 40px;
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-soft);
+  font: 600 var(--text-md) var(--font-ui);
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.crea:hover {
+  background: var(--color-primary-hover);
+}
+
+.crea:active {
+  background: var(--color-primary-active);
+  transform: scale(var(--scale-press));
+}

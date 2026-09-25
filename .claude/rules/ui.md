@@ -14,7 +14,13 @@ paths:
   stili inline con valori (i mock li hanno solo per l'anteprima); icone da `lucide-react` (tratto 1.75); font locali
   (`@fontsource`); rotte con `react-router`. Ogni schermata si ricrea come Panel + cornice mobile/desktop, come nell'export.
 - Ogni testo visibile è una chiave i18n nelle sei lingue (FUNZ §22), notifiche incluse; i valori del dominio
-  (`in_corso`) non si mostrano mai direttamente.
+  (`in_corso`) non si mostrano mai direttamente. La chiave va in tutti e sei i file di `src/ui/i18n/` (un dizionario
+  senza una chiave non compila) e si legge con `t()`; la lingua viene solo da `pickLanguage` (MECC §23).
+- Mobile sotto 1024 px, desktop da 1024 px (D-UI-1). I keyframe `rf-…` stanno in `tokens.css`, globali: in un CSS
+  Module si citano con `global(rf-in)`, altrimenti vengono rinominati e l'animazione sparisce senza errori.
+- Il focus è `:root :focus-visible` in `src/ui/styles/global.css` (`--ring-focus`, sopra le ombre dei componenti). Un
+  componente che cambia `box-shadow` in `:hover` o `:active` pareggia quella specificità e copre l'anello: gli serve un
+  suo `:focus-visible` con `var(--ring-focus)`.
 - Riduzione animazioni e scala del testo di sistema sempre rispettate; nessun numero di versione in nessuna
   schermata (FUNZ §23).
 - Test UI solo dove uno scenario lo richiede (es. G3); gli altri scenari si verificano a livello di servizio.
