@@ -523,6 +523,12 @@ export interface RisultatoImportCorso {
   avvisi: AvvisoImport[];
 }
 
+const isStructureFile = (f: { name: string }): boolean => /\.md$/i.test(f.name) && STRUCTURE_FILE.test(f.name);
+
+/** C'è il file struttura (FORMATO §1)? Se manca, il titolo si chiede all'utente (D-PARSE-1). */
+export const hasStructureFile = (files: readonly { name: string }[]): boolean =>
+  files.some((f) => isStructureFile({ name: fileNameOf(f.name) }));
+
 /**
  * Importa un corso da un elenco di file. Solo i `.md` vengono letti; i percorsi sono appiattiti al nome;
  * serve almeno un file modulo, altrimenti `ErroreImportCorso`. Ogni chiamata produce un corso nuovo.
@@ -541,7 +547,7 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
 
   let titolo = opts.titolo?.trim() || 'Corso importato';
   let sottotitolo = '';
-  const structure = md.find((f) => STRUCTURE_FILE.test(f.name));
+  const structure = md.find(isStructureFile);
   if (structure) {
     const h1 = structure.content.split(/\r?\n/).find((l) => /^#\s+\S/.test(l));
     const h2 = structure.content.split(/\r?\n/).find((l) => /^##\s+\S/.test(l));

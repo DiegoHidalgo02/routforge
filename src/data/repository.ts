@@ -11,7 +11,7 @@
  * - `saveCourse` salva l'albero di un corso importato in una sola transazione (MECC §16, D-IMPORT-1).
  * Il tempo arriva come parametro: `now` e, per i blocchi, il fuso corrente letto dalla porta Clock di `app`.
  */
-import Dexie from 'dexie';
+import Dexie, { liveQuery } from 'dexie';
 import type { CorsoImportato } from '../domain/course/parser';
 import { localDayKey, localTimeKey } from '../domain/time';
 import type { OraDiParete } from '../domain/types';
@@ -136,6 +136,16 @@ export async function saveCourse(db: RoutForgeDb, corso: CorsoImportato, now: nu
       }
     }
   });
+}
+
+/**
+ * Riesegue `query` a ogni scrittura sulle tabelle che legge e passa il risultato a `onChange` (query live di Dexie,
+ * D-STACK-1). Restituisce la funzione che smette di osservare. Un errore della query non arriva a `onChange` e non
+ * interrompe la UI (INV-16): la schermata resta all'ultimo valore; la registrazione in Diagnostica arriva con T-032.
+ */
+export function watch<T>(query: () => Promise<T>, onChange: (v: T) => void): () => void {
+  const s = liveQuery(query).subscribe({ next: onChange, error: () => {} });
+  return () => s.unsubscribe();
 }
 
 /** Blocchi vivi di un giorno locale "YYYY-MM-DD", in ordine d'inizio (indice `[giornoLocale+inizio]`). */

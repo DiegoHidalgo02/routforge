@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ErroreImportCorso,
   extractLinks,
+  hasStructureFile,
   hostOf,
   parseCourse,
   parseEstimatedHours,
@@ -179,6 +180,14 @@ describe('Import corso — SCENARI H1', () => {
 
   it('senza alcun file modulo → errore', () => {
     expect(() => parseCourse([{ name: 'README.md', content: '# ciao' }], opts)).toThrow(ErroreImportCorso);
+  });
+});
+
+describe('File struttura: titolo da chiedere — FORMATO_CORSO §1 (D-PARSE-1)', () => {
+  it('riconosce 00_struttura anche in una sottocartella; un .txt o un modulo non contano', () => {
+    expect(hasStructureFile([{ name: 'corso/00_struttura.md' }, { name: 'M1-a.md' }])).toBe(true);
+    expect(hasStructureFile([{ name: '00_Mappa_corso.md' }])).toBe(true);
+    expect(hasStructureFile([{ name: 'M1-a.md' }, { name: '00_struttura.txt' }])).toBe(false);
   });
 });
 

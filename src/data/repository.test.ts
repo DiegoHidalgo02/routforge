@@ -5,7 +5,7 @@ import { parseCourse } from '../domain/course/parser';
 import type { Blocco } from '../domain/types';
 import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
-import { blocksOfDay, get, list, remove, save, saveBlock, saveCourse } from './repository';
+import { blocksOfDay, get, list, remove, save, saveBlock, saveCourse, watch } from './repository';
 
 const ROMA = 'Europe/Rome';
 const T0 = local(2026, 9, 24, 8, 0);
@@ -158,6 +158,29 @@ describe("Log fasi: id = blocco dell'occorrenza — MECC §5, D-DATA-2", () => {
     expect(await get(db, 'logFasi', 'b-1')).toBeUndefined();
     const terzo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1' }, local(2026, 9, 24, 9, 2));
     expect([terzo.createdAt, terzo.deletedAt]).toEqual([T0, null]);
+  });
+});
+
+describe('Query live — D-STACK-1 (stato della UI)', () => {
+  it('riesegue la query dopo una scrittura; dopo lo stop non notifica più', async () => {
+    const visti: number[] = [];
+    let avvisa = (): void => {};
+    const stop = watch(
+      () => list(db, 'preferenze').then((r) => r.length),
+      (v) => {
+        visti.push(v);
+        avvisa();
+      },
+    );
+    const prossimo = () => new Promise<void>((r) => (avvisa = r));
+    await prossimo();
+    const dopoLaScrittura = prossimo();
+    await save(db, 'preferenze', { id: 'lingua', valore: 'it' }, T0);
+    await dopoLaScrittura;
+    stop();
+    await save(db, 'preferenze', { id: 'tema', valore: 'scuro' }, T1);
+    await list(db, 'preferenze');
+    expect(visti).toEqual([0, 1]);
   });
 });
 

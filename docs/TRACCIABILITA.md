@@ -56,7 +56,7 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | G2 | MECC §14 | domain/nowBlock (chiusura) · ui Oggi | T-001, T-010 | src/domain/nowBlock.test.ts | parziale |
 | G3 | MECC §15 | ui Oggi (trascinamento) · domain/scheduler/horizon (slot) · app/notifications | T-015 | — | nessuno |
 | G4 | MECC §9 | app/scheduler (cambio giorno ogni 60 s) · ui Oggi | T-013 | — | nessuno |
-| H1 | MECC §16, FORMATO §1 | domain/course/parser · app/courseImport (ZIP) · ui Corsi S10 (import salvato, avvisi) | T-002, T-003, T-038 | src/domain/course/parser.test.ts, src/app/courseImport.test.ts | coperto |
+| H1 | MECC §16, FORMATO §1 | domain/course/parser · app/courseImport (ZIP) · ui Corsi S10 (import salvato, avvisi) | T-002, T-003, T-038 | src/domain/course/parser.test.ts, src/app/courseImport.test.ts (T-038: import ZIP salvato, due corsi, titolo, max 5 avvisi) | coperto |
 | H2 | MECC §17, §18 | app/materials (PDF) · app/ai (contesto) | T-024 | — | nessuno |
 | H3 | MECC §16, §21 | app/courses (eliminazione a cascata) · platform/widget | T-037, T-023 | — | nessuno |
 | H4 | MECC §18 | app/ai (lingua della risposta e della pratica) | T-026 | — | nessuno |

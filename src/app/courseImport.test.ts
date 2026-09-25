@@ -3,9 +3,10 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { strToU8, zipSync } from 'fflate';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { list } from '../data/repository';
+import { list, save } from '../data/repository';
 import { local } from '../domain/time';
-import { ErroreImportCorso, importCourseFromZip, importSampleCourse } from './courseImport';
+import { ErroreImportCorso, importCourseFromZip, importSampleCourse, importZip, zipNeedsTitle } from './courseImport';
+import { courseCards } from './courses';
 
 /** Un modulo minimo conforme a FORMATO_CORSO §2 (basta per superare MODULE_HEADER + un'unità leggibile). */
 const M1 = `# MODULO M1 — Tooling Moderno
@@ -116,5 +117,78 @@ describe('Corso di esempio — FUNZ §1, §9.1; FORMATO_CORSO §5 (D-SAMPLE-1)',
       expect(await delCorso(nome, b.corso.id)).toHaveLength(primo.length);
       expect(primo.every((r) => r.updatedAt === T0)).toBe(true); // il secondo import non riscrive il primo
     }
+  });
+
+  it('la scheda del corso di esempio (S10): badge «Esempio», 2 moduli · 13 unità contati dalle righe salvate', async () => {
+    await importSampleCourse(db, T0);
+    expect(await courseCards(db)).toMatchObject([
+      {
+        titolo: 'Syllabus Software Engineer 2026',
+        esempio: true,
+        moduli: 2,
+        unita: 13,
+        completate: 0,
+        pct: 0,
+        minuti: 0,
+      },
+    ]);
+  });
+
+  it('avanzamento e tempo dedicato (FUNZ §9.3): unità completate, percentuale intera, somma dei minuti', async () => {
+    const { corso } = await importSampleCourse(db, T0);
+    const [u1, u2, u3] = await delCorso('unita', corso.id);
+    for (const u of [u1!, u2!]) await save(db, 'unita', { ...u, stato: 'completata', minuti: 45 }, T1);
+    await save(db, 'unita', { ...u3!, stato: 'parziale', minuti: 20 }, T1);
+    expect(await courseCards(db)).toMatchObject([{ unita: 13, completate: 2, pct: 15, minuti: 110 }]);
+  });
+});
+
+// ------------------------------------------------------------------ import ZIP salvato (T-038)
+
+describe('Import ZIP salvato — SCENARI H1; MECC §16', () => {
+  beforeEach(() => {
+    db = openDb(`test-import-${++n}`);
+  });
+  afterEach(() => db.delete());
+
+  const conStruttura = zipSync({ '00_struttura.md': strToU8(STRUTTURA), 'M1-Tooling.md': strToU8(M1) });
+  const senzaStruttura = zipSync({ 'M1-Tooling.md': strToU8(M1) });
+
+  it('due import dello stesso ZIP → due corsi nel database, con le loro righe', async () => {
+    const a = await importZip(db, conStruttura, T0);
+    const b = await importZip(db, conStruttura, T1);
+    expect(b.corso.id).not.toBe(a.corso.id);
+    const schede = await courseCards(db);
+    expect(schede.map((c) => [c.id, c.titolo, c.esempio, c.moduli, c.unita])).toEqual([
+      [a.corso.id, 'Syllabus Software Engineer 2026', false, 1, 1],
+      [b.corso.id, 'Syllabus Software Engineer 2026', false, 1, 1],
+    ]);
+  });
+
+  it('il titolo si chiede solo se manca 00_struttura (FORMATO §1, D-PARSE-1)', async () => {
+    expect(zipNeedsTitle(conStruttura)).toBe(false);
+    expect(zipNeedsTitle(senzaStruttura)).toBe(true);
+    await importZip(db, senzaStruttura, T0, 'Il mio corso');
+    expect((await courseCards(db))[0]?.titolo).toBe('Il mio corso');
+    await importZip(db, senzaStruttura, T1, '  ');
+    expect((await courseCards(db))[1]?.titolo).toBe('Corso importato'); // campo lasciato vuoto (D-PARSE-1)
+  });
+
+  it('avvisi mostrati al massimo 5, con il totale (MECC §16)', async () => {
+    const rotti = Object.fromEntries([2, 3, 4, 5, 6, 7, 8].map((k) => [`M${k}-Rotto.md`, strToU8(M2_BROKEN)] as const));
+    const zip = zipSync({ ...rotti, 'M1-Tooling.md': strToU8(M1) });
+    const r = await importZip(db, zip, T0);
+    const tutti = importCourseFromZip(zip, opts).avvisi;
+    expect(tutti.length).toBeGreaterThanOrEqual(7); // almeno uno per file rotto
+    expect(r.totaleAvvisi).toBe(tutti.length);
+    expect(r.avvisi).toEqual(tutti.slice(0, 5)); // i primi 5, nell'ordine del parser
+  });
+
+  it('ZIP illeggibile o senza moduli → errore leggibile e nessun corso salvato', async () => {
+    await expect(importZip(db, strToU8('non è uno zip'), T0)).rejects.toThrow(ErroreImportCorso);
+    const soloReadme = zipSync({ 'README.md': strToU8('# ciao') });
+    await expect(importZip(db, soloReadme, T0)).rejects.toThrow(ErroreImportCorso);
+    expect(() => zipNeedsTitle(strToU8('non è uno zip'))).toThrow(ErroreImportCorso);
+    expect(await courseCards(db)).toEqual([]);
   });
 });

@@ -3,8 +3,8 @@
  *
  * Estrae i file dallo ZIP con `fflate` (D-STACK-1) e li passa a `parseCourse` (dominio), che fa tutto
  * il lavoro di interpretazione: filtro `.md`, percorsi appiattiti, avvisi, titolo di ripiego (D-PARSE-1)
- * e duplicati (D-PARSE-3). Il titolo chiesto all'utente quando manca `00_struttura` (FORMATO §1) è
- * responsabilità della UI: questo livello si limita a inoltrare `opts.titolo` a `parseCourse`.
+ * e duplicati (D-PARSE-3). Il titolo quando manca `00_struttura` (FORMATO §1) lo chiede la UI se `zipNeedsTitle`;
+ * questo livello lo inoltra a `parseCourse`. `importZip` salva il corso (T-038).
  * Il corso di esempio incluso (T-005, D-SAMPLE-1) si legge e si salva qui: ogni import crea un corso nuovo.
  */
 import { unzipSync, strFromU8 } from 'fflate';
@@ -14,6 +14,8 @@ import m0 from '../data/sample-course/M0-Riattivazione_JavaScript.md?raw';
 import m1 from '../data/sample-course/M1-Tooling_Moderno.md?raw';
 import {
   ErroreImportCorso,
+  hasStructureFile,
+  MAX_WARNINGS_SHOWN,
   parseCourse,
   type FileCorso,
   type OpzioniImport,
@@ -23,8 +25,7 @@ import {
 export { ErroreImportCorso };
 export type { OpzioniImport, RisultatoImportCorso };
 
-/** Importa un corso da uno ZIP grezzo. `ErroreImportCorso` se lo ZIP è illeggibile o senza moduli. */
-export function importCourseFromZip(zip: Uint8Array, opts: OpzioniImport): RisultatoImportCorso {
+function readZip(zip: Uint8Array): FileCorso[] {
   let entries: Record<string, Uint8Array>;
   try {
     // Si decomprimono solo i `.md` (FORMATO §1): un PDF o una cartella estranea nello ZIP non occupano memoria.
@@ -33,11 +34,25 @@ export function importCourseFromZip(zip: Uint8Array, opts: OpzioniImport): Risul
   } catch {
     throw new ErroreImportCorso('ZIP non leggibile o corrotto');
   }
-  const files: FileCorso[] = Object.entries(entries).map(([name, data]) => ({
-    name,
-    content: strFromU8(data),
-  }));
-  return parseCourse(files, opts);
+  return Object.entries(entries).map(([name, data]) => ({ name, content: strFromU8(data) }));
+}
+
+/** Importa un corso da uno ZIP grezzo. `ErroreImportCorso` se lo ZIP è illeggibile o senza moduli. */
+export function importCourseFromZip(zip: Uint8Array, opts: OpzioniImport): RisultatoImportCorso {
+  return parseCourse(readZip(zip), opts);
+}
+
+/** Il titolo va chiesto all'utente: nello ZIP manca `00_struttura` (FORMATO §1, D-PARSE-1). */
+export const zipNeedsTitle = (zip: Uint8Array): boolean => !hasStructureFile(readZip(zip));
+
+/**
+ * Importa uno ZIP scelto dall'utente e lo salva come corso nuovo (MECC §16). Restituisce al massimo 5 avvisi da mostrare
+ * e il loro totale. `ErroreImportCorso` se lo ZIP è illeggibile o senza moduli: allora non si salva niente.
+ */
+export async function importZip(db: RoutForgeDb, zip: Uint8Array, now: number, titolo?: string) {
+  const { corso, avvisi } = importCourseFromZip(zip, { corsoId: newId(), now, titolo });
+  await saveCourse(db, corso, now);
+  return { corso, avvisi: avvisi.slice(0, MAX_WARNINGS_SHOWN), totaleAvvisi: avvisi.length };
 }
 
 /** Corso di esempio incluso: M0 + M1 dell'export del design, senza file struttura (FORMATO §5, D-SAMPLE-1). */

@@ -12,4 +12,6 @@ export type Chiave = keyof typeof it;
 const DIZIONARI: Record<Lingua, Record<Chiave, string>> = { it, en, es, pt, fr, de };
 
 export const lingua = pickLanguage(navigator.languages);
-export const t = (chiave: Chiave): string => DIZIONARI[lingua][chiave];
+/** Testo della chiave; `{nome}` si sostituisce con `parametri.nome`. */
+export const t = (chiave: Chiave, parametri: Record<string, string | number> = {}): string =>
+  DIZIONARI[lingua][chiave].replace(/\{(\w+)\}/g, (tutto, nome: string) => String(parametri[nome] ?? tutto));

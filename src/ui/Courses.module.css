@@ -1,0 +1,369 @@
+/* Profilo → Corsi (S10 Corsi Mobile/Desktop): stato vuoto, card di import (titolo, errore, avvisi), CourseCard.
+   Solo token; gli scarti fuori dalla scala dei mock (10, 6, 3 px) vanno al token più vicino. Su desktop l'elenco
+   occupa la colonna da 320 del mock; il pannello del corso (S11) arriva con il suo task. */
+.vuoto {
+  min-height: 60dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-3) var(--space-10);
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.iconaVuoto {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+.testoVuoto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.titoloVuoto {
+  margin: 0;
+  font: 600 var(--text-xl) / var(--leading-tight) var(--font-ui);
+}
+
+.spiegazione {
+  max-width: 290px;
+  margin: 0;
+  color: var(--color-text-2);
+  font: var(--text-md) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.azioniVuoto {
+  width: 100%;
+  max-width: 290px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.primario,
+.secondario {
+  min-height: var(--size-control);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control-lg);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.primario {
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-soft);
+}
+
+.primario:hover {
+  background: var(--color-primary-hover);
+}
+
+.primario:active {
+  background: var(--color-primary-active);
+  transform: scale(var(--scale-press));
+}
+
+.secondario {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.secondario:hover {
+  background: var(--color-surface-3);
+}
+
+.azioni .secondario {
+  min-height: var(--size-control-sm);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  font-size: var(--text-base);
+}
+
+.testuale {
+  min-height: var(--size-control-sm);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.testuale:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.elenco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.gruppo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.etichetta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+.pill {
+  position: relative;
+  min-height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.pill:hover {
+  background: var(--color-surface-2);
+}
+
+/* Area di tocco 44 anche se la pill misura 32 (DESIGN.md §4) */
+.pill::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--size-chip) - var(--size-touch)) / 2) 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.riga,
+.intestazione {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.colonna {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cardTitolo {
+  font: 600 var(--text-md) / var(--leading-tight) var(--font-ui);
+}
+
+.cardTesto {
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+/* Testo delle card di errore e di avviso: 13/18 come nel mock */
+.cardCorpo {
+  color: var(--color-text-2);
+  font: var(--text-base) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.errore {
+  flex: none;
+  color: var(--color-danger-ink);
+}
+
+.avviso {
+  flex: none;
+  color: var(--color-warning);
+}
+
+.azioni {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.input {
+  min-height: var(--size-control);
+  box-sizing: border-box;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: var(--text-md) var(--font-ui);
+}
+
+.avvisi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-body) var(--font-ui);
+}
+
+.avvisi li::before {
+  content: '· ';
+}
+
+.file {
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.titoloCorso {
+  margin: 0;
+  font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.badge {
+  min-height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.progresso {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Barra nativa `<progress>` con l'aspetto della barra da 3 px del mock */
+.barra {
+  flex: 1;
+  height: var(--size-accent-bar);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+  appearance: none;
+  overflow: hidden;
+}
+
+.barra::-webkit-progress-bar {
+  background: var(--color-surface-3);
+}
+
+.barra::-webkit-progress-value {
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.barra::-moz-progress-bar {
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.numero {
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Desktop (S10 Desktop): niente etichetta del gruppo (il titolo è già nell'intestazione), «Importa ZIP» come bottone
+   secondario da 36, card senza ombra a 8 di distanza. Nello stato vuoto «Importa ZIP» sta a sinistra del primario:
+   `row-reverse` inverte solo l'ordine visivo, il focus segue il DOM (primario prima, come su mobile). */
+@media (min-width: 1024px) {
+  .elenco {
+    max-width: 320px;
+    gap: var(--space-card-gap);
+  }
+
+  .etichetta {
+    display: none;
+  }
+
+  .pill {
+    min-height: var(--size-control-sm);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-2);
+    font: 600 var(--text-base) var(--font-ui);
+  }
+
+  .pill:hover {
+    background: var(--color-surface-3);
+  }
+
+  .card {
+    box-shadow: none;
+  }
+
+  .azioniVuoto {
+    max-width: none;
+    flex-direction: row-reverse;
+    justify-content: center;
+  }
+
+  .azioniVuoto > button {
+    padding: 0 var(--space-5);
+  }
+
+  .spiegazione {
+    max-width: 360px;
+  }
+}
