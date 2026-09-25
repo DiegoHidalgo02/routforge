@@ -67,6 +67,8 @@ export interface Blocco {
   ricorrenzaId?: string | null;
   /** Istante della marcatura "perso" (§8); assente se mai perso. */
   persoIl?: number | null;
+  /** Istante in cui l'utente ha chiuso il blocco: completato (§3) o saltato (FUNZ §4.3); `null` da riaperto. Gli esiti di studio arrivano con T-018. */
+  chiusoIl?: number | null;
   // Campi della creazione (§2): assenti nei blocchi di prova dei meccanismi che non li usano.
   titolo?: string;
   note?: string;
@@ -103,6 +105,16 @@ export interface FaseTemplate {
   id: string;
   etichetta: string;
   ordine: number;
+}
+
+/** Stato di una fase nel log (§5): al completamento tutte `fatte` tranne quelle marcate `saltate`. */
+export type StatoFase = 'fatta' | 'saltata';
+
+/** Voce del log fasi (§1, §5): fotografia `[id, etichetta, stato]` di ogni fase del template al Conferma. */
+export interface FaseLog {
+  id: string;
+  etichetta: string;
+  stato: StatoFase;
 }
 
 /** Definizione di una routine o routine di studio (§1: Ricorrenza; campi §2, §5, §7). */

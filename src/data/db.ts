@@ -18,7 +18,7 @@ import type {
   UnitaImportata,
 } from '../domain/course/parser';
 import type { StatoCarta } from '../domain/sm2';
-import type { BloccoAncorato, Ricorrenza } from '../domain/types';
+import type { BloccoAncorato, FaseLog, Ricorrenza } from '../domain/types';
 
 /** Campi comuni di un record vivo (D-DATA-1, INV-14). */
 export interface CampiComuni {
@@ -56,8 +56,8 @@ export interface Tabelle {
   blocchi: Riga<BloccoAncorato>;
   // Tabelle dei passi successivi: per ora solo i campi indicizzati; il task che le usa aggiunge il resto.
   sessioni: Riga<{ avvio: number; bloccoId: string | null }>;
-  /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2). */
-  logFasi: Riga<{ ricorrenzaId: string | null }>;
+  /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2); `fasi` è la fotografia al Conferma (T-009). */
+  logFasi: Riga<{ ricorrenzaId: string | null; fasi: FaseLog[] }>;
   mazzi: Riga<{ unitaId: string }>;
   carte: Riga<StatoCarta & { mazzoId: string }>;
   pratiche: Riga<{ unitaId: string; tipo: string; creataIl: number }>;

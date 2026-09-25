@@ -3,7 +3,8 @@
 // D-DESIGN-1 n. 3), poi i blocchi con orario (`sortDay`, A5); i
 // terminali restano al loro posto in secondo piano. Vista e giorno stanno nell'indirizzo (`?vista=mese&giorno=…`).
 // Si passa di periodo scorrendo lateralmente, e su desktop con le frecce. Il saluto «Ciao» lascia il posto alla data.
-// Arrivano con il loro task: blocco Adesso (T-010), dettaglio e spunta (T-009), trascinamento (T-015), ritorno dopo
+// Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`).
+// Arrivano con il loro task: blocco Adesso (T-010), trascinamento (T-015), ritorno dopo
 // un'assenza (T-013); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
 // non sono nella spec di Oggi (docs/03_HANDOFF_DESIGN_CODE.md §10).
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -14,6 +15,7 @@ import { appDb } from '../app/db';
 import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, weekOf, type Vista } from '../domain/calendar';
 import { localDayKey } from '../domain/time';
 import { STATI_TERMINALI, type TipoBlocco } from '../domain/types';
+import { maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
 import s from './Today.module.css';
@@ -49,7 +51,6 @@ const data = (giorno: string) => {
 const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(lingua, o).format(data(giorno));
 const fmtParti = (giorno: string, o: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat(lingua, o).formatToParts(data(giorno));
-const maiuscola = (x: string) => x.charAt(0).toLocaleUpperCase(lingua) + x.slice(1);
 const intervallo = (da: string, a: string) =>
   new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(data(da), data(a));
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
@@ -246,7 +247,8 @@ export function Today() {
                       {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
                     </span>
                     <span className={s.punto} />
-                    <div className={s.card}>
+                    {/* Toccando la card si apre il dettaglio (FUNZ §4), sopra Oggi come «+ Crea» */}
+                    <Link to={`/attivita/${b.id}`} state={sfondo} className={s.card}>
                       <span className={s.accento} />
                       {/* Persi e saltati non si spuntano, salvo i todo (MECC §24): niente cerchio vuoto */}
                       {(b.tipo === 'todo' || (b.stato !== 'perso' && b.stato !== 'saltato')) && (
@@ -264,7 +266,7 @@ export function Today() {
                         </span>
                       )}
                       <span className={s.badge}>{t(TIPO[b.tipo])}</span>
-                    </div>
+                    </Link>
                   </li>
                 ))}
               </ol>

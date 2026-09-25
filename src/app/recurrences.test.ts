@@ -133,7 +133,7 @@ describe('Eliminazione della routine — MECC §7 (servizio)', () => {
     const r = await creaCorsa();
     const stamattina = occurrenceId(r.id, '2026-09-23', '07:00');
     await saveBlock(db, { ...(await get(db, 'blocchi', stamattina))!, stato: 'completato' }, NOW, FUSO);
-    await save(db, 'logFasi', { id: stamattina, ricorrenzaId: r.id }, NOW);
+    await save(db, 'logFasi', { id: stamattina, ricorrenzaId: r.id, fasi: [] }, NOW);
 
     await deleteRecurrence(db, r.id, local(2026, 9, 23, 9, 0));
 

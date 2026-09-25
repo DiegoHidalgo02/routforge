@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/ui/Detail.module.css"
+        ],
+        "createdAt": "2026-09-25T19:10:35.704Z",
+        "reason": "design export: claude-design/S5 Dettaglio Panel.dc.html riga 159 ha l'accento 3 px a sinistra della riga di follow-up (D-DESIGN-1: vince il design)"
+      }
+    ]
+  }
+}

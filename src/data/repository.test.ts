@@ -193,12 +193,12 @@ describe('Transazioni dei servizi — MECC §7 (generazioni serializzate), D-IMP
 
 describe("Log fasi: id = blocco dell'occorrenza — MECC §5, D-DATA-2", () => {
   it('ricompletare sovrascrive lo stesso log; annullare la spunta lo elimina e ricompletare lo rianima', async () => {
-    const primo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1' }, T0);
-    await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1' }, T1);
+    const primo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1', fasi: [] }, T0);
+    await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1', fasi: [] }, T1);
     expect(await list(db, 'logFasi')).toEqual([{ ...primo, updatedAt: T1 }]);
     await remove(db, 'logFasi', 'b-1', local(2026, 9, 24, 9, 1));
     expect(await get(db, 'logFasi', 'b-1')).toBeUndefined();
-    const terzo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1' }, local(2026, 9, 24, 9, 2));
+    const terzo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1', fasi: [] }, local(2026, 9, 24, 9, 2));
     expect([terzo.createdAt, terzo.deletedAt]).toEqual([T0, null]);
   });
 });

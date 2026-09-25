@@ -11,3 +11,5 @@ docs
 package-lock.json
 # File JSON con commenti (formato di VS Code): fuori dal controllo
 .vscode
+# Cache del hook di design del plugin impeccable: riscritta a ogni scansione, non è codice del progetto
+.impeccable

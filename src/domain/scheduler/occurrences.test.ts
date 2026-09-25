@@ -6,6 +6,7 @@ import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 import {
   editPlan,
   missingOccurrences,
+  occurrenceDay,
   occurrenceId,
   ORIZZONTE_OCCORRENZE_GIORNI,
   reanchor,
@@ -259,6 +260,12 @@ describe("Id dell'occorrenza = slot della ricorrenza — D-DATA-2", () => {
     const occ = missingOccurrences(ricorrenza(), [], NOW);
     const spostata = { ...occ[0]!, inizio: local(2026, 9, 23, 6, 40), fine: local(2026, 9, 23, 7, 40) };
     expect(missingOccurrences(ricorrenza(), [spostata, ...occ.slice(1)], NOW)).toEqual([]);
+  });
+
+  it("il giorno dello slot si legge dall'id, anche con un id di ricorrenza qualsiasi (T-009: eliminare un'occorrenza spostata)", () => {
+    expect(occurrenceDay('r-corsa:2026-09-23:07:00', 'r-corsa')).toBe('2026-09-23');
+    const uuid = '10000000-1000-4000-8000-100000000000';
+    expect(occurrenceDay(occurrenceId(uuid, '2026-10-05', '18:00'), uuid)).toBe('2026-10-05');
   });
 });
 

@@ -1,0 +1,606 @@
+// Dettaglio di un'attività (S5 Dettaglio Panel/Mobile/Desktop, 03 Dettaglio; FUNZ §4–§6, MECC §3–§5) su `/attivita/:id`,
+// sopra la schermata di partenza come «+ Crea»: sheet sotto i 56 px di testa su mobile, pannello di 440 da 1024 px.
+// Badge del tipo, titolo e meta; riga dell'esito; checklist (todo), fasi (routine ed evento: con il log se chiusa),
+// note; footer per tipo. La revisione delle fasi (S9) e il follow-up sono sheet dentro il pannello; «Elimina» ha il
+// toast con «Annulla». Le regole vengono da dominio e servizio (`app/completion.ts`): qui solo la resa. Fuori da
+// questo task: «Modifica» (T-042), le azioni dello studio (T-016, T-018), l'unità proposta (T-013), le notifiche (T-019).
+import {
+  Calendar,
+  CalendarClock,
+  Check,
+  ChevronLeft,
+  Clock,
+  Flag,
+  GraduationCap,
+  Info,
+  List,
+  MapPin,
+  Repeat,
+  SquareCheckBig,
+  StickyNote,
+  Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Navigate, useLocation, useNavigate, useParams, type Location } from 'react-router';
+import {
+  completeBlock,
+  createFollowUps,
+  deleteBlock,
+  reopenBlock,
+  restoreBlock,
+  skipBlock,
+  toggleChecklist,
+  watchDetail,
+  type DettaglioAttivita,
+} from '../app/completion';
+import { appDb } from '../app/db';
+import { canComplete, shownState } from '../domain/completion';
+import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
+import { shownPhases } from '../domain/phases';
+import { MINUTE, local, sameLocalDay } from '../domain/time';
+import type { TipoBlocco } from '../domain/types';
+import { durata, maiuscola } from './format';
+import { lingua, t, type Chiave } from './i18n';
+import s from './Detail.module.css';
+
+const TIPO: Record<TipoBlocco, Chiave> = {
+  todo: 'tipoTodo',
+  studio: 'tipoStudio',
+  routine: 'tipoRoutine',
+  evento: 'tipoEvento',
+};
+const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bassa: 'prioritaRigaBassa' } as const;
+/** Lunedì → domenica; 0 = domenica (`localWeekday`); il 20/09/2026 è una domenica. */
+const SETTIMANA = [1, 2, 3, 4, 5, 6, 0];
+/** Il toast con «Annulla» resta 5 s, come l'annulla del trascinamento (MECC §15). */
+const TOAST_MS = 5000;
+
+const fmtOra = new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' });
+const fmtGiornoOra = new Intl.DateTimeFormat(lingua, {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtData = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtSigla = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
+const quando = (ms: number, now: number) => (sameLocalDay(ms, now) ? fmtOra : fmtGiornoOra).format(ms);
+const sigle = (giorni: readonly number[]) =>
+  giorni.length === 7
+    ? t('ogniGiorno')
+    : SETTIMANA.filter((g) => giorni.includes(g))
+        .map((g) => maiuscola(fmtSigla.format(local(2026, 9, 20 + (g || 7)))))
+        .join(' · ');
+const inverti = (insieme: ReadonlySet<string>, id: string): Set<string> => {
+  const n = new Set(insieme);
+  if (!n.delete(id)) n.add(id);
+  return n;
+};
+
+type Vista = 'dettaglio' | 'revisione' | 'followup';
+interface Toast {
+  testo: string;
+  annulla: () => void;
+  /** Il pallino nel colore del todo quando l'oggetto creato è un todo (follow-up, S5). */
+  todo?: boolean;
+}
+/** Riga della MetaRow (S5): icona e testo; `ink` = nel colore del tipo, `num` = orari in font-num, `testo` = bianco. */
+interface Meta {
+  Icona: typeof Clock;
+  testo: string;
+  tono?: 'ink' | 'num' | 'testo';
+}
+
+export function Detail() {
+  const { id = '' } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const primaSchermata = location.key === 'default';
+  const sfondo = (location.state as { sfondo?: Location } | null)?.sfondo;
+  const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
+  const dialogo = useRef<HTMLDialogElement>(null);
+  const [d, setD] = useState<DettaglioAttivita>();
+  const [sparito, setSparito] = useState(false);
+  const [vista, setVista] = useState<Vista>('dettaglio');
+  const [saltate, setSaltate] = useState<ReadonlySet<string>>(() => new Set());
+  const [scelte, setScelte] = useState<ReadonlySet<string>>(() => new Set());
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [errore, setErrore] = useState(false);
+  // ponytail: l'orologio si rilegge al montaggio e a ogni azione, come in Crea; passa dalla porta Clock quando nasce
+  const [now, setNow] = useState(() => Date.now());
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const sheet = useRef<HTMLDivElement>(null);
+  const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const sheetAperta = vista !== 'dettaglio';
+
+  useEffect(() => {
+    dialogo.current?.showModal();
+    return () => clearTimeout(timer.current);
+  }, []);
+  // La sheet interna prende il fuoco; il resto del pannello è inerte finché resta aperta
+  useEffect(() => {
+    if (sheetAperta) sheet.current?.focus();
+  }, [sheetAperta]);
+  // Dopo un'eliminazione il blocco sparisce: il pannello mostra l'ultimo valore finché il toast permette l'annulla
+  useEffect(
+    () =>
+      watchDetail(appDb, id, (x) => {
+        setSparito(!x);
+        if (x) setD(x);
+      }),
+    [id],
+  );
+
+  const act = async (fn: () => Promise<unknown>) => {
+    setErrore(false);
+    try {
+      await fn();
+    } catch {
+      clearTimeout(timer.current);
+      setToast(null);
+      setErrore(true);
+    }
+    setNow(Date.now());
+  };
+  const mostraToast = (
+    testo: string,
+    annulla: () => Promise<unknown>,
+    { poi, todo }: { poi?: () => void; todo?: boolean } = {},
+  ) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => (poi ? poi() : setToast(null)), TOAST_MS);
+    setToast({
+      testo,
+      todo,
+      // Il toast resta finché l'annulla non è scritto: altrimenti, con il blocco già sparito, il pannello si chiuderebbe
+      annulla: () => {
+        clearTimeout(timer.current);
+        void act(async () => {
+          await annulla();
+          setSparito(false);
+          setToast(null);
+        });
+      },
+    });
+  };
+
+  if (sparito && !toast) return <Navigate to={sfondo ? sfondo.pathname + sfondo.search : '/'} replace />;
+  const b = d?.blocco;
+  if (!d || !b) return <dialog ref={dialogo} className={s.pannello} aria-label={t('dettaglio')} onClose={chiudi} />;
+
+  const { fasi: template, log } = d;
+  const tipo = b.tipo;
+  const stato = shownState(b, now);
+  const spuntabile = canComplete(b, now);
+  const conFasi = template.length > 0;
+  const fasiMostrate = shownPhases(template, log);
+  const titolo = b.titolo || t(TIPO[tipo]);
+  const orari =
+    b.fine === null
+      ? `${b.orarioInizio} · ${t('senzaDurata')}`
+      : `${b.orarioInizio} – ${b.orarioFine} · ${durata(Math.round((b.fine - b.inizio) / MINUTE))}`;
+  const ora = () => Date.now();
+
+  const meta: Meta[] = [];
+  if (tipo === 'todo') {
+    const orizzonte = b.orizzonte ?? 'giorno';
+    meta.push({
+      Icona: CalendarClock,
+      tono: 'ink',
+      testo:
+        orizzonte === 'giorno'
+          ? maiuscola(fmtGiorno.format(b.inizio))
+          : t('entroIl', { data: fmtGiorno.format(horizonLastDay(b.inizio, orizzonte)) }),
+    });
+    if (b.conOrario) meta.push({ Icona: Clock, tono: 'num', testo: orari });
+    else if (b.priorita) meta.push({ Icona: Flag, testo: t(PRIORITA[b.priorita]) });
+  } else if (tipo === 'evento') {
+    meta.push({ Icona: Calendar, tono: 'testo', testo: maiuscola(fmtGiorno.format(b.inizio)) });
+    meta.push(b.conOrario ? { Icona: Clock, tono: 'num', testo: orari } : { Icona: Clock, testo: t('tuttoIlGiorno') });
+    if (b.luogo) meta.push({ Icona: MapPin, testo: b.luogo });
+  } else {
+    if (tipo === 'studio' && d.corso) meta.push({ Icona: GraduationCap, tono: 'ink', testo: d.corso.titolo });
+    if (tipo === 'routine') meta.push({ Icona: Clock, tono: 'num', testo: orari });
+    if (d.ricorrenza) meta.push({ Icona: Repeat, testo: sigle(d.ricorrenza.giorni) });
+    if (tipo === 'studio') meta.push({ Icona: Clock, tono: 'num', testo: orari });
+  }
+
+  // OutcomeRow (S5): esito scritto, oppure «concluso» per l'evento con la fine passata (§3); gli esiti dello studio con T-018
+  const conto = (ms: number | null | undefined) => (ms == null ? '' : quando(ms, now));
+  const voci = b.checklist ?? [];
+  const fatte = voci.filter((v) => v.fatta).length;
+  const saltateLog = log?.filter((f) => f.stato === 'saltata').length ?? 0;
+  let esito: { testo: string; ora: string; ok: boolean } | null = null;
+  if (b.stato === 'completato' && tipo !== 'studio') {
+    const testo =
+      tipo === 'todo'
+        ? voci.length
+          ? t('esitoCompletatoChecklist', { fatte, totale: voci.length })
+          : t('esitoCompletato')
+        : tipo === 'routine'
+          ? log
+            ? t('esitoFattaFasi', { fatte: log.length - saltateLog, totale: log.length })
+            : t('fatta')
+          : saltateLog === 0
+            ? t('esitoCompletato')
+            : saltateLog === 1
+              ? t('esitoCompletatoSaltata')
+              : t('esitoCompletatoSaltate', { n: saltateLog });
+    esito = { testo, ora: conto(b.chiusoIl), ok: true };
+  } else if (b.stato === 'saltato') esito = { testo: t('saltata'), ora: conto(b.chiusoIl), ok: false };
+  else if (b.stato === 'perso')
+    // L'ora è la scadenza (fine + 30', §8), come nel mock, non l'istante del ciclo che ha marcato
+    esito = {
+      testo: t(tipo === 'todo' ? 'esitoNonFatto' : tipo === 'studio' ? 'esitoPersaStudio' : 'esitoPersa'),
+      ora: conto(lostAtInstant(b)),
+      ok: false,
+    };
+  else if (stato === 'concluso') esito = { testo: t('esitoConcluso'), ora: conto(effectiveEnd(b)), ok: false };
+
+  const suggerimento =
+    tipo === 'todo' && b.stato === 'perso'
+      ? t('suggerimentoTodoPerso')
+      : tipo === 'routine' && !spuntabile && b.stato === 'programmato'
+        ? t('suggerimentoAltroGiorno')
+        : tipo === 'routine' && !spuntabile && b.stato === 'perso'
+          ? t('suggerimentoRoutinePersa')
+          : tipo === 'evento' && stato === 'concluso'
+            ? t('suggerimentoConcluso')
+            : null;
+
+  // Una spunta rifiutata dal servizio (finestra chiusa nel frattempo, §3) si segnala come le eccezioni
+  const esegui = (fn: () => Promise<boolean>) =>
+    void act(async () => {
+      if (!(await fn())) setErrore(true);
+    });
+  // Spunta (§3): con fasi si passa dalla revisione a inversione (§5) e si scrive solo al Conferma
+  const fatta = () => {
+    if (conFasi) {
+      setSaltate(new Set());
+      setVista('revisione');
+    } else esegui(() => completeBlock(appDb, id, ora(), fuso));
+  };
+  const conferma = () =>
+    void act(async () => {
+      const ok = await completeBlock(appDb, id, ora(), fuso, [...saltate]);
+      if (!ok) setErrore(true);
+      if (ok && tipo === 'evento' && saltate.size > 0) {
+        setScelte(new Set(saltate));
+        setVista('followup');
+      } else setVista('dettaglio');
+    });
+  const creaFollowUp = () =>
+    void act(async () => {
+      const etichette = template.filter((f) => scelte.has(f.id)).map((f) => f.etichetta);
+      const ids = await createFollowUps(appDb, etichette, ora(), fuso);
+      setVista('dettaglio');
+      mostraToast(
+        ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length }),
+        async () => {
+          for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
+          setVista('followup');
+        },
+        { todo: true },
+      );
+    });
+  const elimina = () => {
+    const prima = d;
+    mostraToast(t('eliminata', { titolo }), () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
+    void act(() => deleteBlock(appDb, id, ora(), fuso));
+  };
+
+  let piede: ReactNode = null;
+  if (tipo === 'todo')
+    piede =
+      b.stato === 'completato' ? (
+        <button
+          type="button"
+          className={`${s.azione} ${s.secondaria} ${s.larga}`}
+          onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
+        >
+          {t('riapri')}
+        </button>
+      ) : (
+        <button type="button" className={`${s.azione} ${s.primaria}`} onClick={fatta}>
+          <Check size={16} />
+          {t('segnaFatto')}
+        </button>
+      );
+  else if (tipo === 'routine') {
+    if (b.stato === 'completato')
+      piede = (
+        <button
+          type="button"
+          className={`${s.azione} ${s.secondaria} ${s.larga}`}
+          onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
+        >
+          {t('annullaSpunta')}
+        </button>
+      );
+    else if (b.stato !== 'saltato')
+      piede = (
+        <>
+          {/* Fatta o Saltata nella stessa finestra (FUNZ §4.3), anche se già persa nel suo giorno (B2) */}
+          {spuntabile && (
+            <button
+              type="button"
+              className={`${s.azione} ${s.secondaria}`}
+              onClick={() => esegui(() => skipBlock(appDb, id, ora(), fuso))}
+            >
+              {t('saltata')}
+            </button>
+          )}
+          <button type="button" className={`${s.azione} ${s.primaria}`} disabled={!spuntabile} onClick={fatta}>
+            {t('fatta')}
+          </button>
+        </>
+      );
+  } else if (tipo === 'evento' && b.stato !== 'completato')
+    piede = (
+      <button type="button" className={`${s.azione} ${s.primaria}`} onClick={fatta}>
+        {t(conFasi ? 'completaEvento' : 'chiudiEvento')}
+      </button>
+    );
+
+  const saltateTemplate = template.filter((f) => saltate.has(f.id));
+  const casella = (on: boolean) => (
+    <span className={s.casella} data-fatta={on || undefined}>
+      {on && <Check size={12} strokeWidth={3} />}
+    </span>
+  );
+
+  return (
+    <dialog
+      ref={dialogo}
+      className={s.pannello}
+      data-tipo={tipo}
+      aria-label={t('dettaglio')}
+      onClose={chiudi}
+      onCancel={(e) => {
+        // Esc con una sheet aperta chiude solo la sheet, come il velo
+        if (sheetAperta) {
+          e.preventDefault();
+          setVista('dettaglio');
+        }
+      }}
+    >
+      <div className={s.maniglia} aria-hidden />
+      <header className={s.testa} inert={sheetAperta}>
+        <button type="button" className={s.icona} aria-label={t('chiudi')} onClick={chiudi}>
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          className={`${s.icona} ${s.cestino}`}
+          aria-label={t('elimina')}
+          disabled={sparito}
+          onClick={elimina}
+        >
+          <Trash2 size={17} />
+        </button>
+      </header>
+
+      <div className={s.corpo} inert={sheetAperta}>
+        <div className={s.intestazione}>
+          <span className={s.badge}>{t(TIPO[tipo])}</span>
+          {/* Solo il todo completato ha il titolo barrato (S5) */}
+          <h1 className={s.titolo} data-fatto={(tipo === 'todo' && b.stato === 'completato') || undefined}>
+            {titolo}
+          </h1>
+          <div className={s.meta}>
+            {meta.map(({ Icona, testo, tono }) => (
+              <span key={testo} className={s.rigaMeta} data-tono={tono}>
+                <Icona size={14} />
+                <span className={s.testoMeta}>{testo}</span>
+              </span>
+            ))}
+          </div>
+          {esito && (
+            <div className={s.esito} data-ok={esito.ok || undefined}>
+              {esito.ok && <Check size={16} />}
+              {esito.testo}
+              <span className={s.esitoOra}>{esito.ora}</span>
+            </div>
+          )}
+          {suggerimento && (
+            <span className={s.suggerimento}>
+              <Info size={13} />
+              {suggerimento}
+            </span>
+          )}
+        </div>
+
+        {tipo === 'todo' && voci.length > 0 && (
+          <section className={s.gruppo}>
+            <div className={s.rigaEtichetta}>
+              <span className={s.etichetta}>
+                <SquareCheckBig size={14} />
+                {t('checklist')}
+              </span>
+              <span className={`${s.conto} ${s.num}`} data-ink data-fatto={fatte === voci.length || undefined}>
+                {fatte}/{voci.length}
+              </span>
+            </div>
+            <div className={s.barra}>
+              {/* larghezza = dato, non misura del design */}
+              <div
+                className={s.avanzamento}
+                data-fatto={fatte === voci.length || undefined}
+                style={{ width: `${Math.round((fatte / voci.length) * 100)}%` }}
+              />
+            </div>
+            <div className={s.voci}>
+              {voci.map((v, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={s.voce}
+                  aria-pressed={v.fatta}
+                  disabled={sparito}
+                  onClick={() => void act(() => toggleChecklist(appDb, id, i, ora(), fuso))}
+                >
+                  {casella(v.fatta)}
+                  <span className={s.testoVoce}>{v.testo}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {fasiMostrate.length > 0 && (
+          <section className={s.gruppo}>
+            <div className={s.rigaEtichetta}>
+              <span className={s.etichetta}>
+                <List size={14} />
+                {t('fasi')}
+              </span>
+              <span className={`${s.conto} ${s.num}`}>{fasiMostrate.length}</span>
+            </div>
+            <div className={s.fasi}>
+              {fasiMostrate.map((f, i) => (
+                <div key={f.id} className={s.fase} data-saltata={f.stato === 'saltata' || undefined}>
+                  <span className={s.pallino} />
+                  <span className={s.numero}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className={s.testoFase}>{f.etichetta}</span>
+                  {f.stato === 'saltata' && <span className={s.tag}>{t('tagSaltata')}</span>}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {b.note && (
+          <section className={s.note}>
+            <span className={s.etichetta}>
+              <StickyNote size={14} />
+              {t('note')}
+            </span>
+            <p className={s.testoNota}>{b.note}</p>
+          </section>
+        )}
+      </div>
+
+      {(piede || errore) && !sparito && (
+        <footer className={s.piede} inert={sheetAperta}>
+          {errore && (
+            <p className={s.errore} role="alert">
+              {t('azioneNonRiuscita')}
+            </p>
+          )}
+          {piede}
+        </footer>
+      )}
+
+      {vista !== 'dettaglio' && (
+        <div className={s.velo}>
+          <button
+            type="button"
+            className={s.sfondoVelo}
+            aria-label={t(vista === 'revisione' ? 'annulla' : 'nonOra')}
+            onClick={() => setVista('dettaglio')}
+          />
+          <div ref={sheet} className={s.sheet} role="dialog" aria-labelledby="sheet-titolo" tabIndex={-1}>
+            <div className={s.manigliaSheet} aria-hidden />
+            {vista === 'revisione' ? (
+              <>
+                <div className={s.testiSheet}>
+                  <span id="sheet-titolo" className={s.titoloSheet}>
+                    {t('revisioneFasi')}
+                  </span>
+                  <span className={s.sottotitoloSheet}>{t('revisioneFasiTesto')}</span>
+                </div>
+                <div className={s.fasi}>
+                  {shownPhases(template, null).map((f, i) => {
+                    const saltata = saltate.has(f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`${s.fase} ${s.faseRevisione}`}
+                        aria-pressed={saltata}
+                        data-saltata={saltata || undefined}
+                        onClick={() => setSaltate(inverti(saltate, f.id))}
+                      >
+                        <span className={s.pallino} />
+                        <span className={s.numero}>{String(i + 1).padStart(2, '0')}</span>
+                        <span className={s.testoFase}>{f.etichetta}</span>
+                        {saltata && <span className={s.tag}>{t('tagSaltata')}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className={s.riepilogo}>
+                  {t('riepilogoFasi', { fatte: template.length - saltate.size, saltate: saltate.size })}
+                </span>
+                <div className={s.azioniSheet}>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={() => setVista('dettaglio')}>
+                    {t('annulla')}
+                  </button>
+                  <button type="button" className={`${s.azione} ${s.primaria}`} onClick={conferma}>
+                    {t('conferma')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`${s.testiSheet} ${s.rivela}`}>
+                  <span className={s.occhiello}>{t('eventoCompletato')}</span>
+                  <span id="sheet-titolo" className={s.titoloSheet}>
+                    {saltateTemplate.length === 1
+                      ? t('haiSaltatoUna', { fase: saltateTemplate[0]?.etichetta ?? '' })
+                      : t('haiSaltatoN', { n: saltateTemplate.length })}
+                  </span>
+                  <span className={s.sottotitoloSheet}>{t('followUpTesto')}</span>
+                </div>
+                <div className={`${s.fasi} ${s.rivela}`}>
+                  {saltateTemplate.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      className={s.followUp}
+                      aria-pressed={scelte.has(f.id)}
+                      onClick={() => setScelte(inverti(scelte, f.id))}
+                    >
+                      {casella(scelte.has(f.id))}
+                      <span className={s.testoFollowUp}>{f.etichetta}</span>
+                      <span className={s.badgeTodo}>{t('tipoTodo')}</span>
+                    </button>
+                  ))}
+                  <span className={s.metaFollowUp}>
+                    {saltateTemplate.length > 1 &&
+                      `${t('selezionate', { n: scelte.size, totale: saltateTemplate.length })} · `}
+                    {t('rotolaFino', { data: fmtData.format(horizonLastDay(now, 'mese')) })}
+                  </span>
+                </div>
+                <div className={s.azioniSheet}>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={() => setVista('dettaglio')}>
+                    {t('nonOra')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${s.azione} ${s.ctaTodo}`}
+                    disabled={scelte.size === 0}
+                    onClick={creaFollowUp}
+                  >
+                    {scelte.size <= 1 ? t('creaFollowUp') : t('creaFollowUpN', { n: scelte.size })}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={s.toast} role="status" data-todo={toast.todo || undefined}>
+          <span className={s.puntoToast} />
+          <span className={s.testoToast}>{toast.testo}</span>
+          <button type="button" className={s.annullaToast} onClick={toast.annulla}>
+            {t('annulla')}
+          </button>
+        </div>
+      )}
+    </dialog>
+  );
+}

@@ -45,6 +45,7 @@ import {
 import { horizonLastDay } from '../domain/lost';
 import { localDayKey, local } from '../domain/time';
 import type { Orizzonte, Priorita } from '../domain/types';
+import { durata } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
 
@@ -93,12 +94,6 @@ const fmtSettimana = new Intl.DateTimeFormat(lingua, { weekday: 'long' });
 const dataDi = (giorno: string) => {
   const [y, m, d] = giorno.split('-').map(Number) as [number, number, number];
   return local(y, m, d);
-};
-const durata = (min: number) => {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  if (!h) return t('minutiBrevi', { m });
-  return m ? t('durata', { h, m: String(m).padStart(2, '0') }) : t('oreBrevi', { h });
 };
 const anticipo = (min: number) =>
   min === 0

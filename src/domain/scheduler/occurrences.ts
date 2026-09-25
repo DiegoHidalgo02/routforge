@@ -24,6 +24,10 @@ export const ORIZZONTE_OCCORRENZE_GIORNI = 28;
 export const occurrenceId = (ricorrenzaId: string, giorno: string, orarioInizio: string): string =>
   `${ricorrenzaId}:${giorno}:${orarioInizio}`;
 
+/** Giorno locale dello slot, letto dall'id (D-DATA-2): resta quello anche se l'utente ha spostato l'occorrenza (C4). */
+export const occurrenceDay = (id: string, ricorrenzaId: string): string =>
+  id.slice(ricorrenzaId.length + 1, ricorrenzaId.length + 11);
+
 /** Differenza da applicare a una modifica (§7): blocchi da scrivere (nuovi o riscritti), id da eliminare. */
 export interface PianoOccorrenze {
   daScrivere: Blocco[];
