@@ -43,7 +43,7 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | D4 | MECC §10.4, FUNZ §11.2 | app/session (persistenza in preferenze) · platform/widget | T-017 | — | nessuno |
 | D5 | MECC §10.4, §20 | app/session (iperfocus) · platform/doNotDisturb · domain/stats | T-017, T-029 | — | nessuno |
 | D6 | MECC §10.1 | app/session (una sola sessione) | T-016 | — | nessuno |
-| E1 | MECC §3, §5 | domain/phases (log, follow-up) · app/completion · ui Dettaglio S5 (revisione e follow-up) | T-009 | src/domain/phases.test.ts, src/app/completion.test.ts (T-009: evento completato, log 1 fatta + 1 saltata, todo senza orario nel giorno dell'evento; E1 dice «orizzonte mese» e «titolo dato dall'utente», il codice segue D-DETT-1 e D-DETT-2: spec da allineare su richiesta dell'utente) | parziale |
+| E1 | MECC §3, §5 | domain/phases (log, follow-up) · app/completion · ui Dettaglio S5 (revisione e follow-up) | T-009 | src/domain/phases.test.ts, src/app/completion.test.ts (T-009: evento completato, log 1 fatta + 1 saltata, todo «Stampare analisi» senza orario nel giorno dell'evento con orizzonte giorno; E1 allineato a D-DETT-1 e D-DETT-2 il 25/09/2026) | coperto |
 | E2 | MECC §3, §8, §20 | domain/lost (evento mai perso) · domain/completion (stato «concluso») · app/completion · ui Dettaglio S5 · domain/stats | T-001, T-009 | src/domain/lost.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts | parziale |
 | E3 | MECC §13.2, §14, §24 | domain/nowBlock · domain/notifications (08:00) | T-001, T-010 | src/domain/nowBlock.test.ts | parziale |
 | F1 | MECC §13.1–§13.3 | domain/notifications/desiredSet · app/notifications | T-019 | — | nessuno |

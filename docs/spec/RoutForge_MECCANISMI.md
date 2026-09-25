@@ -61,7 +61,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 | Routine di studio | no | solo tramite esito (§10–11) |
 | Evento | no | "Completa evento" dal dettaglio, senza vincolo di giorno |
 
-**Flusso todo/routine**: non consentita → nessuna scrittura; routine con fasi nella definizione → si apre la revisione fasi e si scrive solo al Conferma; altrimenti completamento immediato. **Annulla spunta**: elimina l'eventuale log fasi dell'occorrenza, torna `programmato`, ri-arma le notifiche.
+**Flusso todo/routine**: non consentita → nessuna scrittura; routine con fasi nella definizione → si apre la revisione fasi e si scrive solo al Conferma; altrimenti completamento immediato. **Annulla spunta** («Riapri» nel dettaglio, per todo e routine): elimina l'eventuale log fasi dell'occorrenza, torna `programmato`, ri-arma le notifiche; nel todo azzera le spunte della checklist.
 
 **Evento**: con fasi → revisione; senza → completamento immediato. Stato mostrato: `completato` se scritto; altrimenti `concluso` se la fine è passata; altrimenti `programmato`. Mai `perso`.
 
@@ -71,6 +71,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 
 - Massimo 60 voci, 120 caratteri l'una; voci vuote scartate; ordine per posizione.
 - La spunta di una voce inverte solo quella. Poi: tutte spuntate e todo non completato → il todo si **completa** (operazione di §3); una despuntata su todo completato → il todo **si riapre**; lista vuota **non** è "tutto fatto".
+- **Spunta diretta** (§3): tutte le voci risultano fatte. Con voci non spuntate si può, a scelta, creare **un solo todo con le voci rimaste**: stesso titolo, note, priorità, corso e orizzonte, senza orario, nel giorno del todo ma mai prima di oggi (stessa scadenza); in quel caso il todo d'origine si completa lasciando le voci com'erano.
 - Modificare la lista (aggiungi/rinomina/elimina) non tocca lo stato del todo.
 - Lo spostamento di giorno del todo conserva le spunte.
 
@@ -82,7 +83,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 - **Completamento a inversione**: tutte `fatte`; l'utente marca le `saltate`; Conferma.
 - **Log**: fotografia `[id, etichetta, stato]` di tutte le fasi del template. Chiave dell'occorrenza: routine → `ricorrenza + istante d'inizio`; evento → identificatore dell'evento. Ricompletare **sovrascrive**.
 - Occorrenza persa → **nessun log**.
-- **Follow-up (solo eventi)**: per ogni fase saltata, a scelta, un todo: titolo dato dall'utente, senza orario, oggi, orizzonte mese.
+- **Follow-up (solo eventi)**: per ogni fase saltata, a scelta, un todo con il titolo della fase, senza orario, nel giorno dell'evento ma mai prima di oggi, orizzonte giorno.
 - Dettaglio di un'occorrenza chiusa: vale il log (etichette congelate); senza log: template corrente, stato nullo.
 - Statistiche: aggregazione per identificatore; etichetta = la più recente; tasso = fatte/totali.
 - Eliminare la routine/l'evento elimina i log.

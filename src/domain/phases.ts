@@ -3,7 +3,7 @@
  * Fonte: MECCANISMI §5 (completamento a inversione, log, dettaglio di un'occorrenza chiusa, follow-up solo eventi);
  * FUNZIONALITA §5. Scenari: B5, E1. La chiave del log è l'id del blocco dell'occorrenza (D-DATA-2): salvarlo di nuovo
  * sovrascrive. Il titolo del follow-up è l'etichetta della fase (S5, D-DETT-1); il todo scade il giorno dell'evento, mai
- * prima di oggi (D-DETT-2, scelta dell'utente del 25/09/2026; MECC §5 ed E1 dicono «orizzonte mese»: spec da allineare).
+ * prima di oggi (D-DETT-2, scelta dell'utente del 25/09/2026, spec allineata: MECC §5, FUNZ §5, E1).
  */
 import type { BozzaAttivita } from './activity';
 import { inheritedDay } from './checklist';

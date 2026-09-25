@@ -108,7 +108,7 @@ Toccando un'attività (dal calendario, dal blocco Adesso o da una notifica) si a
 ### 4.3 Routine
 - Ogni occorrenza si segna **Fatta** o **Saltata**, solo nel giorno previsto (né prima né dopo).
 - Con fasi, prima di segnarla Fatta si passa dalla revisione delle fasi.
-- Si può annullare la spunta.
+- Si può annullare la spunta con «Riapri».
 
 ### 4.4 Evento
 - Senza fasi: si chiude con "Completa evento". Con fasi: "Completa evento" apre la revisione delle fasi e l'evento risulta completato dopo la conferma.
@@ -127,7 +127,7 @@ Toccando un'attività (dal calendario, dal blocco Adesso o da una notifica) si a
 Una routine o un evento può essere scomposto in **fasi** (es. "Mattina": sveglia, skin-care, meditazione).
 
 - Al completamento **tutte le fasi risultano fatte**: si toccano solo quelle **non** fatte, poi un unico **Conferma**. Giornata normale = zero tocchi sulle fasi.
-- Per un **evento**, ogni fase saltata può generare un **todo di follow-up** (per oggi, senza orario, orizzonte mese).
+- Per un **evento**, ogni fase saltata può generare un **todo di follow-up** (con il nome della fase, senza orario, per il giorno dell'evento e mai prima di oggi).
 - Le fasi si creano, rinominano, riordinano ed eliminano nella schermata di creazione/modifica. Nel dettaglio di un'occorrenza già chiusa si vede cosa è stato fatto e cosa saltato.
 - Le fasi non sono la checklist (§7): le fasi si segnano in negativo (ciò che non è stato fatto), la checklist in positivo (ciò che è stato fatto).
 
@@ -138,6 +138,7 @@ Una routine o un evento può essere scomposto in **fasi** (es. "Mattina": svegli
 - Solo i todo. Voci create una alla volta (massimo 60).
 - Ogni voce nasce non spuntata; si spunta man mano.
 - **Spuntare l'ultima voce completa il todo**; togliere una spunta a un todo completato lo **riapre**.
+- Segnando fatto un todo con voci ancora da spuntare si può creare un todo con le voci rimaste, con la stessa priorità e la stessa scadenza.
 - Nelle liste: indicatore "fatte/totali".
 - Se il todo si sposta di giorno, le spunte restano.
 

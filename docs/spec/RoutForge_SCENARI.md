@@ -13,7 +13,7 @@ Dato un todo "Chiama Marco" per oggi, senza orario, orizzonte giorno. Il giorno 
 Dato un todo "Spesa" creato martedì con orario 18:00, durata 30', orizzonte settimana (fine: domenica). Martedì non viene fatto. Mercoledì all'apertura il todo è a mercoledì: alle 18:00 se lo slot è libero, altrimenti nel primo varco di 30' libero dopo l'ora corrente entro le 22:00. Le voci di checklist già spuntate restano spuntate. Lunedì successivo, se ancora non fatto, il todo resta a domenica come "non fatto".
 
 **A3 — Checklist che completa il todo**
-Dato un todo con checklist di 3 voci. Spuntare le prime due non completa il todo (badge 2/3). Spuntare la terza completa il todo e cancella le sue notifiche. Togliere la spunta a una voce riapre il todo e ri-arma le notifiche. Eliminare tutte le voci dall'editor non cambia lo stato del todo.
+Dato un todo con checklist di 3 voci. Spuntare le prime due non completa il todo (badge 2/3). Spuntare la terza completa il todo e cancella le sue notifiche. Togliere la spunta a una voce riapre il todo e ri-arma le notifiche. Eliminare tutte le voci dall'editor non cambia lo stato del todo. Segnare fatto il todo con 2 voci su 3 offre un todo con la voce rimasta, stessa priorità e stessa scadenza; il todo d'origine risulta completato.
 
 **A4 — Digest mattutino con arretrati**
 Dati due todo senza orario per oggi e uno senza orario di ieri con orizzonte mese non fatto. Alle 08:00 arriva un solo digest: "3 da fare (1 arretrato)" con i tre titoli. Se non ci sono todo senza orario, nessun digest.
@@ -96,7 +96,7 @@ Con una sessione attiva, aprire il setup da un'altra unità porta al timer in co
 ## E. Eventi
 
 **E1 — Evento con fasi e follow-up**
-Evento "Dentista" giovedì 10:00 con fasi: stampare analisi, portare documenti. "Completa evento" → revisione; l'utente segna "stampare analisi" saltata e chiede un follow-up "Stampa analisi": viene creato un todo senza orario per oggi, orizzonte mese; l'evento è completato; il log registra 1 fatta + 1 saltata.
+Evento "Dentista" giovedì 10:00 con fasi: stampare analisi, portare documenti. "Completa evento" → revisione; l'utente segna "stampare analisi" saltata e chiede il follow-up: viene creato il todo "Stampare analisi" senza orario per giovedì (il giorno dell'evento, mai prima di oggi), orizzonte giorno; l'evento è completato; il log registra 1 fatta + 1 saltata.
 
 **E2 — Evento mai perso**
 Evento venerdì 15:00–16:00 non completato. Sabato risulta "concluso", non "perso"; non compare nei persi delle statistiche; non riceve notifiche "perso".

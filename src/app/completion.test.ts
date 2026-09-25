@@ -243,8 +243,7 @@ describe('Evento con fasi e follow-up — SCENARI E1 (servizio)', () => {
       ['Portare i documenti', 'fatta'],
     ]);
 
-    // Il titolo è l'etichetta della fase, come fa la UI (S5 non ha un campo; la spec dice «dato dall'utente», D-DETT-1).
-    // Scade il giorno dell'evento (D-DETT-2, scelta dell'utente; E1 dice «orizzonte mese»: spec da allineare).
+    // Titolo = nome della fase (S5, D-DETT-1); scade il giorno dell'evento, orizzonte giorno (D-DETT-2; E1 allineato).
     const [todoId] = await createFollowUps(db, id, ['Stampare le analisi'], giovedi, FUSO);
     expect(await blocco(todoId!)).toMatchObject({
       tipo: 'todo',

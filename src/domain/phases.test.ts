@@ -44,8 +44,7 @@ describe('Fasi — MECCANISMI §5', () => {
 });
 
 describe('Follow-up — SCENARI E1 (scadenza del padre, D-DETT-2)', () => {
-  // E1 e MECC §5 dicono «orizzonte mese»; l'utente (25/09/2026) ha deciso che il follow-up scade il giorno dell'evento,
-  // mai prima di oggi: spec da allineare (D-DETT-2).
+  // Il follow-up scade il giorno dell'evento, mai prima di oggi (D-DETT-2; MECC §5 ed E1 allineati il 25/09/2026).
   const dentista = { inizio: local(2026, 9, 24, 10, 0) }; // giovedì
   it('«Stampa analisi»: todo senza orario nel giorno dell’evento, orizzonte giorno, valido per «+ Crea»', () => {
     const now = local(2026, 9, 24, 10, 30);
