@@ -22,7 +22,9 @@ export type { OpzioniImport, RisultatoImportCorso };
 export function importCourseFromZip(zip: Uint8Array, opts: OpzioniImport): RisultatoImportCorso {
   let entries: Record<string, Uint8Array>;
   try {
-    entries = unzipSync(zip);
+    // Si decomprimono solo i `.md` (FORMATO §1): un PDF o una cartella estranea nello ZIP non occupano memoria.
+    // La regola su quali file leggere resta nel parser; questo è solo un filtro sull'inflazione.
+    entries = unzipSync(zip, { filter: (f) => /\.md$/i.test(f.name) });
   } catch {
     throw new ErroreImportCorso('ZIP non leggibile o corrotto');
   }
