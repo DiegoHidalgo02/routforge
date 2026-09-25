@@ -1,6 +1,6 @@
 # RoutForge — Handoff Design → Code
 
-*Ciò che Claude Code deve sapere per costruire l'interfaccia senza perdere informazioni. Due fonti, una regola: **come appare** → export di Claude Design in `claude-design/` (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, `S*.dc.html`); **come si comporta** → spec in `docs/spec/`. Se il design mostra un comportamento diverso dalla spec, **vince il design** (D-DESIGN-1): la differenza va annotata in §10 (conteggio in `docs/STATO.md`) e la spec si allinea al design.*
+*Ciò che Claude Code deve sapere per costruire l'interfaccia senza perdere informazioni. Due fonti, una regola: **come appare** → export di Claude Design in `claude-design/` (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, `S*.dc.html`); **come si comporta** → spec in `docs/spec/`. Se il design mostra un comportamento diverso dalla spec, **vince il design** (D-DESIGN-1): la differenza va annotata in §10 (conteggio in `docs/STATO.md`) e l'utente decide come allineare la spec.*
 
 ## 0. Prerequisito: portare il design nel repo
 
@@ -114,7 +114,7 @@ Soglie e transizioni (§6–§9), regole del puntatore (§11), calcolo delle not
 
 ## 10. Divergenze design ↔ spec (T-000, 24/09/2026)
 
-*Rilevate in T-000 (24/09/2026) e nei task successivi. **Tutte risolte a favore del design il 25/09/2026 (D-DESIGN-1)**: esito, regola e task di ciascuna nella tabella di `docs/decisioni/D-DESIGN-1.md`; il codice segue le righe di §1, già aggiornate; il testo di `docs/spec/` va allineato (elenco dei paragrafi nella scheda). Le descrizioni sotto restano come storia.*
+*Rilevate in T-000 (24/09/2026) e nei task successivi. **Tutte risolte a favore del design il 25/09/2026 (D-DESIGN-1)**: esito, regola e task di ciascuna nella tabella di `docs/decisioni/D-DESIGN-1.md`; il codice segue le righe di §1, già aggiornate; `docs/spec/` è allineata al design dal 25/09/2026. Le descrizioni sotto restano come storia.*
 1. **Corso di esempio** (HANDOFF «BLOCCO 1», S10 Mobile/Desktop): la card «Software Engineer — percorso di esempio · 2 moduli · 2 unità» non corrisponde a nessun file. La spec non fissa quale corso (CONTESTO §5: incluso, conforme, senza avvisi; FORMATO §0: M0/M1 «devono importarsi senza avvisi»): D-SAMPLE-1 sceglie M0+M1 «Syllabus Software Engineer 2026», l'unico corpus conforme, 2 moduli · 13 unità; il badge «Esempio» del design va su quel corso. Il conteggio «5 moduli» (S10 `modules: 5`, S11 Corso `modCount` = moduli + `locked`) include i segnaposto M2–M4 senza file, che l'app non mostra (FORMATO §1, §4).
 2. **Trascinamento di un blocco «perso»** (S1 Mobile e Desktop, tavola 01 `drag=perso`): il mock trascina «Palestra», una routine. MECC §15 e FUNZ §2: si trascinano solo i todo senza orario; il «perso» che torna programmato è un todo.
 3. **S1 Desktop, vista Giorno**: il todo senza orario («Prepara la valigia») è in coda alla lista. MECC §24 e FUNZ §2: fascia senza orario in cima, ordinata per priorità (S1 Mobile è corretto).

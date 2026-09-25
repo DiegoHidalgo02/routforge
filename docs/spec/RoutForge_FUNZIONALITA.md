@@ -17,7 +17,9 @@ Sezioni principali, sempre raggiungibili:
 | **Statistiche** | Analisi del comportamento di studio e delle pratiche |
 | **Profilo** | Corsi importati (moduli, unità, materiali), account e stato della sincronizzazione, accesso alle Impostazioni |
 
-Dalle logo del utente in alto a sinistra si raggiungono anche la schermata **Notifiche** (esiti da registrare) e la **Diagnostica**.
+Dal logo utente in alto a sinistra si apre un menu con **Corsi**, **Esiti da registrare** (la schermata Notifiche, con badge), **Account e sincronizzazione** e **Impostazioni**; in testa al menu nome (se c'è), email e stato della sincronizzazione. La **Diagnostica** si apre da Impostazioni (§24).
+
+Su desktop la barra laterale ha anche **Cerca** (⌘K / Ctrl+K): un campo che cerca per titolo fra attività, corsi e unità e apre il risultato scelto.
 
 Non esiste una lista separata delle attività: tutte le attività si consultano dal calendario di Oggi.
 
@@ -25,9 +27,14 @@ Non esiste una lista separata delle attività: tutte le attività si consultano 
 
 ## 2. Oggi: il calendario
 
-Tre viste: **Giorno** (agenda della giornata), **Settimana**, **Mese**. Si passa da un giorno/periodo all'altro scorrendo lateralmente. Nella vista Giorno le attività senza orario compaiono in una fascia dedicata in cima, ordinate per priorità; le altre seguono in ordine cronologico.
+Tre viste: **Giorno** (agenda della giornata), **Settimana**, **Mese**. Si passa da un giorno/periodo all'altro scorrendo lateralmente. Nella vista Giorno le attività senza orario compaiono in una fascia dedicata, ordinate per priorità: in cima su mobile, in coda dopo le attività con orario su desktop; le altre seguono in ordine cronologico.
 
-In testa alla vista Giorno un saluto senza nome («Ciao») lascia il posto alla data dopo pochi secondi; l'account non ha un nome, solo l'email. Il selettore di vista è un segmentato: Giorno · Settimana su mobile, Giorno · Settimana · Mese su desktop (su mobile il Mese si apre dal bottone nell'header). La **Settimana** mostra i blocchi per giorno, una riga per giorno su mobile e sette colonne su desktop, con il giorno selezionato evidenziato e lo stato vuoto quando non c'è nulla. Il **Mese** mostra la griglia con i puntini dei tipi e, su desktop, l'elenco delle attività del giorno selezionato a lato; un mese senza attività lo dice.
+Su mobile, in testa alla vista Giorno, un saluto («Ciao, <nome>», o solo «Ciao» se l'account non ha un nome) lascia il posto alla data dopo pochi secondi; su desktop l'intestazione mostra il periodo e la lista si apre con la data del giorno, senza saluto. Il selettore di vista: su mobile tre icone Giorno · Settimana · Mese in alto a destra; su desktop un segmentato Giorno · Settimana · Mese con le frecce e «Oggi». La **Settimana** mostra i blocchi per giorno, una riga per giorno su mobile e sette colonne su desktop, con il giorno selezionato evidenziato e lo stato vuoto quando non c'è nulla. Il **Mese** mostra la griglia con i puntini dei tipi e, su desktop, l'elenco delle attività del giorno selezionato a lato; un mese senza attività lo dice.
+
+Sotto la giornata la vista Giorno mostra anche:
+- **Il tuo progresso oggi**: completate su totali di oggi con la percentuale; focus di oggi con il confronto «vs ieri»; attività completate nella settimana.
+- **Prossime attività**: i prossimi due giorni con attività, con orario, titolo e tipo; «Vedi tutte» apre la Settimana; senza nulla in programma: «Niente in programma nei prossimi giorni.».
+- Su mobile le attività già completate si **impilano** in testa al giorno come un archivio compatto: scorrendo in giù si aprono tutte con il loro orario, «Raccogli» le richiude.
 
 ### Il blocco "Adesso / prossimo"
 Mostra cosa è in corso o cosa viene dopo, con uno stato che cambia da solo: minuti mancanti all'inizio; "adesso" durante; "recupera" se una routine o una sessione di studio è passata senza essere gestita; "orario passato" per todo ed eventi. Da qui si avvia direttamente la sessione di studio o si apre l'attività. Può essere chiuso per la giornata: riappare il giorno dopo o se cambia l'attività in corso.
@@ -36,7 +43,7 @@ Mostra cosa è in corso o cosa viene dopo, con uno stato che cambia da solo: min
 Se l'app viene riaperta dopo almeno due giorni, un messaggio una tantum avvisa che il piano si è già riallineato (nessun conteggio di attività perse).
 
 ### Riprogrammare trascinando
-Nella vista Giorno, su mobile come su desktop, si trascinano **solo i todo senza orario** (maniglia a sei punti sulla card; le altre attività non si spostano). Tenuto premuto e trascinato su un orario, il todo si aggancia agli spazi liberi fra le altre attività a passi di 5 minuti e diventa un todo con orario, con la durata già dichiarata o, se manca, quella predefinita del form Crea (30 minuti); trascinato su un altro giorno della striscia settimanale cambia giorno e resta senza orario. L'operazione si può annullare subito dopo. Le notifiche seguono il nuovo orario. Un todo "perso" trascinato torna programmato.
+Nella vista Giorno, su mobile come su desktop, si trascinano **i todo senza orario e i blocchi persi** di qualsiasi tipo (maniglia a sei punti sulla card; le altre attività non si spostano). Tenuto premuto e trascinato su un orario, il todo si aggancia agli spazi liberi fra le altre attività a passi di 5 minuti e diventa un todo con orario, con la durata già dichiarata o, se manca, quella predefinita del form Crea (30 minuti); trascinato su un altro giorno della striscia settimanale cambia giorno e resta senza orario. L'operazione si può annullare subito dopo. Le notifiche seguono il nuovo orario. Un blocco "perso" trascinato su un altro giorno o orario torna programmato e le sue notifiche vengono ri-armate.
 
 ---
 
@@ -52,13 +59,12 @@ Quattro tipi, stessa schermata, campi diversi:
 | **Evento** | Appuntamento puntuale, anche di un giorno intero |
 
 ### 3.1 Todo
-- Titolo.
+- Titolo. Nessuna data e nessun corso: il todo parte da oggi.
 - **Senza orario** (default) oppure con orario d'inizio e durata (scelta tra gradini da 5 a 240 minuti).
 - **Orizzonte**: *giorno* (fisso), *settimana*, *mese*. Con orizzonte diverso da "giorno", il todo non fatto si sposta da solo a oggi, ogni giorno, fino alla fine dell'orizzonte.
 - **Priorità** (solo senza orario): alta, normale, bassa. Decide l'ordine nella fascia senza orario.
 - **Checklist** opzionale (§7).
 - **Promemoria** (§8): solo per i todo con orario; quelli senza orario entrano nel digest mattutino.
-- Corso di riferimento opzionale.
 
 ### 3.2 Routine di studio
 - Corso a cui è agganciata (opzionabile ma consigliato); titolo opzionale.
@@ -75,7 +81,7 @@ Quattro tipi, stessa schermata, campi diversi:
 - Non produce esiti di studio: si segna Fatta o Saltata.
 
 ### 3.4 Evento
-- Titolo, data, orario d'inizio e fine, oppure **tutto il giorno**.
+- Titolo, data, orario d'inizio e fine (la fine deve venire dopo l'inizio, altrimenti il form lo segnala e non crea l'evento), oppure **tutto il giorno**.
 - Luogo opzionale.
 - **Fasi** opzionali (§6).
 - Promemoria.
@@ -184,13 +190,13 @@ Senza intervento dell'utente, a ogni avvio, ritorno in primo piano e cambio di g
 ## 9. Corsi, moduli e unità
 
 ### 9.1 Importare
-Da un file ZIP di markdown con struttura a moduli e unità (formato in `RoutForge_FORMATO_CORSO.md`), oppure caricando il corso di esempio. L'app ricostruisce corso → moduli → unità → sezioni e risorse, segnalando eventuali avvisi di lettura. Ogni import crea un corso nuovo.
+Da un file ZIP di markdown con struttura a moduli e unità (formato in `RoutForge_FORMATO_CORSO.md`), oppure caricando il corso di esempio. L'app ricostruisce corso → moduli → unità → sezioni e risorse, segnalando eventuali avvisi di lettura. Ogni import crea un corso nuovo; reimportando un corso con lo stesso titolo, i materiali personali passano al corso nuovo (§10).
 
 ### 9.2 Struttura
 Corso → Moduli → Unità. L'unità è il livello di studio: concetto core, sezioni (teoria, studio, pratica, mini progetto), risorse collegate (link, video YouTube incorporati), materiali personali, file di codice.
 
 ### 9.3 Avanzamento
-Ogni corso mostra la percentuale di unità completate e il tempo dedicato; ogni unità ha uno stato (non iniziata, parziale, da rivedere, completata, saltata).
+Ogni corso mostra la percentuale di unità completate e, su mobile, il tempo dedicato; ogni unità ha uno stato (non iniziata, parziale, da rivedere, completata, saltata).
 
 ### 9.4 Eliminare
 Eliminare un corso elimina tutto ciò che gli appartiene: routine di studio e occorrenze, materiali, quiz, flashcard e pratiche, conversazioni, storico delle fasi, notifiche.
@@ -207,6 +213,8 @@ Tipi di materiale personale:
 - **PDF** (max 20 MB), consultabile in un visualizzatore integrato o con un'app esterna. Se il testo è estraibile, il PDF entra nel contesto dell'AI; se è scansionato resta consultabile ma passivo.
 
 **File di codice**: da un'unità (o da una sessione libera) si caricano file o uno ZIP di progetto. Si vede l'albero delle cartelle, non il contenuto; il contenuto serve solo all'AI, dove ha priorità sul testo del corso. Cartelle tecniche, segreti e file troppo grandi vengono esclusi.
+
+I materiali personali e i file di codice **restano anche se si reimporta** il corso: all'import di un corso con lo stesso titolo passano alle unità con lo stesso numero del corso nuovo; quelli senza corrispondenza restano sul corso nuovo.
 
 Nelle Impostazioni si vede lo spazio occupato dai materiali e si possono eliminare.
 
@@ -267,16 +275,16 @@ Carte con un frammento di codice, un'architettura o un'affermazione. **Swipe a d
 Un blocco di codice di 5–10 righe con una riga sbagliata (es. query con SQL injection, async senza gestione errori, re-render inutile). Si **tocca la riga** che si ritiene sbagliata: se è quella, punti e versione corretta mostrata con spiegazione; altrimenti si ha un secondo tentativo, poi la soluzione. Nessuna tastiera.
 
 ### 14.5 Audio Flash-Trivia
-Modalità a mani libere: l'app **legge a voce** una domanda secca, lascia **5 secondi** di silenzio, poi legge una spiegazione di circa 15 secondi e passa alla successiva da sola. Funziona con schermo spento; comandi essenziali play/pausa/salta/stop. Nessuna interazione visiva richiesta.
+Modalità a mani libere: l'app **legge a voce** una domanda secca, lascia **5 secondi** di silenzio, poi legge una spiegazione di circa 15 secondi e passa alla successiva da sola. Funziona con schermo spento; comandi essenziali play/pausa/salta/stop. Nessuna interazione visiva richiesta. Chi non sa la risposta preme **Salta**: l'elemento conta come sbagliato e torna una volta nella playlist successiva.
 
 ### 14.6 Fine della pratica
-DevSwipe, Bug Hunter e Audio Flash-Trivia chiudono con un riepilogo: punteggio, elenco delle risposte sbagliate (per DevSwipe dopo che sono state riproposte una volta) e due azioni, **Rifai la pratica** e **Torna all'unità**. Il quiz mostra punteggio e percentuale (§14.1).
+DevSwipe, Bug Hunter e Audio Flash-Trivia chiudono con un riepilogo: punteggio (per la Trivia giuste su totali con la percentuale, es. «8 / 10 · 80 %»), elenco delle risposte sbagliate (per DevSwipe dopo che sono state riproposte una volta; per la Trivia gli elementi saltati) e due azioni, **Rifai la pratica** e **Torna all'unità**. Il quiz mostra punteggio e percentuale (§14.1).
 
 ---
 
 ## 15. Ripetizione dilazionata (flashcard)
 
-Dopo aver visto la risposta si valuta: **Niente**, **Difficile**, **Bene**, **Facile**. L'app calcola quando riproporre la carta (SM-2); accanto a ogni bottone si vede la prossima scadenza. "Niente" ripropone la carta nella stessa sessione. Il **ripasso trasversale** raccoglie tutte le carte scadute di tutti i mazzi; il conteggio compare nel widget.
+Dopo aver visto la risposta si valuta: **Niente**, **Difficile**, **Bene**, **Facile**. L'app calcola quando riproporre la carta (SM-2); sui bottoni c'è solo l'etichetta del grado. "Niente" ripropone la carta nella stessa sessione. Il **ripasso trasversale** raccoglie tutte le carte scadute di tutti i mazzi, dalle più scadute.
 
 ---
 
@@ -285,10 +293,11 @@ Dopo aver visto la risposta si valuta: **Niente**, **Difficile**, **Bene**, **Fa
 - **Chat globale**, senza contesto.
 - **Chat contestuale** su unità, modulo o corso (granularità a scelta), dalla sessione o dall'unità: risponde basandosi sul materiale, sui file di codice e sui materiali personali (note, link, PDF con testo).
 - Cita sempre le fonti (teoria, codice, nota, link, PDF) e dichiara quando integra con conoscenza esterna o quando il materiale non copre la domanda.
-- Risponde nella **lingua del messaggio** dell'utente (ripiego: lingua del materiale).
+- Risponde nella **lingua del messaggio** dell'utente (ripiego: lingua del materiale), oppure nella lingua fissata in Impostazioni → «Lingua delle risposte» (default Automatica).
 - Risposte in streaming, interrompibili. Cronologia conservata per contesto.
 - Le conversazioni restano in un elenco, raggruppate per età (oggi, ieri, questa settimana, prima) con ambito, numero di messaggi e data; una conversazione si riapre e continua con lo stesso ambito. L'elenco vuoto mostra lo stato vuoto.
-- Modello Gemini selezionabile nelle Impostazioni; errori spiegati in modo leggibile (chiave assente, quota, rete…).
+- **Offline** il messaggio scritto resta in attesa e parte da solo al ritorno della rete; finché è in attesa non se ne inviano altri. Quiz e flashcard già generati funzionano anche senza rete.
+- Modello Gemini selezionabile nelle Impostazioni; errori spiegati in modo leggibile (chiave assente, quota…).
 
 ---
 
@@ -297,28 +306,28 @@ Dopo aver visto la risposta si valuta: **Niente**, **Difficile**, **Bene**, **Fa
 Periodo selezionabile: 7 / 30 / 90 giorni / tutto.
 
 ### 17.1 Panoramica
-Streak; ore studiate; mappa di calore degli ultimi 84 giorni; tre indicatori (efficienza del focus, giorni attivi, puntualità d'avvio); disciplina per tipo (completate vs perse/saltate) e globale; avanzamento e ore per corso.
+**Focus** (ore di focus nel periodo, confronto col periodo precedente, andamento per settimana); **Costanza** (giorni di fila con studio = streak, e il record); **Sessioni** (numero e durata media); **Disciplina** (quota di attività completate sul totale delle programmate, globale e per tipo); **Giorni con attività** (sugli ultimi 84, con mappa di calore); **Per corso** (unità completate su totali e percentuale).
 
 ### 17.2 Comportamenti
 Fasce orarie di rendimento (mattina/pomeriggio/sera/notte); minuti per giorno della settimana; costanza settimanale; blocchi persi (tasso, andamento, giorno e tipo peggiori); risposta ai trigger di verifica (recuperi dopo l'avviso); routine senza durata; fasi (tasso per fase, le più saltate, andamento dei salti).
 
 ### 17.3 Studio
-Esiti (distribuzione); focus reale vs pianificato e pause; ritmo (pomodoro, segmenti, pause, interruzioni); minuti per unità; iperfocus (sessioni, minuti, uscite d'emergenza, abbandoni) con il tempo extra accumulato; puntualità (ritardo medio, % puntuali, ritardi maggiori, anticipi).
+Focus, iperfocus e puntualità in evidenza; esiti (distribuzione); focus reale vs pianificato (efficienza del focus) e pause; ritmo (pomodoro, segmenti, pause, interruzioni); minuti per unità; iperfocus (sessioni, minuti, uscite d'emergenza, abbandoni) con il tempo extra accumulato; puntualità (ritardo medio, % puntuali, ritardi maggiori, anticipi).
 
 ### 17.4 Pratica
-Quiz: media dei punteggi. DevSwipe e Bug Hunter: accuratezza. Audio Flash-Trivia: sessioni ascoltate. Flashcard: carte ripassate e carte scadute.
+Quiz: media dei punteggi. DevSwipe e Bug Hunter: accuratezza. Audio Flash-Trivia: playlist completate. Flashcard: carte ripassate e carte scadute.
 
 ---
 
 ## 18. Widget della schermata Home (Android)
 
-Un widget calendario: a sinistra il mese con weekend evidenziati, giorno corrente e un indicatore sui giorni con attività; a destra l'agenda di oggi con "+" per creare un'attività. Mostra inoltre la sessione in corso, il blocco "adesso/prossimo", i todo ad alta priorità senza orario di oggi e arretrati, il numero di carte da ripassare. Ogni voce apre direttamente la schermata giusta.
+Un widget calendario 4×2: a sinistra il mese con weekend attenuati, giorno corrente in bianco e un pallino nel colore del tipo di attività prevalente del giorno; a destra l'agenda di oggi, «Prossima: …» con il prossimo blocco e "+" che apre direttamente «+ Crea». Ogni voce apre direttamente la schermata giusta.
 
 ---
 
 ## 19. La schermata Notifiche
 
-Raccoglie in un unico posto le cose che aspettano l'utente: le sessioni di studio degli ultimi giorni ancora senza esito, con accesso diretto a "Registra esito". Un badge segnala quante sono.
+Raccoglie in un unico posto le cose che aspettano l'utente: le sessioni di studio degli ultimi giorni ancora senza esito, con accesso diretto a "Registra esito". Un badge segnala quante sono. Sotto, la sezione **Ieri · gestite** elenca le notifiche del giorno prima già consegnate o gestite; **Segna tutte lette** toglie il segno di novità dalle voci (gli esiti restano finché non si registrano).
 
 ---
 
@@ -332,25 +341,25 @@ Esportazione e importazione di un file con tutti i dati: corsi, attività, routi
 
 Con un **account** (email + codice di verifica), le **attività** (todo, eventi, routine, routine di studio, con stati, esiti, checklist, fasi) e le **impostazioni** sono condivise fra i dispositivi dell'utente. Serve internet: offline si continua a lavorare e le modifiche si allineano alla prima connessione. Corsi, materiali, file di codice, sessioni, pratiche e chat restano locali e si trasferiscono con il backup; una routine di studio compare su un altro dispositivo con la sua unità solo se lo stesso corso è stato importato anche lì.
 
-Nel Profilo: stato dell'account, ultima sincronizzazione, "Sincronizza ora", uscita dall'account, cancellazione dei dati remoti.
+In Account e sincronizzazione: nome facoltativo (usato nel saluto e nel menu) ed email, stato dell'account, ultima sincronizzazione, "Sincronizza ora", cosa viaggia e cosa resta sul dispositivo, **dispositivi** collegati con «Scollega» (revoca l'accesso di un altro dispositivo, che deve rientrare), uscita dall'account, cancellazione dei dati remoti.
 
 ---
 
 ## 22. Lingua
 
-Nessun selettore: l'interfaccia segue la lingua del dispositivo fra italiano, inglese, spagnolo, portoghese, francese, tedesco; altrimenti inglese. Contenuti AI e pratiche seguono invece la lingua del materiale o del messaggio.
+Nessun selettore: l'interfaccia segue la lingua del dispositivo fra italiano, inglese, spagnolo, portoghese, francese, tedesco; altrimenti inglese. Contenuti AI e pratiche seguono invece la lingua del materiale o del messaggio, salvo la «Lingua delle risposte» fissata nelle Impostazioni (§16).
 
 ---
 
 ## 23. Impostazioni
 
-Notifiche (§8.7); modello AI e chiave; backup; account e sincronizzazione; spazio occupato dai materiali; animazioni (auto/sempre/mai), celebrazioni scelte per nome (piena / sobria / off), feedback aptico; diagnostica; Informazioni (voce navigabile); eliminazione di tutti i dati. Il numero di versione dell'app non compare in nessuna schermata.
+Notifiche (§7.7); **inizio settimana** (lunedì o domenica: decide la settimana del calendario e la fine dell'orizzonte «settimana»); modello AI, chiave e **lingua delle risposte** (Automatica o una delle sei lingue); backup; account e sincronizzazione; spazio occupato dai materiali; animazioni (auto/sempre/mai), celebrazioni scelte per nome (piena / sobria / off), feedback aptico; in **Avanzate** la diagnostica e **Informazioni**, che mostra la versione dell'app; eliminazione di tutti i dati.
 
 ---
 
 ## 24. Diagnostica
 
-Rapporto copiabile sullo stato del dispositivo: margini dello schermo, scala del testo, riduzione animazioni, permessi (notifiche, allarmi precisi, Non Disturbare), coda delle notifiche programmate, ultimo errore e ultima sincronizzazione delle notifiche, stato dell'account.
+Rapporto copiabile sullo stato del dispositivo: margini dello schermo, scala del testo, riduzione animazioni, permessi (notifiche, allarmi precisi, Non Disturbare), coda delle notifiche programmate, ultimo errore e ultima sincronizzazione delle notifiche, stato dell'account; spazio locale con **Svuota cache** (elimina solo dati rigenerabili, come la cache dell'app web e le anteprime, mai dati dell'utente) e, sul web, **Reinstalla PWA** (aggiorna l'app installata e ricarica).
 
 ---
 
@@ -364,5 +373,5 @@ Rapporto copiabile sullo stato del dispositivo: margini dello schermo, scala del
 | Può diventare "perso" | sì ("non fatto", ma spuntabile) | no | sì | sì |
 | Completamento | spunta, sempre | "Completa evento" | Fatta/Saltata nel giorno previsto | esito a fine sessione |
 | Sotto-elementi | checklist | fasi | fasi | — |
-| Legato a un corso | opzionale | no | no | opzionale (consigliato) |
+| Legato a un corso | no | no | no | opzionale (consigliato) |
 | Promemoria | sì (digest se senza orario) | sì | sì | sì |

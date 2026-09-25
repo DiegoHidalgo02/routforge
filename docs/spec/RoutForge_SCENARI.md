@@ -19,7 +19,7 @@ Dato un todo con checklist di 3 voci. Spuntare le prime due non completa il todo
 Dati due todo senza orario per oggi e uno senza orario di ieri con orizzonte mese non fatto. Alle 08:00 arriva un solo digest: "3 da fare (1 arretrato)" con i tre titoli. Se non ci sono todo senza orario, nessun digest.
 
 **A5 — Priorità nella fascia senza orario**
-Tre todo senza orario oggi: bassa, alta, normale. Nella vista Giorno appaiono in cima nell'ordine alta, normale, bassa, prima di qualsiasi blocco con orario. Solo il todo alta compare nel widget.
+Tre todo senza orario oggi: bassa, alta, normale. Nella vista Giorno appaiono nell'ordine alta, normale, bassa: su mobile in cima, prima di qualsiasi blocco con orario; su desktop in coda, dopo i blocchi con orario.
 
 ## B. Routine
 
@@ -85,7 +85,7 @@ Sessione libera da 50'. Pausa di 10' → la sessione finisce quando il focus arr
 Sessione libera 90' pomodoro 25/5: segmenti 25/5/25/5/25/5 (tassellano esattamente i 90'; con 80' l'ultimo segmento sarebbe una pausa troncata a 0 e quindi omessa). Al terzo segmento di studio l'utente cambia unità: i minuti per unità nel riepilogo riflettono 50' sulla prima e 25' sulla seconda; l'esito resta sull'unità pianificata; l'altra riceve solo i minuti.
 
 **D4 — Persistenza**
-Sessione avviata, app chiusa, riaperta 12' dopo: il timer riprende con 12' in più di focus (non in pausa), il banner permette di rientrare, il widget mostra la sessione attiva.
+Sessione avviata, app chiusa, riaperta 12' dopo: il timer riprende con 12' in più di focus (non in pausa) e il banner permette di rientrare.
 
 **D5 — Iperfocus**
 Sessione iperfocus 50': schermo intero, tasto indietro inattivo fino alla fine, ora di sblocco visibile, Non Disturbare attivo se permesso. Un tentativo di uscita apre la conferma "Esci comunque / Resta"; "Esci comunque" → interruzione "iperfocus" registrata → conta come uscita d'emergenza in Statistiche. Superata la durata senza uscire, il timer segna "Tempo extra +04:12": nel riepilogo compare "54 min · tempo extra +4 min".
@@ -133,7 +133,7 @@ Routine A 09:00–10:00 e B 10:00–11:00. Alle 10:00 in punto "Adesso" è B (A 
 L'utente chiude il blocco Adesso su A. Quando B diventa in corso, il blocco riappare. Il giorno dopo riappare comunque.
 
 **G3 — Trascinamento**
-Nella vista Giorno il todo senza orario "Leggere 20 pagine" (durata 30') viene trascinato fra due blocchi 15:00–15:40 e 16:00–17:00: la riga di aggancio mostra "15:40 · 30 min", il todo atterra alle 15:40 (snap a 5') e diventa un todo con orario 15:40–16:10. Un todo senza orario perso trascinato a domani nella striscia settimanale torna programmato e riceve le notifiche di domani. "Annulla" entro 5 s ripristina giorno, orario e stato "perso". Un evento, una routine o un todo con orario non si trascinano, né su mobile né su desktop.
+Nella vista Giorno il todo senza orario "Leggere 20 pagine" (durata 30') viene trascinato fra due blocchi 15:00–15:40 e 16:00–17:00: la riga di aggancio mostra "15:40 · 30 min", il todo atterra alle 15:40 (snap a 5') e diventa un todo con orario 15:40–16:10. Un todo senza orario perso trascinato a domani nella striscia settimanale torna programmato e riceve le notifiche di domani; allo stesso modo la routine persa "Palestra" trascinata a domani 08:30 torna programmata con le notifiche ri-armate. "Annulla" entro 5 s ripristina giorno, orario e stato "perso". Un evento, una routine o un todo con orario non persi non si trascinano, né su mobile né su desktop.
 
 **G4 — Cambio giorno a app aperta**
 App aperta a mezzanotte: entro un minuto i todo rotolanti si spostano, i blocchi di ieri non gestiti diventano persi, il calendario si aggiorna senza riavvio.
@@ -147,7 +147,7 @@ Uno ZIP con `00_struttura.md`, `M1-…md`, `M3-…md` e un `note.txt`: il corso 
 Un PDF testuale da 3 MB aggiunto all'unità entra nel contesto dell'AI (la chat cita "PDF: titolo"). Un PDF scansionato resta apribile ma l'AI non lo cita. Un PDF da 25 MB viene rifiutato.
 
 **H3 — Eliminazione corso**
-Eliminando il corso: spariscono routine di studio e occorrenze (incluse quelle di oggi con notifiche armate), materiali e PDF, mazzi, quiz e pratiche, chat, log fasi; il conteggio "carte da ripassare" del widget cala di conseguenza.
+Eliminando il corso: spariscono routine di studio e occorrenze (incluse quelle di oggi con notifiche armate), materiali e PDF, mazzi, quiz e pratiche, chat, log fasi; le carte del corso escono dal ripasso trasversale.
 
 **H4 — Lingua dell'AI**
 Materiale in inglese, app in italiano: quiz, flashcard, DevSwipe, Bug Hunter e Trivia sono in inglese. In chat, un messaggio in italiano riceve risposta in italiano con fonti citate in inglese; "ok?" riceve risposta nella lingua del materiale.
@@ -167,7 +167,7 @@ Mazzo di 10 carte, 3 errori: dopo la decima le 3 sbagliate vengono riproposte un
 Esercizio con riga errata 4. Tocco su 4 al primo tentativo: 2 punti, codice corretto mostrato. Tocco su 2, poi su 4: 1 punto. Due errori: 0 punti e soluzione mostrata. Punteggio finale = punti / (2 × esercizi).
 
 **I4 — Audio Flash-Trivia**
-Playlist di 10: ogni elemento = domanda letta → 5 s → spiegazione letta → successivo, senza tocchi; continua a schermo spento; "salta" passa al successivo; alla fine la playlist risulta completata.
+Playlist di 10: ogni elemento = domanda letta → 5 s → spiegazione letta → successivo, senza tocchi; continua a schermo spento; "salta" passa al successivo e conta l'elemento come sbagliato. Con 2 elementi saltati, alla fine la playlist risulta completata e il riepilogo mostra "8 / 10 · 80 %", le 2 sbagliate e le azioni "Rifai la pratica" e "Torna all'unità"; le 2 sbagliate tornano una volta nella playlist successiva.
 
 ## J. Sincronizzazione
 

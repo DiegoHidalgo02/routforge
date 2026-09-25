@@ -12,13 +12,13 @@ iOS, web installabile. Un solo utente, dati sul dispositivo, tutto offline trann
 3. `docs/spec/RoutForge_MECCANISMI.md` — regole esatte: stati, soglie, algoritmi
 4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile
 5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (54 scenari): un task è finito solo se i suoi scenari passano
-6. `claude-design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1, `docs/decisioni/D-DESIGN-1.md`): la spec va allineata.
+6. `claude-design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1, `docs/decisioni/D-DESIGN-1.md`): si annota la divergenza e l'utente decide come allineare la spec.
 
 Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e regole in una pagina),
 `docs/01_DECISIONI.md` (registro; schede delle decisioni ad alto impatto in `docs/decisioni/`), `docs/02_ARCHITETTURA.md`,
 `docs/INVARIANTI.md` (proprietà da preservare e come sono verificate), `docs/TRACCIABILITA.md` (scenario → task → test),
 `docs/DIPENDENZE.md` (registro dei pacchetti), `docs/03_HANDOFF_DESIGN_CODE.md`, `docs/TASKS.md` (backlog ordinato),
-`docs/STATO.md` (dove siamo, problemi aperti). I file in `docs/spec/` **non si modificano mai**.
+`docs/STATO.md` (dove siamo, problemi aperti). I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5; ultima: D-DESIGN-1).
 
 ## 2. Principi di lavoro
 

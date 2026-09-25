@@ -26,7 +26,7 @@
 - Nessun task in corso.
 
 ## Problemi aperti
-- **Spec da allineare al design (D-DESIGN-1)**: i paragrafi elencati nella scheda (FUNZ, MECC, FORMATO, CONTESTO e gli scenari G3, I4, A5 e H3 per il widget) contraddicono ancora le regole nuove. L'agente non può scrivere in `docs/spec/` (INV-5, `deny` in `.claude/settings.json`, bloccato anche dal classificatore dei permessi): li modifica l'utente, oppure autorizza esplicitamente l'agente. Finché restano, vale la scheda.
+- **Spec allineata al design (D-DESIGN-1, 25/09)** con il permesso esplicito dell'utente: FUNZIONALITA, MECCANISMI, FORMATO_CORSO, CONTESTO e scenari A5, D4, G3, H3, I4. Il `deny` su `docs/spec/**` è di nuovo attivo. Le scelte fatte dove il design taceva (n. 5, 10, 13, 14 della scheda) vanno riviste se Claude Design le precisa.
 - Export di Claude Design versionato in `claude-design/`: `npm run design:check` = 46 presenti, 45 attesi, 0 mancanti (il file in più è il README del repository).
 - `eslint-plugin-jsx-a11y` 6.10.2 dichiara ESLint fino alla 9: `overrides` in `package.json` finché il plugin non dichiara la 10 (`docs/DIPENDENZE.md`).
 - Favicon e icone assenti (404 della favicon nella console del dev server): arrivano con nome e icona di CP6 (T-035).

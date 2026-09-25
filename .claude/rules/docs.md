@@ -7,7 +7,7 @@ paths:
 ---
 # Regole per la documentazione e la governance
 
-- `docs/spec/**` non si modifica mai (INV-5). Se una spec è ambigua o contraddittoria: decisione in
+- `docs/spec/**` non si modifica se non su richiesta esplicita dell'utente (INV-5; il `deny` resta attivo e lo toglie solo l'utente). Se una spec è ambigua o contraddittoria: decisione in
   `docs/01_DECISIONI.md`, contraddizione registrata in `docs/00_SINTESI.md` §6.
 - Una decisione nuova = una riga in `docs/01_DECISIONI.md` (`D-AREA-n`: decisione, motivo, alternative, stato). Se è ad
   alto impatto (confini, modello dei dati, tempo, persistenza, sicurezza, sync, stack) anche la scheda

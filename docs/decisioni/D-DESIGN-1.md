@@ -1,9 +1,8 @@
 # D-DESIGN-1 — Nelle divergenze fra design e spec vince il design
 
 **Stato**: decisa dall'utente il 25/09/2026 («scelta definitiva non la spec ma il design»). Applicata nel codice già
-scritto e nei documenti operativi; **testo di `docs/spec/` ancora da allineare** (vedi «Modifiche alla spec»): i
-permessi del progetto vietano all'agente di scrivere in `docs/spec/` (INV-5). Riga nel registro:
-`docs/01_DECISIONI.md`.
+scritto, nei documenti operativi e in `docs/spec/`, allineata al design lo stesso giorno con il permesso esplicito
+dell'utente (INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 
@@ -22,7 +21,7 @@ spec. L'utente ha scelto il contrario: il design è la fonte definitiva e le spe
 
 ## Esito per divergenza (numeri di `docs/03_HANDOFF_DESIGN_CODE.md` §10)
 
-| n. | Regola da oggi | Paragrafi di spec da allineare | Codice |
+| n. | Regola da oggi | Paragrafi di spec allineati | Codice |
 |---|---|---|---|
 | 1 | Il corso di esempio mostra **5 moduli**: M0 e M1 importati più M2–M4 come segnaposto bloccati (solo numero e titolo, da `course-data.js` `locked`), come in S10/S11 e HANDOFF «Dati del corso». Titolo «Syllabus Software Engineer 2026» (fixture e HANDOFF; il titolo della card S10 è dato d'esempio). Card: «5 moduli · 13 unità». | FORMATO §5; CONTESTO §5 | T-041 |
 | 2 | Si trascinano i todo senza orario **e i blocchi persi di qualsiasi tipo**: un blocco perso trascinato su un altro giorno o orario torna programmato, con le notifiche ri-armate e «Annulla» (S1 `drag=perso`). | FUNZ §2; MECC §15; SCENARI G3 (ultima frase) | T-015 |
@@ -50,19 +49,19 @@ spec. L'utente ha scelto il contrario: il design è la fonte definitiva e le spe
 **Fixture `course-data.js`** (FORMATO §0 lo dichiara «risultato atteso»; sostituisce D-PARSE-2): intestazione di
 sezione verbatim («Teoria (Fondamenta)»); finestra indicativa con la nota fra parentesi dopo « · » senza i rimandi
 «v. …» («settimane 8–11 · mini-modulo»); intro = primo paragrafo senza grassetto più la riga che introduce gli
-obiettivi; testo del test di fit con i link ridotti al titolo (gli indirizzi restano nelle risorse). Spec da allineare:
-FORMATO §2–§3. Codice: fatto (`parser.ts`; `scripts/corso-esempio.test.mjs` confronta senza differenze annotate).
+obiettivi; testo del test di fit con i link ridotti al titolo (gli indirizzi restano nelle risorse). Spec allineata:
+FORMATO §2–§3 e §5. Codice: fatto (`parser.ts`; `scripts/corso-esempio.test.mjs` confronta senza differenze annotate).
 
 **Note interne al design** (colore dello studio blu/viola, valori fuori dai token, dati d'esempio inventati, «Quando
 capita» in DESIGN.md ma non in S4, prefisso del mini progetto in S15): non contraddicono la spec; restano da segnalare a
 Claude Design. Per il prefisso vale S11 Modulo con i dati del fixture (prefisso conservato).
 
-## Modifiche alla spec (da fare)
+## Modifiche alla spec (fatte il 25/09/2026)
 
-Paragrafi elencati nella colonna «Paragrafi di spec da allineare», più CLAUDE.md §1 già aggiornato. Scenari toccati:
-**G3** (i blocchi persi si trascinano), **I4** (la Trivia ha punteggio e sbagliate), **A5** e **H3** nella parte sul widget (niente todo ad alta priorità né conteggio delle carte). Finché la spec non è allineata il
-gate resta verde perché nessun test cita i paragrafi cambiati come vincoli contrari; i task elencati applicano le regole
-di questa scheda.
+Paragrafi elencati nella colonna «Paragrafi di spec allineati», più CONTESTO §2 (se il design diverge, vince il design)
+e §3 (chat offline), e lo scenario D4 (il widget non mostra più la sessione). Scenari toccati:
+**G3** (i blocchi persi si trascinano), **I4** (la Trivia ha punteggio e sbagliate), **A5** e **H3** nella parte sul widget (niente todo ad alta priorità né conteggio delle carte). I task elencati applicano le
+regole nuove; nessun test esistente cita un paragrafo cambiato come vincolo contrario.
 
 ## Alternative scartate
 

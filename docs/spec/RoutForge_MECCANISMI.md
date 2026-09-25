@@ -21,7 +21,7 @@
 | Materiale (+ binario) | Link / nota / PDF dell'utente su un'unità | Il PDF binario sta separato dai metadati |
 | File di codice | Sorgenti caricati per un'unità o una sessione libera | Solo contesto AI |
 | Registro notifiche | Chiave logica → id nativo delle notifiche armate | Derivato: ricostruito a ogni riconciliazione; mai nel backup né nella sincronizzazione |
-| Preferenze e stato | Impostazioni, streak, sessione attiva, ultima apertura, modello AI, account | |
+| Preferenze e stato | Impostazioni (con inizio settimana e lingua delle risposte), streak, sessione attiva, ultima apertura, modello AI, account (email, nome facoltativo) | |
 
 **Stati di un blocco**: `programmato` · `in corso` · `completato` · `parziale` · `indietro` · `saltato` · `perso`. I primi due sono aperti; gli altri terminali. Un `perso` di routine/studio resta recuperabile (§8); un `perso` todo resta spuntabile (§3).
 
@@ -37,7 +37,8 @@
 |---|---|---|---|---|
 | Obbligatorio | titolo | titolo | titolo + ≥1 giorno | ≥1 giorno (titolo default "Studio") |
 | Orario | opzionale (default: senza orario) | opzionale (tutto il giorno) | inizio + fine, o senza durata | inizio + fine |
-| Durata | gradini 5,10,15,20,25,30,40,45,50,60,75,90,105,120,150,180,210,240 min | fine ≤ inizio ⇒ fine il giorno dopo | fine ≤ inizio ⇒ giorno dopo | idem |
+| Durata | gradini 5,10,15,20,25,30,40,45,50,60,75,90,105,120,150,180,210,240 min | fine ≤ inizio ⇒ errore «La fine deve venire dopo l'inizio», l'evento non si crea | fine ≤ inizio ⇒ giorno dopo | idem |
+| Data | nessuna: il todo parte da oggi | sì | — | — |
 | Orizzonte | giorno / settimana / mese (default giorno) | — | — | — |
 | Priorità | solo senza orario: alta / normale (default) / bassa | — | — | — |
 | Fasi | — | sì | sì | no |
@@ -45,7 +46,7 @@
 | Date ricorrenza | — | — | inizio (default oggi); fine: mai, o dopo N giorni/settimane/mesi | idem |
 | Promemoria | override per istanza; **senza orario: nessun override** (solo digest) | override | override sulla definizione, ereditato dalle istanze | idem |
 | Luogo | — | sì | — | — |
-| Corso | opzionale | — | — | opzionale (consigliato) |
+| Corso | — | — | — | opzionale (consigliato) |
 
 ---
 
@@ -90,7 +91,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 
 ## 6. Todo: orizzonte, spostamento automatico, ritardo
 
-**Orizzonte** (ultimo giorno incluso): giorno → data scelta; settimana → domenica della settimana della data; mese → ultimo giorno del mese.
+**Orizzonte** (ultimo giorno incluso), a partire dal giorno di creazione: giorno → quel giorno; settimana → ultimo giorno della settimana (la domenica, o il sabato se in Impostazioni la settimana inizia di domenica); mese → ultimo giorno del mese.
 
 **Spostamento a oggi** (a ogni ciclo, §9): todo `programmato`, orizzonte ≠ giorno, giorno passato, ancora entro l'orizzonte:
 - senza orario → ancora 12:00 di oggi;
@@ -109,7 +110,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 - **Orizzonte 28 giorni**: alla creazione e a ogni ciclo, per ogni ricorrenza attiva (fine assente o ≥ oggi), si creano le occorrenze mancanti da oggi a oggi+28 nei giorni selezionati.
 - **Idempotenza**: nessuna occorrenza duplicata per la stessa ricorrenza e lo stesso istante d'inizio; generazioni concorrenti serializzate.
 - **Filtri**: data inizio, data fine, date saltate (confronto per giorno locale).
-- Fine ≤ inizio → fine il giorno dopo. Senza durata (solo routine) → occorrenza senza fine, scade alle 23:59.
+- Fine ≤ inizio → fine il giorno dopo (solo routine e routine di studio; l'evento lo rifiuta, §2). Senza durata (solo routine) → occorrenza senza fine, scade alle 23:59.
 - **Ereditati**: titolo (default "Studio"), note, override promemoria. Le fasi restano sulla definizione.
 - **Routine di studio senza corso**: le occorrenze sono blocchi di studio senza unità (nessun puntatore); l'unità si sceglie nel setup della sessione, fra quelle di qualsiasi corso o nessuna.
 - **Modifica**: elimina solo le occorrenze future `programmate` (inizio > adesso), aggiorna la definizione, rigenera, ricalcola il puntatore se c'è un corso, riconcilia le notifiche. Passato e completato restano.
@@ -125,7 +126,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 
 **Scadenza di recupero** = fine − 50% della durata (senza durata: inizio + 30'). A quell'istante scatta la notifica di **verifica** se il blocco non è stato avviato né chiuso. Il blocco resta avviabile in **recupero** finché non è `perso`, e anche dopo: un esito registrato lo riabilita e azzera la marcatura.
 
-**Esiti pendenti** (schermata Notifiche + badge): blocchi di studio `persi` negli ultimi **3 giorni** o `programmati` con fine reale passata; dal più recente; massimo 5.
+**Esiti pendenti** (schermata Notifiche + badge): blocchi di studio `persi` negli ultimi **3 giorni** o `programmati` con fine reale passata; dal più recente; massimo 5. Sotto, **Ieri · gestite**: le notifiche consegnate o gestite il giorno prima (dal registro). **Segna tutte lette** toglie il segno di novità dalle voci; gli esiti pendenti restano finché non si registrano.
 
 **Orfani `in corso`**: un blocco resta `in corso` solo mentre la sessione attiva lo punta. A ogni ciclo, prima di marcare i persi, ogni `in corso` non collegato alla sessione attiva con fine passata da > 30' torna `programmato`. Un abbandono di sessione riporta subito il blocco a `programmato`.
 
@@ -246,11 +247,11 @@ Alla prossima occorrenza dell'orario (default 08:00): todo senza orario di quel 
 
 ## 15. Riprogrammazione per trascinamento (vista Giorno)
 
-- Si trascinano **solo i todo senza orario**, su mobile e su desktop (maniglia a sei punti; su desktop il cursore di presa compare solo su quelle card). Le altre attività non si trascinano.
+- Si trascinano **i todo senza orario e i blocchi `persi` di qualsiasi tipo**, su mobile e su desktop (maniglia a sei punti; su desktop il cursore di presa compare solo su quelle card). Le altre attività non si trascinano.
 - I todo senza orario possono essere riordinati nell'elenco attività con drag and drop.
 - Rilascio su un orario: il todo diventa `con orario`, inizio agganciato agli spazi liberi fra gli altri blocchi a passi di 5', durata = quella dichiarata o 30' (default del form Crea); durante il trascinamento si mostra la riga di aggancio con orario e durata.
 - Rilascio su un altro giorno della striscia settimanale: cambia il giorno, resta senza orario.
-- Un todo `perso` rilasciato su un giorno o un orario futuro torna `programmato`; le notifiche vengono riconciliate sul nuovo giorno/orario.
+- Un blocco `perso` rilasciato su un giorno o un orario futuro torna `programmato` (un blocco con orario lo mantiene se rilasciato su un giorno, lo cambia se rilasciato su un orario); le notifiche dell'istanza vengono ri-armate sul nuovo giorno/orario.
 - Annullamento entro 5 s dal toast: ripristina giorno, orario e stato precedenti.
 
 ---
@@ -263,7 +264,7 @@ Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 - Modulo senza intestazione valida → saltato con avviso. Unità con intestazione non leggibile → saltata con avviso.
 - Ore stimate: euristica `~N h/ore` o intervallo `N–M ore` (media). Difficoltà: alta/media/bassa se dichiarata.
 - Sezioni per emoji (📖 teoria · 📺 studio · 🛠 pratica · 🏗 mini progetto) o per bullet in grassetto; "Corso online che sostituisce il modulo" = studio. Risorse = link markdown con descrizione (riga "Descrizione:" o primo paragrafo) e meta (segmento fra "·"). Video YouTube incorporati.
-- **Ogni import crea un corso nuovo.** Avvisi mostrati (max 5).
+- **Ogni import crea un corso nuovo.** Avvisi mostrati (max 5). Se esiste già un corso con lo stesso titolo, i materiali e i file di codice dell'utente passano al corso nuovo: sulle unità con lo stesso numero, altrimenti a livello di corso.
 - **Eliminazione**: cascata completa (moduli, unità, sezioni, risorse, blocchi e ricorrenze del corso, mazzi e carte, quiz e pratiche, conversazioni, materiali e PDF, log fasi, notifiche); se era il corso corrente passa al successivo.
 
 ---
@@ -280,9 +281,11 @@ Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 
 **Contesto per granularità**: unità → intestazione + markdown integrale + indice risorse + codice + materiali groundabili; modulo → tutte le unità + materiali; corso → panoramica (moduli, unità, concetti core) + materiali del corso.
 
-**Regole al modello**: materiale = fonte principale; integrazione esterna dichiarata; copertura mancante dichiarata; citazioni TEORIA / CODICE / NOTA / LINK / PDF; risposta nella lingua dell'ultimo messaggio (ripiego: lingua del materiale), fonti citate nella loro lingua; markdown conciso. Streaming interrompibile; cronologia come turni. **Elenco delle conversazioni**: ordinato per ultimo messaggio, raggruppato per età (oggi, ieri, questa settimana, prima), con ambito (unità / modulo / corso / globale), numero di messaggi e data; riaprire una conversazione ne mantiene l'ambito.
+**Regole al modello**: materiale = fonte principale; integrazione esterna dichiarata; copertura mancante dichiarata; citazioni TEORIA / CODICE / NOTA / LINK / PDF; risposta nella lingua dell'ultimo messaggio (ripiego: lingua del materiale), oppure nella «Lingua delle risposte» fissata in Impostazioni (default Automatica = la regola precedente); fonti citate nella loro lingua; markdown conciso. Streaming interrompibile; cronologia come turni. **Elenco delle conversazioni**: ordinato per ultimo messaggio, raggruppato per età (oggi, ieri, questa settimana, prima), con ambito (unità / modulo / corso / globale), numero di messaggi e data; riaprire una conversazione ne mantiene l'ambito.
 
-**Errori** mappati: chiave assente/non valida; modello fuori piano; limite richieste; blocco di sicurezza; rete.
+**Errori** mappati: chiave assente/non valida; modello fuori piano; limite richieste; blocco di sicurezza.
+
+**Offline**: un messaggio di chat inviato senza rete resta **in attesa** sul dispositivo e parte da solo al ritorno della connessione; finché è in attesa l'invio è spento e l'indicatore di scrittura non compare. Un solo messaggio in attesa per conversazione. Quiz, flashcard e pratiche già generati funzionano offline.
 
 **Generazione**: quantità 5–25 (passo 5); difficoltà facile/media/difficile dove prevista; lingua del materiale; codice fonte primaria se presente. Ciò che non supera la validazione non viene salvato; nessun elemento valido → errore.
 
@@ -292,15 +295,15 @@ Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 | **Flashcard** | fronte, retro, citazione | fronte e retro presenti | stato SM-2 per carta (§19) |
 | **DevSwipe** | contenuto (codice / architettura / affermazione, ≤ 12 righe), verdetto `corretto`/`errato`, spiegazione ≤ 2 righe, citazione | verdetto fra i due valori; contenuto e spiegazione presenti | risposte giuste/totali, istante |
 | **Bug Hunter** | codice 5–10 righe con linguaggio, numero della riga errata, categoria del bug, codice corretto, spiegazione | riga nell'intervallo; codice corretto diverso dall'originale | punti/totali, istante |
-| **Audio Flash-Trivia** | domanda breve, spiegazione ~40–60 parole | entrambe presenti | ascoltate/totali, istante |
+| **Audio Flash-Trivia** | domanda breve, spiegazione ~40–60 parole | entrambe presenti | giuste/totali (saltate = sbagliate), istante |
 
 **DevSwipe**: destra = corretto, sinistra = errato. Risposta sbagliata → vibrazione breve + spiegazione. A fine mazzo gli errori vengono riproposti una volta; punteggio = giuste al primo passaggio / totali.
 
 **Bug Hunter**: tocco sulla riga. Primo tentativo giusto = 2 punti; secondo = 1; altrimenti 0 e soluzione mostrata. Dopo la risposta: codice corretto + spiegazione. Punteggio = punti / (2 × esercizi).
 
-**Fine della pratica** (DevSwipe, Bug Hunter, Trivia): riepilogo con punteggio salvato, elenco delle sbagliate (DevSwipe: dopo la riproposizione) e azioni "Rifai la pratica" (nuova pratica con gli stessi parametri) e "Torna all'unità".
+**Fine della pratica** (DevSwipe, Bug Hunter, Trivia): riepilogo con punteggio salvato, elenco delle sbagliate (DevSwipe: dopo la riproposizione; Trivia: gli elementi saltati) e azioni "Rifai la pratica" (nuova pratica con gli stessi parametri) e "Torna all'unità".
 
-**Audio Flash-Trivia**: per ogni elemento: lettura vocale della domanda → 5 s di silenzio → lettura della spiegazione → elemento successivo, senza tocchi. Voce di sistema nella lingua del materiale. Continua con schermo spento; comandi play/pausa/salta/stop; termina a fine playlist. Nessun punteggio.
+**Audio Flash-Trivia**: per ogni elemento: lettura vocale della domanda → 5 s di silenzio → lettura della spiegazione → elemento successivo, senza tocchi. Voce di sistema nella lingua del materiale. Continua con schermo spento; comandi play/pausa/salta/stop; termina a fine playlist. **Punteggio**: un elemento saltato con «salta» conta come sbagliato, gli altri come giusti; punteggio = giuste / totali con la percentuale. Le sbagliate tornano una volta nella playlist successiva della stessa unità.
 
 ---
 
@@ -313,7 +316,7 @@ Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 | Bene | 0 | max(1 g, intervallo × facilità) |
 | Facile | +0,15 | max(1 g, intervallo × facilità × 1,3) |
 
-Facilità iniziale 2,5, mai sotto 1,3; intervallo iniziale 0 (carta dovuta subito); prima valutazione parte da 1 g. Scadenza = adesso + intervallo. Ripasso trasversale = tutte le carte con scadenza ≤ adesso, dalle più scadute.
+Facilità iniziale 2,5, mai sotto 1,3; intervallo iniziale 0 (carta dovuta subito); prima valutazione parte da 1 g. Scadenza = adesso + intervallo. Ripasso trasversale = tutte le carte con scadenza ≤ adesso, dalle più scadute. I quattro bottoni mostrano solo l'etichetta del grado, non l'intervallo calcolato.
 
 ---
 
@@ -321,11 +324,11 @@ Facilità iniziale 2,5, mai sotto 1,3; intervallo iniziale 0 (carta dovuta subit
 
 Periodi 7/30/90/tutto. Blocchi del periodo = inizio nel periodo; sessioni del periodo = avvio nel periodo; concluse = con fine.
 
-**Panoramica**: ore = somma del focus delle sessioni concluse (ripiego: minuti accreditati alle unità se non esiste alcuna sessione); efficienza focus = focus / durata pianificata sulle sessioni con piano; giorni attivi = giorni distinti con blocchi completati/parziali; puntualità = % blocchi di studio avviati con ritardo ≤ 5'; anticipi = conteggio; disciplina per tipo = completati / (completati + persi + saltati) e globale; mappa di calore = fino a 84 giorni, minuti dei blocchi completati/parziali (senza orario e senza durata = 0), scala relativa al massimo con minimo 60'.
+**Panoramica**: **focus** = somma del focus delle sessioni concluse (ripiego: minuti accreditati alle unità se non esiste alcuna sessione), con il delta sul periodo precedente di pari durata e le barre per settimana; **costanza** = streak attuale (§12) in giorni, con il record; **sessioni** = numero di sessioni concluse e durata media; **disciplina** = completati / (completati + persi + saltati), globale con il delta sul periodo precedente e per tipo; **giorni con attività** = giorni distinti con blocchi completati/parziali sugli ultimi 84, con la mappa di calore (minuti dei blocchi completati/parziali, senza orario e senza durata = 0, scala relativa al massimo con minimo 60'); **per corso** = unità completate / totali e percentuale.
 
 **Comportamenti**: fasce 06–12 / 12–18 / 18–24 / 00–06 dal focus delle sessioni, altrimenti dalla durata dei blocchi completati/parziali (mai entrambe); minuti per giorno della settimana; costanza = giorni attivi per settimana su 4–12 settimane, media senza la settimana corrente; persi: tasso = persi / (completati + persi), andamento settimanale sul giorno previsto, giorno e tipo peggiori; trigger: blocchi con scadenza di recupero passata senza avvio/chiusura prima; "risposto" = tocco registrato, o avvio/chiusura dopo, o esito Completata/Continua; tasso di recupero; persi dopo l'avviso; routine senza durata: tasso di completamento; fasi: tasso per fase, più saltate, salti per settimana.
 
-**Studio**: esiti (Completata / Continua / Indietro / Salta+persa); focus reale vs pianificato, pause; ritmo (sessioni pomodoro, segmenti, pause, interruzioni); minuti per unità; tempo extra = minuti oltre la durata pianificata, sommati sul periodo; iperfocus (sessioni, minuti, uscite d'emergenza = interruzioni "iperfocus", abbandoni), con il tempo extra delle sessioni in iperfocus come meta; puntualità (ritardo medio, % ≤ 5', ritardi > 5', anticipo medio).
+**Studio**: focus, iperfocus (sessioni su totali, tempo extra) e puntualità in testa; esiti (Completata / Continua / Indietro / Salta+persa); focus reale vs pianificato (efficienza = focus / durata pianificata sulle sessioni con piano), pause; ritmo (sessioni pomodoro, segmenti, pause, interruzioni); minuti per unità; tempo extra = minuti oltre la durata pianificata, sommati sul periodo; iperfocus (sessioni, minuti, uscite d'emergenza = interruzioni "iperfocus", abbandoni), con il tempo extra delle sessioni in iperfocus come meta; puntualità (ritardo medio, % blocchi di studio avviati con ritardo ≤ 5', ritardi > 5', anticipo medio e conteggio degli anticipi).
 
 **Pratica**: quiz = media delle percentuali; DevSwipe e Bug Hunter = media dei punteggi; Trivia = playlist completate; flashcard = valutazioni date e carte scadute oggi.
 
@@ -333,13 +336,11 @@ Periodi 7/30/90/tutto. Blocchi del periodo = inizio nel periodo; sessioni del pe
 
 ## 21. Widget e collegamenti diretti
 
-Contenuto ricalcolato a ogni cambiamento di blocchi, corsi, sessione, carte valutate, e al ritorno in primo piano; aggiornato solo se il contenuto cambia:
-- sessione attiva (pausa, tempo trascorso, corso, unità);
-- blocco adesso/prossimo con la regola di §14, altrimenti il primo futuro con orario;
-- agenda di oggi: massimo 6 + "+N";
-- fino a 3 todo alta priorità senza orario, di oggi o arretrati;
-- giorni del mese con almeno un blocco;
-- carte da ripassare.
+Contenuto ricalcolato a ogni cambiamento di blocchi e al ritorno in primo piano; aggiornato solo se il contenuto cambia:
+- mini mese: weekend attenuati, oggi in bianco, un pallino sui giorni con almeno un blocco nel colore del tipo prevalente (a parità: studio, routine, todo, evento);
+- agenda di oggi (le prime righe che entrano nel 4×2, completati barrati);
+- «Prossima: …»: il prossimo blocco con la regola di §14, altrimenti il primo futuro con orario;
+- «+» che apre la creazione.
 
 Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creazione; blocco (studio → unità, altro → dettaglio); todo. Aperture duplicate entro 1,5 s ignorate.
 
@@ -358,13 +359,15 @@ Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creaz
 ## 23. Lingua e diagnostica
 
 - **Lingua**: prima lingua del dispositivo, in ordine di preferenza, fra it/en/es/pt/fr/de; altrimenti en. Immutabile per la vita del processo.
-- **Diagnostica**: permessi, stato notifiche (permesso, allarmi precisi, pendenti, voci nel registro, prossima, ultimo errore, ultima riconciliazione), scala testo, riduzione animazioni, margini schermo, stato account e ultima sincronizzazione; copiabile.
+- **Diagnostica**: permessi, stato notifiche (permesso, allarmi precisi, pendenti, voci nel registro, prossima, ultimo errore, ultima riconciliazione), scala testo, riduzione animazioni, margini schermo, stato account e ultima sincronizzazione; spazio locale per categoria con **Svuota cache** (solo dati rigenerabili: cache dell'app web e anteprime; mai dati dell'utente); sul web **Reinstalla PWA** (deregistra il service worker e ricarica); copiabile. Si apre da Impostazioni → Avanzate.
+- **Informazioni**: versione dell'app (dalla build), in Impostazioni → Avanzate.
 
 ---
 
 ## 24. Ordinamento e visibilità nel calendario
 
-- Giorno: fascia senza orario (per priorità) → blocchi con orario (cronologici).
+- Giorno: su mobile fascia senza orario (per priorità) → blocchi con orario (cronologici); su desktop blocchi con orario → fascia senza orario in coda. Su mobile i completati si impilano in testa al giorno (archivio compatto apribile).
+- Settimana: inizia dal giorno scelto in Impostazioni (lunedì default, o domenica).
 - Blocchi terminali (completato, saltato, perso) restano nel giorno, in secondo piano; i persi/saltati non sono spuntabili salvo i todo.
 - Settimana/Mese: per ogni giorno, conteggio e tipo dei blocchi; il mese mostra i giorni con carico.
 - I blocchi senza orario non occupano "Adesso" e non contano nei totalizzatori di minuti.
@@ -388,6 +391,8 @@ Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creaz
 **Dopo ogni ricezione**: si eseguono i cicli dello scheduler (§9) — le occorrenze ricevute vengono giudicate, le notifiche riconciliate, il widget aggiornato.
 
 **Primo accesso su un dispositivo con dati locali**: i dati locali vengono caricati sull'account e fusi con quelli remoti (stesse regole di conflitto); nulla viene perso.
+
+**Dispositivi**: l'account elenca i dispositivi collegati (nome, piattaforma, ultima attività); «Scollega» revoca l'accesso di un altro dispositivo, che smette di sincronizzarsi finché non rientra con un nuovo codice. Il dispositivo in uso non si scollega da qui (si usa l'uscita).
 
 **Uscita dall'account**: i dati restano sul dispositivo e smettono di sincronizzarsi. **Cancellazione dei dati remoti**: rimuove tutto dall'account, non dal dispositivo.
 

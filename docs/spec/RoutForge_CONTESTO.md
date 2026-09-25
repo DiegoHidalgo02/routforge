@@ -44,14 +44,14 @@ Le regole operative dello Studio, compresi stati, transizioni, progresso, puntat
 | 4 | `RoutForge_FORMATO_CORSO.md` | Formato del corso importabile e corso di esempio |
 | 5 | `RoutForge_SCENARI.md` | Criteri di accettazione end-to-end |
 
-In caso di contraddizione prevale il file più in basso nella tabella (uno scenario vince su un meccanismo, un meccanismo su una funzionalità).
+In caso di contraddizione prevale il file più in basso nella tabella (uno scenario vince su un meccanismo, un meccanismo su una funzionalità). Se l'export di Claude Design (schermate, `course-data.js`) diverge da questi file vince il design, e questi file vanno allineati.
 
 ---
 
 ## 3. Piattaforme e requisiti non funzionali
 
 - **Piattaforme**: Android, iOS, web installabile. Stesse funzioni ovunque, con queste eccezioni: widget della schermata Home (Android; iOS se disponibile), sveglie a schermo intero e Non Disturbare (mobile), notifiche in background (mobile; sul web solo con la scheda aperta), salvataggio backup nella cartella documenti (mobile).
-- **Dati sul dispositivo**: tutto funziona offline salvo AI e sincronizzazione. Nessun dato lascia il dispositivo se non verso il servizio di sincronizzazione (scelto dall'utente con l'account) e il fornitore del modello AI (solo il contenuto del contesto della richiesta).
+- **Dati sul dispositivo**: tutto funziona offline salvo AI e sincronizzazione (un messaggio di chat scritto offline resta in attesa e parte al ritorno della rete; quiz e flashcard già generati funzionano offline). Nessun dato lascia il dispositivo se non verso il servizio di sincronizzazione (scelto dall'utente con l'account) e il fornitore del modello AI (solo il contenuto del contesto della richiesta).
 - **Tempo**: tutte le regole usano il giorno e l'ora **locali** del dispositivo; fuso orario e ora legale non devono spostare i blocchi di giorno.
 - **Reattività**: apertura sulla schermata Oggi con il blocco "Adesso" pronto entro mezzo secondo su dati esistenti; scheduler e notifiche in background senza bloccare l'uso.
 - **Robustezza**: nessuna operazione di notifica, widget o sincronizzazione può bloccare o far fallire l'app; ogni ciclo dello scheduler è idempotente (rieseguirlo non cambia il risultato).
@@ -99,7 +99,7 @@ In caso di contraddizione prevale il file più in basso nella tabella (uno scena
 
 **Pratiche nuove** (DevSwipe, Bug Hunter, Audio Flash-Trivia): si generano da un'unità come quiz e flashcard, nella lingua del materiale, con validazione prima del salvataggio; punteggi e regole in `RoutForge_MECCANISMI.md` §18; risultati nelle Statistiche → Pratica.
 
-**Corso di esempio**: incluso nell'app, conforme a `RoutForge_FORMATO_CORSO.md`, importabile senza avvisi.
+**Corso di esempio**: incluso nell'app, conforme a `RoutForge_FORMATO_CORSO.md`, importabile senza avvisi; mostra anche i moduli successivi come segnaposto bloccati (`RoutForge_FORMATO_CORSO.md` §5).
 
 **Backup**: file unico con tutti i dati locali, PDF inclusi; l'import sostituisce i dati locali dopo conferma.
 

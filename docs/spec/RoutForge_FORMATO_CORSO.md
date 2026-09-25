@@ -22,9 +22,10 @@
 **Finestra indicativa:** settimane 1–8
 **Trasversali attivi in questo modulo:** testo libero (opzionale)
 
-Paragrafi introduttivi (opzionali, conservati come `intro`).
+Paragrafi introduttivi (opzionali; `intro` = il primo paragrafo senza grassetto, più la riga che introduce gli obiettivi se c'è).
 
 ### Obiettivi di Apprendimento
+Al termine sarai in grado di:          (riga guida opzionale, finisce in `intro`)
 - **Verbo** resto dell'obiettivo
 - …
 
@@ -63,11 +64,12 @@ Testo libero.
 
 Regole:
 - L'intestazione `# MODULO M0 — Titolo` è **obbligatoria** (`#` o `##`, `M` opzionale davanti al numero, trattino lungo o breve). Senza: il file è saltato con un avviso.
-- I campi in grassetto a livello modulo devono iniziare la riga. Solo `Tipo` e `Prerequisiti` sono obbligatori; `Finestra indicativa` compare in interfaccia (testa del modulo e sub della riga modulo nel corso); `Trasversali attivi` compare accanto al tipo. Il testo tra parentesi nella finestra (rimandi alla mappa) viene rimosso.
+- I campi in grassetto a livello modulo devono iniziare la riga. Solo `Tipo` e `Prerequisiti` sono obbligatori; `Finestra indicativa` compare in interfaccia (testa del modulo e sub della riga modulo nel corso); `Trasversali attivi` compare accanto al tipo. Il testo tra parentesi nella finestra resta come nota dopo « · », tolti i rimandi che iniziano con «v.» o «vedi» (es. `settimane 8–11 (mini-modulo, v. mappa §4)` → «settimane 8–11 · mini-modulo»; `settimane 1–8 (v. mappa §4)` → «settimane 1–8»).
 - Le unità iniziano con `#### Unità N.M — Titolo`. Un'unità con intestazione non leggibile è saltata con avviso.
 - Tutto ciò che segue l'ultima unità e inizia con `###` è contenuto di modulo, non dell'unità.
 - **Domande** ed **esercizi**: liste numerate sotto il rispettivo grassetto, fino al prossimo grassetto o intestazione. **Criteri Go/No-Go**: righe `- [ ] …`; il suffisso `→ sì/no` viene rimosso. Un criterio che contiene "Domande socratiche" è **auto**: lo spunta l'app quando il quiz del modulo raggiunge la soglia scritta nel testo (es. `≥8/10`). Tutti gli altri sono manuali.
 - **Progetto del Modulo**: i tre campi sono bullet in grassetto; la risorsa è il primo link del campo.
+- **Test di fit**: testo senza grassetto, con i link ridotti al loro titolo; gli indirizzi sono nelle risorse del test.
 - `Self-Critique del Comitato` e `Riassunto del modulo` in coda sono conservati nel markdown del modulo ma non compaiono in interfaccia.
 
 ---
@@ -98,7 +100,7 @@ Testo del concetto (uno o più paragrafi, fino al prossimo grassetto).
 ```
 
 Regole:
-- Ogni unità ha **esattamente quattro sezioni**, riconosciute dall'emoji all'inizio del grassetto: 📖 `teoria` · 📺 `studio` · 🛠️ `pratica` · 🏗️ `progetto`. Il numero (`1.`…`4.`) è opzionale. Etichette in interfaccia: Teoria · Studio · Pratica · Mini progetto. Il testo dopo emoji e numero è l'**intestazione** della sezione (es. "Fondamenta", "Mini Progetto Finale: \"Batteria di previsioni\"").
+- Ogni unità ha **esattamente quattro sezioni**, riconosciute dall'emoji all'inizio del grassetto: 📖 `teoria` · 📺 `studio` · 🛠️ `pratica` · 🏗️ `progetto`. Il numero (`1.`…`4.`) è opzionale. Etichette in interfaccia: Teoria · Studio · Pratica · Mini progetto. Il testo dopo emoji e numero è l'**intestazione** della sezione, verbatim (es. "Teoria (Fondamenta)", "Mini Progetto Finale: \"Batteria di previsioni\"").
 - Un'unità con meno di quattro sezioni si importa con avviso ("importata con N sezioni"); una sezione ripetuta prende la prima occorrenza.
 - Una sezione dura fino al prossimo grassetto a inizio riga, alla prossima intestazione o a `---`.
 - **Risorse** = ogni link markdown `[titolo](http…)` dentro la sezione (anche più di uno, anche in mezzo alla descrizione). `host` = dominio senza `www.`. **Descrizione** = le righe `Descrizione:` / `Descrizione del progetto…:` della sezione, altrimenti il testo discorsivo della sezione senza i bullet dei link. Il grassetto viene rimosso, il resto è verbatim.
@@ -112,7 +114,7 @@ Regole:
 
 | Livello | Campi |
 |---|---|
-| Corso | titolo, sottotitolo, data di import, moduli, numero unità, unità completate, unità corrente (puntatore) |
+| Corso | titolo, sottotitolo, data di import, moduli (inclusi eventuali segnaposto, §5), numero unità, unità completate, unità corrente (puntatore) |
 | Modulo | numero, `nn` a due cifre, titolo, tipo, prerequisiti, finestra indicativa, trasversali, intro, obiettivi, unità, domande, esercizi, criteri (testo + `auto`), no-go, riassunto, progetto (titolo, descrizione, risorsa), test di fit, stato `bloccato / aperto / passato` |
 | Unità | numero, titolo, **markdown integrale** (fonte primaria dell'AI), concetto core (titolo, testo), 4 sezioni, ore, difficoltà, stato `non iniziata · parziale · da rivedere · completata · saltata`, progresso, minuti, confidenza |
 | Sezione | tipo, etichetta, intestazione, risorse, descrizione, stato `da fare · in corso · fatta` |
@@ -124,4 +126,4 @@ Ordine del puntatore: modulo (numero nel nome del file) → unità (ordine nel f
 
 ## 5. Corso dei mock
 
-`M0-Riattivazione_JavaScript.md` (9 unità, 7 criteri, test di fit) e `M1-Tooling_Moderno.md` (4 unità, 5 criteri). Titolo del corso: "Syllabus Software Engineer 2026". I moduli M2–M4 mostrati bloccati nelle schermate non hanno file: sono segnaposto con solo numero e titolo.
+`M0-Riattivazione_JavaScript.md` (9 unità, 7 criteri, test di fit) e `M1-Tooling_Moderno.md` (4 unità, 5 criteri). Titolo del corso: "Syllabus Software Engineer 2026". I moduli M2–M4 non hanno file: il corso di esempio li include come **segnaposto bloccati** con solo numero e titolo (quelli di `locked` in `course-data.js`: 2 «Testing con Vitest», 3 «Fondamenti di Computer Science», 4 «TypeScript»), fuori dal puntatore. Il corso di esempio conta quindi 5 moduli e 13 unità. `course-data.js` è il risultato atteso: il parser lo produce senza differenze.
