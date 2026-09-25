@@ -10,8 +10,10 @@ import s from './Shell.module.css';
 export function Shell() {
   // S20 Shell Mobile: niente BottomNav su Notifiche e sulle viste interne di Impostazioni (Diagnostica), che hanno
   // l'indietro; Impostazioni stessa la tiene
-  const { pathname } = useLocation();
-  const barra = pathname !== '/notifiche' && pathname !== '/diagnostica';
+  const location = useLocation();
+  const barra = location.pathname !== '/notifiche' && location.pathname !== '/diagnostica';
+  // «+ Crea» si apre sopra la schermata corrente (App.tsx)
+  const sfondo = { sfondo: location };
   return (
     <div className={s.shell}>
       <aside className={s.sidebar}>
@@ -30,7 +32,7 @@ export function Shell() {
             <ChartColumn size={18} />
             {t('statistiche')}
           </NavLink>
-          <Link to="/crea" className={s.crea}>
+          <Link to="/crea" state={sfondo} className={s.crea}>
             <Plus size={16} strokeWidth={2.25} />
             {t('crea')}
           </Link>
@@ -52,7 +54,7 @@ export function Shell() {
             <House size={18} />
             {t('oggi')}
           </NavLink>
-          <Link to="/crea" className={s.fab} aria-label={t('crea')}>
+          <Link to="/crea" state={sfondo} className={s.fab} aria-label={t('crea')}>
             <Plus size={22} strokeWidth={2.25} />
           </Link>
           <NavLink to="/statistiche" className={s.tab}>

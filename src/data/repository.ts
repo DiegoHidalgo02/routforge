@@ -149,10 +149,14 @@ export function watch<T>(query: () => Promise<T>, onChange: (v: T) => void): () 
 }
 
 /** Blocchi vivi di un giorno locale "YYYY-MM-DD", in ordine d'inizio (indice `[giornoLocale+inizio]`). */
-export async function blocksOfDay(db: RoutForgeDb, giornoLocale: string): Promise<RigaBlocco[]> {
+export const blocksOfDay = (db: RoutForgeDb, giornoLocale: string): Promise<RigaBlocco[]> =>
+  blocksBetween(db, giornoLocale, giornoLocale);
+
+/** Blocchi vivi dei giorni locali da `primo` a `ultimo` inclusi, per giorno e poi per inizio (stesso indice). */
+export async function blocksBetween(db: RoutForgeDb, primo: string, ultimo: string): Promise<RigaBlocco[]> {
   const righe = await db.blocchi
     .where('[giornoLocale+inizio]')
-    .between([giornoLocale, Dexie.minKey], [giornoLocale, Dexie.maxKey])
+    .between([primo, Dexie.minKey], [ultimo, Dexie.maxKey])
     .toArray();
   return righe.filter((r): r is RigaBlocco => vivo(r));
 }

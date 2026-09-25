@@ -1,0 +1,980 @@
+/* Oggi (S1 Oggi Mobile/Desktop, 10 Mese): solo token. Il colore del tipo arriva da `data-tipo` sulle variabili locali
+   --fill, --ink, --soft, --deep; gli scarti fuori dalla scala dei mock (10, 6, 3, 2 px) vanno al token più vicino. */
+[data-tipo='todo'] {
+  --fill: var(--color-cat-todo);
+  --ink: var(--color-cat-todo-ink);
+  --soft: var(--color-cat-todo-soft);
+  --deep: var(--color-cat-todo-deep);
+}
+
+[data-tipo='studio'] {
+  --fill: var(--color-cat-study);
+  --ink: var(--color-cat-study-ink);
+  --soft: var(--color-cat-study-soft);
+  --deep: var(--color-cat-study-deep);
+}
+
+[data-tipo='routine'] {
+  --fill: var(--color-cat-routine);
+  --ink: var(--color-cat-routine-ink);
+  --soft: var(--color-cat-routine-soft);
+  --deep: var(--color-cat-routine-deep);
+}
+
+[data-tipo='evento'] {
+  --fill: var(--color-cat-event);
+  --ink: var(--color-cat-event-ink);
+  --soft: var(--color-cat-event-soft);
+  --deep: var(--color-cat-event-deep);
+}
+
+.oggi {
+  display: flex;
+  flex-direction: column;
+}
+
+.soloDesktop {
+  display: none !important;
+}
+
+/* Intestazione: logo, saluto → data, «Oggi» fuori dal giorno corrente, vista */
+.testa {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+}
+
+.titolo {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: inherit;
+}
+
+.saluto,
+.data {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ciao {
+  font: 600 var(--text-xl-2) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.motto {
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+.ciao,
+.motto,
+.giornoSettimana,
+.giornoMese {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cifra {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.esce {
+  animation: global(rf-swap-out) var(--dur-swap) var(--ease-standard) forwards;
+}
+
+.data {
+  animation: global(rf-swap-in) var(--dur-swap) var(--ease-swap);
+}
+
+.giornoSettimana {
+  font: 600 var(--text-xl) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.giornoMese {
+  color: var(--color-text-2);
+  font: 500 var(--text-base) / var(--leading-tight) var(--font-ui);
+}
+
+.periodo {
+  font: 600 var(--text-xl) / var(--leading-tight) var(--font-ui);
+}
+
+/* Area di tocco 44 sui controlli più bassi (DESIGN.md §4): il bottone misura 28–34, l'area la estende */
+.tornaOggi,
+.segmento,
+.freccia,
+.oggiPill,
+.iconaMese {
+  position: relative;
+}
+
+.tornaOggi::after,
+.segmento::after,
+.freccia::after,
+.oggiPill::after,
+.iconaMese::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+  border-radius: inherit;
+}
+
+.tornaOggi {
+  min-height: var(--size-chip);
+  flex: none;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-selected);
+  border-radius: var(--radius-pill);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font: 600 var(--text-sm) var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.tornaOggi:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.segmentato {
+  flex: none;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-2);
+}
+
+.segmento {
+  min-height: var(--size-chip-sm);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-segment);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.segmento:hover {
+  color: var(--color-text);
+}
+
+.segmento[aria-pressed='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+}
+
+.iconaMese {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.iconaMese:hover {
+  background: var(--color-surface-3);
+}
+
+.iconaMese[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+}
+
+.iconaMese::after {
+  inset: calc((34px - var(--size-touch)) / 2);
+}
+
+.frecce {
+  height: var(--size-chip);
+  flex: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+}
+
+.freccia,
+.oggiPill {
+  height: var(--size-chip-sm);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.freccia {
+  width: var(--size-chip-sm);
+}
+
+.oggiPill {
+  padding: 0 var(--space-2);
+  font: 600 var(--text-sm) var(--font-ui);
+}
+
+.freccia:hover,
+.oggiPill:hover {
+  background: var(--color-surface-3);
+}
+
+/* Corpo: si scorre lateralmente per cambiare periodo, in verticale resta lo scroll della pagina */
+.corpo {
+  touch-action: pan-y;
+}
+
+/* Striscia della settimana (vista Giorno) */
+.striscia {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.giornoStriscia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sigla {
+  color: var(--color-text-2);
+  font: 600 var(--text-2xs) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.numero {
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-3);
+  font: 500 var(--text-md) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.giornoStriscia[data-carico] .numero,
+.giornoStriscia[aria-current='date'] .numero {
+  color: var(--color-text);
+}
+
+.giornoStriscia[aria-current='date'] .numero {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.giornoStriscia[aria-pressed='true'] .sigla {
+  color: var(--color-text);
+}
+
+.giornoStriscia[aria-pressed='true'] .numero {
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.carico {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--fill, transparent);
+  color: var(--fill, transparent);
+  box-shadow: var(--glow-dot-week);
+}
+
+.carico:not([data-tipo]) {
+  box-shadow: none;
+}
+
+.giornoTitolo {
+  margin: var(--space-4) 0 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
+}
+
+/* Vista Giorno: colonna dell'orario (o della priorità) · pallino sull'asse · card */
+.giornata {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-activity-gap);
+  margin: 0;
+  padding: var(--space-3) 0 0;
+  list-style: none;
+}
+
+/* Segmentato mobile sotto la striscia; separatore tra striscia e giornata (S1 Mobile) */
+.segmentato.soloMobile {
+  width: fit-content;
+  margin: var(--space-3) auto 0;
+}
+
+.separatore {
+  height: 1px;
+  margin: var(--space-3) 0 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-border) 20%, var(--color-border) 80%, transparent);
+}
+
+.meseMobile {
+  margin: var(--space-4) 0 0;
+  font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
+}
+
+/* Asse della timeline al centro dei pallini, solo con più di un blocco (S1) */
+.giornata:has(> .riga + .riga)::before {
+  content: '';
+  position: absolute;
+  left: calc(40px + var(--size-dot) / 2 - 0.5px);
+  top: calc(var(--space-3) + var(--space-6));
+  bottom: var(--space-6);
+  width: 1px;
+  background: var(--color-border-strong);
+}
+
+.riga {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--size-time-column) minmax(0, 1fr);
+}
+
+.ora,
+.priorita {
+  padding-top: 9px;
+  color: var(--color-text-2);
+  line-height: 18px;
+}
+
+.ora {
+  font: 500 var(--text-xs) / 18px var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.priorita {
+  font: 600 var(--text-2xs) / 18px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.priorita[data-alta] {
+  color: var(--color-text);
+}
+
+.punto {
+  position: absolute;
+  left: 40px;
+  top: 14px;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--fill);
+}
+
+/* Alone solo sui todo senza orario (tokens.css `--glow-dot-todo`) */
+[data-senza-orario] .punto {
+  box-shadow: var(--glow-dot-todo);
+}
+
+[data-terminale] .punto {
+  opacity: var(--opacity-archive);
+  box-shadow: none;
+}
+
+[data-completato] .punto {
+  background: var(--color-success);
+}
+
+.card {
+  position: relative;
+  min-height: var(--size-card-activity);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.accento {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-accent-bar);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: var(--fill);
+}
+
+.spunta {
+  width: var(--space-5);
+  height: var(--space-5);
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--color-text-3);
+  border-radius: var(--radius-pill);
+}
+
+.spunta[data-fatta] {
+  border: 0;
+  background: var(--color-success);
+  color: var(--color-bg);
+}
+
+.testi {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titoloCard,
+.sub,
+.titoloMini {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titoloCard {
+  font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
+}
+
+.sub {
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+.fascia {
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--soft);
+  color: var(--ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+/* Terminali (completato, saltato, perso): restano nel giorno, in secondo piano (MECC §24) */
+[data-terminale] .card,
+.mini[data-terminale] {
+  opacity: 0.7;
+}
+
+[data-terminale] .titoloCard,
+[data-terminale] .titoloMini {
+  color: var(--color-text-dim);
+}
+
+[data-terminale] .ora {
+  color: var(--color-text-3);
+}
+
+/* Stati vuoti */
+.vuotoGiorno {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) 0 var(--space-5);
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.iconaVuotoGiorno {
+  color: var(--color-text-2);
+}
+
+.testoVuoto {
+  max-width: 260px;
+  margin: 0;
+  color: var(--color-text-2);
+  font: var(--text-base) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.azioniVuoto {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.primario,
+.testuale {
+  height: var(--size-control-sm);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.primario {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-soft);
+}
+
+.primario:hover {
+  background: var(--color-primary-hover);
+}
+
+.primario:active {
+  transform: scale(var(--scale-press));
+}
+
+.primario:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.testuale:hover {
+  background: var(--color-surface-2);
+}
+
+.vuoto {
+  min-height: 50dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-10) 0 var(--space-5);
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.vuoto .primario {
+  height: var(--size-control);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-control-lg);
+  font-size: var(--text-lg);
+}
+
+.iconaVuoto {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-3);
+}
+
+.testiVuoto {
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.titoloVuoto {
+  font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
+}
+
+/* Vista Settimana: una riga per giorno su mobile, sette colonne su desktop */
+.settimana {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+}
+
+.giornoSettimanaRiga {
+  display: grid;
+  grid-template-columns: var(--size-touch) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.giornoSettimanaRiga[aria-pressed='true'] {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+}
+
+.intestazioneGiorno {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.giornoSettimanaRiga .numero:not([data-libero]) {
+  color: var(--color-text);
+}
+
+.giornoSettimanaRiga[aria-pressed='true'] .sigla {
+  color: var(--color-text);
+}
+
+.giornoSettimanaRiga[aria-pressed='true'] .numero {
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+}
+
+.blocchiGiorno {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.libero {
+  padding: var(--space-2) 0 var(--space-1);
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+/* Riga compatta: Settimana ed elenco del giorno nel Mese */
+.mini {
+  position: relative;
+  min-height: var(--size-row);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.oraMini {
+  width: var(--size-touch);
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.titoloMini {
+  flex: 1;
+  min-width: 0;
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+/* Vista Mese: griglia con i puntini dei tipi, legenda, elenco del giorno scelto */
+.mese {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.calendario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sigleMese,
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.griglia {
+  grid-auto-rows: 48px;
+}
+
+.cella {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control-lg);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.cella .numero {
+  width: auto;
+  height: auto;
+  color: inherit;
+}
+
+.cella[data-carico] {
+  border-color: var(--color-border);
+  background: var(--color-surface-month-1);
+}
+
+.cella[data-carico='alto'] {
+  background: var(--color-surface-hover);
+}
+
+.cella[aria-current='date'] .numero {
+  font-weight: 600;
+}
+
+.cella[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+}
+
+.puntini {
+  height: var(--space-1);
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+
+.puntini > span {
+  width: var(--space-1);
+  height: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.cella[aria-pressed='true'] .puntini > span {
+  background: var(--deep);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: 2px;
+}
+
+.voceLegenda {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: var(--text-sm) var(--font-ui);
+}
+
+.puntoLegenda {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.elencoGiorno {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.elencoGiorno .giornoTitolo {
+  margin-top: var(--space-2);
+  padding-bottom: 0;
+  border: 0;
+}
+
+/* Desktop da 1024 px (D-UI-1) */
+@media (min-width: 1024px) {
+  .soloMobile {
+    display: none !important;
+  }
+
+  .soloDesktop {
+    display: revert !important;
+  }
+
+  .frecce.soloDesktop {
+    display: flex !important;
+  }
+
+  .segmentato.soloDesktop {
+    display: grid !important;
+  }
+
+  .testa {
+    min-height: var(--size-chip);
+  }
+
+  .giornata {
+    gap: var(--space-2);
+  }
+
+  .giornata:has(> .riga + .riga)::before {
+    left: calc(42px + var(--size-dot) / 2 - 0.5px);
+    background: var(--color-border);
+  }
+
+  .riga {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .punto {
+    left: 42px;
+    top: 15px;
+  }
+
+  .card {
+    min-height: 56px;
+    padding: 9px var(--space-3) 9px var(--space-card-inner);
+  }
+
+  .settimana {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    padding-top: var(--space-4);
+  }
+
+  .giornoSettimanaRiga {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding: var(--space-2) 2px;
+  }
+
+  .settimana .mini {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  }
+
+  .settimana .oraMini {
+    width: auto;
+    font-size: var(--text-xs);
+  }
+
+  .settimana .titoloMini {
+    font: 600 var(--text-sm) var(--font-ui);
+  }
+
+  .settimana .badge {
+    display: none;
+  }
+
+  .settimana .libero {
+    text-align: center;
+  }
+
+  .mese {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+    gap: var(--space-6);
+    padding-top: var(--space-4);
+  }
+
+  .griglia {
+    grid-auto-rows: minmax(56px, 1fr);
+    gap: var(--space-2);
+  }
+
+  .sigleMese {
+    gap: var(--space-2);
+  }
+
+  .legenda {
+    gap: var(--space-4);
+  }
+
+  .elencoGiorno {
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .elencoGiorno {
+    gap: 0;
+    padding: var(--space-3) var(--space-3) var(--space-1);
+  }
+
+  .elencoGiorno .giornoTitolo {
+    margin: 0;
+    padding-bottom: var(--space-2);
+  }
+
+  /* Nel pannello a lato righe con hairline, non card dentro la card (S1 Desktop, DESIGN.md §8) */
+  .elencoGiorno .mini {
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .elencoGiorno .accento {
+    display: none;
+  }
+}

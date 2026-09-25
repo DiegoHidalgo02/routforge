@@ -5,7 +5,7 @@ import { parseCourse } from '../domain/course/parser';
 import type { Blocco } from '../domain/types';
 import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
-import { blocksOfDay, get, list, remove, save, saveBlock, saveCourse, watch } from './repository';
+import { blocksBetween, blocksOfDay, get, list, remove, save, saveBlock, saveCourse, watch } from './repository';
 
 const ROMA = 'Europe/Rome';
 const T0 = local(2026, 9, 24, 8, 0);
@@ -118,6 +118,15 @@ describe('Blocchi: giorno locale e ora di parete — MECC §1, D-TIME-2', () => 
     await saveBlock(db, occorrenza(27, 8, { ricorrenzaId: null }), T0, ROMA);
     await remove(db, 'blocchi', eliminato.id, T1);
     expect((await blocksOfDay(db, '2026-09-26')).map((b) => b.id)).toEqual([sette.id, nove.id]);
+  });
+
+  it('blocksBetween: i giorni dal primo all’ultimo inclusi, per giorno e poi per inizio', async () => {
+    await saveBlock(db, occorrenza(24, 7, { ricorrenzaId: null }), T0, ROMA);
+    const a = await saveBlock(db, occorrenza(25, 9, { ricorrenzaId: null }), T0, ROMA);
+    const b = await saveBlock(db, occorrenza(26, 7, { ricorrenzaId: null }), T0, ROMA);
+    const c = await saveBlock(db, occorrenza(26, 23, { ricorrenzaId: null }), T0, ROMA);
+    await saveBlock(db, occorrenza(27, 7, { ricorrenzaId: null }), T0, ROMA);
+    expect((await blocksBetween(db, '2026-09-25', '2026-09-26')).map((r) => r.id)).toEqual([a.id, b.id, c.id]);
   });
 });
 

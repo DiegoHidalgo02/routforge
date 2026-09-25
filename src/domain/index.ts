@@ -12,3 +12,4 @@ export * from './course/parser';
 export * from './language';
 export * from './activity';
 export * from './ordering';
+export * from './calendar';
