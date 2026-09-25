@@ -247,7 +247,7 @@ describe('Modulo — FORMATO_CORSO §2', () => {
   const { modulo: m, avvisi } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
   if (!m) throw new Error('modulo atteso');
 
-  it('intestazione, campi in grassetto, finestra senza parentesi, trasversali, intro', () => {
+  it('intestazione, campi in grassetto, finestra senza rimandi, trasversali, intro (D-DESIGN-1)', () => {
     expect(m.numero).toBe(1);
     expect(m.titolo).toBe('Tooling Moderno');
     expect(m.tipo).toBe('NUOVO CONTENUTO');
@@ -255,6 +255,18 @@ describe('Modulo — FORMATO_CORSO §2', () => {
     expect(m.finestraIndicativa).toBe('settimane 9–12');
     expect(m.trasversali).toBe('Git, terminale');
     expect(m.intro).toBe('Questo modulo introduce gli strumenti del lavoro quotidiano.\nSeconda riga di introduzione.');
+  });
+
+  it('finestra: la nota fra parentesi resta dopo « · », i rimandi «v. …» no; intro = primo paragrafo + guida degli obiettivi (D-DESIGN-1)', () => {
+    const testo = M1.replace('settimane 9–12 (vedi mappa §3)', 'settimane 8–11 (mini-modulo, v. mappa §4)')
+      .replace('Seconda riga di introduzione.', 'Seconda riga di **introduzione**.\n\nSecondo paragrafo escluso.')
+      .replace('### Obiettivi di Apprendimento\n', '### Obiettivi di Apprendimento\nAl termine sarai in grado di:\n');
+    const { modulo } = parseModule({ name: 'M1-Tooling_Moderno.md', content: testo }, 'corso-1');
+    expect(modulo?.finestraIndicativa).toBe('settimane 8–11 · mini-modulo');
+    expect(modulo?.intro).toBe(
+      'Questo modulo introduce gli strumenti del lavoro quotidiano.\nSeconda riga di introduzione.\nAl termine sarai in grado di:',
+    );
+    expect(modulo?.obiettivi).toHaveLength(2);
   });
 
   it('obiettivi senza grassetto; domande ed esercizi come liste numerate', () => {
@@ -284,9 +296,8 @@ describe('Modulo — FORMATO_CORSO §2', () => {
     expect(m.progetto?.risorsa?.url).toBe('https://esempio.org/progetto-m1');
     expect(m.testDiFit?.risorse[0]?.url).toBe('https://esempio.org/fit');
     // Il separatore `---` che chiude la sezione non è contenuto (emerso dal confronto con M0, T-000)
-    expect(m.testDiFit?.testo).toBe(
-      'Se hai già usato Vite, prova [il test](https://esempio.org/fit) e salta alla 1.2.',
-    );
+    // Nel testo il link resta solo come titolo, l'indirizzo è nelle risorse (course-data.js, D-DESIGN-1)
+    expect(m.testDiFit?.testo).toBe('Se hai già usato Vite, prova il test e salta alla 1.2.');
   });
 
   it('due unità in ordine; la seconda ha 3 sezioni → avviso "importata con 3 sezioni"', () => {
@@ -311,12 +322,12 @@ describe('Unità — FORMATO_CORSO §3', () => {
     expect(u.concettoCore?.testo.startsWith('Node esegue JavaScript')).toBe(true);
   });
 
-  it('quattro sezioni con tipo, etichetta e intestazione (D-PARSE-2)', () => {
+  it('quattro sezioni con tipo, etichetta e intestazione verbatim come course-data.js (D-DESIGN-1)', () => {
     expect(u.sezioni.map((s) => s.tipo)).toEqual(['teoria', 'studio', 'pratica', 'progetto']);
     expect(u.sezioni.map((s) => s.etichetta)).toEqual(['Teoria', 'Studio', 'Pratica', 'Mini progetto']);
-    expect(u.sezioni[0]?.intestazione).toBe('Fondamenta');
-    expect(u.sezioni[1]?.intestazione).toBe('Visualizzazione');
-    expect(u.sezioni[2]?.intestazione).toBe('Testing & Debugging');
+    expect(u.sezioni[0]?.intestazione).toBe('Teoria (Fondamenta)');
+    expect(u.sezioni[1]?.intestazione).toBe('Studio (Visualizzazione)');
+    expect(u.sezioni[2]?.intestazione).toBe('Pratica (Testing & Debugging)');
     expect(u.sezioni[3]?.intestazione).toBe('Mini Progetto Finale: "Toolbox CLI"');
     expect(u.sezioni.every((s) => s.stato === 'da_fare')).toBe(true);
   });

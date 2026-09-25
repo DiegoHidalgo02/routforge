@@ -880,6 +880,12 @@
     grid-template-columns: 60px minmax(0, 1fr);
   }
 
+  /* S1 Desktop: i todo senza orario in coda alla giornata, dopo i blocchi con orario (D-DESIGN-1 n. 3).
+     ponytail: riordino solo visivo (order); se le righe diventano focalizzabili (T-009) riordinare nel DOM */
+  .riga[data-senza-orario] {
+    order: 1;
+  }
+
   .punto {
     left: 42px;
     top: 15px;

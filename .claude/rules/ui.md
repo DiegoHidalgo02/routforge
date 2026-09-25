@@ -6,7 +6,7 @@ paths:
 
 - Importa da `app` e `domain`; mai da `data` o `platform` (INV-1).
 - Nessuna regola di business nei componenti: stati, soglie e transizioni arrivano dai servizi o dal dominio. Il
-  comportamento viene dalle spec, l'aspetto dal design: se divergono vince la spec e la divergenza va in
+  comportamento viene dalle spec, l'aspetto dal design: se divergono vince il design (D-DESIGN-1) e la divergenza va in
   `docs/03_HANDOFF_DESIGN_CODE.md` §10 (conteggio in `docs/STATO.md`).
 - Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata di
   `claude-design/design/tokens.css`); nessun valore hardcoded.

@@ -1,5 +1,6 @@
 // Oggi (S1 Oggi Mobile/Desktop, 10 Mese; FUNZ §2, MECC §24): viste Giorno, Settimana e Mese sullo stesso periodo.
-// Giorno: striscia della settimana, fascia senza orario per priorità, poi i blocchi con orario (`sortDay`, A5); i
+// Giorno: striscia della settimana, fascia senza orario per priorità (in cima su mobile, in coda su desktop,
+// D-DESIGN-1 n. 3), poi i blocchi con orario (`sortDay`, A5); i
 // terminali restano al loro posto in secondo piano. Vista e giorno stanno nell'indirizzo (`?vista=mese&giorno=…`).
 // Si passa di periodo scorrendo lateralmente, e su desktop con le frecce. Il saluto «Ciao» lascia il posto alla data.
 // Arrivano con il loro task: blocco Adesso (T-010), dettaglio e spunta (T-009), trascinamento (T-015), ritorno dopo

@@ -1,7 +1,7 @@
-// Menu del logo utente (FUNZ §1; S1 Oggi Mobile «menu», S20 Shell Desktop): Corsi, esiti da registrare, Impostazioni
-// e Diagnostica (divergenza 16, docs/03_HANDOFF_DESIGN_CODE.md §10). Popover nativo: si chiude toccando fuori o con Esc.
-// La voce «Account e sincronizzazione» e l'intestazione con email e stato della sync entrano con T-033.
-import { Activity, Bell, BookOpen, Settings } from 'lucide-react';
+// Menu del logo utente (S1 Oggi Mobile «menu», FUNZ §1): Corsi, Esiti da registrare, Account e sincronizzazione,
+// Impostazioni (D-DESIGN-1 n. 16: la Diagnostica si apre da Impostazioni). Popover nativo: si chiude toccando fuori o
+// con Esc. L'intestazione con nome, email e stato della sync e il badge degli esiti entrano con T-033 e T-022.
+import { Bell, BookOpen, RefreshCw, Settings } from 'lucide-react';
 import { useId, useRef } from 'react';
 import { NavLink } from 'react-router';
 import { t, type Chiave } from './i18n';
@@ -11,8 +11,8 @@ import s from './ProfileMenu.module.css';
 const VOCI: { to: string; chiave: Chiave; Icona: typeof Bell }[] = [
   { to: '/corsi', chiave: 'corsi', Icona: BookOpen },
   { to: '/notifiche', chiave: 'esiti', Icona: Bell },
+  { to: '/account', chiave: 'account', Icona: RefreshCw },
   { to: '/impostazioni', chiave: 'impostazioni', Icona: Settings },
-  { to: '/diagnostica', chiave: 'diagnostica', Icona: Activity },
 ];
 
 /** `logo`: bottone tondo in testa a Oggi (mobile); `riga`: riga del profilo in fondo alla sidebar (desktop). */

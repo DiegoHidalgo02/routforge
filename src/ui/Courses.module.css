@@ -326,8 +326,9 @@
 }
 
 /* Desktop (S10 Desktop): niente etichetta del gruppo (il titolo è già nell'intestazione), «Importa ZIP» come bottone
-   secondario da 36, card senza ombra a 8 di distanza. Nello stato vuoto «Importa ZIP» sta a sinistra del primario:
-   `row-reverse` inverte solo l'ordine visivo, il focus segue il DOM (primario prima, come su mobile). */
+   secondario da 36, card senza ombra a 8 di distanza e senza tempo dedicato (D-DESIGN-1 n. 18). Nello stato vuoto
+   «Importa ZIP» sta a sinistra del primario come nel mock: `row-reverse` inverte solo l'ordine visivo, il focus segue
+   il DOM (primario prima, come su mobile). */
 @media (min-width: 1024px) {
   .elenco {
     max-width: 320px;
@@ -351,6 +352,10 @@
 
   .card {
     box-shadow: none;
+  }
+
+  .tempo {
+    display: none;
   }
 
   .azioniVuoto {

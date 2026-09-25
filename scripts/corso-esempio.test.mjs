@@ -1,9 +1,9 @@
 // =============================================================================
-// Corso di esempio (CONTESTO §5, FORMATO_CORSO §0 e §5; decisioni D-SAMPLE-1, D-PARSE-2; invariante INV-19)
+// Corso di esempio (CONTESTO §5, FORMATO_CORSO §0 e §5; decisioni D-SAMPLE-1, D-DESIGN-1; invariante INV-19)
 // -----------------------------------------------------------------------------
 // I due moduli in src/data/sample-course/ sono la copia esatta dell'export di Claude Design; il parser li legge
-// senza avvisi e produce lo stesso corso già letto dal design (claude-design/design/course-data.js), a meno delle
-// differenze annotate in `attesoDalFixture`. Il test vive in scripts/ perché il fixture sta fuori da src/ e INV-1
+// senza avvisi e produce lo stesso corso già letto dal design (claude-design/design/course-data.js): il fixture è il
+// risultato atteso (FORMATO §0, D-DESIGN-1). Il test vive in scripts/ perché il fixture sta fuori da src/ e INV-1
 // vieta gli import fuori da src (scripts/architettura.test.mjs).
 // =============================================================================
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COURSE } from '../claude-design/design/course-data.js';
-import { parseCourse, stripBold } from '../src/domain/course/parser.ts';
+import { parseCourse } from '../src/domain/course/parser.ts';
 import { local } from '../src/domain/time.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,21 +19,13 @@ const EXPORT = join(ROOT, 'claude-design', 'spec');
 const COPIA = join(ROOT, 'src', 'data', 'sample-course');
 const FILE = ['M0-Riattivazione_JavaScript.md', 'M1-Tooling_Moderno.md'];
 
-const senzaLink = (s) => s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1');
 const risorsa = ({ title, url, host }) => ({ titolo: title, url, host });
 
 /**
  * Forma attesa del corso con i nomi del dominio (D-NAMING-1), confrontata come sottoinsieme dell'output del parser
  * (`toMatchObject`: id, stati, soglie e flag YouTube del parser non contano; `file`, `importedOn`, `locked` — i
- * segnaposto M2–M4 senza file — esistono solo nel fixture). FORMATO §0 dichiara course-data.js «risultato atteso», ma
- * in quattro campi il fixture si discosta dalle regole di FORMATO §2–§3: vincono le regole (D-PARSE-2 estesa,
- * 00_SINTESI §6 riga 24):
- * - `heading`: il fixture tiene «Teoria (Fondamenta)», «Studio (Visualizzazione)», «Pratica (Testing & Debugging)»,
- *   il parser il contenuto della parentesi (FORMATO §3, D-PARSE-2);
- * - `window`: il fixture tiene «· mini-modulo» preso dalla parentesi di M1, FORMATO §2 rimuove la parentesi;
- * - `intro`: il fixture tiene solo il primo paragrafo senza grassetto e aggiunge la riga guida degli obiettivi;
- *   FORMATO §2 conserva tutti i paragrafi introduttivi: si confronta il primo paragrafo (vedi `letto`);
- * - `fit.text`: il fixture riduce i link markdown al solo titolo (vedi `letto`).
+ * segnaposto M2–M4 senza file — li aggiunge T-041). Nessuna differenza annotata: dove il fixture si discostava dalle
+ * regole di FORMATO §2–§3 (intestazione, finestra, intro, test di fit) vince il fixture (D-DESIGN-1).
  */
 function attesoDalFixture(fixture) {
   return {
@@ -44,9 +36,9 @@ function attesoDalFixture(fixture) {
       titolo: m.title,
       tipo: m.type,
       prerequisiti: m.prereq,
-      finestraIndicativa: m.window.split(' · ')[0],
+      finestraIndicativa: m.window,
       trasversali: m.transversal,
-      intro: m.intro[0],
+      intro: m.intro.join('\n'),
       obiettivi: m.objectives,
       unita: m.units.map((u) => ({
         numero: u.n,
@@ -55,7 +47,7 @@ function attesoDalFixture(fixture) {
         sezioni: u.sections.map((s) => ({
           tipo: s.type,
           etichetta: s.label,
-          intestazione: s.heading.replace(/^(?:Teoria|Studio|Pratica)\s*\((.+)\)$/, '$1'),
+          intestazione: s.heading,
           risorse: s.links.map(risorsa),
           descrizione: s.description,
         })),
@@ -75,15 +67,7 @@ const files = FILE.map((name) => ({ name, content: readFileSync(join(COPIA, name
 // Titolo passato dal chiamante: l'export non ha il file struttura (FORMATO §5, D-PARSE-1, D-SAMPLE-1).
 const opzioni = { corsoId: 'corso-esempio', now: local(2026, 9, 24, 9, 0), titolo: 'Syllabus Software Engineer 2026' };
 const { corso, avvisi } = parseCourse(files, opzioni);
-// Le due riduzioni del fixture applicate all'output del parser: intro al primo paragrafo, test di fit senza link.
-const letto = {
-  ...corso,
-  moduli: corso.moduli.map((m) => ({
-    ...m,
-    intro: stripBold(m.intro.split('\n')[0]),
-    testDiFit: m.testDiFit && { ...m.testDiFit, testo: senzaLink(m.testDiFit.testo) },
-  })),
-};
+const letto = corso;
 
 describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-SAMPLE-1)', () => {
   it("src/data/sample-course/ è la copia esatta dei moduli dell'export del design", () => {
@@ -112,7 +96,7 @@ describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-
     expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
   });
 
-  it('il corso letto dal parser coincide con course-data.js (differenze annotate in attesoDalFixture)', () => {
+  it('il corso letto dal parser coincide con course-data.js', () => {
     expect(letto).toMatchObject(attesoDalFixture(COURSE));
   });
 

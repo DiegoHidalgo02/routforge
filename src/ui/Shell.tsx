@@ -8,10 +8,10 @@ import { ProfileMenu } from './ProfileMenu';
 import s from './Shell.module.css';
 
 export function Shell() {
-  // S20 Shell Mobile: niente BottomNav su Notifiche e sulle viste interne di Impostazioni (Diagnostica), che hanno
+  // S20 Shell Mobile: niente BottomNav su Notifiche e sulle viste interne di Impostazioni (Account, Diagnostica), che hanno
   // l'indietro; Impostazioni stessa la tiene
   const location = useLocation();
-  const barra = location.pathname !== '/notifiche' && location.pathname !== '/diagnostica';
+  const barra = !['/notifiche', '/account', '/diagnostica'].includes(location.pathname);
   // «+ Crea» si apre sopra la schermata corrente (App.tsx)
   const sfondo = { sfondo: location };
   return (

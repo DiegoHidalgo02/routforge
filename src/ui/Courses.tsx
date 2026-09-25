@@ -198,7 +198,9 @@ export function Courses() {
               <span className={s.colonna}>
                 <h2 className={s.titoloCorso}>{c.titolo}</h2>
                 <span className={s.cardTesto}>
-                  {t('corsoNumeri', { moduli: c.moduli, unita: c.unita, tempo: durata(c.minuti) })}
+                  {t('corsoNumeri', { moduli: c.moduli, unita: c.unita })}
+                  {/* Il tempo dedicato solo su mobile: S10 Desktop non lo mostra (D-DESIGN-1 n. 18) */}
+                  <span className={s.tempo}>{t('corsoTempo', { tempo: durata(c.minuti) })}</span>
                 </span>
               </span>
               {c.esempio && <span className={s.badge}>{t('esempio')}</span>}

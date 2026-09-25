@@ -1,7 +1,8 @@
 /**
  * Creazione delle quattro attività: campi, vincoli e valori di default.
  * Fonte: MECCANISMI §2 (tabella dei campi), §4 (limiti della checklist), §13.1 (anticipi e sveglie), §1 (ancore dei
- * blocchi senza orario), §7 (fine ≤ inizio → giorno dopo). FUNZIONALITA §3. Decisione: D-CREA-1.
+ * blocchi senza orario), §7 (fine ≤ inizio → giorno dopo per routine e studio; per l'evento è un errore, S4 Crea). FUNZIONALITA §3.
+ * Decisioni: D-CREA-1, D-DESIGN-1 (n. 19–20).
  *
  * `validateActivity` riceve la bozza del form e restituisce gli errori oppure il blocco (todo, evento) o la
  * definizione (routine, routine di studio) pronti da salvare. I campi che la variante scelta non usa si scartano
@@ -79,6 +80,7 @@ export type ErroreAttivita =
   | 'giorni'
   | 'data'
   | 'orario'
+  | 'fine'
   | 'durata'
   | 'checklist_voci'
   | 'checklist_testo'
@@ -205,11 +207,11 @@ export function validateActivity(b: BozzaAttivita): Validazione {
   if (b.tipo === 'evento') {
     // Tutto il giorno: ancora 00:00–23:59 (§1)
     const inizio = at(b.giorno, b.orario ? b.orario.inizio : '00:00');
-    let fine = b.orario ? at(b.giorno, b.orario.fine) : inizio === null ? null : endOfLocalDay(inizio);
+    const fine = b.orario ? at(b.giorno, b.orario.fine) : inizio === null ? null : endOfLocalDay(inizio);
     if (at(b.giorno, '00:00') === null) errori.push('data');
     else if (inizio === null || fine === null) errori.push('orario');
-    // Fine ≤ inizio ⇒ fine il giorno dopo (§2)
-    else if (fine <= inizio) fine = addLocalDays(fine, 1);
+    // Fine ≤ inizio è un errore per l'evento (S4 Crea, D-DESIGN-1 n. 19); routine e studio passano al giorno dopo
+    else if (fine <= inizio) errori.push('fine');
     const promemoria = checkReminder(b.promemoria, b.orario !== null, errori);
     if (errori.length > 0 || inizio === null || fine === null) return { ok: false, errori };
     return {

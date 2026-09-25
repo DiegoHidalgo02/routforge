@@ -164,9 +164,9 @@ describe('Evento — MECCANISMI §2, §1', () => {
     });
   });
 
-  it('fine ≤ inizio ⇒ fine il giorno dopo', () => {
-    const v = validateActivity(evento({ orario: { inizio: '22:00', fine: '01:00' } }));
-    expect(v.ok && v.blocco).toMatchObject({ inizio: local(2026, 9, 22, 22, 0), fine: local(2026, 9, 23, 1, 0) });
+  it('fine ≤ inizio è un errore (S4 Crea, D-DESIGN-1 n. 19)', () => {
+    expect(errori(evento({ orario: { inizio: '22:00', fine: '01:00' } }))).toEqual(['fine']);
+    expect(errori(evento({ orario: { inizio: '10:00', fine: '10:00' } }))).toEqual(['fine']);
   });
 
   it('fasi: etichette pulite, in ordine', () => {

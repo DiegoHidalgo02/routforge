@@ -1,7 +1,7 @@
 // «+ Crea» (S4 Crea Panel/Mobile/Desktop; FUNZ §3, MECC §2): quattro tipi nello stesso form, campi per tipo. Su
 // mobile una sheet sotto i 56 px di testa, da 1024 px un pannello a destra di 440 (DESIGN.md, S4 Desktop). La
-// validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Data e corso del todo
-// non sono nel mock ma nella spec (MECC §2, §6): stessi campi dell'evento e dello studio (D-CREA-1). L'anticipo
+// validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Il todo non ha data né
+// corso (S4 Crea, D-DESIGN-1 n. 20): parte da oggi e l'orizzonte dice fin dove rotola. L'anticipo
 // libero del promemoria (MECC §13.1) il dominio lo accetta; il campo arriva con T-019.
 import {
   AlarmClock,
@@ -170,7 +170,7 @@ function initial(): Form {
   };
 }
 
-function toDraft(f: Form): BozzaAttivita {
+function toDraft(f: Form, oggi: string): BozzaAttivita {
   const comune = {
     titolo: f.titolo,
     note: f.note,
@@ -185,12 +185,13 @@ function toDraft(f: Form): BozzaAttivita {
       return {
         ...comune,
         tipo: 'todo',
-        giorno: f.giorno,
+        // Il todo parte da oggi (S4 Crea, D-DESIGN-1 n. 20)
+        giorno: oggi,
         orario: f.conOrario ? { inizio: f.inizio, durata: f.durata } : null,
         orizzonte: f.orizzonte,
         priorita: f.priorita,
         checklist: f.checklist,
-        corsoId: f.corsoId,
+        corsoId: null,
       };
     case 'evento':
       return {
@@ -361,6 +362,8 @@ export function Create() {
   const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
   const dialogo = useRef<HTMLDialogElement>(null);
   const [f, setF] = useState(initial);
+  // Il todo parte dal giorno in cui si apre il form (S4 Crea, D-DESIGN-1 n. 20)
+  const [oggi] = useState(() => localDayKey(Date.now()));
   const [corsi, setCorsi] = useState<SchedaCorso[]>([]);
   const [errore, setErrore] = useState(false);
   const [inCorso, setInCorso] = useState(false);
@@ -371,7 +374,7 @@ export function Create() {
   }, []);
   useEffect(() => watchCourseCards(appDb, setCorsi), []);
 
-  const bozza = toDraft(f);
+  const bozza = toDraft(f, oggi);
   const pronta = validateActivity(bozza).ok;
   const { tipo } = f;
   const ricorrente = tipo === 'routine' || tipo === 'studio';
@@ -382,7 +385,8 @@ export function Create() {
   const mostraOrari = ricorrente || (tipo === 'todo' && f.conOrario) || (tipo === 'evento' && !f.tuttoIlGiorno);
   const mostraFine = tipo === 'studio' || tipo === 'evento' || (tipo === 'routine' && f.conFine);
   const minuti = mostraFine ? wallDuration(f.inizio, f.fine) : null;
-  const giornoDopo = minuti !== null && endsNextDay(f.inizio, f.fine);
+  const fineErrata = tipo === 'evento' && minuti !== null && endsNextDay(f.inizio, f.fine);
+  const giornoDopo = !fineErrata && minuti !== null && endsNextDay(f.inizio, f.fine);
   const svegliabili = f.anticipi.filter((m) => m <= MAX_ANTICIPO_SVEGLIA).sort((a, b) => b - a);
 
   // Un solo salvataggio alla volta: un doppio tocco non crea due attività
@@ -437,7 +441,7 @@ export function Create() {
           onChange={(e) => set({ titolo: e.currentTarget.value })}
         />
 
-        {(tipo === 'studio' || tipo === 'todo') && (
+        {tipo === 'studio' && (
           <label className={s.select} data-vuoto={f.corsoId === null}>
             <GraduationCap size={16} className={s.iconaInk} />
             <select
@@ -542,7 +546,7 @@ export function Create() {
               <Etichetta Icona={CalendarDays}>{t('orizzonte')}</Etichetta>
               <span className={`${s.meta} ${s.num}`}>
                 {t(f.orizzonte === 'giorno' ? 'soloIl' : 'rotolaFino', {
-                  data: fmtData.format(horizonLastDay(dataDi(f.giorno), f.orizzonte)),
+                  data: fmtData.format(horizonLastDay(dataDi(oggi), f.orizzonte)),
                 })}
               </span>
             </div>
@@ -557,7 +561,7 @@ export function Create() {
           </div>
         )}
 
-        {(tipo === 'evento' || tipo === 'todo') && (
+        {tipo === 'evento' && (
           <div className={s.gruppo}>
             <Etichetta Icona={CalendarDays}>{t('data')}</Etichetta>
             <CampoData giorno={f.giorno} grande onChange={(giorno) => set({ giorno })} />
@@ -608,6 +612,7 @@ export function Create() {
                     <input
                       type="time"
                       className={s.ora}
+                      aria-invalid={fineErrata || undefined}
                       value={f.fine}
                       onChange={(e) => set({ fine: e.currentTarget.value })}
                     />
@@ -636,7 +641,12 @@ export function Create() {
                 </span>
               </div>
             )}
-            {minuti !== null && (
+            {fineErrata && (
+              <span className={s.errore} role="alert">
+                {t('fineDopoInizio')}
+              </span>
+            )}
+            {minuti !== null && !fineErrata && (
               <span className={s.nota}>
                 <span className={s.badgeDurata}>
                   <span className={s.puntoTipo} />

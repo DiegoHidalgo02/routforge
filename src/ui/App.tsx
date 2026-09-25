@@ -22,6 +22,7 @@ function Rotte() {
           <Route path="corsi" element={<Courses />} />
           <Route path="notifiche" element={<Section titolo="notifiche" indietro />} />
           <Route path="impostazioni" element={<Section titolo="impostazioni" indietro />} />
+          <Route path="account" element={<Section titolo="account" indietro />} />
           <Route path="diagnostica" element={<Section titolo="diagnostica" indietro />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

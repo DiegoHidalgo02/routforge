@@ -535,6 +535,16 @@
   gap: var(--space-2);
 }
 
+/* Fine dell'evento prima dell'inizio (S4 Crea): bordo e nota rossi */
+.ora[aria-invalid='true'] {
+  border-color: var(--color-danger-ink);
+}
+
+.errore {
+  color: var(--color-danger-ink);
+  font: var(--text-sm) var(--font-ui);
+}
+
 /* Campo orario da 48 (tokens.css: «campo orario 48») */
 .ora {
   height: calc(var(--size-control) + var(--space-1));

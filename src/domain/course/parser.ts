@@ -7,11 +7,11 @@
  *
  * Decisione D-PARSE-1: senza file struttura il titolo è quello passato dal chiamante (chiesto
  * all'utente) o "Corso importato" — FORMATO_CORSO §1 prevale su MECC §16 ("primo H1 dei moduli").
- * Decisione D-PARSE-2: l'intestazione di sezione "Teoria (Fondamenta)", "Studio (Visualizzazione)",
- * "Pratica (Testing & Debugging)" → il contenuto della parentesi (FORMATO §3, esempio «Fondamenta»); in tutti gli
- * altri casi è il testo dopo emoji e numero, verbatim (il mini progetto conserva «Mini Progetto Finale:»). Dove il
- * fixture del design (course-data.js) si discosta da FORMATO §2–§3 vincono le regole: finestra senza parentesi,
- * intro con tutti i paragrafi e il grassetto, test di fit con i link (confronto in scripts/corso-esempio.test.mjs).
+ * Decisione D-DESIGN-1 (sostituisce D-PARSE-2): il risultato atteso è il fixture del design (course-data.js).
+ * L'intestazione di sezione è il testo dopo emoji e numero, verbatim ("Teoria (Fondamenta)"; il mini progetto
+ * conserva «Mini Progetto Finale:»); la finestra tiene la nota fra parentesi dopo « · » senza i rimandi «v. …»;
+ * l'intro è il primo paragrafo senza grassetto più la riga che introduce gli obiettivi; il test di fit riduce i link
+ * al titolo (confronto in scripts/corso-esempio.test.mjs).
  * Decisione D-PARSE-3: due file modulo con lo stesso numero, o due intestazioni "Unità X.Y" nello stesso file,
  * produrrebbero id in collisione (`corso:M1`, `corso:M1:U1.1`); FORMATO §1 tace. Il duplicato successivo viene
  * saltato con un avviso, come un'intestazione illeggibile: il primo vince, nessuna rinumerazione automatica.
@@ -258,14 +258,26 @@ function sectionDescription(lines: string[]): string {
   return discursive.join('\n').trim();
 }
 
+/** Finestra indicativa: la nota fra parentesi resta dopo « · », senza i rimandi «v. …» / «vedi …» (course-data.js). */
+function windowNote(value: string): string {
+  return value
+    .replace(/\s*\(([^)]*)\)/g, (_, dentro: string) => {
+      const note = dentro
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => x !== '' && !/^(v\.|vedi\b)/i.test(x));
+      return note.length > 0 ? ` · ${note.join(', ')}` : '';
+    })
+    .trim();
+}
+
 function parseSection(unitId: string, block: RawBlock): SezioneImportata | null {
   const m = SECTION_MARK.exec(block.header);
   if (!m) return null;
   const tipo = SECTION_BY_EMOJI[m[1]!.replace('\uFE0F', '')];
   if (!tipo) return null;
   const rawHeading = m[3]!.trim();
-  const canonical = /^(Teoria|Studio|Pratica)\s*\((.+)\)\s*$/i.exec(rawHeading);
-  const intestazione = canonical ? canonical[2]!.trim() : rawHeading;
+  const intestazione = rawHeading;
   const body = block.lines.join('\n');
   return {
     id: `${unitId}:${tipo}`,
@@ -435,6 +447,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
   const { head, chunks } = chunkByHeadings(lines.slice(headerIndex + 1));
   const fields = { tipo: '', prerequisiti: '', finestra: '', trasversali: '' };
   const intro: string[] = [];
+  let introChiusa = false;
   for (const line of head) {
     const f = MODULE_FIELD.exec(line);
     if (f) {
@@ -442,9 +455,11 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       const value = f[2]!.trim();
       if (key === 'tipo') fields.tipo = value;
       else if (key === 'prerequisiti') fields.prerequisiti = value;
-      else if (key === 'finestra indicativa') fields.finestra = value.replace(/\s*\([^)]*\)/g, '').trim();
+      else if (key === 'finestra indicativa') fields.finestra = windowNote(value);
       else fields.trasversali = value;
-    } else if (line.trim() !== '' && !isSeparator(line)) intro.push(line);
+    } else if (line.trim() === '') {
+      if (intro.length > 0) introChiusa = true;
+    } else if (!introChiusa && !isSeparator(line)) intro.push(stripBold(line)); // solo il primo paragrafo
   }
   if (!fields.tipo) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Tipo" mancante` });
   if (!fields.prerequisiti) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Prerequisiti" mancante` });
@@ -452,6 +467,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
   const unita: UnitaImportata[] = [];
   const numeriUnitaVisti = new Set<string>();
   let obiettivi: string[] = [];
+  let guidaObiettivi = '';
   let verification: ReturnType<typeof parseVerification> = { domande: [], esercizi: [], criteri: [], noGo: '' };
   let riassunto = '';
   let progetto: ModuloImportato['progetto'] = null;
@@ -469,6 +485,10 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
         unita.push(u);
       }
     } else if (/^Obiettivi di Apprendimento/i.test(heading)) {
+      // La riga che introduce l'elenco («Al termine … sarà in grado di:») chiude l'intro (course-data.js)
+      guidaObiettivi = stripBold(
+        chunk.lines.find((l) => l.trim() !== '' && !BULLET.test(l) && !isSeparator(l))?.trim() ?? '',
+      );
       obiettivi = chunk.lines
         .map((l) => BULLET.exec(l)?.[1])
         .filter((s): s is string => !!s)
@@ -479,7 +499,11 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
         .map(stripBold)
         .join('\n')
         .trim();
-      testDiFit = { testo, risorse: extractLinks(chunk.lines.join('\n')) };
+      // Nel testo i link restano solo come titolo; gli indirizzi stanno nelle risorse (course-data.js)
+      testDiFit = {
+        testo: testo.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1'),
+        risorse: extractLinks(chunk.lines.join('\n')),
+      };
     } else if (/^Verifica della Comprensione/i.test(heading)) {
       verification = parseVerification(chunk.lines);
     } else if (/^Riassunto/i.test(heading)) {
@@ -503,7 +527,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
     prerequisiti: fields.prerequisiti,
     finestraIndicativa: fields.finestra,
     trasversali: fields.trasversali,
-    intro: intro.join('\n').trim(),
+    intro: [...intro, guidaObiettivi].filter(Boolean).join('\n').trim(),
     obiettivi,
     unita,
     ...verification,
