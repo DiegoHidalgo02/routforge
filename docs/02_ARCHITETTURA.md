@@ -35,7 +35,8 @@ descrive lo stack scelto.
 ```
 src/
 ├── domain/      Meccanismi puri (TS senza I/O). Già presenti: time, types, sm2, streak, pomodoro,
-│                practice, pointer, lost, nowBlock, course/parser. In arrivo: scheduler/ (occurrences, horizon, cycles),
+│                practice, pointer, lost, nowBlock, course/parser, activity, ordering, calendar, language,
+│                scheduler/occurrences (T-011). In arrivo: scheduler/ (horizon, cycles),
 │                notifications/ (desiredSet, quietHours, digest), session/ (timer, outcome), stats, sync/ (merge).
 │                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
 ├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.

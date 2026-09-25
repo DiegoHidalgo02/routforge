@@ -95,6 +95,9 @@ export interface OraDiParete {
   fuso: string;
 }
 
+/** Un blocco con il suo ancoraggio di parete memorizzato: giorno locale, orari e fuso di calcolo (D-TIME-2). */
+export type BloccoAncorato = Blocco & OraDiParete & { giornoLocale: string };
+
 /** Voce del template delle fasi (§5): l'identificatore stabile regge rinomine e riordini. */
 export interface FaseTemplate {
   id: string;

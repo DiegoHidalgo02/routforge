@@ -61,7 +61,7 @@ describe('Crea — MECCANISMI §2', () => {
     expect(new Set(b?.fasi?.map((f) => f.id)).size).toBe(2);
   });
 
-  it('routine: si salva la definizione, nessuna occorrenza (T-011)', async () => {
+  it('routine: si salvano la definizione e le sue occorrenze da oggi a oggi + 28 (§7)', async () => {
     const r = await createActivity(
       db,
       {
@@ -81,7 +81,9 @@ describe('Crea — MECCANISMI §2', () => {
     const def = r.ok ? await get(db, 'ricorrenze', r.id) : undefined;
     expect(def).toMatchObject({ tipo: 'routine', titolo: 'Mattina', orarioFine: null, fuso: FUSO });
     expect(def?.fasi).toHaveLength(1);
-    expect(await list(db, 'blocchi')).toEqual([]);
+    const occorrenze = await list(db, 'blocchi');
+    expect(occorrenze).toHaveLength(29);
+    expect(occorrenze.every((b) => b.ricorrenzaId === def?.id && b.fine === null && b.titolo === 'Mattina')).toBe(true);
   });
 });
 

@@ -18,11 +18,18 @@ import type { OraDiParete } from '../domain/types';
 import type { CampiComuni, RoutForgeDb, Tabelle, Tombstone } from './db';
 
 // La lib della radice è ES2022 senza DOM (D-TS-1): si dichiara solo la parte di Web Crypto che si usa.
-// ponytail: randomUUID vuole un contesto sicuro (https, localhost, WebView Android); iOS da verificare in T-036.
-declare const crypto: { randomUUID(): string };
+declare const crypto: { randomUUID?(): string; getRandomValues(a: Uint8Array): Uint8Array };
 
-/** UUID v4: id dei record senza identità logica e del corso nuovo di ogni import (MECC §16). */
-export const newId = (): string => crypto.randomUUID();
+/**
+ * UUID v4: id dei record senza identità logica e del corso nuovo di ogni import (MECC §16).
+ * `randomUUID` esiste solo in contesto sicuro (https, localhost): da telefono su http://<ip-del-pc> manca e il
+ * salvataggio falliva; `getRandomValues` c'è anche lì, e con i bit di versione e variante dà lo stesso formato.
+ */
+export const newId = (): string =>
+  crypto.randomUUID?.() ??
+  '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+    (Number(c) ^ ((crypto.getRandomValues(new Uint8Array(1))[0] ?? 0) & (15 >> (Number(c) / 4)))).toString(16),
+  );
 
 type NomeTabella = keyof Tabelle;
 type RigaBlocco = Tabelle['blocchi'];
@@ -47,6 +54,28 @@ export async function get<K extends NomeTabella>(
 /** Tutti i record vivi della tabella. */
 export async function list<K extends NomeTabella>(db: RoutForgeDb, nome: K): Promise<Tabelle[K][]> {
   return (await tabella(db, nome).toArray()).filter((r): r is Tabelle[K] => vivo(r));
+}
+
+/**
+ * Esegue `fn` in una transazione di scrittura sulle tabelle date: le chiamate ai repository al suo interno ne fanno
+ * parte (tutto o niente; scritture serializzate, MECC §7). Dexie resta confinato in `data`.
+ */
+export const inTransaction = <T>(db: RoutForgeDb, tabelle: readonly NomeTabella[], fn: () => Promise<T>): Promise<T> =>
+  db.transaction(
+    'rw',
+    tabelle.map((t) => db.table(t)),
+    fn,
+  );
+
+/** I record vivi con `indice` uguale a `valore` (un indice secondario di `SCHEMA_V1`, es. `ricorrenzaId`, MECC §7). */
+export async function listBy<K extends NomeTabella>(
+  db: RoutForgeDb,
+  nome: K,
+  indice: keyof Tabelle[K] & string,
+  valore: string,
+): Promise<Tabelle[K][]> {
+  const righe = await tabella(db, nome).where(indice).equals(valore).toArray();
+  return righe.filter((r): r is Tabelle[K] => vivo(r));
 }
 
 /** Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. */

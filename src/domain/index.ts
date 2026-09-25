@@ -13,3 +13,4 @@ export * from './language';
 export * from './activity';
 export * from './ordering';
 export * from './calendar';
+export * from './scheduler/occurrences';

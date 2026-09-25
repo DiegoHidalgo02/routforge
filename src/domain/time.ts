@@ -63,6 +63,13 @@ export function local(y: number, month1: number, day: number, h = 0, min = 0, s 
   return new Date(y, month1 - 1, day, h, min, s, 0).getTime();
 }
 
+/** Istante del giorno locale "YYYY-MM-DD" all'orario di parete "HH:MM", nel fuso del processo (D-TIME-2). */
+export function localInstant(giorno: string, orario: string): number {
+  const [y = 0, m = 1, d = 1] = giorno.split('-').map(Number);
+  const [h = 0, min = 0] = orario.split(':').map(Number);
+  return local(y, m, d, h, min);
+}
+
 /** Giorno della settimana locale: 0 = domenica … 6 = sabato. */
 export function localWeekday(ms: number): number {
   return new Date(ms).getDay();

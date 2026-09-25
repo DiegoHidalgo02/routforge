@@ -9,7 +9,7 @@
  * (priorità di un todo con orario, promemoria di un todo senza orario, anticipi di un evento tutto il giorno); i valori
  * fuori dai limiti sono errori (D-CREA-1). Le occorrenze delle routine le genera T-011; gli id (anche delle fasi) li dà il servizio.
  */
-import { addLocalDays, endOfLocalDay, localDayKey, minutes } from './time';
+import { addLocalDays, endOfLocalDay, localDayKey, localInstant, minutes } from './time';
 import type { Blocco, Orizzonte, Priorita, Promemoria, Ricorrenza } from './types';
 
 /** Gradini della durata di un todo con orario, in minuti (§2). */
@@ -102,10 +102,8 @@ const GIORNO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Istante locale del giorno "YYYY-MM-DD" all'orario "HH:MM"; `null` se uno dei due non è valido. */
 function at(giorno: string, orario: string): number | null {
-  const g = GIORNO.exec(giorno);
-  const o = ORARIO.exec(orario);
-  if (!g || !o) return null;
-  const ms = new Date(+g[1]!, +g[2]! - 1, +g[3]!, +o[1]!, +o[2]!).getTime();
+  if (!GIORNO.test(giorno) || !ORARIO.test(orario)) return null;
+  const ms = localInstant(giorno, orario);
   return localDayKey(ms) === giorno ? ms : null; // scarta 2026-02-31 e simili
 }
 

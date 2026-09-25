@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lostAtInstant } from './lost';
-import { addLocalDays, endOfLocalDay, local, localDayKey, localTimeKey, startOfLocalDay } from './time';
+import { addLocalDays, endOfLocalDay, local, localDayKey, localInstant, localTimeKey, startOfLocalDay } from './time';
 
 // I test usano solo i getter locali di Date, quindi valgono in qualsiasi fuso.
 // Eseguiti con TZ=Europe/Rome attraversano il cambio d'ora del 25 ottobre 2026.
@@ -32,5 +32,10 @@ describe('Ora di parete — D-TIME-2', () => {
     expect(localTimeKey(local(2026, 9, 24, 7, 5))).toBe('07:05');
     expect(localTimeKey(local(2026, 9, 26, 23, 0))).toBe('23:00');
     expect(localTimeKey(local(2026, 10, 25, 18, 45))).toBe('18:45');
+  });
+
+  it('localInstant: giorno "YYYY-MM-DD" e orario "HH:MM" → istante locale, anche il giorno del cambio d\'ora', () => {
+    expect(localInstant('2026-09-26', '23:00')).toBe(local(2026, 9, 26, 23, 0));
+    expect(localInstant('2026-10-25', '07:05')).toBe(local(2026, 10, 25, 7, 5));
   });
 });

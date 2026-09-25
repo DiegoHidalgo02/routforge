@@ -21,12 +21,12 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | A3 | MECC §3, §4 | domain/checklist · app/notifications · ui Dettaglio | T-009 | — | nessuno |
 | A4 | MECC §13.5 | domain/notifications/digest · app/notifications | T-020 | — | nessuno |
 | A5 | MECC §2, §6, §21, §24 | domain/ordering · app/activities · ui Oggi · platform/widget | T-007, T-008, T-023 | src/domain/ordering.test.ts, src/app/activities.test.ts, src/app/calendar.test.ts | parziale |
-| B1 | MECC §7 | domain/scheduler/occurrences · app/scheduler | T-011, T-013 | — | nessuno |
+| B1 | MECC §7 | domain/scheduler/occurrences · app/recurrences · app/scheduler (estensione a ogni ciclo) | T-011, T-013 | src/domain/scheduler/occurrences.test.ts, src/app/recurrences.test.ts | parziale |
 | B2 | MECC §3, §8 | domain/lost (finestra di spunta, marcatura) · ui Dettaglio | T-001, T-009 | src/domain/lost.test.ts | parziale |
-| B3 | MECC §3, §7, §8, §14 | domain/lost · domain/scheduler/occurrences (fine ≤ inizio → giorno dopo) | T-001, T-011 | src/domain/lost.test.ts | parziale |
-| B4 | MECC §7, §8, §20 | domain/lost · domain/scheduler/occurrences · domain/stats | T-001, T-011, T-029 | src/domain/lost.test.ts | parziale |
+| B3 | MECC §3, §7, §8, §14 | domain/lost · domain/nowBlock · domain/scheduler/occurrences (fine ≤ inizio → giorno dopo) | T-001, T-011 | src/domain/lost.test.ts, src/domain/scheduler/occurrences.test.ts | coperto |
+| B4 | MECC §7, §8, §20 | domain/lost · domain/scheduler/occurrences · domain/stats (mappa di calore, sezione «senza durata») | T-001, T-011, T-029 | src/domain/lost.test.ts, src/domain/scheduler/occurrences.test.ts | parziale |
 | B5 | MECC §5 | domain/phases · data (tabella logFasi) · ui Dettaglio | T-009 | — | nessuno |
-| B6 | MECC §7, §13.3 | domain/scheduler/occurrences (modifica) · app/notifications | T-011, T-019 | — | nessuno |
+| B6 | MECC §7, §13.3 | domain/scheduler/occurrences (modifica) · app/recurrences · app/notifications (notifiche ricalcolate) | T-011, T-019 | src/domain/scheduler/occurrences.test.ts, src/app/recurrences.test.ts | parziale |
 | B7 | MECC §8, §13.2, §13.6, §20 | domain/lost (scadenza di recupero) · app/scheduler · app/notifications · domain/stats | T-001, T-013, T-020, T-029 | src/domain/lost.test.ts | parziale |
 | C1 | MECC §11, FORMATO §4 | domain/pointer | T-001 | src/domain/pointer.test.ts | parziale |
 | C2 | MECC §11, §12 | domain/pointer (progresso) · domain/streak · app/session | T-001, T-018 | src/domain/pointer.test.ts, src/domain/streak.test.ts | parziale |

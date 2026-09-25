@@ -18,7 +18,7 @@ import type {
   UnitaImportata,
 } from '../domain/course/parser';
 import type { StatoCarta } from '../domain/sm2';
-import type { Blocco, OraDiParete, Ricorrenza } from '../domain/types';
+import type { BloccoAncorato, Ricorrenza } from '../domain/types';
 
 /** Campi comuni di un record vivo (D-DATA-1, INV-14). */
 export interface CampiComuni {
@@ -53,7 +53,7 @@ export interface Tabelle {
    * deterministico = slot della ricorrenza (ricorrenza + giorno locale + orario della ricorrenza, D-DATA-2, T-011):
    * resta lo stesso se l'utente la sposta (C4) e la generazione la ritrova con `get`, senza indici univoci.
    */
-  blocchi: Riga<Blocco & OraDiParete & { giornoLocale: string }>;
+  blocchi: Riga<BloccoAncorato>;
   // Tabelle dei passi successivi: per ora solo i campi indicizzati; il task che le usa aggiunge il resto.
   sessioni: Riga<{ avvio: number; bloccoId: string | null }>;
   /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2). */

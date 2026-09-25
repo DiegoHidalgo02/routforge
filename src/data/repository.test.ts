@@ -1,11 +1,24 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseCourse } from '../domain/course/parser';
 import type { Blocco } from '../domain/types';
 import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
-import { blocksBetween, blocksOfDay, get, list, remove, save, saveBlock, saveCourse, watch } from './repository';
+import {
+  blocksBetween,
+  blocksOfDay,
+  get,
+  inTransaction,
+  list,
+  listBy,
+  newId,
+  remove,
+  save,
+  saveBlock,
+  saveCourse,
+  watch,
+} from './repository';
 
 const ROMA = 'Europe/Rome';
 const T0 = local(2026, 9, 24, 8, 0);
@@ -156,6 +169,26 @@ describe('Occorrenze: id deterministico dello slot — MECC §7, D-DATA-2', () =
     expect(await list(db, 'blocchi')).toEqual([b]);
     expect([b.id, b.createdAt, b.deletedAt]).toEqual([a.id, T0, null]);
   });
+
+  it('listBy: le occorrenze vive di una ricorrenza dall’indice `ricorrenzaId` (le eliminate e le altre routine no)', async () => {
+    const a = await saveBlock(db, occorrenza(24), T0, ROMA);
+    const b = await saveBlock(db, occorrenza(25), T0, ROMA);
+    await saveBlock(db, occorrenza(26, 7, { id: 'altra', ricorrenzaId: 'r-altra' }), T0, ROMA);
+    await remove(db, 'blocchi', b.id, T1);
+    expect((await listBy(db, 'blocchi', 'ricorrenzaId', 'r-corsa')).map((r) => r.id)).toEqual([a.id]);
+  });
+});
+
+describe('Transazioni dei servizi — MECC §7 (generazioni serializzate), D-IMPORT-1 (tutto o niente)', () => {
+  it('inTransaction: un errore a metà annulla le scritture già fatte', async () => {
+    await expect(
+      inTransaction(db, ['preferenze'], async () => {
+        await save(db, 'preferenze', { id: 'lingua', valore: 'it' }, T0);
+        throw new Error('a metà');
+      }),
+    ).rejects.toThrow('a metà');
+    expect(await list(db, 'preferenze')).toEqual([]);
+  });
 });
 
 describe("Log fasi: id = blocco dell'occorrenza — MECC §5, D-DATA-2", () => {
@@ -254,5 +287,18 @@ describe('Albero del corso — MECC §16, D-DATA-2 (D-IMPORT-1)', () => {
     for (const nome of ['corsi', 'moduli', 'unita', 'sezioni', 'risorse'] as const) {
       expect(await list(db, nome)).toEqual([]);
     }
+  });
+});
+
+describe('newId fuori dal contesto sicuro (http su IP di rete, D-DATA-1)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('senza randomUUID genera comunque UUID v4 distinti', () => {
+    let x = 7; // generatore finto: basta che i byte cambino
+    vi.stubGlobal('crypto', {
+      getRandomValues: (a: Uint8Array) => a.map(() => (x = (x * 1103515245 + 12345) % 2 ** 31) >> 16),
+    });
+    const ids = Array.from({ length: 50 }, newId);
+    for (const id of ids) expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(new Set(ids).size).toBe(50);
   });
 });
