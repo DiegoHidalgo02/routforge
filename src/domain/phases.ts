@@ -2,11 +2,12 @@
  * Fasi di routine ed eventi: log al completamento, fasi mostrate nel dettaglio, follow-up.
  * Fonte: MECCANISMI §5 (completamento a inversione, log, dettaglio di un'occorrenza chiusa, follow-up solo eventi);
  * FUNZIONALITA §5. Scenari: B5, E1. La chiave del log è l'id del blocco dell'occorrenza (D-DATA-2): salvarlo di nuovo
- * sovrascrive. Il titolo del follow-up è l'etichetta della fase (S5, D-DETT-1).
+ * sovrascrive. Il titolo del follow-up è l'etichetta della fase (S5, D-DETT-1); il todo scade il giorno dell'evento, mai
+ * prima di oggi (D-DETT-2, scelta dell'utente del 25/09/2026; MECC §5 ed E1 dicono «orizzonte mese»: spec da allineare).
  */
 import type { BozzaAttivita } from './activity';
-import { localDayKey } from './time';
-import type { FaseLog, FaseTemplate, StatoFase } from './types';
+import { inheritedDay } from './checklist';
+import type { Blocco, FaseLog, FaseTemplate, StatoFase } from './types';
 
 const inOrdine = (fasi: readonly FaseTemplate[]): FaseTemplate[] => [...fasi].sort((a, b) => a.ordine - b.ordine);
 
@@ -28,15 +29,15 @@ export function shownPhases(
   return inOrdine(fasi).map((f) => ({ id: f.id, etichetta: f.etichetta, stato: null }));
 }
 
-/** Bozza del todo di follow-up di una fase saltata (§5, E1): senza orario, oggi, orizzonte mese, priorità normale. */
-export const followUpDraft = (titolo: string, now: number): BozzaAttivita => ({
+/** Bozza del todo di follow-up di una fase saltata (§5, E1, D-DETT-2): senza orario, il giorno dell'evento (mai prima di oggi), orizzonte giorno, priorità normale. */
+export const followUpDraft = (titolo: string, evento: Pick<Blocco, 'inizio'>, now: number): BozzaAttivita => ({
   tipo: 'todo',
   titolo,
   note: '',
   promemoria: { modo: 'auto' },
-  giorno: localDayKey(now),
+  giorno: inheritedDay(evento.inizio, now),
   orario: null,
-  orizzonte: 'mese',
+  orizzonte: 'giorno',
   priorita: 'normale',
   checklist: [],
   corsoId: null,

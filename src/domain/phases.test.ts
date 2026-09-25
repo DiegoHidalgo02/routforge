@@ -43,23 +43,30 @@ describe('Fasi — MECCANISMI §5', () => {
   });
 });
 
-describe('Follow-up — SCENARI E1', () => {
-  it('«Stampa analisi»: todo senza orario per oggi, orizzonte mese, valido per «+ Crea»', () => {
-    const now = local(2026, 9, 24, 10, 30); // giovedì
-    const bozza = followUpDraft('Stampa analisi', now);
+describe('Follow-up — SCENARI E1 (scadenza del padre, D-DETT-2)', () => {
+  // E1 e MECC §5 dicono «orizzonte mese»; l'utente (25/09/2026) ha deciso che il follow-up scade il giorno dell'evento,
+  // mai prima di oggi: spec da allineare (D-DETT-2).
+  const dentista = { inizio: local(2026, 9, 24, 10, 0) }; // giovedì
+  it('«Stampa analisi»: todo senza orario nel giorno dell’evento, orizzonte giorno, valido per «+ Crea»', () => {
+    const now = local(2026, 9, 24, 10, 30);
+    const bozza = followUpDraft('Stampa analisi', dentista, now);
     expect(bozza).toMatchObject({
       tipo: 'todo',
       titolo: 'Stampa analisi',
       giorno: localDayKey(now),
       orario: null,
-      orizzonte: 'mese',
+      orizzonte: 'giorno',
     });
     const v = validateActivity(bozza);
     expect(v.ok && v.blocco).toMatchObject({
       tipo: 'todo',
       conOrario: false,
-      orizzonte: 'mese',
+      orizzonte: 'giorno',
       inizio: local(2026, 9, 24, 12, 0),
     });
+  });
+  it('evento completato sabato (concluso): il follow-up è per sabato, mai per un giorno passato', () => {
+    const sabato = followUpDraft('Stampa analisi', dentista, local(2026, 9, 26, 18, 0));
+    expect(sabato.tipo === 'todo' && sabato.giorno).toBe('2026-09-26');
   });
 });

@@ -170,7 +170,7 @@
   "eventoCompletato": "Termin abgeschlossen",
   "haiSaltatoUna": "Du hast „{fase}“ übersprungen",
   "haiSaltatoN": "Du hast {n} Phasen übersprungen",
-  "followUpTesto": "Lege ein Todo an, um es später nachzuholen. Es bleibt unter Heute, bis du es erledigst.",
+  "followUpTesto": "Lege ein Todo an, um es nachzuholen. Es ist am Tag des Termins fällig, nie vor heute.",
   "selezionate": "{n} von {totale}",
   "nonOra": "Nicht jetzt",
   "creaFollowUp": "Folge-Todo anlegen",
@@ -178,5 +178,8 @@
   "todoCreato": "Todo angelegt · {titolo}",
   "todoCreatiN": "{n} Todos angelegt",
   "eliminata": "Gelöscht · {titolo}",
-  "azioneNonRiuscita": "Vorgang fehlgeschlagen. Versuch es erneut."
+  "azioneNonRiuscita": "Vorgang fehlgeschlagen. Versuch es erneut.",
+  "residuoTitolo": "Nicht abgehakte Punkte: {n}",
+  "residuoTesto": "Lege ein Todo mit den restlichen Punkten an, gleiche Priorität und gleiche Frist. Mit „Nicht jetzt“ wird das Todo nur als erledigt markiert.",
+  "creaResiduo": "Todo mit den restlichen Punkten anlegen"
 }

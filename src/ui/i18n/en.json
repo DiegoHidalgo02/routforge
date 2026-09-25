@@ -170,7 +170,7 @@
   "eventoCompletato": "Event completed",
   "haiSaltatoUna": "You skipped “{fase}”",
   "haiSaltatoN": "You skipped {n} phases",
-  "followUpTesto": "Create a todo to make up for it later. It will show on Today until you complete it.",
+  "followUpTesto": "Create a todo to make up for it. It is due on the event day, never before today.",
   "selezionate": "{n} of {totale}",
   "nonOra": "Not now",
   "creaFollowUp": "Create follow-up todo",
@@ -178,5 +178,8 @@
   "todoCreato": "Todo created · {titolo}",
   "todoCreatiN": "{n} todos created",
   "eliminata": "Deleted · {titolo}",
-  "azioneNonRiuscita": "Something went wrong. Try again."
+  "azioneNonRiuscita": "Something went wrong. Try again.",
+  "residuoTitolo": "Unchecked items: {n}",
+  "residuoTesto": "Create a todo with the remaining items, same priority and same deadline. With “Not now” the todo is just marked as done.",
+  "creaResiduo": "Create todo with remaining items"
 }

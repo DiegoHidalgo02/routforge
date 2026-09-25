@@ -9,6 +9,7 @@ import { local, localDayKey } from '../domain/time';
 import { createActivity } from './activities';
 import {
   completeBlock,
+  completeWithLeftover,
   createFollowUps,
   deleteBlock,
   readDetail,
@@ -184,6 +185,40 @@ describe('Fasi a inversione — SCENARI B5 (servizio)', () => {
   });
 });
 
+describe('Segna come fatto con voci rimaste — D-DETT-2 (servizio)', () => {
+  it('completa il todo lasciando le voci com’erano e crea un todo con le voci rimaste: stesso titolo, priorità, orizzonte e giorno', async () => {
+    const id = await crea(todoValigia());
+    await toggleChecklist(db, id, 0, NOW, FUSO);
+    const alle9 = local(2026, 9, 23, 9, 0);
+    const nuovo = await completeWithLeftover(db, id, alle9, FUSO);
+    const padre = await blocco(id);
+    expect(padre).toMatchObject({ stato: 'completato', chiusoIl: alle9 });
+    expect(padre.checklist?.map((v) => v.fatta)).toEqual([true, false, false]);
+    expect(nuovo).not.toBeNull();
+    expect(await blocco(nuovo!)).toMatchObject({
+      tipo: 'todo',
+      stato: 'programmato',
+      titolo: 'Prepara la valigia',
+      priorita: 'normale',
+      orizzonte: 'giorno',
+      giornoLocale: '2026-09-23',
+      conOrario: false,
+      checklist: [
+        { testo: 'Caricabatterie', fatta: false },
+        { testo: 'Medicine', fatta: false },
+      ],
+    });
+  });
+  it('senza voci rimaste non crea nulla e non completa: il chiamante usa la spunta normale', async () => {
+    const id = await crea(todoValigia(['Passaporto']));
+    await toggleChecklist(db, id, 0, NOW, FUSO); // completa il todo (A3)
+    await reopenBlock(db, id, local(2026, 9, 23, 8, 1), FUSO);
+    await toggleChecklist(db, id, 0, local(2026, 9, 23, 8, 2), FUSO);
+    expect(await completeWithLeftover(db, id, local(2026, 9, 23, 8, 3), FUSO)).toBeNull();
+    expect(await list(db, 'blocchi')).toHaveLength(1);
+  });
+});
+
 describe('Checklist su un todo «non fatto» — MECCANISMI §4, §6 (servizio)', () => {
   it('spuntare l’ultima voce di un todo perso lo completa e azzera la marcatura', async () => {
     const id = await crea(todoValigia(['Passaporto']));
@@ -208,17 +243,19 @@ describe('Evento con fasi e follow-up — SCENARI E1 (servizio)', () => {
       ['Portare i documenti', 'fatta'],
     ]);
 
-    // Il titolo è l'etichetta della fase, come fa la UI (S5 non ha un campo; la spec dice «dato dall'utente», D-DETT-1)
-    const [todoId] = await createFollowUps(db, ['Stampare le analisi'], giovedi, FUSO);
+    // Il titolo è l'etichetta della fase, come fa la UI (S5 non ha un campo; la spec dice «dato dall'utente», D-DETT-1).
+    // Scade il giorno dell'evento (D-DETT-2, scelta dell'utente; E1 dice «orizzonte mese»: spec da allineare).
+    const [todoId] = await createFollowUps(db, id, ['Stampare le analisi'], giovedi, FUSO);
     expect(await blocco(todoId!)).toMatchObject({
       tipo: 'todo',
       stato: 'programmato',
       titolo: 'Stampare le analisi',
       conOrario: false,
-      orizzonte: 'mese',
+      orizzonte: 'giorno',
       giornoLocale: localDayKey(giovedi),
       orarioInizio: '12:00',
     });
+    expect(await createFollowUps(db, 'nessuno', ['x'], giovedi, FUSO)).toEqual([]);
   });
   it('un evento senza fasi si chiude senza log e senza vincolo di giorno (anche «concluso», SCENARI E2)', async () => {
     const id = await crea(eventoDentista([]));

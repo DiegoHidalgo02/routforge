@@ -563,6 +563,13 @@
   border-color: var(--color-border-strong);
 }
 
+/* Voci rimaste (D-DETT-2): stessa riga, ma non si sceglie voce per voce */
+.followUp[data-statico],
+.followUp[data-statico]:hover {
+  border-color: var(--color-border);
+  cursor: default;
+}
+
 .badgeTodo {
   --soft: var(--color-cat-todo-soft);
   --ink: var(--color-cat-todo-ink);

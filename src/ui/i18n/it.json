@@ -170,7 +170,7 @@
   "eventoCompletato": "Evento completato",
   "haiSaltatoUna": "Hai saltato «{fase}»",
   "haiSaltatoN": "Hai saltato {n} fasi",
-  "followUpTesto": "Crea un todo per rimediare più tardi. Comparirà su Oggi finché non lo completi.",
+  "followUpTesto": "Crea un todo per rimediare. Scade il giorno dell’evento, mai prima di oggi.",
   "selezionate": "{n} su {totale}",
   "nonOra": "Non ora",
   "creaFollowUp": "Crea todo di follow-up",
@@ -178,5 +178,8 @@
   "todoCreato": "Todo creato · {titolo}",
   "todoCreatiN": "{n} todo creati",
   "eliminata": "Eliminata · {titolo}",
-  "azioneNonRiuscita": "Operazione non riuscita. Riprova."
+  "azioneNonRiuscita": "Operazione non riuscita. Riprova.",
+  "residuoTitolo": "Voci non spuntate: {n}",
+  "residuoTesto": "Crea un todo con le voci rimaste, con la stessa priorità e la stessa scadenza. Con «Non ora» il todo viene segnato fatto e basta.",
+  "creaResiduo": "Crea todo con le voci rimaste"
 }

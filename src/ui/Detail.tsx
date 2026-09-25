@@ -24,6 +24,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Navigate, useLocation, useNavigate, useParams, type Location } from 'react-router';
 import {
   completeBlock,
+  completeWithLeftover,
   createFollowUps,
   deleteBlock,
   reopenBlock,
@@ -34,10 +35,11 @@ import {
   type DettaglioAttivita,
 } from '../app/completion';
 import { appDb } from '../app/db';
+import { inheritedDay } from '../domain/checklist';
 import { canComplete, shownState } from '../domain/completion';
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
-import { MINUTE, local, sameLocalDay } from '../domain/time';
+import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 import { durata, maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
@@ -78,7 +80,7 @@ const inverti = (insieme: ReadonlySet<string>, id: string): Set<string> => {
   return n;
 };
 
-type Vista = 'dettaglio' | 'revisione' | 'followup';
+type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo';
 interface Toast {
   testo: string;
   annulla: () => void;
@@ -259,8 +261,38 @@ export function Detail() {
     if (conFasi) {
       setSaltate(new Set());
       setVista('revisione');
-    } else esegui(() => completeBlock(appDb, id, ora(), fuso));
+    } else if (tipo === 'todo' && fatte < voci.length)
+      setVista('residuo'); // voci rimaste: D-DETT-2
+    else esegui(() => completeBlock(appDb, id, ora(), fuso));
   };
+  // «Non ora» nella sheet delle voci rimaste: segna fatto e basta (tutte le voci spuntate, S5)
+  const soloFatto = () => {
+    setVista('dettaglio');
+    esegui(() => completeBlock(appDb, id, ora(), fuso));
+  };
+  const creaResiduo = () => {
+    const prima = d;
+    void act(async () => {
+      const nuovo = await completeWithLeftover(appDb, id, ora(), fuso);
+      setVista('dettaglio');
+      if (!nuovo) return setErrore(true);
+      mostraToast(
+        t('todoCreato', { titolo }),
+        async () => {
+          await deleteBlock(appDb, nuovo, ora(), fuso);
+          await restoreBlock(appDb, prima, ora(), fuso);
+          setVista('residuo');
+        },
+        { todo: true },
+      );
+    });
+  };
+  // Scadenza del todo derivato (D-DETT-2): giorno dell'attività da cui nasce, mai prima di oggi
+  const giornoDerivato = localInstant(inheritedDay(b.inizio, now), '00:00');
+  const orizzonteTodo = b.orizzonte ?? 'giorno';
+  const scadenzaResiduo = t(orizzonteTodo === 'giorno' ? 'soloIl' : 'rotolaFino', {
+    data: fmtData.format(horizonLastDay(giornoDerivato, orizzonteTodo)),
+  });
   const conferma = () =>
     void act(async () => {
       const ok = await completeBlock(appDb, id, ora(), fuso, [...saltate]);
@@ -273,7 +305,7 @@ export function Detail() {
   const creaFollowUp = () =>
     void act(async () => {
       const etichette = template.filter((f) => scelte.has(f.id)).map((f) => f.etichetta);
-      const ids = await createFollowUps(appDb, etichette, ora(), fuso);
+      const ids = await createFollowUps(appDb, id, etichette, ora(), fuso);
       setVista('dettaglio');
       mostraToast(
         ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length }),
@@ -498,7 +530,7 @@ export function Detail() {
           <button
             type="button"
             className={s.sfondoVelo}
-            aria-label={t(vista === 'revisione' ? 'annulla' : 'nonOra')}
+            aria-label={t(vista === 'followup' ? 'nonOra' : 'annulla')}
             onClick={() => setVista('dettaglio')}
           />
           <div ref={sheet} className={s.sheet} role="dialog" aria-labelledby="sheet-titolo" tabIndex={-1}>
@@ -543,7 +575,7 @@ export function Detail() {
                   </button>
                 </div>
               </>
-            ) : (
+            ) : vista === 'followup' ? (
               <>
                 <div className={`${s.testiSheet} ${s.rivela}`}>
                   <span className={s.occhiello}>{t('eventoCompletato')}</span>
@@ -571,7 +603,7 @@ export function Detail() {
                   <span className={s.metaFollowUp}>
                     {saltateTemplate.length > 1 &&
                       `${t('selezionate', { n: scelte.size, totale: saltateTemplate.length })} · `}
-                    {t('rotolaFino', { data: fmtData.format(horizonLastDay(now, 'mese')) })}
+                    {t('soloIl', { data: fmtData.format(giornoDerivato) })}
                   </span>
                 </div>
                 <div className={s.azioniSheet}>
@@ -585,6 +617,34 @@ export function Detail() {
                     onClick={creaFollowUp}
                   >
                     {scelte.size <= 1 ? t('creaFollowUp') : t('creaFollowUpN', { n: scelte.size })}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={s.testiSheet}>
+                  <span id="sheet-titolo" className={s.titoloSheet}>
+                    {t('residuoTitolo', { n: voci.length - fatte })}
+                  </span>
+                  <span className={s.sottotitoloSheet}>{t('residuoTesto')}</span>
+                </div>
+                <div className={s.fasi}>
+                  {voci
+                    .filter((v) => !v.fatta)
+                    .map((v, i) => (
+                      <div key={i} className={s.followUp} data-statico>
+                        {casella(false)}
+                        <span className={s.testoFollowUp}>{v.testo}</span>
+                      </div>
+                    ))}
+                  <span className={s.metaFollowUp}>{scadenzaResiduo}</span>
+                </div>
+                <div className={s.azioniSheet}>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={soloFatto}>
+                    {t('nonOra')}
+                  </button>
+                  <button type="button" className={`${s.azione} ${s.ctaTodo}`} onClick={creaResiduo}>
+                    {t('creaResiduo')}
                   </button>
                 </div>
               </>

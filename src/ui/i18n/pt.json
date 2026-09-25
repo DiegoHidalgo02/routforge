@@ -170,7 +170,7 @@
   "eventoCompletato": "Evento concluído",
   "haiSaltatoUna": "Ignoraste «{fase}»",
   "haiSaltatoN": "Ignoraste {n} fases",
-  "followUpTesto": "Cria um todo para remediar mais tarde. Aparece em Hoje até o concluíres.",
+  "followUpTesto": "Cria um todo para remediar. Vence no dia do evento, nunca antes de hoje.",
   "selezionate": "{n} de {totale}",
   "nonOra": "Agora não",
   "creaFollowUp": "Criar todo de seguimento",
@@ -178,5 +178,8 @@
   "todoCreato": "Todo criado · {titolo}",
   "todoCreatiN": "{n} todos criados",
   "eliminata": "Eliminada · {titolo}",
-  "azioneNonRiuscita": "A operação falhou. Tenta outra vez."
+  "azioneNonRiuscita": "A operação falhou. Tenta outra vez.",
+  "residuoTitolo": "Itens por marcar: {n}",
+  "residuoTesto": "Cria um todo com os itens restantes, com a mesma prioridade e o mesmo prazo. Com «Agora não» o todo fica apenas marcado como feito.",
+  "creaResiduo": "Criar todo com os itens restantes"
 }

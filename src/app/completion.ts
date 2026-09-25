@@ -10,7 +10,7 @@
  */
 import type { RoutForgeDb, Tabelle } from '../data/db';
 import { get, inTransaction, remove, save, saveBlock, watch } from '../data/repository';
-import { afterToggle, toggleItem } from '../domain/checklist';
+import { afterToggle, leftoverDraft, toggleItem } from '../domain/checklist';
 import { canComplete, completed, reopened, skipped } from '../domain/completion';
 import { followUpDraft, phaseLog } from '../domain/phases';
 import { occurrenceDay } from '../domain/scheduler/occurrences';
@@ -133,19 +133,43 @@ export async function toggleChecklist(
   });
 }
 
-/** Follow-up delle fasi saltate di un evento (§5, E1): un todo per etichetta, senza orario, oggi, orizzonte mese. Restituisce gli id. */
+/** Follow-up delle fasi saltate di un evento (§5, E1, D-DETT-2): un todo per etichetta, senza orario, nel giorno dell'evento (mai prima di oggi), orizzonte giorno. Restituisce gli id. */
 export async function createFollowUps(
   db: RoutForgeDb,
+  eventoId: string,
   etichette: readonly string[],
   now: number,
   fuso: string,
 ): Promise<string[]> {
+  const evento = await get(db, 'blocchi', eventoId);
+  if (!evento) return [];
   const ids: string[] = [];
   for (const etichetta of etichette) {
-    const r = await createActivity(db, followUpDraft(etichetta, now), now, fuso);
+    const r = await createActivity(db, followUpDraft(etichetta, evento, now), now, fuso);
     if (r.ok) ids.push(r.id);
   }
   return ids;
+}
+
+/**
+ * «Segna come fatto» con voci non spuntate (D-DETT-2): completa il todo lasciando le voci com'erano e crea il todo con
+ * le voci rimaste (stessa scadenza). Restituisce l'id del nuovo todo; `null` se non consentito o senza voci rimaste.
+ */
+export async function completeWithLeftover(
+  db: RoutForgeDb,
+  id: string,
+  now: number,
+  fuso: string,
+): Promise<string | null> {
+  return inTransaction(db, TABELLE, async () => {
+    const b = await get(db, 'blocchi', id);
+    if (!b || b.tipo !== 'todo' || !canComplete(b, now)) return null;
+    const bozza = leftoverDraft(b, now);
+    if (!bozza) return null;
+    await writeCompleted(db, b, now, fuso);
+    const r = await createActivity(db, bozza, now, fuso);
+    return r.ok ? r.id : null;
+  });
 }
 
 /** «Elimina» dal dettaglio: tombstone del blocco e del suo log (§5); per un'occorrenza di routine anche il giorno del suo slot in `dateSaltate` (D-OCC-1). */

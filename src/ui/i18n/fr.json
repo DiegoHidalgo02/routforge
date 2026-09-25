@@ -170,7 +170,7 @@
   "eventoCompletato": "Événement terminé",
   "haiSaltatoUna": "Tu as sauté « {fase} »",
   "haiSaltatoN": "Tu as sauté {n} phases",
-  "followUpTesto": "Crée un todo pour y remédier plus tard. Il restera sur Aujourd’hui jusqu’à ce que tu le termines.",
+  "followUpTesto": "Crée un todo pour y remédier. Il échoit le jour de l’événement, jamais avant aujourd’hui.",
   "selezionate": "{n} sur {totale}",
   "nonOra": "Pas maintenant",
   "creaFollowUp": "Créer un todo de suivi",
@@ -178,5 +178,8 @@
   "todoCreato": "Todo créé · {titolo}",
   "todoCreatiN": "{n} todos créés",
   "eliminata": "Supprimée · {titolo}",
-  "azioneNonRiuscita": "L’opération a échoué. Réessaie."
+  "azioneNonRiuscita": "L’opération a échoué. Réessaie.",
+  "residuoTitolo": "Éléments non cochés : {n}",
+  "residuoTesto": "Crée un todo avec les éléments restants, même priorité et même échéance. Avec « Pas maintenant », le todo est simplement marqué comme fait.",
+  "creaResiduo": "Créer un todo avec les éléments restants"
 }
