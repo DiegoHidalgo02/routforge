@@ -63,26 +63,32 @@ del runner e in quattro fusi diversi (Rome, Los Angeles, Kolkata a mezz'ora, Auc
 ottobre 2026 (`time.test.ts`). Il fuso del processo resta un globale implicito: il dominio è puro rispetto all'orologio,
 non rispetto al fuso (D-TIME-1; al cambio di fuso vale l'ora locale di parete e i blocchi futuri si riancorano, D-TIME-2).
 
-## 3. Modello di persistenza (T-004 — Dexie, D-DATA-1 confermata in T-000)
+## 3. Modello di persistenza (T-004 — Dexie, D-DATA-1, D-DATA-2)
 
-Tabelle Dexie (una per entità di MECC §1); campi comuni: `id` (UUID v4), `createdAt`, `updatedAt`, `deletedAt|null`.
-Nomi di tabelle e campi in italiano come nel dominio (D-NAMING-1).
+Schema v1 in `src/data/db.ts`, repository in `src/data/repository.ts`. Tabelle Dexie (una per entità di MECC §1), chiave
+primaria `id`; campi comuni `id`, `createdAt`, `updatedAt`, `deletedAt|null` (INV-14). `id` è un UUID v4 generato dal
+repository, oppure deterministico dove l'identità è logica: albero del corso (D-PARSE-2), occorrenze di routine (slot:
+ricorrenza + giorno locale + orario della ricorrenza, T-011), log fasi (id del blocco), preferenze (id = chiave),
+registro notifiche (id = chiave logica). Eliminare lascia una **tombstone minima** `{id, createdAt, updatedAt,
+deletedAt}`: fuori dagli indici secondari, così gli indici vedono solo i record vivi; con gli id logici non servono
+indici univoci (D-DATA-2). Nomi di
+tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non richiede migrazioni; un indice nuovo sì
+(versione successiva, additiva).
 
-| Tabella | Chiavi/indici principali | Note |
+| Tabella | Indici (oltre a `id`) | Note |
 |---|---|---|
-| `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId`, `moduloId`, `unitaId`, ordine | Albero import; `unita.markdown` integrale (fonte AI) |
-| `ricorrenze` | `corsoId?`, `attiva` | Definizioni routine/studio con fasi (template con id stabili), promemoria, date, date saltate; orario di parete e fuso di calcolo (D-TIME-2) |
-| `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId+inizio` (univoco), `stato`, `tipo`, `corsoId` | Un record per occorrenza; `giornoLocale` calcolato all'inserimento per la vista Giorno in < 0,5 s; per i blocchi futuri anche orario di parete e fuso, per il riancoraggio (D-TIME-2) |
-| `sessioni` | `avvio`, `bloccoId?` | Focus, pause, segmenti, interruzioni (incl. "iperfocus"), minuti per unità, tipo di chiusura |
-| `logFasi` | chiave occorrenza (`ricorrenzaId+inizio` o `eventoId`) | Riscrittura idempotente (§5) |
-| `mazzi`, `carte` | `unitaId`, `carte.scadenza` | Stato SM-2 per carta (`facilita`, `intervalloGiorni`, `scadenza`, come `StatoCarta` del dominio) |
+| `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId` su ogni livello sotto il corso; `moduloId`, `unitaId`, `sezioneId` verso il genitore | Albero import; `unita.markdown` integrale (fonte AI). Non si salvano i campi che il dominio calcola: stato dei moduli, conteggi, unità corrente |
+| `ricorrenze` | `corsoId` | Tipo `Ricorrenza` del dominio: giorni, ora di parete e fuso (D-TIME-2), date, date saltate, fasi (template con id stabili); promemoria in T-019. «Attiva» si calcola (fine assente o ≥ oggi, §7): IndexedDB non indicizza i booleani |
+| `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId`, `stato`, `tipo`, `corsoId` | Un record per occorrenza, con id = slot della ricorrenza (D-DATA-2): resta lo stesso se l'utente la sposta (C4) e la generazione la ritrova con `get`. `giornoLocale`, `orarioInizio`, `orarioFine` e `fuso` li deriva `saveBlock` dagli istanti e li conserva se gli istanti non cambiano (D-TIME-2) |
+| `sessioni` | `avvio`, `bloccoId` | Focus, pause, segmenti, interruzioni (incl. "iperfocus"), minuti per unità, tipo di chiusura |
+| `logFasi` | `ricorrenzaId` | id = id del blocco dell'occorrenza: un log per occorrenza, ricompletare sovrascrive (§5) |
+| `mazzi`, `carte` | `mazzi.unitaId`; `carte.mazzoId`, `carte.scadenza` | Stato SM-2 per carta (`facilita`, `intervalloGiorni`, `scadenza`, come `StatoCarta` del dominio) |
 | `pratiche` | `unitaId`, `tipo`, `creataIl` | Quiz, DevSwipe, Bug Hunter, Trivia + risultati |
-| `conversazioni`, `messaggi` | `ambito`, `ultimoMessaggio` | Elenco raggruppato per età (§18) |
-| `materiali`, `materialiBinari` | `unitaId` | Metadati separati dal PDF (§17) |
-| `fileCodice` | `unitaId?`, `sessioneId?` | Solo contesto AI |
-| `preferenze` | chiave | Impostazioni, streak, sessione attiva, ultima apertura, modello AI, account |
-
-Il **registro notifiche** (chiave logica → id nativo) sta in una tabella `registroNotifiche` esclusa da backup e sync.
+| `conversazioni`, `messaggi` | `conversazioni.ambito`, `conversazioni.ultimoMessaggio`; `messaggi.conversazioneId` | Elenco raggruppato per età (§18) |
+| `materiali`, `materialiBinari` | `materiali.unitaId`; `materialiBinari.materialeId` | Metadati separati dal PDF (§17) |
+| `fileCodice` | `unitaId`, `sessioneId` | Solo contesto AI |
+| `preferenze` | — (id = chiave) | Impostazioni, streak, sessione attiva, ultima apertura, modello AI, account |
+| `registroNotifiche` | — (id = chiave logica) | Chiave logica → id nativo; derivato, escluso da backup e sync (MECC §1) |
 
 ## 4. Servizi chiave
 
@@ -157,7 +163,7 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 | Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | hash → intero a 32 bit, gestione collisioni, test dedicato | T-019 |
 | Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la riconciliazione all'avvio (ciclo §9) le ricrea; la Diagnostica mostra lo stato del permesso | T-019, T-021 |
 | Doze (Android): le notifiche `allowWhileIdle` possono scattare al massimo una volta ogni 9 minuti per app | trigger ravvicinati (pre, inizio, verifica) | test su dispositivo con Doze; per le sveglie usare le API di allarme esatto | T-021 |
-| Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`), mostrarne lo stato in Diagnostica, ricordare il backup | T-004, T-006, T-032 |
+| Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`) al primo avvio, mostrarne lo stato in Diagnostica, ricordare il backup | T-006 (serve la lib `DOM` e l'avvio dell'app, assenti in T-004), T-032 |
 | Gate eseguito a ogni fine turno (hook Stop) più lento man mano che crescono i test (UI in particolare) | loop agentico | quando `npm run verify` supera ~60 s, separare `verify` (dominio + unità + regole) da `verify:completo` (UI) e usare il primo nell'hook | quando serve |
 | Lib `DOM` visibile al dominio | purezza del dominio | **risolto** (D-TS-1): la radice compila con `ES2022`; `ui` e `platform` avranno il proprio `tsconfig` in T-006 | fatto |
 | Font caricati da Google Fonts nei mock del design | offline (CONTESTO §3), privacy | font impacchettati in locale con `@fontsource` (D-STACK-1); nessuna richiesta di rete per l'aspetto | T-006 |
@@ -166,9 +172,10 @@ Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinament
 
 `docs/INVARIANTI.md` elenca ogni proprietà da preservare con la sua verifica. Nel gate oggi: direzione delle dipendenze e
 purezza del dominio (`scripts/architettura.test.mjs`), tracciabilità scenari ↔ test (`scripts/tracciabilita.test.mjs`),
-registro delle dipendenze (`scripts/dipendenze.test.mjs`), assenza di segreti (`scripts/segreti.test.mjs`), lint e
-formato. Da automatizzare nei task che li introducono: schema con campi comuni (T-004), idempotenza dello scheduler
-(T-013), adapter che non propagano errori (T-019, T-021). Prima di aggiungere una regola solo scritta: può essere un test?
+registro delle dipendenze (`scripts/dipendenze.test.mjs`), assenza di segreti (`scripts/segreti.test.mjs`), campi
+comuni e tombstone in ogni tabella (`src/data/db.test.ts`, INV-14), lint e formato. Da automatizzare nei task che li
+introducono: idempotenza dello scheduler (T-013), adapter che non propagano errori (T-019, T-021). Prima di aggiungere
+una regola solo scritta: può essere un test?
 
 ## 10. Processo di modifica proporzionato al rischio
 

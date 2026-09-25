@@ -1,6 +1,7 @@
 # D-DATA-1 — Persistenza locale con identità pronta per la sincronizzazione
 
-**Stato**: default, condizionata a D-STACK-1 (vale per lo stack web; da confermare in T-000, applicata in T-004).
+**Stato**: confermata da D-STACK-1 (T-000) e applicata in T-004 (25/09/2026); i dettagli dello schema v1 sono in
+D-DATA-2.
 Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
@@ -36,8 +37,11 @@ giorno locale copre il requisito di reattività.
 - `updatedAt` viene dall'orologio del dispositivo finché il CP4 non decide una sorgente diversa (rischio in
   ARCHITETTURA §8: due orologi sfasati invertono l'esito di «ultimo vince»).
 - I test dei repository usano `fake-indexeddb`; i servizi non toccano Dexie ma i repository.
-- Se il CP0 sceglierà l'ora di parete (D-TIME-2), lo schema delle ricorrenze aggiunge ora e fuso prima di T-004.
+- Il CP0 ha scelto l'ora di parete (D-TIME-2): ricorrenze e blocchi hanno ora di parete e fuso fin dallo schema v1
+  (D-DATA-2).
+- La richiesta di archiviazione persistente passa a T-006 (serve la lib `DOM` e un avvio dell'app); stato in T-032.
 
 ## Verifica
 
-Da T-004: test dello schema (ogni tabella ha i campi comuni, INV-14) e delle migrazioni.
+`src/data/db.test.ts` (ogni tabella ha i campi comuni e lascia una tombstone, INV-14; versione 1 e riapertura) e
+`src/data/repository.test.ts`.

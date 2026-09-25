@@ -19,13 +19,13 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `eslint`, `@eslint/js`, `typescript-eslint` | dev | lint (`npm run lint`), regole "recommended" | `any`, `@ts-ignore`, variabili inutilizzate verificati dal gate e non solo scritti in CLAUDE.md | D-LINT-1 |
 | `prettier` | dev | formato (`npm run format`, `npm run format:check`) | stile uniforme fra modelli e sessioni diverse | D-LINT-1 |
 | `fflate` | runtime | `src/app/courseImport.ts` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso; piccola, senza dipendenze, stesso codice su web e WebView | D-STACK-1 |
+| `dexie` | runtime | `src/data` (schema v1 e repository), T-004 | IndexedDB con stesso codice su web e WebView; id globali e `updatedAt` per la sync. I suoi tipi citano API DOM: senza la lib `DOM` (D-TS-1) restano comunque stretti sui metodi usati (verificato in T-004) | D-DATA-1 |
+| `fake-indexeddb` | dev | test di `src/data` (`import 'fake-indexeddb/auto'`), T-004 | repository testati senza browser | D-DATA-1 |
 
 ## Previste (entrano nel task indicato; stack deciso in T-000, `docs/decisioni/D-STACK-1.md`)
 
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
-| `dexie` | prevista | `src/data`, T-004 | IndexedDB con stesso codice su web e WebView; id globali e `updatedAt` per la sync | D-DATA-1 |
-| `fake-indexeddb` | prevista | dev, test di `src/data`, T-004 | repository testati senza browser | D-DATA-1 |
 | `react`, `react-dom`, `@types/react`, `@types/react-dom` | prevista | `src/ui`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
 | `vite`, `@vitejs/plugin-react`, `vite-plugin-pwa` | prevista | dev, build e PWA, T-006 e T-035 | build, CSS Modules nativi e web installabile | D-STACK-1 |
 | `react-router` | prevista | `src/ui`, T-006 | rotte di `docs/03_HANDOFF_DESIGN_CODE.md` §1 e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |

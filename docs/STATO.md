@@ -2,10 +2,11 @@
 
 *Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart). Contesto tecnico, non un diario.*
 
-**Data**: 2026-09-24 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (111 test, 16 file: typecheck + lint + formato + test)
+**Data**: 2026-09-25 · **Passo corrente** (CONTESTO §6): 1 — Dati e import del corso · **Gate**: `npm run verify` verde (129 test, 18 file: typecheck + lint + formato + test)
 
 ## Fatto
-- **T-003 (24/09)** Lettura ZIP nel layer applicativo: `src/app/courseImport.ts` (`importCourseFromZip`, `fflate` `unzipSync`/`strFromU8`) estrae i file dallo ZIP e li inoltra a `parseCourse` senza duplicare la logica di filtro/appiattimento (già nel dominio); `ErroreImportCorso` propaga leggibile per uno ZIP senza moduli. **D-PARSE-3 applicata**: modulo o unità con numero duplicato → il secondo viene saltato con avviso, come un'intestazione illeggibile (`src/domain/course/parser.ts`, 2 test nuovi). H1 verificato end-to-end da uno ZIP binario reale (`src/app/courseImport.test.ts`, 3 test) oltre che a livello di dominio: riga H1 di `docs/TRACCIABILITA.md` → `coperto`. Il titolo chiesto all'utente quando manca `00_struttura` resta responsabilità della UI (non ancora scaffoldata, T-006): questo livello si limita a inoltrare `opts.titolo` a `parseCourse` (D-PARSE-1, invariata). `fflate` passata da `prevista` a `runtime` in `docs/DIPENDENZE.md`.
+- **T-004 R (25/09)** Schema v1 Dexie (`src/data/db.ts`, 19 tabelle, indici di `docs/02_ARCHITETTURA.md` §3) e repository minimi (`src/data/repository.ts`: `save`, `saveBlock`, `remove`, `get`, `list`, `blocksOfDay`); test con `fake-indexeddb` (INV-14 su ogni tabella, v1 e riapertura). **D-DATA-2**: tombstone minima; occorrenza con id deterministico dello slot; ancoraggio di parete derivato da `saveBlock` e conservato se gli istanti non cambiano; log fasi con id = blocco; niente indici booleani. `OraDiParete`, `FaseTemplate`, `Ricorrenza`, `Blocco.ricorrenzaId` in `types.ts`; `localTimeKey` in `time.ts`. Scritto da Opus 5.5 in una sessione parallela; **revisione indipendente** qui (Fable 5.1, `/ponytail-review` più i rilievi del suo `spec-reviewer`): l'indice univoco sull'orario attuale dell'occorrenza avrebbe lasciato passare un duplicato dopo «Anticipa sessione» (C4) → id di slot, nessun indice univoco; log fasi id = blocco; fuso convergente a parità di offset (INV-15); `ambito` senza vocabolario di dominio nel layer dati.
+- **T-003 (24/09)** Lettura ZIP nel layer applicativo: `src/app/courseImport.ts` (`importCourseFromZip`, `fflate`) inoltra i file a `parseCourse`, che filtra e appiattisce; `ErroreImportCorso` leggibile per ZIP corrotto o senza moduli; **D-PARSE-3 applicata** (modulo o unità con numero duplicato: il secondo saltato con avviso). H1 end-to-end da uno ZIP reale (`src/app/courseImport.test.ts`) → riga H1 `coperto`. Il titolo chiesto all'utente resta alla UI (T-006, D-PARSE-1). **Rivisto il 25/09**: `unzipSync` decomprime solo i `.md` (opzione `filter` di fflate).
 - **T-000 (24/09)** Import del design e stack: export letto per intero; **D-STACK-1 decisa** (React 19 + Vite PWA + Capacitor, Dexie e fflate confermati, CSS Modules su `tokens.css`, `lucide-react`, `@fontsource`, `react-router`: `docs/decisioni/D-STACK-1.md`); handoff verificato (`docs/03_HANDOFF_DESIGN_CODE.md` §9) con 17 divergenze design ↔ spec (§10 dello stesso documento); M0/M1 copiati in `src/data/sample-course/`, letti **senza avvisi** e confrontati con `course-data.js` nel gate (`scripts/corso-esempio.test.mjs`, INV-19; D-PARSE-2 estesa); parser: il separatore `---` resta fuori dal test di fit; decisioni D-SAMPLE-1 e D-TRIVIA-1; revisione del `spec-reviewer` applicata. **Rivisto il 24/09** (`/ponytail-review`): test del corso di esempio ridotto (fixture importato, confronto con `toMatchObject`), divergenze spostate in 03_HANDOFF §10 (questo file sotto il limite dell'hook), `jsdom` rinviato al primo test UI (G3).
 - T-001 Dominio puro: `time`, `types`, `sm2` (I1), `streak` (C2), `pomodoro` (D3), `practice` (I2, I3), `pointer` (C1, C2, C3 + moduli bloccati), `lost` (A1, A2, B2, B3, B4, B7, E2, C6), `nowBlock` (G1, G2, E3). Suite eseguita in più fusi orari e attraverso il cambio d'ora di ottobre 2026.
 - T-002 Parser del corso `src/domain/course/parser.ts` (FORMATO_CORSO §1–§4, MECC §16): H1 e template §2–§3 su fixture sintetiche (21 test); fedeltà ai file reali M0/M1 e a `course-data.js` verificata in T-000.
@@ -23,6 +24,8 @@
 ## Problemi aperti
 - Export di Claude Design versionato in `claude-design/`: `npm run design:check` = 46 presenti, 45 attesi, 0 mancanti (il file in più è il README del repository).
 - Font: i mock caricano Manrope e IBM Plex Mono da Google Fonts; l'app li impacchetta in locale con `@fontsource` (D-STACK-1, T-006).
+- Archiviazione persistente (`navigator.storage.persist()`, D-DATA-1) rinviata a T-006: serve la lib `DOM` e l'avvio dell'app; stato in Diagnostica in T-032.
+- `crypto.randomUUID` (id dei record, `src/data/repository.ts`) richiede un contesto sicuro: ok su https, localhost e WebView Android; iOS da verificare in T-036.
 - Strumenti solo di progetto (D-TOOLS-3, 24/09): plugin superpowers, ponytail, claude-council, mattpocock-skills, impeccable installati in ambito project per questa cartella e spenti a livello utente; skill Graphify in `.claude/skills/graphify/`; connettori claude.ai e Claude in Chrome spenti qui (`disabledMcpServers`). Verificare in una sessione nuova con `/plugin`, `/mcp`, `/context` e `npm run audit:claude`. Se `/mcp` mostra ancora i connettori, spegnerli da lì.
 - `/impeccable init` eseguito (24/09): `PRODUCT.md` alla radice (utenti: studenti in generale; posizione: studio e vita in un calendario; piattaforma `web`, un solo linguaggio visivo). DESIGN.md di impeccable non scritto: l'aspetto resta in `claude-design/`.
 - Nessun remote git in questo checkout: la CI non ha mai girato (`gh repo create … --push`, guida Fase 1).
@@ -36,10 +39,9 @@
 - 17 divergenze rilevate in T-000 (24/09/2026), più note interne al design: elenco in `docs/03_HANDOFF_DESIGN_CODE.md` §10. Vince la spec: il codice segue le righe di §1 dello stesso documento; i mock vanno corretti in Claude Design e reimportati (`/design-sync`).
 
 ## Prossimo task
-- **T-004 R** (Opus 5.5): schema Dexie con ora di parete (D-TIME-2); dipendenze (T-000, T-001) fatte.
-- **T-005** (Sonnet 5) attende T-003 (fatto) e T-004.
-- In parallelo, dominio puro senza dipendenze: **T-011** (Opus 5.5) e poi **T-012**.
-- T-006 attende T-004: fino ad allora l'utente può porre il veto sullo stack (CP1).
+- **T-005** (Sonnet 5): corso di esempio nell'app; T-003 e T-004 fatti.
+- In parallelo, dominio puro: **T-011** (Opus 5.5; il formato dell'id di slot delle occorrenze si fissa lì, D-DATA-2) e poi **T-012**.
+- T-006 è sbloccato (T-004 fatto): l'utente può ancora porre il veto sullo stack (CP1) prima che parta.
 
 ## Checkpoint in attesa
 - CP1 (informativo): D-STACK-1 scritta (`docs/decisioni/D-STACK-1.md`, riga in `docs/01_DECISIONI.md`); l'utente può porre il veto prima di T-006; senza risposta la decisione vale.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lostAtInstant } from './lost';
-import { addLocalDays, endOfLocalDay, local, localDayKey, startOfLocalDay } from './time';
+import { addLocalDays, endOfLocalDay, local, localDayKey, localTimeKey, startOfLocalDay } from './time';
 
 // I test usano solo i getter locali di Date, quindi valgono in qualsiasi fuso.
 // Eseguiti con TZ=Europe/Rome attraversano il cambio d'ora del 25 ottobre 2026.
@@ -24,5 +24,13 @@ describe('Tempo locale — CONTESTO §3 (fuso e ora legale non spostano i blocch
   it("routine senza durata il giorno del cambio d'ora → persa alle 00:29 del giorno dopo", () => {
     const lostAt = new Date(lostAtInstant({ inizio: local(2026, 10, 25, 7, 0), fine: null, conOrario: true }));
     expect([lostAt.getDate(), lostAt.getHours(), lostAt.getMinutes()]).toEqual([26, 0, 29]);
+  });
+});
+
+describe('Ora di parete — D-TIME-2', () => {
+  it('localTimeKey dà l\'orario locale "HH:MM", anche il giorno del cambio d\'ora', () => {
+    expect(localTimeKey(local(2026, 9, 24, 7, 5))).toBe('07:05');
+    expect(localTimeKey(local(2026, 9, 26, 23, 0))).toBe('23:00');
+    expect(localTimeKey(local(2026, 10, 25, 18, 45))).toBe('18:45');
   });
 });

@@ -44,8 +44,51 @@ export interface Blocco {
   /** Solo blocchi di studio: unità puntata, se c'è (§11). */
   unitaId?: string | null;
   corsoId?: string | null;
+  /** Solo occorrenze di routine/studio: la ricorrenza che le ha generate (§7). */
+  ricorrenzaId?: string | null;
   /** Istante della marcatura "perso" (§8); assente se mai perso. */
   persoIl?: number | null;
+}
+
+/**
+ * Ora locale di parete (D-TIME-2): gli orari come li vede l'utente, ovunque si trovi, e il fuso in cui sono stati
+ * calcolati gli istanti. Al cambio di fuso i blocchi futuri si riancorano a questi orari; il passato li conserva.
+ */
+export interface OraDiParete {
+  /** "HH:MM" locale d'inizio. */
+  orarioInizio: string;
+  /** "HH:MM" locale di fine; `null` = senza durata (§7). Fine ≤ inizio = il giorno dopo (§2, §7). */
+  orarioFine: string | null;
+  /** Nome IANA del fuso (es. "Europe/Rome"): arriva come dato dalla porta Clock di `app`, mai da Intl nel dominio. */
+  fuso: string;
+}
+
+/** Voce del template delle fasi (§5): l'identificatore stabile regge rinomine e riordini. */
+export interface FaseTemplate {
+  id: string;
+  etichetta: string;
+  ordine: number;
+}
+
+/** Definizione di una routine o routine di studio (§1: Ricorrenza; campi §2, §5, §7). */
+export interface Ricorrenza extends OraDiParete {
+  id: string;
+  tipo: Extract<TipoBlocco, 'routine' | 'studio'>;
+  /** Default "Studio" per le routine di studio (§7). */
+  titolo: string;
+  note: string;
+  /** Giorni della settimana, almeno uno (§2): 0 = domenica … 6 = sabato, come `localWeekday`. */
+  giorni: number[];
+  /** Giorno locale "YYYY-MM-DD" d'inizio (§2: default oggi). */
+  dataInizio: string;
+  /** Ultimo giorno locale incluso; `null` = mai (§2). La ricorrenza è attiva finché fine assente o ≥ oggi (§7). */
+  dataFine: string | null;
+  /** Giorni locali "YYYY-MM-DD" esclusi (§7). */
+  dateSaltate: string[];
+  /** Solo routine di studio, opzionale (§2). */
+  corsoId: string | null;
+  /** Template delle fasi (§5); vuoto per le routine di studio (§2). */
+  fasi: FaseTemplate[];
 }
 
 /** Stato terminale = non più aperto (§1). */

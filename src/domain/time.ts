@@ -22,6 +22,12 @@ export function localDayKey(ms: number): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Orario locale "HH:MM" che contiene `ms`: l'ora di parete di un'attività (D-TIME-2). */
+export function localTimeKey(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 /** 00:00:00.000 locale del giorno che contiene `ms`. */
 export function startOfLocalDay(ms: number): number {
   const d = new Date(ms);
