@@ -39,7 +39,7 @@
 - 17 divergenze rilevate in T-000 (24/09/2026), più note interne al design (in T-006: valori della BottomNav e spaziature dei mock fuori dai token): elenco in `docs/03_HANDOFF_DESIGN_CODE.md` §10. Vince la spec: il codice segue le righe di §1 dello stesso documento; i mock vanno corretti in Claude Design e reimportati (`/design-sync`).
 
 ## Prossimo task
-- **T-038** (Sonnet 5): Profilo → Corsi (S10), la UI di T-005, dentro la shell di T-006 (rotta `/corsi` già vuota). Poi **T-007** (+ Crea).
+- **T-038** (Opus 5.5): Profilo → Corsi (S10), la UI di T-005, dentro la shell di T-006 (rotta `/corsi` già vuota). Poi **T-007** (+ Crea).
 - In parallelo, dominio puro: **T-011** (Opus 5.5; il formato dell'id di slot delle occorrenze si fissa lì, D-DATA-2) e poi **T-012**.
 - **T-037** (eliminazione a cascata) è sbloccato: T-004 e T-005 fatti.
 

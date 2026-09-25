@@ -441,13 +441,13 @@ Ogni sessione chiude da 1 a 3 task con lo stesso schema: apri, `/task next`, leg
 
 | Nella riga del task | Cosa fai prima di `/task next` |
 | --- | --- |
-| colonna **Modello** | `/model` → il modello indicato: **Fable 5.1**, **Opus 5.5**, **Sonnet 5** o **Haiku 4.5** |
+| colonna **Modello** | `/model` → il modello indicato: **Fable 5.1**, **Opus 5.5** o **Sonnet 5** |
 | "Fable 5.1 (piano) → Opus 5.5 (codice)" | prima sessione con **Fable 5.1**: `/task <ID>` scrive il piano in `docs/piani/<ID>.md` e si ferma; poi `/model` → **Opus 5.5** e di nuovo `/task <ID>` per il codice |
 | **R** (rischioso: dati, plugin nativi, sync) | attività **snapshot**: Terminale → Esegui attività… → snapshot |
 | **M** (meccanico) | puoi delegarlo a OpenCode (Fase 8) |
 | **CPn** (checkpoint prima di iniziare) | vai alla Fase 7; finché il marcatore resta sulla riga, `/task` e il loop si fermano da soli |
 
-Fable 5.1 serve solo per T-000 e per i piani di T-013, T-019 e T-033: consuma più in fretta i limiti settimanali. Se il gate resta rosso dopo due tentativi, sali di un gradino: Haiku → Sonnet → Opus 5.5 → Opus 5.5 con sforzo più alto (lo scegli dal selettore `/model`) → Fable 5.1. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
+Fable 5.1 serve solo per T-000 e per i piani di T-013, T-019 e T-033: consuma più in fretta i limiti settimanali. Se il gate resta rosso dopo due tentativi, sali di un gradino: Sonnet 5 → Opus 5.5 → Opus 5.5 con sforzo più alto (lo scegli dal selettore `/model`) → Fable 5.1. Se ti dimentichi di cambiare modello, `/task` te lo ricorda prima di iniziare.
 
 **Durante**
 
@@ -566,7 +566,7 @@ git switch main
 Rivedi il branch agent/opencode/T-031 con il subagent spec-reviewer. Se è conforme, fai il merge in main e aggiorna docs/TASKS.md e docs/STATO.md.
 ```
 
-**Regole sui dati.** I modelli gratuiti di OpenCode sono endpoint di prova, e le varianti Muse "Contributor" usano i dati per l'addestramento. Non inviare mai chiavi, password o dati personali; se non vuoi che codice e spec di RoutForge vengano riutilizzati, non usare OpenCode e lascia i task M a Claude Haiku 4.5.
+**Regole sui dati.** I modelli gratuiti di OpenCode sono endpoint di prova, e le varianti Muse "Contributor" usano i dati per l'addestramento. Non inviare mai chiavi, password o dati personali; se non vuoi che codice e spec di RoutForge vengano riutilizzati, non usare OpenCode e lascia i task M a Claude Sonnet 5.
 
 **Verifica.** Dopo ogni revisione il rapporto è stato applicato (commit di correzione con test), `npm run verify` è verde e il branch dell'agente delegato è stato unito o cancellato.
 
@@ -591,7 +591,7 @@ Quasi tutti i problemi del primo avvio sono di PATH, permessi di PowerShell o ca
 | `scripts/loop.sh` compare sempre come modificato in `git status` anche senza toccarlo | bit di esecuzione del file e `core.fileMode` su Windows | `git config core.fileMode false` **prima** di `git add`: l'indice conserva il bit di esecuzione e lo script resta eseguibile su macOS/Linux; se lo hai già aggiunto, `git update-index --chmod=+x scripts/loop.sh` |
 | Il gate è rosso su "format" o "lint" senza che tu abbia cambiato il comportamento | file non formattato o regola ESLint violata | `npm run format`, poi `npm run lint` e leggi il messaggio; in VS Code le estensioni consigliate formattano al salvataggio |
 | `design:check` elenca ancora file mancanti | export incompleto o nomi diversi; i due moduli M0/M1 non sono nel progetto Claude Design | copia `M0-Riattivazione_JavaScript.md` e `M1-Tooling_Moderno.md` in `claude-design/spec/`; per il resto chiedi all'agente di confrontare l'elenco atteso con i file presenti; se serve, riesporta |
-| Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Opus 5.5; `/compact`; nel loop usa `-MaxTasks 1` |
+| Messaggio di limite del piano Max | quota della finestra esaurita | aspetta il reset; usa Sonnet 5 invece di Opus 5.5 (`-ForzaModello claude-sonnet-5` nel loop); `/compact`; nel loop usa `-MaxTasks 1` |
 | Codex risponde "quota esaurita" | piano gratuito OpenAI | usa il subagent spec-reviewer e rimanda la revisione di Codex |
 | Un'estensione non si trova in Antigravity | marketplace diverso (Open VSX) | per questo progetto usa VS Code |
 
@@ -642,7 +642,7 @@ Spunta le voci mentre procedi: le prime cinque fasi si chiudono una volta, le ul
 
 - [ ] `/model` → Fable 5.1, poi `/task T-000` completato
 - [ ] Letti D-STACK-1 e le divergenze design ↔ spec; veto dato se necessario
-- [ ] `/model` → Sonnet 5 per i task successivi
+- [ ] `/model` → Opus 5.5 per i task successivi
 
 **Fase 6 — Ogni sessione**
 

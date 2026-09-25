@@ -5,7 +5,7 @@
 // Usato da scripts/loop.ps1 e scripts/loop.sh. Stessa regola di `/task next`:
 // il primo task `aperto` di docs/TASKS.md le cui dipendenze (T-0NN) sono `fatto`.
 // Il modello viene dalla colonna "Modello" (decisione D-MODEL-1):
-//   "Sonnet 5" | "Opus 5.5" | "Haiku 4.5" | "Fable 5.1"
+//   "Opus 5.5" | "Sonnet 5" | "Fable 5.1" (D-MODEL-2: Haiku non si usa più)
 //   "Fable 5.1 (piano) → Opus 5.5 (codice)" → fase piano con Fable se
 //      docs/piani/<ID>.md non esiste ancora, altrimenti fase codice con Opus.
 //
@@ -22,7 +22,6 @@ export const MODELLI = {
   'Fable 5.1': 'claude-fable-5-1',
   'Opus 5.5': 'claude-opus-5-5',
   'Sonnet 5': 'claude-sonnet-5',
-  'Haiku 4.5': 'claude-haiku-4-5-20251001',
 };
 
 /** Legge le righe dei task dalla tabella di docs/TASKS.md. */

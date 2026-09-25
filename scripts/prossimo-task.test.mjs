@@ -17,15 +17,15 @@ describe('prossimoTask — stessa regola di /task next (docs/05_LOOP_AGENTICO.md
   it('salta i task le cui dipendenze non sono fatte', () => {
     const t = tabella(
       riga('T-001', '—', 'già fatto', 'fatto'),
-      riga('T-002', 'T-009', 'Sonnet 5', 'aperto'),
-      riga('T-003', 'T-001', 'Haiku 4.5', 'aperto'),
+      riga('T-002', 'T-009', 'Opus 5.5', 'aperto'),
+      riga('T-003', 'T-001', 'Sonnet 5', 'aperto'),
     );
     const r = prossimoTask(t, nessunPiano);
     expect(r).toMatchObject({
       trovato: true,
       id: 'T-003',
-      modello: 'Haiku 4.5',
-      modelloId: 'claude-haiku-4-5-20251001',
+      modello: 'Sonnet 5',
+      modelloId: 'claude-sonnet-5',
       fase: 'unica',
     });
   });
@@ -83,16 +83,14 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
     expect(righe.length).toBeGreaterThanOrEqual(37);
     for (const r of righe) {
       expect(
-        /^(già fatto|Fable 5\.1|Opus 5\.5|Sonnet 5|Haiku 4\.5|Fable 5\.1 \(piano\) → Opus 5\.5 \(codice\))$/.test(
-          r.modello,
-        ),
+        /^(già fatto|Fable 5\.1|Opus 5\.5|Sonnet 5|Fable 5\.1 \(piano\) → Opus 5\.5 \(codice\))$/.test(r.modello),
         `${r.id}: ${r.modello}`,
       ).toBe(true);
     }
   });
 
-  it('oggi il prossimo task è T-038 con Sonnet 5 (T-006 chiuso il 25/09/2026)', () => {
-    expect(prossimoTask(reale, nessunPiano)).toMatchObject({ id: 'T-038', modello: 'Sonnet 5' });
+  it('oggi il prossimo task è T-038 con Opus 5.5 (T-006 chiuso il 25/09/2026, D-MODEL-2)', () => {
+    expect(prossimoTask(reale, nessunPiano)).toMatchObject({ id: 'T-038', modello: 'Opus 5.5' });
   });
 });
 

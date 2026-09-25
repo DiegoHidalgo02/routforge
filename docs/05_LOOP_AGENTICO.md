@@ -70,7 +70,7 @@ Regole di convivenza: un solo agente scrive sul branch `main`; gli altri lavoran
 
 ## 4. Gestione della quota
 
-- Piano MAX: finestre di 5 ore e settimanali. Modello per task nella colonna **Modello** di `docs/TASKS.md` (Sonnet 5 per la maggior parte, Opus 5.5 per i task difficili, Fable 5.1 per T-000 e per i piani di T-013, T-019, T-033); `/compact` a metà dei task lunghi; `CLAUDE.md` resta sotto le 120 righe.
+- Piano MAX: finestre di 5 ore e settimanali. Modello per task nella colonna **Modello** di `docs/TASKS.md` (Opus 5.5 per la maggior parte, Sonnet 5 per i task meccanici, D-MODEL-2; Fable 5.1 per T-000 e per i piani di T-013, T-019, T-033); `/compact` a metà dei task lunghi; `CLAUDE.md` resta sotto le 120 righe.
 - Piano gratuito OpenAI: poche chiamate al giorno → revisioni ai checkpoint, non a ogni commit.
 - OpenCode free: illimitato ma con dati pubblici soltanto; `nemotron-3-ultra-free` solo per letture a contesto enorme.
 
