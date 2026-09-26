@@ -8,7 +8,7 @@
  *   passata da > 30 minuti. Un evento non è mai perso.
  * - Scadenza di recupero = fine − 50% della durata (senza durata: inizio + 30').
  */
-import { addLocalDays, endOfLocalDay, localDayKey, minutes, sameLocalDay, startOfLocalDay } from './time';
+import { addLocalDays, endOfLocalDay, localDayKey, localInstant, minutes, sameLocalDay, startOfLocalDay } from './time';
 import type { Blocco } from './types';
 
 export const LOST_GRACE_MS = minutes(30);
@@ -39,12 +39,21 @@ export function horizonLastDay(start: number, horizon: NonNullable<Blocco['orizz
   }
 }
 
-/** true se oggi (giorno locale di `now`) è ancora entro l'orizzonte del todo. */
-export function todoWithinHorizon(block: Blocco, now: number): boolean {
+/**
+ * true se oggi (giorno locale di `now`) è ancora entro l'orizzonte del todo. L'orizzonte parte dal giorno del todo:
+ * quello di parete memorizzato (`giornoLocale`) quando c'è, perché dopo un cambio di fuso gli istanti di un giorno
+ * passato restano quelli di prima e possono cadere in un altro giorno (D-TIME-2); mezzogiorno è dentro il giorno anche
+ * con l'ora legale.
+ */
+export function todoWithinHorizon(block: Blocco & { giornoLocale?: string }, now: number): boolean {
   const horizon = block.orizzonte ?? 'giorno';
-  const last = horizonLastDay(block.inizio, horizon);
-  return startOfLocalDay(now) <= last;
+  const giorno = block.giornoLocale ? localInstant(block.giornoLocale, '12:00') : block.inizio;
+  return startOfLocalDay(now) <= horizonLastDay(giorno, horizon);
 }
+
+/** Todo con orizzonte settimana o mese ancora aperto (§6): rotola a oggi invece di diventare «non fatto». */
+export const isRollingTodo = (block: Blocco & { giornoLocale?: string }, now: number): boolean =>
+  block.tipo === 'todo' && (block.orizzonte ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now);
 
 /**
  * Il blocco va marcato `perso` adesso? (§8 marcatura; §6 per i todo)
@@ -52,12 +61,10 @@ export function todoWithinHorizon(block: Blocco, now: number): boolean {
  * - todo con orizzonte ≠ giorno e ancora entro l'orizzonte: no (rotola invece, §6);
  * - altrimenti: `programmato` e adesso > fine effettiva + 30'.
  */
-export function shouldMarkLost(block: Blocco, now: number): boolean {
+export function shouldMarkLost(block: Blocco & { giornoLocale?: string }, now: number): boolean {
   if (block.stato !== 'programmato') return false;
   if (block.tipo === 'evento') return false;
-  if (block.tipo === 'todo' && (block.orizzonte ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now)) {
-    return false;
-  }
+  if (isRollingTodo(block, now)) return false;
   return now > effectiveEnd(block) + LOST_GRACE_MS;
 }
 

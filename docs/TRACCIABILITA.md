@@ -16,8 +16,8 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 
 | Scenario | Regole | Dove | Task | Test | Stato |
 |---|---|---|---|---|---|
-| A1 | MECC §6, §13.6 | domain/lost (marcatura) · domain/scheduler/horizon · app/notifications (one-shot) · ui Oggi | T-001, T-012, T-020 | src/domain/lost.test.ts | parziale |
-| A2 | MECC §4, §6 | domain/scheduler/horizon (slot libero) · domain/lost · app/scheduler | T-001, T-012 | src/domain/lost.test.ts | parziale |
+| A1 | MECC §6, §13.6 | domain/lost (marcatura) · domain/scheduler/horizon (non rotola; avviso una volta, `lateNoticeDue`) · app/horizon · app/scheduler (marcatura con avviso, T-013) · app/notifications (one-shot) · ui Oggi | T-001, T-012, T-013, T-020 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/app/horizon.test.ts | parziale |
+| A2 | MECC §4, §6 | domain/scheduler/horizon (slot libero, `rollPlan`) · domain/lost · app/horizon (`rollTodos`) · app/scheduler (ciclo all'apertura, T-013) | T-001, T-012, T-013 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/app/horizon.test.ts | parziale |
 | A3 | MECC §3, §4, §13.2 | domain/checklist · domain/completion · app/completion · app/notifications (cancella e ri-arma) · ui Dettaglio S5 (editor della checklist: T-042) | T-009, T-019, T-042 | src/domain/checklist.test.ts, src/app/completion.test.ts | parziale |
 | A4 | MECC §13.5 | domain/notifications/digest · app/notifications | T-020 | — | nessuno |
 | A5 | MECC §2, §6, §21, §24 | domain/ordering · app/activities · ui Oggi · platform/widget | T-007, T-008, T-023 | src/domain/ordering.test.ts, src/app/activities.test.ts, src/app/calendar.test.ts | parziale |

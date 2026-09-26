@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canCheckRoutine,
   horizonLastDay,
+  isRollingTodo,
   lostAtInstant,
   pendingOutcomes,
   recoveryDeadline,
@@ -87,6 +88,26 @@ describe('Todo — SCENARI A1 / A2 (orizzonte)', () => {
     });
     expect(shouldMarkLost(t, local(2026, 9, 23, 9, 0))).toBe(false); // mercoledì: rotola
     expect(shouldMarkLost(t, local(2026, 9, 28, 9, 0))).toBe(true); // lunedì dopo: orizzonte scaduto
+  });
+
+  it("rotola chi ha orizzonte settimana o mese ancora aperto, contato dal giorno di parete quando c'è (D-TIME-2)", () => {
+    const t = block({
+      tipo: 'todo',
+      orizzonte: 'settimana',
+      inizio: local(2026, 9, 22, 18, 0),
+      fine: local(2026, 9, 22, 18, 30),
+    });
+    expect(isRollingTodo(t, local(2026, 9, 27, 9, 0))).toBe(true);
+    expect(isRollingTodo(t, local(2026, 9, 28, 9, 0))).toBe(false);
+    expect(isRollingTodo({ ...t, orizzonte: 'giorno' }, local(2026, 9, 22, 20, 0))).toBe(false);
+    // Istanti di domenica, giorno di parete lunedì (creato in un altro fuso): l'orizzonte è la domenica dopo
+    const lunedi = {
+      ...t,
+      inizio: local(2026, 9, 27, 23, 30),
+      fine: local(2026, 9, 28, 0, 0),
+      giornoLocale: '2026-09-28',
+    };
+    expect(isRollingTodo(lunedi, local(2026, 9, 29, 9, 0))).toBe(true);
   });
 
   it('orizzonte: settimana → domenica; mese → ultimo giorno del mese', () => {

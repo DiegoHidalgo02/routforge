@@ -12,6 +12,9 @@
 import { addLocalDays, endOfLocalDay, localDayKey, localInstant, minutes } from './time';
 import type { Blocco, Orizzonte, Priorita, Promemoria, Ricorrenza } from './types';
 
+/** Ancora dei todo senza orario: 12:00–23:59 del loro giorno (§1), anche quando rotolano (§6). */
+export const ANCORA_TODO = '12:00';
+
 /** Gradini della durata di un todo con orario, in minuti (§2). */
 export const GRADINI_DURATA = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 210, 240] as const;
 /** Anticipi proposti dal promemoria personalizzato, in minuti: 1 g, 1 h, 30/15/10/5', all'inizio (§13.1). */
@@ -172,7 +175,7 @@ export function validateActivity(b: BozzaAttivita): Validazione {
 
   if (b.tipo === 'todo') {
     const conOrario = b.orario !== null;
-    const inizio = at(b.giorno, b.orario ? b.orario.inizio : '12:00');
+    const inizio = at(b.giorno, b.orario ? b.orario.inizio : ANCORA_TODO);
     if (at(b.giorno, '00:00') === null) errori.push('data');
     else if (inizio === null) errori.push('orario');
     if (b.orario && !(GRADINI_DURATA as readonly number[]).includes(b.orario.durata)) errori.push('durata');

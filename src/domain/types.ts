@@ -69,6 +69,14 @@ export interface Blocco {
   persoIl?: number | null;
   /** Istante in cui l'utente ha chiuso il blocco: completato (§3) o saltato (FUNZ §4.3); `null` da riaperto. Gli esiti di studio arrivano con T-018. */
   chiusoIl?: number | null;
+  /** Solo todo: istante dell'avviso «todo in ritardo» (§6, §13.6), una volta per todo; assente se mai avvisato (D-HOR-1). */
+  ritardoIl?: number | null;
+  /**
+   * Solo todo con orario: l'ora di parete "HH:MM" scelta dall'utente, ricordata quando un ciclo sposta il todo in un
+   * varco perché era occupata (§6, punto 1); `null` o assente quando il todo è al suo orario. Modifica e trascinamento
+   * la azzerano (T-042, T-015; D-HOR-1).
+   */
+  orarioOriginale?: string | null;
   // Campi della creazione (§2): assenti nei blocchi di prova dei meccanismi che non li usano.
   titolo?: string;
   note?: string;
