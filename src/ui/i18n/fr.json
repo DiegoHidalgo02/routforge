@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "L’opération a échoué. Réessaie.",
   "residuoTitolo": "Éléments non cochés : {n}",
   "residuoTesto": "Crée un todo avec les éléments restants, même priorité et même échéance. Avec « Pas maintenant », le todo est simplement marqué comme fait.",
-  "creaResiduo": "Créer un todo avec les éléments restants"
+  "creaResiduo": "Créer un todo avec les éléments restants",
+  "adesso": "Maintenant",
+  "traPoco": "Bientôt",
+  "daRecuperare": "À rattraper",
+  "concluso": "Terminé",
+  "apri": "Ouvrir",
+  "chiudiPerOggi": "Fermer pour aujourd’hui",
+  "minutiUnita": "min",
+  "allInizio": "avant le début",
+  "allaFine": "avant la fin",
+  "ultimoAvvio": "dernier départ"
 }

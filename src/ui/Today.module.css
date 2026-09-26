@@ -358,6 +358,17 @@
   background: linear-gradient(90deg, transparent, var(--color-border) 20%, var(--color-border) 80%, transparent);
 }
 
+/* Colonna laterale della vista Giorno (T-010): su mobile ospita solo il blocco Adesso, fra striscia e giornata, che sta
+   appiccicato in testa; su desktop è la colonna di 360 di S1 Desktop (con T-040 anche progresso e prossime attività) */
+.lato {
+  display: contents;
+}
+
+/* Il blocco Adesso porta già il suo respiro sotto (S1 Mobile: separatore subito dopo) */
+.lato:has(> *) + .separatore {
+  margin-top: 0;
+}
+
 .meseMobile {
   margin: var(--space-4) 0 0;
   font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
@@ -983,5 +994,32 @@
 
   .elencoGiorno .accento {
     display: none;
+  }
+
+  /* Vista Giorno a due colonne come S1 Desktop: testata e giornata a sinistra, colonna laterale di 360 a destra
+     dall'altezza della testata. `.corpo` non genera un riquadro (display: contents) e i suoi figli entrano nella
+     griglia di `.oggi`; i gesti sul corpo arrivano lo stesso, perché gli eventi risalgono il DOM. */
+  .oggi:has(> .corpo[data-vista='giorno']) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+
+  .corpo[data-vista='giorno'] {
+    display: contents;
+  }
+
+  .oggi:has(> .corpo[data-vista='giorno']) > .testa,
+  .corpo[data-vista='giorno'] > * {
+    grid-column: 1;
+  }
+
+  .corpo[data-vista='giorno'] > .lato {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 }

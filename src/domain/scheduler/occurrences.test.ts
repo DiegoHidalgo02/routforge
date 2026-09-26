@@ -99,7 +99,7 @@ describe('Routine notturna — SCENARI B3 (sabato 23:00 → domenica 01:00)', ()
 
   it('domenica alle 00:30 è ancora spuntabile e risulta «adesso»; persa da domenica 01:30', () => {
     expect(canCheckRoutine(b!, local(2026, 9, 27, 0, 30))).toBe(true);
-    expect(statusOf(b!, local(2026, 9, 27, 0, 30))).toEqual({ tipo: 'adesso' });
+    expect(statusOf(b!, local(2026, 9, 27, 0, 30))).toEqual({ tipo: 'adesso', minutiAllaFine: 30 });
     expect(shouldMarkLost(b!, local(2026, 9, 27, 1, 29))).toBe(false);
     expect(shouldMarkLost(b!, local(2026, 9, 27, 1, 31))).toBe(true);
   });

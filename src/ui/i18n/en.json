@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "Something went wrong. Try again.",
   "residuoTitolo": "Unchecked items: {n}",
   "residuoTesto": "Create a todo with the remaining items, same priority and same deadline. With “Not now” the todo is just marked as done.",
-  "creaResiduo": "Create todo with remaining items"
+  "creaResiduo": "Create todo with remaining items",
+  "adesso": "Now",
+  "traPoco": "Up next",
+  "daRecuperare": "To catch up",
+  "concluso": "Ended",
+  "apri": "Open",
+  "chiudiPerOggi": "Dismiss for today",
+  "minutiUnita": "min",
+  "allInizio": "to start",
+  "allaFine": "to end",
+  "ultimoAvvio": "latest start"
 }

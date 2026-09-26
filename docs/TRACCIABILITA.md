@@ -45,15 +45,15 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | D6 | MECC §10.1 | app/session (una sola sessione) | T-016 | — | nessuno |
 | E1 | MECC §3, §5 | domain/phases (log, follow-up) · app/completion · ui Dettaglio S5 (revisione e follow-up) | T-009 | src/domain/phases.test.ts, src/app/completion.test.ts (T-009: evento completato, log 1 fatta + 1 saltata, todo «Stampare analisi» senza orario nel giorno dell'evento con orizzonte giorno; E1 allineato a D-DETT-1 e D-DETT-2 il 25/09/2026) | coperto |
 | E2 | MECC §3, §8, §20 | domain/lost (evento mai perso) · domain/completion (stato «concluso») · app/completion · ui Dettaglio S5 · domain/stats | T-001, T-009 | src/domain/lost.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts | parziale |
-| E3 | MECC §13.2, §14, §24 | domain/nowBlock · domain/notifications (08:00) | T-001, T-010 | src/domain/nowBlock.test.ts | parziale |
+| E3 | MECC §13.2, §14, §24 | domain/nowBlock · app/nowBlock · domain/notifications (08:00) | T-001, T-010, T-019 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | parziale |
 | F1 | MECC §13.1–§13.3 | domain/notifications/desiredSet · app/notifications | T-019 | — | nessuno |
 | F2 | MECC §13.1, §13.2, §21 | domain/notifications (sveglie) · platform/alarms | T-019, T-021 | — | nessuno |
 | F3 | MECC §13.4, §13.6 | domain/notifications/quietHours | T-020 | — | nessuno |
 | F4 | MECC §13.3 | domain/notifications (finestra 14 gg) · app/notifications | T-019 | — | nessuno |
 | F5 | MECC §13.2, §13.4 | domain/notifications (posticipa) · app/notifications | T-020 | — | nessuno |
 | F6 | MECC §3, §13.1, §13.3 | app/notifications (riconciliazione) | T-019 | — | nessuno |
-| G1 | MECC §14 | domain/nowBlock · ui Oggi | T-001, T-010 | src/domain/nowBlock.test.ts | parziale |
-| G2 | MECC §14 | domain/nowBlock (chiusura) · ui Oggi | T-001, T-010 | src/domain/nowBlock.test.ts | parziale |
+| G1 | MECC §14 | domain/nowBlock · app/nowBlock · ui Oggi (NowBlock S1) | T-001, T-010 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | coperto |
+| G2 | MECC §14 | domain/nowBlock (chiusura) · app/nowBlock (chiusure in preferenze) · ui Oggi (NowBlock S1) | T-001, T-010 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | coperto |
 | G3 | MECC §15 | ui Oggi (trascinamento) · domain/scheduler/horizon (slot) · app/notifications | T-015 | — | nessuno |
 | G4 | MECC §9 | app/scheduler (cambio giorno ogni 60 s) · ui Oggi | T-013 | — | nessuno |
 | H1 | MECC §16, FORMATO §1 | domain/course/parser · app/courseImport (ZIP) · ui Corsi S10 (import salvato, avvisi) | T-002, T-003, T-038 | src/domain/course/parser.test.ts, src/app/courseImport.test.ts (T-038: import ZIP salvato, due corsi, titolo, max 5 avvisi) | coperto |

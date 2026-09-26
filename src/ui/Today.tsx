@@ -4,8 +4,8 @@
 // terminali restano al loro posto in secondo piano. Vista e giorno stanno nell'indirizzo (`?vista=mese&giorno=…`).
 // Si passa di periodo scorrendo lateralmente, e su desktop con le frecce. Il saluto «Ciao» lascia il posto alla data.
 // Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`).
-// Arrivano con il loro task: blocco Adesso (T-010), trascinamento (T-015), ritorno dopo
-// un'assenza (T-013); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
+// Il blocco Adesso (T-010, `NowBlock.tsx`) sta fra la striscia e la giornata su mobile e nella colonna laterale su
+// desktop. Arrivano con il loro task: trascinamento (T-015), ritorno dopo un'assenza (T-013); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
 // non sono nella spec di Oggi (docs/03_HANDOFF_DESIGN_CODE.md §10).
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
@@ -14,18 +14,13 @@ import { watchCalendar, type BloccoCalendario } from '../app/calendar';
 import { appDb } from '../app/db';
 import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, weekOf, type Vista } from '../domain/calendar';
 import { localDayKey } from '../domain/time';
-import { STATI_TERMINALI, type TipoBlocco } from '../domain/types';
-import { maiuscola } from './format';
+import { STATI_TERMINALI } from '../domain/types';
+import { maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { lingua, t, type Chiave } from './i18n';
+import { NowBlock } from './NowBlock';
 import { ProfileMenu } from './ProfileMenu';
 import s from './Today.module.css';
 
-const TIPO: Record<TipoBlocco, Chiave> = {
-  todo: 'tipoTodo',
-  studio: 'tipoStudio',
-  routine: 'tipoRoutine',
-  evento: 'tipoEvento',
-};
 // Forme brevi nella colonna dell'orario («Norm.», S1)
 const PRIORITA = { alta: 'prioritaBreveAlta', normale: 'prioritaBreveNormale', bassa: 'prioritaBreveBassa' } as const;
 const FRECCE: Record<Vista, [Chiave, Chiave]> = {
@@ -55,14 +50,6 @@ const intervallo = (da: string, a: string) =>
   new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(data(da), data(a));
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
 const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
-const titolo = (b: BloccoCalendario) => b.titolo || t(TIPO[b.tipo]);
-
-function sottotitolo(b: BloccoCalendario): string {
-  if (b.stato === 'perso' && b.conOrario) return t('persaEraAlle', { ora: b.orarioInizio });
-  const lista = b.checklist ?? [];
-  if (lista.length) return t('checklistConto', { fatte: lista.filter((v) => v.fatta).length, totale: lista.length });
-  return b.luogo ?? '';
-}
 
 export function Today() {
   const [parametri, setParametri] = useSearchParams();
@@ -189,7 +176,13 @@ export function Today() {
         </div>
       </header>
 
-      <div className={s.corpo} onPointerDown={giu} onPointerUp={su} onPointerCancel={() => (inizio.current = null)}>
+      <div
+        className={s.corpo}
+        data-vista={vista}
+        onPointerDown={giu}
+        onPointerUp={su}
+        onPointerCancel={() => (inizio.current = null)}
+      >
         {vista === 'mese' && <h2 className={`${s.meseMobile} ${s.soloMobile}`}>{etichettaPeriodo}</h2>}
         {vista !== 'mese' && (
           <>
@@ -219,6 +212,10 @@ export function Today() {
         )}
         {vista === 'giorno' && (
           <>
+            {/* Colonna laterale di S1 Desktop (360); su mobile il blocco Adesso sta qui, fra striscia e giornata */}
+            <div className={s.lato}>
+              <NowBlock sfondo={sfondo} />
+            </div>
             <hr className={`${s.separatore} ${s.soloMobile}`} />
             <h2 className={`${s.giornoTitolo} ${s.soloDesktop}`}>{giornoLungo}</h2>
             {pronto && blocchi(giorno).length === 0 ? (

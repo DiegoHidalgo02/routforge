@@ -89,10 +89,10 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
     }
   });
 
-  it('oggi il loop riparte da T-010 con Opus 5.5 (CP2 approvato il 25/09/2026, marcatori tolti; T-009 e T-011 fatti)', () => {
+  it('oggi il loop riparte da T-012 con Opus 5.5 (T-010 fatto il 26/09/2026; T-011, da cui dipende, fatto)', () => {
     expect(prossimoTask(reale, nessunPiano)).toMatchObject({
       trovato: true,
-      id: 'T-010',
+      id: 'T-012',
       fase: 'unica',
       modello: 'Opus 5.5',
       usaFable: false,

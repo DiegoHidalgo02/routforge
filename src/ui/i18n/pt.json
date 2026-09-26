@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "A operação falhou. Tenta outra vez.",
   "residuoTitolo": "Itens por marcar: {n}",
   "residuoTesto": "Cria um todo com os itens restantes, com a mesma prioridade e o mesmo prazo. Com «Agora não» o todo fica apenas marcado como feito.",
-  "creaResiduo": "Criar todo com os itens restantes"
+  "creaResiduo": "Criar todo com os itens restantes",
+  "adesso": "Agora",
+  "traPoco": "Em breve",
+  "daRecuperare": "Por recuperar",
+  "concluso": "Encerrado",
+  "apri": "Abrir",
+  "chiudiPerOggi": "Fechar por hoje",
+  "minutiUnita": "min",
+  "allInizio": "para começar",
+  "allaFine": "para terminar",
+  "ultimoAvvio": "último início"
 }

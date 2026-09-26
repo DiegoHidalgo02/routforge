@@ -1,0 +1,313 @@
+/* Blocco Adesso (S1 NowBlock, DESIGN.md §8): solo token. Il colore dello stato (accento, pallino, eyebrow, numero)
+   arriva da `data-stato` sulle variabili locali --stato e --stato-chiaro; il badge del tipo da `data-tipo`. Gli scarti
+   fuori dalla scala dei mock vanno al token più vicino, a parità al più piccolo: 11 → 12, 10 → 8, 7 → 8, 5 → 4, 3 → 4,
+   13 → 12, 9 → 8, azione 38 → 36; restano letterali 6 (pallino e suo gap, come i puntini di Oggi) e 1. */
+
+/* Appiccicato in testa su mobile: il fondo copre ciò che scorre sotto (S1 Mobile) */
+.fisso {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 3;
+  padding: var(--space-2) 0;
+  background: var(--color-bg);
+}
+
+.card {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-card-inner);
+  overflow: hidden;
+  padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-card-inner) + var(--size-accent-bar));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  animation: global(rf-expand) var(--dur-block) var(--ease-out-soft);
+}
+
+.card[data-stato='adesso'] {
+  --stato: var(--color-primary);
+  --stato-chiaro: var(--color-primary-light);
+}
+
+.card[data-stato='tra'],
+.card[data-stato='orario_passato'] {
+  --stato: var(--color-text-2);
+  --stato-chiaro: var(--color-text-dim);
+}
+
+/* Giallo di avviso: il chiaro del gradiente è l'unico giallo chiaro dei token */
+.card[data-stato='recupera'] {
+  --stato: var(--color-warning);
+  --stato-chiaro: var(--color-cat-routine-light);
+}
+
+.card[data-tipo='todo'] {
+  --ink: var(--color-cat-todo-ink);
+  --soft: var(--color-cat-todo-soft);
+}
+
+.card[data-tipo='studio'] {
+  --ink: var(--color-cat-study-ink);
+  --soft: var(--color-cat-study-soft);
+}
+
+.card[data-tipo='routine'] {
+  --ink: var(--color-cat-routine-ink);
+  --soft: var(--color-cat-routine-soft);
+}
+
+.card[data-tipo='evento'] {
+  --ink: var(--color-cat-event-ink);
+  --soft: var(--color-cat-event-soft);
+}
+
+/* Accento animato senza alone (DESIGN.md §5: nel NowBlock la barra non ha alone, `nowBarGlow: none`; il pallino
+   dell'eyebrow sì, come nel mock) */
+.accento {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-accent-bar);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: linear-gradient(180deg, var(--stato-chiaro), var(--stato) 50%, var(--stato-chiaro));
+  animation: global(rf-bar) var(--dur-bar) ease-in-out infinite;
+}
+
+.eyebrow {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--stato);
+  font: 600 var(--text-2xs) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.pallino {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--stato);
+  color: var(--stato);
+  box-shadow: var(--glow-dot-week);
+}
+
+/* × 24 con area di tocco 44 (DESIGN.md §4) */
+.chiudi {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  /* La riga dell'eyebrow resta alta quanto la sua interlinea: il bottone 24 sporge sopra e sotto (mock: -6) */
+  margin: calc((var(--text-2xs) * var(--leading-tight) - var(--space-6)) / 2) 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.chiudi::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-6) - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+.chiudi:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.titolo,
+.sub,
+.numeroSub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titolo {
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: var(--space-2);
+  font: 600 var(--text-lg-3) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.sub {
+  grid-column: 1;
+  grid-row: 3;
+  margin-top: var(--space-1);
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+.sub:empty {
+  display: none;
+}
+
+.meta {
+  grid-column: 1;
+  grid-row: 4;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.badge {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--soft);
+  color: var(--ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.numeri {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.numero {
+  flex: none;
+  color: var(--stato);
+  font: 600 var(--text-base) / var(--leading-tight) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.unita {
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) / var(--leading-tight) var(--font-num);
+}
+
+.numeroSub {
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-tight) var(--font-ui);
+}
+
+/* Azione (DESIGN.md §8: 38 r11): «Apri» nello stile secondario del mock; i primari della sessione arrivano con T-016 */
+.azione {
+  position: relative;
+  grid-column: 2;
+  grid-row: 3 / span 2;
+  justify-self: end;
+  align-self: end;
+  height: var(--size-control-sm);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-action);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.azione::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--size-control-sm) - var(--size-touch)) / 2) 0;
+  border-radius: inherit;
+}
+
+.azione:hover {
+  background: var(--color-surface-3);
+}
+
+/* Compresso allo scorrimento (S1 Mobile «Blocco Adesso compresso»): 48 di altezza, pallino · titolo e numeri · azione */
+.compatta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: calc(var(--size-row) + var(--space-1));
+  padding: 0 var(--space-2) 0 calc(var(--space-card-inner) + var(--size-accent-bar));
+  animation: global(rf-shrink) var(--dur-block) var(--ease-out-soft);
+}
+
+.colonna {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.compatta .titolo {
+  margin: 0;
+  font: 600 var(--text-md) / var(--leading-tight) var(--font-ui);
+  letter-spacing: 0;
+}
+
+.compatta .numero {
+  font-size: var(--text-xs);
+}
+
+.compatta .unita {
+  font-size: var(--text-2xs);
+}
+
+.compatta .numeroSub {
+  font-size: var(--text-xs);
+}
+
+.compatta .azione {
+  height: var(--size-chip);
+  flex: none;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  font-size: var(--text-sm);
+}
+
+.compatta .azione::after {
+  inset: calc((var(--size-chip) - var(--size-touch)) / 2) 0;
+}
+
+/* Riduzione animazioni: solo dissolvenze (DESIGN.md §4); la barra infinita si ferma, perché con la durata a .01 ms
+   campionerebbe una fase diversa a ogni frame */
+@media (prefers-reduced-motion: reduce) {
+  .accento {
+    animation: none;
+  }
+}
+
+/* Desktop da 1024 px (D-UI-1): nella colonna laterale, senza sticky né compressione */
+@media (min-width: 1024px) {
+  .fisso {
+    position: static;
+    padding: 0;
+    background: none;
+  }
+}

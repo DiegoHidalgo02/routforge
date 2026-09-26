@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "La operación no se completó. Vuelve a intentarlo.",
   "residuoTitolo": "Elementos sin marcar: {n}",
   "residuoTesto": "Crea un todo con los elementos restantes, con la misma prioridad y el mismo plazo. Con «Ahora no» el todo se marca como hecho y nada más.",
-  "creaResiduo": "Crear todo con los elementos restantes"
+  "creaResiduo": "Crear todo con los elementos restantes",
+  "adesso": "Ahora",
+  "traPoco": "Dentro de poco",
+  "daRecuperare": "Por recuperar",
+  "concluso": "Concluido",
+  "apri": "Abrir",
+  "chiudiPerOggi": "Cerrar por hoy",
+  "minutiUnita": "min",
+  "allInizio": "para empezar",
+  "allaFine": "para terminar",
+  "ultimoAvvio": "último inicio"
 }

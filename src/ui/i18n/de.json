@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "Vorgang fehlgeschlagen. Versuch es erneut.",
   "residuoTitolo": "Nicht abgehakte Punkte: {n}",
   "residuoTesto": "Lege ein Todo mit den restlichen Punkten an, gleiche Priorität und gleiche Frist. Mit „Nicht jetzt“ wird das Todo nur als erledigt markiert.",
-  "creaResiduo": "Todo mit den restlichen Punkten anlegen"
+  "creaResiduo": "Todo mit den restlichen Punkten anlegen",
+  "adesso": "Jetzt",
+  "traPoco": "Gleich",
+  "daRecuperare": "Nachzuholen",
+  "concluso": "Beendet",
+  "apri": "Öffnen",
+  "chiudiPerOggi": "Für heute schließen",
+  "minutiUnita": "min",
+  "allInizio": "bis zum Beginn",
+  "allaFine": "bis zum Ende",
+  "ultimoAvvio": "spätester Start"
 }

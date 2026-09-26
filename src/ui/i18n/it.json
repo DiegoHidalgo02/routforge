@@ -181,5 +181,15 @@
   "azioneNonRiuscita": "Operazione non riuscita. Riprova.",
   "residuoTitolo": "Voci non spuntate: {n}",
   "residuoTesto": "Crea un todo con le voci rimaste, con la stessa priorità e la stessa scadenza. Con «Non ora» il todo viene segnato fatto e basta.",
-  "creaResiduo": "Crea todo con le voci rimaste"
+  "creaResiduo": "Crea todo con le voci rimaste",
+  "adesso": "Adesso",
+  "traPoco": "Tra poco",
+  "daRecuperare": "Da recuperare",
+  "concluso": "Concluso",
+  "apri": "Apri",
+  "chiudiPerOggi": "Chiudi per oggi",
+  "minutiUnita": "min",
+  "allInizio": "all’inizio",
+  "allaFine": "alla fine",
+  "ultimoAvvio": "ultimo avvio"
 }
