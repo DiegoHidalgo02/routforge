@@ -16,7 +16,8 @@ T-011, come realizzare «elimina le future e rigenera» e quali blocchi siano «
    si crea anche a orario passato, alla creazione come alla modifica.
 2. **Id di slot** `<ricorrenzaId>:<YYYY-MM-DD>:<HH:MM>` con l'orario d'inizio della definizione (`occurrenceId`): stabile
    allo spostamento (C4) e al riancoraggio; un orario nuovo è uno slot nuovo (B6). Le esistenti si leggono con una
-   query sull'indice `ricorrenzaId` (`listBy`).
+   query sull'indice `ricorrenzaId` (`listBy`); da T-013 la generazione legge solo gli slot dell'orizzonte per
+   intervallo di chiave primaria (`horizonSlotRange`, `listKeyRange`), che include le occorrenze spostate (D-SCHED-1).
 3. **Occorrenza**: `programmato`, `conOrario` vero anche senza durata (fine `null`), titolo, note, promemoria e corso
    copiati dalla definizione, nessuna fase, nessuna unità finché il puntatore non la assegna (T-013).
 4. **Modifica** = differenza (`editPlan`): future `programmate` (inizio > adesso) non più previste → tombstone; ancora

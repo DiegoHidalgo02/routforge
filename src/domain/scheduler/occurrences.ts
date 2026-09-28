@@ -24,6 +24,18 @@ export const ORIZZONTE_OCCORRENZE_GIORNI = 28;
 export const occurrenceId = (ricorrenzaId: string, giorno: string, orarioInizio: string): string =>
   `${ricorrenzaId}:${giorno}:${orarioInizio}`;
 
+/**
+ * Intervallo delle chiavi degli slot dell'orizzonte, da oggi a oggi + 28 inclusi (§7): gli id di slot si ordinano per
+ * ricorrenza, giorno e orario, e un'occorrenza spostata conserva il suo (D-DATA-2). Così la generazione legge solo gli
+ * slot che confronta, non tutta la storia della routine (D-SCHED-1).
+ */
+export function horizonSlotRange(ricorrenzaId: string, now: number): readonly [string, string] {
+  const oggi = startOfLocalDay(now);
+  const ultimo = localDayKey(addLocalDays(oggi, ORIZZONTE_OCCORRENZE_GIORNI));
+  // "~" viene dopo le cifre e i ":" dell'orario: chiude il giorno `ultimo` a ogni orario
+  return [`${ricorrenzaId}:${localDayKey(oggi)}`, `${ricorrenzaId}:${ultimo}:~`];
+}
+
 /** Giorno locale dello slot, letto dall'id (D-DATA-2): resta quello anche se l'utente ha spostato l'occorrenza (C4). */
 export const occurrenceDay = (id: string, ricorrenzaId: string): string =>
   id.slice(ricorrenzaId.length + 1, ricorrenzaId.length + 11);

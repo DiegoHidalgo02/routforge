@@ -12,6 +12,7 @@ import {
   inTransaction,
   list,
   listBy,
+  listKeyRange,
   newId,
   remove,
   save,
@@ -176,6 +177,17 @@ describe('Occorrenze: id deterministico dello slot — MECC §7, D-DATA-2', () =
     await saveBlock(db, occorrenza(26, 7, { id: 'altra', ricorrenzaId: 'r-altra' }), T0, ROMA);
     await remove(db, 'blocchi', b.id, T1);
     expect((await listBy(db, 'blocchi', 'ricorrenzaId', 'r-corsa')).map((r) => r.id)).toEqual([a.id]);
+  });
+
+  it('listKeyRange: i record vivi con la chiave fra due estremi inclusi, in ordine di chiave (eliminati e fuori intervallo no)', async () => {
+    await saveBlock(db, occorrenza(24), T0, ROMA);
+    const b = await saveBlock(db, occorrenza(25), T0, ROMA);
+    const c = await saveBlock(db, occorrenza(26, 18), T0, ROMA);
+    const eliminata = await saveBlock(db, occorrenza(26, 7), T0, ROMA);
+    await saveBlock(db, occorrenza(27), T0, ROMA);
+    await remove(db, 'blocchi', eliminata.id, T1);
+    const trovati = await listKeyRange(db, 'blocchi', 'r-corsa:2026-09-25', 'r-corsa:2026-09-26:~');
+    expect(trovati.map((r) => r.id)).toEqual([b.id, c.id]);
   });
 });
 

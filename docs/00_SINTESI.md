@@ -12,7 +12,7 @@ Un'app personale (un utente, i suoi dispositivi) di **organizzazione e studio**:
 |---|---|---|
 | Calendario "Oggi" | Giorno/Settimana/Mese, quattro tipi di attività, blocco "Adesso/prossimo", trascinamento dei todo senza orario | FUNZ §2–§4, MECC §14–§15, §24 |
 | Quattro attività | **Todo** (orizzonte giorno/settimana/mese, checklist), **Evento** (fasi, mai "perso"), **Routine** (fasi, senza durata possibile), **Routine di studio** (agganciata a un corso, riceve l'unità dal puntatore) | FUNZ §3, MECC §2 |
-| Scheduler | A ogni avvio/primo piano/cambio giorno: estende le occorrenze (28 gg), sposta i todo, azzera gli orfani, marca i persi, riconcilia le notifiche, aggiorna la streak — in quest'ordine, idempotente | MECC §6–§9 |
+| Scheduler | A ogni avvio/primo piano/cambio giorno (con l'app aperta ogni minuto, e a ogni modifica delle routine: D-SCHED-1): riancora al cambio di fuso (D-TIME-2), estende le occorrenze (28 gg), sposta i todo, azzera gli orfani, marca i persi, ricalcola il puntatore, riconcilia le notifiche, aggiorna la streak — in quest'ordine, idempotente | MECC §6–§9 |
 | Sessione di studio | Setup (cosa/quanto/modalità), timer persistente, pomodoro, tempo extra, iperfocus, quattro esiti (Completata/Continua/Indietro/Salta) | FUNZ §11, MECC §10–§11 |
 | Corsi | Import da ZIP di markdown (Corso → Moduli → Unità → 4 sezioni → risorse), puntatore dell'unità, moduli bloccati dai criteri Go/No-Go | FORMATO_CORSO, MECC §16 |
 | Notifiche | Default per tipo, override per istanza, sveglie a schermo intero, finestra 14 gg, riconciliazione, ore silenziose, digest mattutino, azioni rapide | FUNZ §7, MECC §13 |

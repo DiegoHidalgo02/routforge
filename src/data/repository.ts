@@ -78,6 +78,21 @@ export async function listBy<K extends NomeTabella>(
   return righe.filter((r): r is Tabelle[K] => vivo(r));
 }
 
+/**
+ * I record vivi con la chiave primaria fra `da` e `a` inclusi, in ordine di chiave. Serve dove l'id è logico e ordinato,
+ * come gli slot delle occorrenze `<ricorrenza>:<giorno>:<orario>` (D-DATA-2): la generazione legge solo i giorni
+ * dell'orizzonte invece di tutta la storia della routine (D-SCHED-1).
+ */
+export async function listKeyRange<K extends NomeTabella>(
+  db: RoutForgeDb,
+  nome: K,
+  da: string,
+  a: string,
+): Promise<Tabelle[K][]> {
+  const righe = await tabella(db, nome).where(':id').between(da, a, true, true).toArray();
+  return righe.filter((r): r is Tabelle[K] => vivo(r));
+}
+
 /** Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. */
 export async function save<K extends Exclude<NomeTabella, 'blocchi'>>(
   db: RoutForgeDb,

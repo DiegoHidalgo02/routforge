@@ -15,6 +15,7 @@ export * from './ordering';
 export * from './calendar';
 export * from './scheduler/occurrences';
 export * from './scheduler/horizon';
+export * from './scheduler/cycle';
 export * from './completion';
 export * from './checklist';
 export * from './phases';

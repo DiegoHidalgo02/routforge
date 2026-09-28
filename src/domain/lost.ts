@@ -1,7 +1,7 @@
 /**
- * Blocchi persi, scadenza di recupero, finestra di spunta delle routine.
- * Fonti: RoutForge_MECCANISMI.md §3 (spunta), §6 (todo "non fatto"), §8 (persi e recupero).
- * Criteri: SCENARI A1, B2, B3, B4, B7, E2.
+ * Blocchi persi, orfani, scadenza di recupero, finestra di spunta delle routine.
+ * Fonti: RoutForge_MECCANISMI.md §3 (spunta), §6 (todo "non fatto"), §8 (persi, recupero, orfani).
+ * Criteri: SCENARI A1, B2, B3, B4, B7, C8, E2.
  *
  * - Fine effettiva = fine reale, oppure 23:59 del giorno d'inizio (senza durata / senza orario).
  * - `perso`: blocco `programmato`, non evento, non todo entro orizzonte, fine effettiva
@@ -66,6 +66,19 @@ export function shouldMarkLost(block: Blocco & { giornoLocale?: string }, now: n
   if (block.tipo === 'evento') return false;
   if (isRollingTodo(block, now)) return false;
   return now > effectiveEnd(block) + LOST_GRACE_MS;
+}
+
+/**
+ * Orfano `in corso` (§8): un blocco resta `in_corso` solo mentre la sessione attiva lo punta. Non collegato a
+ * `bloccoSessioneAttiva` e con la fine effettiva passata da > 30' torna `programmato`, prima della marcatura dei persi
+ * (§9). Con la sessione attiva sul blocco non è mai orfano, anche nel tempo extra (§10.4).
+ */
+export function isOrphan(
+  block: Pick<Blocco, 'id' | 'stato' | 'inizio' | 'fine' | 'conOrario'>,
+  bloccoSessioneAttiva: string | null,
+  now: number,
+): boolean {
+  return block.stato === 'in_corso' && block.id !== bloccoSessioneAttiva && now > effectiveEnd(block) + LOST_GRACE_MS;
 }
 
 /** Istante esatto in cui il blocco diventa perso (utile a test e diagnostica). */

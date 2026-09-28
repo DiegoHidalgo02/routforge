@@ -2,21 +2,25 @@
  * Routine e routine di studio (MECC §7): le occorrenze si generano alla creazione, si rigenerano alla modifica e si
  * tolgono all'eliminazione. La differenza la calcola il dominio (`src/domain/scheduler/occurrences.ts`); qui si legge
  * e si scrive, in una transazione per operazione (generazioni concorrenti serializzate, §7). Il ciclo che estende
- * tutte le ricorrenze a ogni avvio e il puntatore delle occorrenze di studio sono T-013; le notifiche T-019.
+ * tutte le ricorrenze e il puntatore delle occorrenze di studio stanno in `scheduler.ts` e `pointer.ts` (T-013, che
+ * parte anche a ogni scrittura sulle ricorrenze); le notifiche T-019.
  * Per saltare una singola occorrenza si aggiunge il suo giorno a `dateSaltate` con `editRecurrence`: eliminare il
  * blocco non basta, la generazione successiva lo ricreerebbe con lo stesso id (D-DATA-2, D-OCC-1).
  */
 import type { RoutForgeDb } from '../data/db';
-import { inTransaction, listBy, remove, save, saveBlock } from '../data/repository';
-import { editPlan, missingOccurrences, removableOccurrences } from '../domain/scheduler/occurrences';
+import { inTransaction, listBy, listKeyRange, remove, save, saveBlock } from '../data/repository';
+import { editPlan, horizonSlotRange, missingOccurrences, removableOccurrences } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 
 const occurrencesOf = (db: RoutForgeDb, ricorrenzaId: string) => listBy(db, 'blocchi', 'ricorrenzaId', ricorrenzaId);
 
-/** Crea le occorrenze mancanti da oggi a oggi + 28 (§7) e ne restituisce il numero; senza cambiamenti non scrive nulla. */
+/**
+ * Crea le occorrenze mancanti da oggi a oggi + 28 (§7) e ne restituisce il numero; senza cambiamenti non scrive nulla.
+ * Legge solo gli slot dell'orizzonte, per chiave: il ciclo la chiama a ogni minuto e la storia cresce (D-SCHED-1).
+ */
 export async function generateOccurrences(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<number> {
   return inTransaction(db, ['blocchi'], async () => {
-    const mancanti = missingOccurrences(r, await occurrencesOf(db, r.id), now);
+    const mancanti = missingOccurrences(r, await listKeyRange(db, 'blocchi', ...horizonSlotRange(r.id, now)), now);
     for (const b of mancanti) await saveBlock(db, b, now, fuso);
     return mancanti.length;
   });

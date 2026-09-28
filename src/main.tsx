@@ -10,6 +10,9 @@ import './ui/styles/tokens.css';
 import './ui/styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { appDb } from './app/db';
+import { createScheduler } from './app/scheduler';
+import { webClock } from './platform/clock';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
 
@@ -26,3 +29,6 @@ if (radice)
 // Archiviazione persistente (D-DATA-1, docs/02_ARCHITETTURA.md §8), dopo il montaggio e mai bloccante (INV-16): il
 // browser può non averla o rifiutarla; lo stato si mostra in Diagnostica (T-032).
 void navigator.storage?.persist?.().catch(() => false);
+// Ciclo dello scheduler (MECC §9, D-SCHED-1): subito, al ritorno in primo piano, a ogni minuto e alle modifiche delle
+// routine. Non blocca il primo disegno: le query live delle schermate mostrano il risultato quando arriva.
+createScheduler(appDb, webClock).start();

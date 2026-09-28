@@ -36,7 +36,7 @@ descrive lo stack scelto.
 src/
 ├── domain/      Meccanismi puri (TS senza I/O). Già presenti: time, types, sm2, streak, pomodoro,
 │                practice, pointer, lost, nowBlock, course/parser, activity, ordering, calendar, language,
-│                scheduler/occurrences (T-011). In arrivo: scheduler/ (horizon, cycles),
+│                scheduler/occurrences (T-011), scheduler/horizon (T-012), scheduler/cycle (T-013). In arrivo:
 │                notifications/ (desiredSet, quietHours, digest), session/ (timer, outcome), stats, sync/ (merge).
 │                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
 ├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.
@@ -44,11 +44,13 @@ src/
 ├── app/         Servizi: SchedulerService (cicli §9), SessionService (timer §10), NotificationPlanner (§13),
 │                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
 │   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, Alarms, DoNotDisturb, Widget, FileSystem,
-│                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test
+│                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test.
+│                Già presente: clock (T-013; l'orologio finto sta nel test che lo usa)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
 │                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
 └── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
+                 Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView)
 ```
 
 **Regola**: `ui → app → data → domain`. `platform` è iniettato in `app` tramite le porte (`src/app/ports/*.ts`) così
@@ -93,17 +95,23 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 
 ## 4. Servizi chiave
 
-- **SchedulerService.run(now)** — esegue nell'ordine vincolante di §9 usando `domain/lost.ts`, `domain/pointer.ts`,
-  e i futuri `domain/scheduler/*`. Invocato a: avvio, primo piano, cambio giorno (timer 60 s sulla data locale),
-  CRUD di routine, ricezione sync. Deve essere idempotente: rieseguirlo senza cambiamenti non scrive nulla (INV-15).
+- **SchedulerService** (`src/app/scheduler.ts`, T-013, D-SCHED-1) — `runCycle(db, now, fuso)` esegue in **una
+  transazione** riancoraggio (D-TIME-2) → estensione delle ricorrenze → spostamento dei todo → reset degli orfani →
+  marcatura dei persi → puntatore di ogni corso, con i giudizi di `domain/scheduler/*`, `domain/lost.ts` e
+  `domain/pointer.ts`, e restituisce gli id degli avvisi «in ritardo» e «perso» (T-020). `createScheduler(db, clock)`
+  dà `run()` e `start()`: all'avvio, al ritorno in primo piano, **ogni minuto** (il ciclo intero: B7, fini alle
+  23:59) e a ogni scrittura su `ricorrenze` (CRUD di routine, poi la sync); lo avvia `src/main.tsx`. Dopo la
+  transazione, in `run()`, la riconciliazione delle notifiche (T-019). Idempotente: rieseguirlo senza cambiamenti non
+  scrive nulla (INV-15); un ciclo che fallisce non scrive e non arriva alla UI.
 - **SessionService** — una sola sessione attiva (§10); stato persistito in `preferenze` per sopravvivere alla chiusura
   (D4); tick derivato dagli istanti assoluti, non da contatori.
 - **NotificationPlanner.desiredSet(now)** — calcola l'insieme desiderato (§13.3) in modo deterministico
   (id = hash di trigger+anticipo+blocco); l'adapter fa `cancel(registro − desiderato)` e `schedule(desiderato − registro)`.
   **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**; l'hash deve produrre un intero in
   [-2147483648, 2147483647] (chiave logica testuale → id numerico nel registro), gestendo le collisioni.
-- **CoursePointer.recompute(corsoId)** — `assignPointer` sui blocchi futuri `programmati` del corso; chiamato dopo
-  ogni esito, marcatura persa di studio, generazione, import.
+- **CoursePointer.recompute(corsoId)** = `recomputePointer` (`src/app/pointer.ts`, T-013) — `pointerPlan` sui blocchi di
+  studio futuri `programmati` del corso, scrive solo gli `unitaId` che cambiano; il ciclo lo chiama per ogni corso
+  (dopo la generazione e la marcatura persa, FUNZ §8), T-018 dopo ogni esito.
 
 **Schema comune dei meccanismi** (già usato per le notifiche, §13.3): una funzione pura del dominio riceve lo stato
 rilevante e `now` e restituisce l'**insieme desiderato** o la **differenza da applicare** (da creare, aggiornare,

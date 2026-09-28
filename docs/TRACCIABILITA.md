@@ -16,26 +16,26 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 
 | Scenario | Regole | Dove | Task | Test | Stato |
 |---|---|---|---|---|---|
-| A1 | MECC §6, §13.6 | domain/lost (marcatura) · domain/scheduler/horizon (non rotola; avviso una volta, `lateNoticeDue`) · app/horizon · app/scheduler (marcatura con avviso, T-013) · app/notifications (one-shot) · ui Oggi | T-001, T-012, T-013, T-020 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/app/horizon.test.ts | parziale |
-| A2 | MECC §4, §6 | domain/scheduler/horizon (slot libero, `rollPlan`) · domain/lost · app/horizon (`rollTodos`) · app/scheduler (ciclo all'apertura, T-013) | T-001, T-012, T-013 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/app/horizon.test.ts | parziale |
+| A1 | MECC §6, §13.6 | domain/lost (marcatura) · domain/scheduler/horizon (non rotola; avviso una volta, `lateNoticeDue`) · domain/scheduler/cycle (`lostPlan`: «non fatto» con `ritardoIl`) · app/horizon · app/scheduler (marcatura con avviso nel ciclo) · app/notifications (one-shot, T-020) · ui Oggi | T-001, T-012, T-013, T-020 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/domain/scheduler/cycle.test.ts, src/app/horizon.test.ts, src/app/scheduler.test.ts | parziale |
+| A2 | MECC §4, §6 | domain/scheduler/horizon (slot libero, `rollPlan`) · domain/lost · app/horizon (`rollTodos`) · app/scheduler (ciclo a ogni apertura: spostamento e «non fatto» il lunedì) | T-001, T-012, T-013 | src/domain/lost.test.ts, src/domain/scheduler/horizon.test.ts, src/app/horizon.test.ts, src/app/scheduler.test.ts | coperto |
 | A3 | MECC §3, §4, §13.2 | domain/checklist · domain/completion · app/completion · app/notifications (cancella e ri-arma) · ui Dettaglio S5 (editor della checklist: T-042) | T-009, T-019, T-042 | src/domain/checklist.test.ts, src/app/completion.test.ts | parziale |
 | A4 | MECC §13.5 | domain/notifications/digest · app/notifications | T-020 | — | nessuno |
 | A5 | MECC §2, §6, §21, §24 | domain/ordering · app/activities · ui Oggi · platform/widget | T-007, T-008, T-023 | src/domain/ordering.test.ts, src/app/activities.test.ts, src/app/calendar.test.ts | parziale |
-| B1 | MECC §7 | domain/scheduler/occurrences · app/recurrences · app/scheduler (estensione a ogni ciclo) | T-011, T-013 | src/domain/scheduler/occurrences.test.ts, src/app/recurrences.test.ts | parziale |
-| B2 | MECC §3, §8 | domain/lost (finestra di spunta, marcatura) · domain/completion · app/completion · app/scheduler (marcatura nel ciclo) · ui Dettaglio S5 | T-001, T-009, T-013 | src/domain/lost.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts | parziale |
+| B1 | MECC §7 | domain/scheduler/occurrences · app/recurrences · app/scheduler (estensione a ogni ciclo) | T-011, T-013 | src/domain/scheduler/occurrences.test.ts, src/app/recurrences.test.ts, src/app/scheduler.test.ts | coperto |
+| B2 | MECC §3, §8 | domain/lost (finestra di spunta, marcatura) · domain/completion · app/completion · app/scheduler (marcatura nel ciclo) · ui Dettaglio S5 | T-001, T-009, T-013 | src/domain/lost.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts, src/app/scheduler.test.ts | coperto |
 | B3 | MECC §3, §7, §8, §14 | domain/lost · domain/nowBlock · domain/scheduler/occurrences (fine ≤ inizio → giorno dopo) | T-001, T-011 | src/domain/lost.test.ts, src/domain/scheduler/occurrences.test.ts | coperto |
 | B4 | MECC §7, §8, §20 | domain/lost · domain/scheduler/occurrences · domain/stats (mappa di calore, sezione «senza durata») | T-001, T-011, T-029 | src/domain/lost.test.ts, src/domain/scheduler/occurrences.test.ts | parziale |
 | B5 | MECC §5 | domain/phases · app/completion · data (tabella logFasi) · ui Dettaglio S5 (revisione S9) · statistiche per fase (T-029) | T-009, T-029 | src/domain/phases.test.ts, src/app/completion.test.ts | parziale |
 | B6 | MECC §7, §13.3 | domain/scheduler/occurrences (modifica) · app/recurrences · app/notifications (notifiche ricalcolate) | T-011, T-019 | src/domain/scheduler/occurrences.test.ts, src/app/recurrences.test.ts | parziale |
-| B7 | MECC §8, §13.2, §13.6, §20 | domain/lost (scadenza di recupero) · app/scheduler · app/notifications · domain/stats | T-001, T-013, T-020, T-029 | src/domain/lost.test.ts | parziale |
-| C1 | MECC §11, FORMATO §4 | domain/pointer | T-001 | src/domain/pointer.test.ts | parziale |
+| B7 | MECC §8, §13.2, §13.6, §20 | domain/lost (scadenza di recupero) · domain/scheduler/cycle (marcatura, avviso «perso» una volta) · app/scheduler (marcatura alle 20:30 nel ciclo, anche ad app aperta) · app/notifications (verifica T-019, invio dell’avviso T-020) · domain/stats | T-001, T-013, T-019, T-020, T-029 | src/domain/lost.test.ts, src/domain/scheduler/cycle.test.ts, src/app/scheduler.test.ts | parziale |
+| C1 | MECC §11, FORMATO §4 | domain/pointer (`assignPointer`, `pointerPlan`) · app/pointer (`recomputePointer`) · app/scheduler (puntatore a ogni ciclo, anche dopo la creazione della routine) | T-001, T-013 | src/domain/pointer.test.ts, src/app/pointer.test.ts, src/app/scheduler.test.ts | coperto |
 | C2 | MECC §11, §12 | domain/pointer (progresso) · domain/streak · app/session | T-001, T-018 | src/domain/pointer.test.ts, src/domain/streak.test.ts | parziale |
 | C3 | MECC §11 | domain/pointer · app/session | T-001, T-018 | src/domain/pointer.test.ts | parziale |
 | C4 | MECC §10.1 | app/session (setup, anticipo) | T-016 | — | nessuno |
 | C5 | MECC §10.1, §20 | app/session (recupero, ritardo) · domain/stats | T-016 | — | nessuno |
 | C6 | MECC §8, §11 | domain/lost (esiti pendenti) · app/session (Registra esito) · ui Notifiche | T-001, T-018, T-022 | src/domain/lost.test.ts | parziale |
 | C7 | MECC §11 | app/session (blocco retroattivo) · domain/pointer | T-018 | — | nessuno |
-| C8 | MECC §8, §9 | app/scheduler (orfani) · app/session (abbandono) | T-013 | — | nessuno |
+| C8 | MECC §8, §9, §10.5 | domain/lost (`isOrphan`) · domain/scheduler/cycle (`orphanPlan`) · app/scheduler (orfani prima dei persi, sessione attiva in `preferenze.sessioneAttiva`) · app/session (abbandono → `programmato`, T-017) | T-013, T-017 | src/domain/lost.test.ts, src/domain/scheduler/cycle.test.ts, src/app/scheduler.test.ts | parziale |
 | C9 | MECC §7, §10.1, §11, §12 | app/session (setup senza corso) · domain/pointer | T-016, T-018 | — | nessuno |
 | D1 | MECC §10.2, §13.6 | domain/session/timer (ancorata all'orologio) | T-017 | — | nessuno |
 | D2 | MECC §10.2 | domain/session/timer (ancorata al focus) | T-017 | — | nessuno |
@@ -44,7 +44,7 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | D5 | MECC §10.4, §20 | app/session (iperfocus) · platform/doNotDisturb · domain/stats | T-017, T-029 | — | nessuno |
 | D6 | MECC §10.1 | app/session (una sola sessione) | T-016 | — | nessuno |
 | E1 | MECC §3, §5 | domain/phases (log, follow-up) · app/completion · ui Dettaglio S5 (revisione e follow-up) | T-009 | src/domain/phases.test.ts, src/app/completion.test.ts (T-009: evento completato, log 1 fatta + 1 saltata, todo «Stampare analisi» senza orario nel giorno dell'evento con orizzonte giorno; E1 allineato a D-DETT-1 e D-DETT-2 il 25/09/2026) | coperto |
-| E2 | MECC §3, §8, §20 | domain/lost (evento mai perso) · domain/completion (stato «concluso») · app/completion · ui Dettaglio S5 · domain/stats | T-001, T-009 | src/domain/lost.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts | parziale |
+| E2 | MECC §3, §8, §20 | domain/lost (evento mai perso) · domain/scheduler/cycle (mai marcato né avvisato) · domain/completion (stato «concluso») · app/completion · app/scheduler · ui Dettaglio S5 · domain/stats | T-001, T-009, T-013 | src/domain/lost.test.ts, src/domain/scheduler/cycle.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts, src/app/scheduler.test.ts | parziale |
 | E3 | MECC §13.2, §14, §24 | domain/nowBlock · app/nowBlock · domain/notifications (08:00) | T-001, T-010, T-019 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | parziale |
 | F1 | MECC §13.1–§13.3 | domain/notifications/desiredSet · app/notifications | T-019 | — | nessuno |
 | F2 | MECC §13.1, §13.2, §21 | domain/notifications (sveglie) · platform/alarms | T-019, T-021 | — | nessuno |
@@ -55,7 +55,7 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | G1 | MECC §14 | domain/nowBlock · app/nowBlock · ui Oggi (NowBlock S1) | T-001, T-010 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | coperto |
 | G2 | MECC §14 | domain/nowBlock (chiusura) · app/nowBlock (chiusure in preferenze) · ui Oggi (NowBlock S1) | T-001, T-010 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | coperto |
 | G3 | MECC §15 | ui Oggi (trascinamento) · domain/scheduler/horizon (slot) · app/notifications | T-015 | — | nessuno |
-| G4 | MECC §9 | app/scheduler (cambio giorno ogni 60 s) · ui Oggi | T-013 | — | nessuno |
+| G4 | MECC §9, FUNZ §4.5 | app/scheduler (ciclo intero a ogni battito di un minuto; il calendario osservato si aggiorna) · platform/clock (battito al cambio di minuto, primo piano) · ui Oggi (`useOggi`: il giorno cambia senza riavvio; verificato solo nel browser via CDP, manca un ambiente DOM per i test della UI) | T-013 | src/app/scheduler.test.ts, src/platform/clock.test.ts | parziale |
 | H1 | MECC §16, FORMATO §1 | domain/course/parser · app/courseImport (ZIP) · ui Corsi S10 (import salvato, avvisi) | T-002, T-003, T-038 | src/domain/course/parser.test.ts, src/app/courseImport.test.ts (T-038: import ZIP salvato, due corsi, titolo, max 5 avvisi) | coperto |
 | H2 | MECC §17, §18 | app/materials (PDF) · app/ai (contesto) | T-024 | — | nessuno |
 | H3 | MECC §16, §21 | app/courses (eliminazione a cascata) · platform/widget | T-037, T-023 | — | nessuno |

@@ -17,7 +17,7 @@
  * saltato con un avviso, come un'intestazione illeggibile: il primo vince, nessuna rinumerazione automatica.
  */
 import type { StatoUnita, StatoModulo } from '../types';
-import { statiModuli } from '../pointer';
+import { criteriaMet, statiModuli } from '../pointer';
 
 // ------------------------------------------------------------------ tipi di output (FORMATO §4)
 
@@ -596,9 +596,7 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   if (moduli.length === 0) throw new ErroreImportCorso('Nessun modulo con intestazione valida');
 
   // Stati dei moduli: stessa regola del puntatore (pointer.ts → statiModuli), nessuna copia locale.
-  const stati = statiModuli(
-    moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: m.criteri.every((c) => c.fatto) })),
-  );
+  const stati = statiModuli(moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) })));
   for (const m of moduli) m.stato = stati.get(m.numero) ?? 'bloccato';
   const firstOpen = moduli.find((m) => m.stato !== 'bloccato');
   const unitaCorrenteId = firstOpen?.unita[0]?.id ?? null;

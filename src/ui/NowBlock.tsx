@@ -12,7 +12,8 @@ import { Link, type Location } from 'react-router';
 import { appDb } from '../app/db';
 import { dismissNowBlock, watchNowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { selectNowBlock, type StatoAdesso } from '../domain/nowBlock';
-import { localDayKey, localTimeKey, MINUTE } from '../domain/time';
+import { localDayKey, localTimeKey } from '../domain/time';
+import { useMinuto } from './clock';
 import { sottotitolo, TIPO, titolo } from './format';
 import { t, type Chiave } from './i18n';
 import s from './NowBlock.module.css';
@@ -28,26 +29,6 @@ const SCROLL_COMPATTO = 72;
 const SCROLL_ESTESO = 8;
 /** Da 1024 px il blocco sta nella colonna laterale (D-UI-1). */
 const DESKTOP = '(min-width: 1024px)';
-
-/** L'istante corrente, aggiornato al cambio di ogni minuto. */
-function useMinuto(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    let ogniMinuto: ReturnType<typeof setInterval> | undefined;
-    const alProssimo = setTimeout(
-      () => {
-        setNow(Date.now());
-        ogniMinuto = setInterval(() => setNow(Date.now()), MINUTE);
-      },
-      MINUTE - (Date.now() % MINUTE),
-    );
-    return () => {
-      clearTimeout(alProssimo);
-      if (ogniMinuto) clearInterval(ogniMinuto);
-    };
-  }, []);
-  return now;
-}
 
 /** Compresso dopo 72 px di scorrimento della pagina, esteso di nuovo sotto 8 px (S1 Mobile); mai su desktop (D-UI-1). */
 function useCompatto(): boolean {

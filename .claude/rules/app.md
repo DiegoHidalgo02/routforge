@@ -8,7 +8,7 @@ paths:
   `src/app/ports/`, iniettate nel costruttore del servizio (INV-1, D-ARCH-1).
 - Un servizio orchestra: legge dai repository, chiama funzioni pure del dominio, scrive il risultato. Se una regola di
   business compare in un servizio, va spostata nel dominio (INV-13).
-- `SchedulerService.run(now)` esegue i cicli nell'ordine vincolante di MECC §9 ed è idempotente: il test «seconda
+- Lo scheduler (`runCycle(db, now, fuso)`; `SchedulerService.run()` prende l'istante dalla porta `Clock`) esegue i cicli nell'ordine vincolante di MECC §9 ed è idempotente: il test «seconda
   esecuzione senza cambiamenti non scrive nulla» è obbligatorio (INV-15).
 - Il tempo arriva da una porta `Clock` o come parametro: mai `Date.now()` diretto, così i test usano istanti fissi.
 - Gli scenari che coinvolgono servizi si verificano a questo livello con repository in memoria e porte finte; una riga

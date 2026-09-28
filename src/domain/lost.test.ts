@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canCheckRoutine,
   horizonLastDay,
+  isOrphan,
   isRollingTodo,
   lostAtInstant,
   pendingOutcomes,
@@ -149,5 +150,41 @@ describe('Esiti pendenti — SCENARI C6 / §8', () => {
       mk('rt', 24, { tipo: 'routine' }), // non studio: escluso
     ];
     expect(pendingOutcomes(list, now).map((b) => b.id)).toEqual(['r', 'a', 'b', 'c']);
+  });
+});
+
+describe('Orfani — MECCANISMI §8, SCENARI C8 (in corso senza la sessione attiva)', () => {
+  // Blocco di studio 09:00–10:00 di mercoledì rimasto `in_corso`
+  const b = block({
+    id: 's',
+    tipo: 'studio',
+    stato: 'in_corso',
+    inizio: local(2026, 9, 23, 9, 0),
+    fine: local(2026, 9, 23, 10, 0),
+  });
+
+  it("non collegato alla sessione attiva, 40' dopo la fine è orfano", () => {
+    expect(isOrphan(b, null, local(2026, 9, 23, 10, 40))).toBe(true);
+    expect(isOrphan(b, 'un-altro-blocco', local(2026, 9, 23, 10, 40))).toBe(true);
+  });
+
+  it('collegato alla sessione attiva non è mai orfano, anche ore dopo la fine (tempo extra, §10.4)', () => {
+    expect(isOrphan(b, 's', local(2026, 9, 23, 13, 0))).toBe(false);
+  });
+
+  it("con la fine passata da 30' esatti non lo è ancora; un istante dopo sì (> 30', §8)", () => {
+    expect(isOrphan(b, null, local(2026, 9, 23, 10, 30))).toBe(false);
+    expect(isOrphan(b, null, local(2026, 9, 23, 10, 30) + 1)).toBe(true);
+  });
+
+  it('solo un blocco `in_corso` può essere orfano', () => {
+    expect(isOrphan({ ...b, stato: 'programmato' }, null, local(2026, 9, 23, 12, 0))).toBe(false);
+    expect(isOrphan({ ...b, stato: 'perso' }, null, local(2026, 9, 23, 12, 0))).toBe(false);
+  });
+
+  it('senza durata la fine è 23:59: orfano solo dopo le 00:29 del giorno dopo (§8, fine effettiva)', () => {
+    const s = { ...b, fine: null };
+    expect(isOrphan(s, null, local(2026, 9, 24, 0, 29))).toBe(false);
+    expect(isOrphan(s, null, local(2026, 9, 24, 0, 30))).toBe(true);
   });
 });

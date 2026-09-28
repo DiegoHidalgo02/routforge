@@ -13,8 +13,8 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { watchCalendar, type BloccoCalendario } from '../app/calendar';
 import { appDb } from '../app/db';
 import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, weekOf, type Vista } from '../domain/calendar';
-import { localDayKey } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
+import { useOggi } from './clock';
 import { maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { NowBlock } from './NowBlock';
@@ -54,8 +54,8 @@ const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
 export function Today() {
   const [parametri, setParametri] = useSearchParams();
   const location = useLocation();
-  // ponytail: il giorno di oggi letto al montaggio come in Courses; il cambio di giorno a schermata aperta è T-013
-  const [oggi] = useState(() => localDayKey(Date.now()));
+  // Il giorno di oggi cambia a mezzanotte e al ritorno in primo piano, senza riavvio (G4)
+  const oggi = useOggi();
   const vista = (VISTE.find((v) => v.vista === parametri.get('vista'))?.vista ?? 'giorno') satisfies Vista;
   const scelto = parametri.get('giorno') ?? '';
   const giorno = isDayKey(scelto) ? scelto : oggi;

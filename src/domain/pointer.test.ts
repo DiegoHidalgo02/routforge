@@ -3,13 +3,16 @@ import {
   applyOutcome,
   assignPointer,
   courseProgress,
+  criteriaMet,
   currentUnit,
   partialProgress,
+  pointerPlan,
   previousUnitInPath,
   statiModuli,
   type UnitaPercorso,
 } from './pointer';
-import { local } from './time';
+import { local, minutes } from './time';
+import type { Blocco } from './types';
 
 const unit = (id: string, moduloNumero: number, ordine: number): UnitaPercorso => ({
   id,
@@ -131,5 +134,78 @@ describe('Moduli bloccati — FORMATO_CORSO §4 (decisione D-PTR-1)', () => {
     ];
     const map = assignPointer(course(), blocks, modules);
     expect([...map.values()]).toEqual(['1.1', '1.2', '2.1', null]);
+  });
+
+  it('criteriaMet: il modulo è passato con tutti i criteri a sì, anche senza criteri; basta un no per non esserlo', () => {
+    expect(criteriaMet([])).toBe(true);
+    expect(criteriaMet([{ fatto: true }, { fatto: true }])).toBe(true);
+    expect(criteriaMet([{ fatto: true }, { fatto: false }])).toBe(false);
+  });
+});
+
+describe('Puntatore — SCENARI C1 (piano sui blocchi del corso, MECCANISMI §11)', () => {
+  /** Martedì 22 settembre 2026 a mezzogiorno: le occorrenze di `blocks` sono tutte future. */
+  const now = local(2026, 9, 22, 12, 0);
+  const studio = (id: string, inizio: number, unitaId: string | null, over: Partial<Blocco> = {}): Blocco => ({
+    id,
+    tipo: 'studio',
+    stato: 'programmato',
+    inizio,
+    fine: inizio + minutes(60),
+    conOrario: true,
+    unitaId,
+    ...over,
+  });
+  const future = () => [
+    studio('b1', local(2026, 9, 23, 9), null),
+    studio('b2', local(2026, 9, 24, 9), null),
+    studio('b3', local(2026, 9, 25, 9), null),
+    studio('b4', local(2026, 9, 28, 9), 'vecchia'),
+  ];
+
+  it('le occorrenze future puntano in ordine a 1.1, 1.2, 2.1, poi a nessuna unità', () => {
+    expect([...pointerPlan(course(), [], future(), now)]).toEqual([
+      ['b1', '1.1'],
+      ['b2', '1.2'],
+      ['b3', '2.1'],
+      ['b4', null],
+    ]);
+  });
+
+  it('non tocca e non conta i blocchi già iniziati, non programmati o non di studio', () => {
+    const esclusi = [
+      studio('iniziato', local(2026, 9, 22, 11), 'u-iniziato'),
+      studio('in-corso', local(2026, 9, 23, 8), 'u-in-corso', { stato: 'in_corso' }),
+      studio('perso', local(2026, 9, 21, 9), 'u-perso', { stato: 'perso' }),
+      studio('routine', local(2026, 9, 23, 7), null, { tipo: 'routine' }),
+    ];
+    const piano = pointerPlan(course(), [], [...esclusi, ...future()], now);
+    expect([...piano.keys()]).toEqual(['b1', 'b2', 'b3', 'b4']);
+    expect(piano.get('b1')).toBe('1.1');
+  });
+
+  it('senza cambiamenti il piano è vuoto; dopo «1.1 completata» contiene solo i blocchi che cambiano', () => {
+    const giaPuntate: Record<string, string> = { b1: '1.1', b2: '1.2', b3: '2.1' };
+    const allineati = future().map((b) => ({ ...b, unitaId: giaPuntate[b.id] ?? null }));
+    expect(pointerPlan(course(), [], allineati, now).size).toBe(0);
+    const unita = course().map((u) => (u.id === '1.1' ? { ...u, stato: 'completata' as const } : u));
+    expect([...pointerPlan(unita, [], allineati, now)]).toEqual([
+      ['b1', '1.2'],
+      ['b2', '2.1'],
+      ['b3', null],
+    ]);
+  });
+
+  it('non entra in un modulo con un criterio Go/No-Go a no nel modulo precedente (D-PTR-1)', () => {
+    const moduli = [
+      { numero: 1, criteri: [{ fatto: true }, { fatto: false }] },
+      { numero: 2, criteri: [] },
+    ];
+    // 2.1 non è mai assegnata: b3 resta senza unità (nessun cambiamento), b4 perde quella vecchia
+    expect([...pointerPlan(course(), moduli, future(), now)]).toEqual([
+      ['b1', '1.1'],
+      ['b2', '1.2'],
+      ['b4', null],
+    ]);
   });
 });

@@ -12,7 +12,7 @@
  * sempre aperto; il puntatore NON entra in un modulo bloccato. Senza criteri, tutti i moduli
  * sono aperti (coerente con C1, dove il corso non ha criteri).
  */
-import { STATI_UNITA_PENDENTI, type Esito, type StatoUnita, type StatoModulo } from './types';
+import { STATI_UNITA_PENDENTI, type Blocco, type Esito, type StatoUnita, type StatoModulo } from './types';
 
 export interface UnitaPercorso {
   id: string;
@@ -39,6 +39,12 @@ export interface BloccoStudioFuturo {
   id: string;
   inizio: number;
 }
+
+/** Un blocco come lo guarda il puntatore: quali ricevono l'unità e quale hanno adesso (§11). */
+export type BloccoPuntatore = Pick<Blocco, 'id' | 'tipo' | 'stato' | 'inizio' | 'unitaId'>;
+
+/** Tutti i criteri Go/No-Go del modulo a sì, vero anche senza criteri: il modulo è passato (FORMATO_CORSO §4). */
+export const criteriaMet = (criteri: readonly { fatto: boolean }[]): boolean => criteri.every((c) => c.fatto);
 
 /** Ordine di percorso: modulo → unità. */
 export function sortedUnits(units: readonly UnitaPercorso[]): UnitaPercorso[] {
@@ -96,6 +102,27 @@ export function assignPointer(
   const out = new Map<string, string | null>();
   blocks.forEach((b, i) => out.set(b.id, pending[i]?.id ?? null));
   return out;
+}
+
+/**
+ * Il puntatore sui blocchi di un corso (§11), come differenza da applicare: i blocchi di studio futuri `programmati`
+ * (inizio > adesso), in ordine cronologico, ricevono la i-esima unità pendente dei moduli aperti, oltre le pendenti
+ * nessuna. Restituisce solo i blocchi il cui `unitaId` cambia: senza cambiamenti la mappa è vuota (INV-15). I blocchi
+ * iniziati, chiusi o persi tengono la loro unità. Lo chiama il ciclo dello scheduler per ogni corso (D-SCHED-1).
+ */
+export function pointerPlan(
+  unita: readonly UnitaPercorso[],
+  moduli: readonly { numero: number; criteri: readonly { fatto: boolean }[] }[],
+  blocchi: readonly BloccoPuntatore[],
+  now: number,
+): Map<string, string | null> {
+  const futuri = blocchi.filter((b) => b.tipo === 'studio' && b.stato === 'programmato' && b.inizio > now);
+  const percorso = moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
+  const piano = new Map<string, string | null>();
+  const attuale = new Map(futuri.map((b) => [b.id, b.unitaId ?? null]));
+  for (const [id, unitaId] of assignPointer(unita, futuri, percorso))
+    if (attuale.get(id) !== unitaId) piano.set(id, unitaId);
+  return piano;
 }
 
 /** Progresso del corso = completate / totali (§11). */

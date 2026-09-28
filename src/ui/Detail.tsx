@@ -41,6 +41,7 @@ import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
 import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
+import { useMinuto } from './clock';
 import { durata, maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
@@ -109,8 +110,8 @@ export function Detail() {
   const [scelte, setScelte] = useState<ReadonlySet<string>>(() => new Set());
   const [toast, setToast] = useState<Toast | null>(null);
   const [errore, setErrore] = useState(false);
-  // ponytail: l'orologio si rilegge al montaggio e a ogni azione, come in Crea; passa dalla porta Clock quando nasce
-  const [now, setNow] = useState(() => Date.now());
+  // L'orologio batte al minuto e si riallinea al ritorno in primo piano (G4); le scritture usano l'istante del clic
+  const now = useMinuto();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sheet = useRef<HTMLDivElement>(null);
   const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -143,7 +144,6 @@ export function Detail() {
       setToast(null);
       setErrore(true);
     }
-    setNow(Date.now());
   };
   const mostraToast = (
     testo: string,

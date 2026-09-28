@@ -5,6 +5,7 @@ import { HOUR, local, localDayKey, localTimeKey } from '../time';
 import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 import {
   editPlan,
+  horizonSlotRange,
   missingOccurrences,
   occurrenceDay,
   occurrenceId,
@@ -266,6 +267,17 @@ describe("Id dell'occorrenza = slot della ricorrenza — D-DATA-2", () => {
     expect(occurrenceDay('r-corsa:2026-09-23:07:00', 'r-corsa')).toBe('2026-09-23');
     const uuid = '10000000-1000-4000-8000-100000000000';
     expect(occurrenceDay(occurrenceId(uuid, '2026-10-05', '18:00'), uuid)).toBe('2026-10-05');
+  });
+
+  it("gli slot dell'orizzonte stanno in un intervallo di chiavi: da oggi a oggi + 28 inclusi, a ogni orario (D-SCHED-1)", () => {
+    const [da, a] = horizonSlotRange('r-corsa', NOW);
+    const dentro = (id: string) => id >= da && id <= a;
+    expect(dentro(occurrenceId('r-corsa', '2026-09-22', '00:00'))).toBe(true);
+    expect(dentro(occurrenceId('r-corsa', '2026-10-20', '23:59'))).toBe(true); // oggi + 28 (§7)
+    expect(dentro(occurrenceId('r-corsa', '2026-09-21', '23:59'))).toBe(false);
+    expect(dentro(occurrenceId('r-corsa', '2026-10-21', '00:00'))).toBe(false);
+    expect(dentro(occurrenceId('r-altra', '2026-09-23', '07:00'))).toBe(false);
+    expect(missingOccurrences(ricorrenza(), [], NOW).every((b) => dentro(b.id))).toBe(true);
   });
 });
 
