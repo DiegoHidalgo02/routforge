@@ -4,8 +4,11 @@
   min-height: 100dvh;
 }
 
-/* Padding di pagina: sotto, 56 della BottomNav + 25 + safe area (DESIGN.md §6) più l'aria sopra la barra */
+/* Padding di pagina: sotto, 56 della BottomNav + 25 + safe area (DESIGN.md §6) più l'aria sopra la barra. `clip` taglia
+   ciò che sborda di lato (il periodo di Oggi che entra scorrendo, D-CAL-2) senza creare un contenitore di scorrimento:
+   il blocco Adesso resta appiccicato */
 .main {
+  overflow-x: clip;
   padding: calc(env(safe-area-inset-top) + var(--space-5)) max(var(--space-page), env(safe-area-inset-right))
     calc(var(--size-nav-pill) + var(--space-6) + var(--space-8) + env(safe-area-inset-bottom))
     max(var(--space-page), env(safe-area-inset-left));

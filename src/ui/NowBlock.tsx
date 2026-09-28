@@ -5,7 +5,8 @@
 // oggi e domani, chiusure), la scelta dal dominio (`selectNowBlock`). «Apri» porta al Dettaglio; la sessione di studio
 // (Inizia · Anticipa · Recupera) arriva con T-016. × chiude per oggi (G2). Su mobile il blocco è appiccicato in testa
 // e si comprime allo scroll (oltre 72 px giù, sotto 8 px su, come il mock); su desktop sta nella colonna laterale.
-// Decisione: D-NOW-2.
+// Colori: solo quello del tipo (accento, pallino, badge), lo stato con parole e peso (D-NOW-3, `NowBlock.module.css`).
+// Decisioni: D-NOW-2, D-NOW-3.
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, type Location } from 'react-router';
@@ -99,10 +100,14 @@ export function NowBlock({ sfondo }: { sfondo: { sfondo: Location } }) {
           aria-label={t('adesso')}
         >
           <span className={s.accento} />
-          <span className={s.pallino} aria-label={t(EYEBROW[stato.tipo])} />
+          <span className={s.pallino} aria-hidden />
           <span className={s.colonna}>
             <span className={s.titolo}>{titolo(b)}</span>
-            {numeri}
+            {/* Il pallino ha il colore del tipo (D-NOW-3): lo stato lo dice la parola, anche da compresso */}
+            <span className={s.rigaCompatta}>
+              <span className={s.statoCompatto}>{t(EYEBROW[stato.tipo])}</span>
+              {numeri}
+            </span>
           </span>
           {azione}
         </section>

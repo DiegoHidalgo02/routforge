@@ -139,6 +139,8 @@
   "dettaglio": "Aktivitätsdetails",
   "elimina": "Löschen",
   "segnaFatto": "Als erledigt markieren",
+  "segnaFattoTitolo": "Als erledigt markieren: {titolo}",
+  "completatoTitolo": "Erledigt: {titolo}",
   "riapri": "Wieder öffnen",
   "fatta": "Erledigt",
   "saltata": "Übersprungen",

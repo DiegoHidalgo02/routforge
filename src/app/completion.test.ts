@@ -8,6 +8,7 @@ import { occurrenceId } from '../domain/scheduler/occurrences';
 import { local, localDayKey } from '../domain/time';
 import { createActivity } from './activities';
 import {
+  checkFromCalendar,
   completeBlock,
   completeWithLeftover,
   createFollowUps,
@@ -116,6 +117,91 @@ describe('Spunta diretta e riapertura del todo — MECCANISMI §3, §4 (servizio
     const venerdi = local(2026, 9, 25, 9, 0);
     expect(await completeBlock(db, id, venerdi, FUSO)).toBe(true);
     expect(await blocco(id)).toMatchObject({ stato: 'completato', chiusoIl: venerdi, persoIl: null });
+  });
+});
+
+describe('Spunta diretta dal cerchio della card — MECCANISMI §3, §24, SCENARI A3, B2, B5 (servizio, D-DETT-3)', () => {
+  it('todo senza voci e routine senza fasi nel loro giorno: completati subito, con la stessa scrittura del dettaglio', async () => {
+    const todo = await crea(todoValigia([]));
+    expect(await checkFromCalendar(db, todo, NOW, FUSO)).toBe('completa');
+    expect(await blocco(todo)).toMatchObject({ stato: 'completato', chiusoIl: NOW });
+
+    const routine = oggi(await crea(routineMattina([])));
+    expect(await checkFromCalendar(db, routine, NOW, FUSO)).toBe('completa');
+    expect(await blocco(routine)).toMatchObject({ stato: 'completato', chiusoIl: NOW });
+    expect(await log(routine)).toBeUndefined();
+  });
+  it('routine con fasi (B5) e todo con 2 voci su 3 (A3): nessuna scrittura, si apre la sheet del dettaglio', async () => {
+    const routine = oggi(await crea(routineMattina()));
+    const todo = await crea(todoValigia());
+    await toggleChecklist(db, todo, 0, NOW, FUSO);
+    await toggleChecklist(db, todo, 1, NOW, FUSO);
+    const [primaRoutine, primaTodo] = [await blocco(routine), await blocco(todo)];
+
+    expect(await checkFromCalendar(db, routine, NOW, FUSO)).toBe('revisione');
+    expect(await checkFromCalendar(db, todo, NOW, FUSO)).toBe('residuo');
+    expect(await blocco(routine)).toEqual(primaRoutine);
+    expect(await blocco(todo)).toEqual(primaTodo);
+    expect(await log(routine)).toBeUndefined();
+  });
+  it('routine fuori dal giorno previsto (B2), evento, id sconosciuto: nessuna spunta diretta e nessuna scrittura', async () => {
+    const routine = oggi(await crea(routineMattina([])));
+    const evento = await crea(eventoDentista([]));
+    const giovedi = local(2026, 9, 24, 9, 0);
+    expect(await checkFromCalendar(db, routine, giovedi, FUSO)).toBeNull();
+    expect(await checkFromCalendar(db, evento, giovedi, FUSO)).toBeNull();
+    expect(await checkFromCalendar(db, 'nessuno', giovedi, FUSO)).toBeNull();
+    expect((await blocco(routine)).stato).toBe('programmato');
+    expect((await blocco(evento)).stato).toBe('programmato');
+  });
+  it('routine persa nel suo giorno (§24 contro B2, 00_SINTESI §6 n. 26): niente dal cerchio, «Fatta» dal dettaglio', async () => {
+    const id = oggi(await crea(routineMattina([])));
+    const alle830 = local(2026, 9, 23, 8, 30);
+    await saveBlock(db, { ...(await blocco(id)), stato: 'perso', persoIl: alle830 }, alle830, FUSO);
+    const persa = await blocco(id);
+    const alle9 = local(2026, 9, 23, 9, 0);
+    expect(await checkFromCalendar(db, id, alle9, FUSO)).toBeNull();
+    expect(await blocco(id)).toEqual(persa);
+    expect(await completeBlock(db, id, alle9, FUSO)).toBe(true);
+  });
+  it('todo completato: niente; todo «non fatto» senza voci: completato con la marcatura azzerata (§3, §8)', async () => {
+    const fatto = await crea(todoValigia([]));
+    await completeBlock(db, fatto, NOW, FUSO);
+    expect(await checkFromCalendar(db, fatto, local(2026, 9, 23, 9, 0), FUSO)).toBeNull();
+    expect((await blocco(fatto)).chiusoIl).toBe(NOW);
+
+    const perso = await crea(todoValigia([]));
+    const mezzanotte = local(2026, 9, 24, 0, 30);
+    await saveBlock(db, { ...(await blocco(perso)), stato: 'perso', persoIl: mezzanotte }, mezzanotte, FUSO);
+    const venerdi = local(2026, 9, 25, 9, 0);
+    expect(await checkFromCalendar(db, perso, venerdi, FUSO)).toBe('completa');
+    expect(await blocco(perso)).toMatchObject({ stato: 'completato', chiusoIl: venerdi, persoIl: null });
+  });
+  it('routine saltata e blocco di studio: nessuna spunta diretta', async () => {
+    const routine = oggi(await crea(routineMattina([])));
+    await skipBlock(db, routine, local(2026, 9, 23, 7, 30), FUSO);
+    const studio = await saveBlock(
+      db,
+      {
+        tipo: 'studio',
+        stato: 'programmato',
+        conOrario: true,
+        inizio: local(2026, 9, 23, 16, 0),
+        fine: local(2026, 9, 23, 17, 0),
+      },
+      NOW,
+      FUSO,
+    );
+    expect(await checkFromCalendar(db, routine, NOW, FUSO)).toBeNull();
+    expect(await checkFromCalendar(db, studio.id, NOW, FUSO)).toBeNull();
+    expect((await blocco(studio.id)).stato).toBe('programmato');
+  });
+  it('voci rimaste su un todo già completato (sheet rimasta aperta): nessun secondo todo derivato', async () => {
+    const id = await crea(todoValigia());
+    await toggleChecklist(db, id, 0, NOW, FUSO);
+    expect(await completeWithLeftover(db, id, local(2026, 9, 23, 9, 0), FUSO)).not.toBeNull();
+    expect(await completeWithLeftover(db, id, local(2026, 9, 23, 9, 5), FUSO)).toBeNull();
+    expect(await list(db, 'blocchi')).toHaveLength(2);
   });
 });
 

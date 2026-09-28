@@ -139,6 +139,8 @@
   "dettaglio": "Detalle de la actividad",
   "elimina": "Eliminar",
   "segnaFatto": "Marcar como hecho",
+  "segnaFattoTitolo": "Marcar como hecho: {titolo}",
+  "completatoTitolo": "Completado: {titolo}",
   "riapri": "Reabrir",
   "fatta": "Hecha",
   "saltata": "Omitida",

@@ -139,6 +139,8 @@
   "dettaglio": "Dettaglio attività",
   "elimina": "Elimina",
   "segnaFatto": "Segna come fatto",
+  "segnaFattoTitolo": "Segna come fatto: {titolo}",
+  "completatoTitolo": "Completato: {titolo}",
   "riapri": "Riapri",
   "fatta": "Fatta",
   "saltata": "Saltata",

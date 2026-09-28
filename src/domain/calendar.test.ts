@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, weekOf } from './calendar';
+import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, swipeDay, weekOf } from './calendar';
 import type { Blocco } from './types';
 
 const b = (tipo: Blocco['tipo'], conOrario = true): Pick<Blocco, 'tipo' | 'conOrario'> => ({ tipo, conOrario });
@@ -66,6 +66,25 @@ describe('Scorrere il periodo — FUNZ §2', () => {
   it('attraverso il cambio d’ora il giorno resta un giorno', () => {
     expect(shiftPeriod('2026-10-25', 'giorno', 1)).toBe('2026-10-26');
     expect(shiftPeriod('2026-03-30', 'giorno', -1)).toBe('2026-03-29');
+  });
+});
+
+describe('Giorno scelto scorrendo — FUNZ §2 (D-CAL-2)', () => {
+  const oggi = '2026-09-28';
+  it('nel Mese: il primo del mese, così la selezione si sposta a vista', () => {
+    expect(swipeDay('2026-09-28', 'mese', 1, oggi)).toBe('2026-10-01');
+    expect(swipeDay('2026-10-01', 'mese', 1, oggi)).toBe('2026-11-01');
+    expect(swipeDay('2026-01-31', 'mese', 1, oggi)).toBe('2026-02-01');
+    expect(swipeDay('2026-12-10', 'mese', 1, oggi)).toBe('2027-01-01');
+    expect(swipeDay('2026-03-15', 'mese', -2, oggi)).toBe('2026-01-01');
+  });
+  it('nel Mese che contiene oggi: oggi', () => {
+    expect(swipeDay('2026-10-01', 'mese', -1, oggi)).toBe('2026-09-28');
+    expect(swipeDay('2026-08-31', 'mese', 1, oggi)).toBe('2026-09-28');
+  });
+  it('Giorno e Settimana come shiftPeriod: il giorno dopo, lo stesso giorno della settimana', () => {
+    expect(swipeDay('2026-09-30', 'giorno', 1, oggi)).toBe('2026-10-01');
+    expect(swipeDay('2026-09-30', 'settimana', -1, oggi)).toBe('2026-09-23');
   });
 });
 

@@ -482,6 +482,11 @@
   animation: global(rf-up) var(--dur-layout) var(--ease-standard);
 }
 
+/* Aperta dal cerchio di Oggi insieme al pannello (D-DETT-3): entra con il pannello, senza una seconda salita */
+.sheet[data-subito] {
+  animation: none;
+}
+
 .manigliaSheet {
   width: var(--size-control-sm);
   height: var(--space-1);

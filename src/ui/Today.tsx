@@ -2,19 +2,26 @@
 // Giorno: striscia della settimana, fascia senza orario per priorità (in cima su mobile, in coda su desktop,
 // D-DESIGN-1 n. 3), poi i blocchi con orario (`sortDay`, A5); i
 // terminali restano al loro posto in secondo piano. Vista e giorno stanno nell'indirizzo (`?vista=mese&giorno=…`).
-// Si passa di periodo scorrendo lateralmente, e su desktop con le frecce. Il saluto «Ciao» lascia il posto alla data.
-// Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`).
+// Si passa di periodo scorrendo lateralmente, e su desktop con le frecce: il periodo nuovo entra dal lato verso cui si
+// scorre; nel Mese si sceglie oggi o il primo del mese e la griglia resta anche senza attività (D-CAL-2). Il saluto
+// «Ciao» lascia il posto alla data, in forma breve se la lunga non entra nella testata (360 px, D-CAL-2).
+// Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`); il cerchio della card spunta
+// (MECC §3 «spunta diretta», D-DETT-3). Pallini con l'alone del tipo e card in corso come S1 Mobile (D-CAL-2).
 // Il blocco Adesso (T-010, `NowBlock.tsx`) sta fra la striscia e la giornata su mobile e nella colonna laterale su
 // desktop. Arrivano con il loro task: trascinamento (T-015), ritorno dopo un'assenza (T-013); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
 // non sono nella spec di Oggi (docs/03_HANDOFF_DESIGN_CODE.md §10).
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams, type Location } from 'react-router';
 import { watchCalendar, type BloccoCalendario } from '../app/calendar';
+import { checkFromCalendar } from '../app/completion';
 import { appDb } from '../app/db';
-import { dayLoad, isDayKey, monthGrid, monthLegend, shiftPeriod, weekOf, type Vista } from '../domain/calendar';
+import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
+import { canCheckFromCalendar, type PassoSpunta } from '../domain/completion';
+import { isLiveBlock } from '../domain/nowBlock';
+import { sortDayDesktop } from '../domain/ordering';
 import { STATI_TERMINALI } from '../domain/types';
-import { useOggi } from './clock';
+import { useMinuto, useOggi } from './clock';
 import { maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { NowBlock } from './NowBlock';
@@ -39,6 +46,18 @@ const SALUTO_MS = 2600;
 const SOGLIA_SWIPE = 60;
 let salutato = false;
 
+/** Lato da cui entra il periodo nuovo dopo uno scorrimento o una freccia (D-CAL-2). */
+type Verso = 'avanti' | 'indietro';
+type Sfondo = { sfondo: Location };
+/** Da 1024 px la giornata segue l'ordine desktop (D-UI-1). */
+const DESKTOP = '(min-width: 1024px)';
+const seguiDesktop = (cambia: () => void) => {
+  const m = window.matchMedia(DESKTOP);
+  m.addEventListener('change', cambia);
+  return () => m.removeEventListener('change', cambia);
+};
+const eDesktop = () => window.matchMedia(DESKTOP).matches;
+
 const data = (giorno: string) => {
   const [y = 0, m = 1, d = 1] = giorno.split('-').map(Number);
   return new Date(y, m - 1, d);
@@ -50,6 +69,9 @@ const intervallo = (da: string, a: string) =>
   new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(data(da), data(a));
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
 const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
+/** Il periodo che una vista mostra per un giorno: il giorno, il lunedì della settimana o il mese. */
+const periodoDi = (vista: Vista, giorno: string) =>
+  vista === 'mese' ? giorno.slice(0, 7) : vista === 'settimana' ? (weekOf(giorno)[0] ?? giorno) : giorno;
 
 export function Today() {
   const [parametri, setParametri] = useSearchParams();
@@ -78,12 +100,16 @@ export function Today() {
     return () => (clearTimeout(a), clearTimeout(b));
   }, []);
 
-  const vai = (p: { vista?: Vista; giorno?: string }) => {
+  // Il contenuto del periodo si rimonta quando il periodo cambia (chiave) ed entra dal lato dello scorrimento
+  const [verso, setVerso] = useState<Verso>();
+  const chiavePeriodo = `${vista}:${periodoDi(vista, giorno)}`;
+  const vai = (p: { vista?: Vista; giorno?: string }, direzione?: Verso) => {
     const v = p.vista ?? vista;
     const g = p.giorno ?? giorno;
+    setVerso(direzione);
     setParametri({ ...(v !== 'giorno' && { vista: v }), ...(g !== oggi && { giorno: g }) }, { replace: true });
   };
-  const scorri = (n: number) => vai({ giorno: shiftPeriod(giorno, vista, n) });
+  const scorri = (n: number) => vai({ giorno: swipeDay(giorno, vista, n, oggi) }, n > 0 ? 'avanti' : 'indietro');
 
   const inizio = useRef<{ x: number; y: number } | null>(null);
   const giu = (e: PointerEvent) => {
@@ -108,6 +134,7 @@ export function Today() {
       ? intervallo(settimana[0] ?? giorno, settimana[6] ?? giorno)
       : maiuscola(fmt(giorno, { month: 'long', year: 'numeric' }));
   const giornoLungo = maiuscola(fmt(giorno, { weekday: 'long', day: 'numeric', month: 'long' }));
+  const meseVuoto = pronto && !!griglia?.every((c) => !c.delMese || blocchi(c.giorno).length === 0);
 
   return (
     <div className={s.oggi}>
@@ -124,20 +151,7 @@ export function Today() {
                 <span className={s.motto}>{t('motto')}</span>
               </span>
             ) : (
-              <span className={s.data}>
-                <span className={s.giornoSettimana}>{maiuscola(fmt(giorno, { weekday: 'long' }))}</span>
-                <span className={s.giornoMese}>
-                  {fmtParti(giorno, { day: 'numeric', month: 'long' }).map((p, i) =>
-                    p.type === 'day' ? (
-                      <span key={i} className={s.cifra}>
-                        {p.value}
-                      </span>
-                    ) : (
-                      p.value
-                    ),
-                  )}
-                </span>
-              </span>
+              <DataTesta giorno={giorno} />
             )}
           </span>
           <span className={`${s.periodo} ${s.soloDesktop}`}>{etichettaPeriodo}</span>
@@ -219,7 +233,7 @@ export function Today() {
             <hr className={`${s.separatore} ${s.soloMobile}`} />
             <h2 className={`${s.giornoTitolo} ${s.soloDesktop}`}>{giornoLungo}</h2>
             {pronto && blocchi(giorno).length === 0 ? (
-              <div className={s.vuotoGiorno}>
+              <div key={chiavePeriodo} className={s.vuotoGiorno} data-verso={verso}>
                 <CalendarCheck size={32} strokeWidth={1.5} className={s.iconaVuotoGiorno} />
                 <p className={s.testoVuoto}>{t('giornoVuoto')}</p>
                 <div className={s.azioniVuoto}>
@@ -230,50 +244,14 @@ export function Today() {
                 </div>
               </div>
             ) : (
-              <ol className={s.giornata}>
-                {blocchi(giorno).map((b) => (
-                  <li
-                    key={b.id}
-                    className={s.riga}
-                    data-tipo={b.tipo}
-                    data-terminale={terminale(b) || undefined}
-                    data-completato={b.stato === 'completato' || undefined}
-                    data-senza-orario={!b.conOrario || undefined}
-                  >
-                    <span className={b.conOrario ? s.ora : s.priorita} data-alta={b.priorita === 'alta' || undefined}>
-                      {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
-                    </span>
-                    <span className={s.punto} />
-                    {/* Toccando la card si apre il dettaglio (FUNZ §4), sopra Oggi come «+ Crea» */}
-                    <Link to={`/attivita/${b.id}`} state={sfondo} className={s.card}>
-                      <span className={s.accento} />
-                      {/* Persi e saltati non si spuntano, salvo i todo (MECC §24): niente cerchio vuoto */}
-                      {(b.tipo === 'todo' || (b.stato !== 'perso' && b.stato !== 'saltato')) && (
-                        <span className={s.spunta} data-fatta={b.stato === 'completato' || undefined}>
-                          {b.stato === 'completato' && <Check size={12} strokeWidth={2.75} />}
-                        </span>
-                      )}
-                      <span className={s.testi}>
-                        <span className={s.titoloCard}>{titolo(b)}</span>
-                        {sottotitolo(b) && <span className={s.sub}>{sottotitolo(b)}</span>}
-                      </span>
-                      {b.conOrario && b.orarioFine && (
-                        <span className={`${s.fascia} ${s.soloDesktop}`}>
-                          {b.orarioInizio} – {b.orarioFine}
-                        </span>
-                      )}
-                      <span className={s.badge}>{t(TIPO[b.tipo])}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
+              <Giornata key={chiavePeriodo} blocchi={blocchi(giorno)} sfondo={sfondo} verso={verso} />
             )}
           </>
         )}
 
         {vista === 'settimana' &&
           (pronto && settimana.every((g) => blocchi(g).length === 0) ? (
-            <div className={s.vuoto}>
+            <div key={chiavePeriodo} className={s.vuoto} data-verso={verso}>
               <span className={s.iconaVuoto}>
                 <CalendarDays size={24} />
               </span>
@@ -284,7 +262,7 @@ export function Today() {
               {creaAttivita}
             </div>
           ) : (
-            <div className={s.settimana}>
+            <div key={chiavePeriodo} className={s.settimana} data-verso={verso}>
               {settimana.map((g) => (
                 <button
                   key={g}
@@ -310,58 +288,48 @@ export function Today() {
             </div>
           ))}
 
-        {griglia &&
-          (pronto && griglia.every((c) => !c.delMese || blocchi(c.giorno).length === 0) ? (
-            <div className={s.vuoto}>
-              <span className={s.iconaVuoto}>
-                <CalendarDays size={24} />
-              </span>
-              <span className={s.testiVuoto}>
-                <span className={s.titoloVuoto}>
-                  {t('meseVuoto', { mese: maiuscola(fmt(giorno, { month: 'long' })) })}
-                </span>
-                <span className={s.testoVuoto}>{t('meseVuotoTesto')}</span>
-              </span>
-              {creaAttivita}
-            </div>
-          ) : (
-            <div className={s.mese}>
-              <div className={s.calendario}>
-                <div className={s.sigleMese} aria-hidden>
-                  {settimana.map((g) => (
-                    <span key={g} className={s.sigla}>
-                      {fmt(g, { weekday: 'short' })}
-                    </span>
-                  ))}
-                </div>
-                <div className={s.griglia}>
-                  {griglia.map(({ giorno: g, delMese }) => {
-                    if (!delMese) return <span key={g} />;
-                    const { n, tipi, livello } = dayLoad(blocchi(g));
-                    return (
-                      <button
-                        key={g}
-                        type="button"
-                        className={s.cella}
-                        data-carico={livello ?? undefined}
-                        aria-pressed={g === giorno}
-                        aria-current={g === oggi ? 'date' : undefined}
-                        aria-label={t('cellaMese', {
-                          giorno: fmt(g, { weekday: 'long', day: 'numeric', month: 'long' }),
-                          n,
-                        })}
-                        onClick={() => vai({ giorno: g })}
-                      >
-                        <span className={s.numero}>{fmt(g, { day: 'numeric' })}</span>
-                        <span className={s.puntini}>
-                          {tipi.map((tp) => (
-                            <span key={tp} data-tipo={tp} />
-                          ))}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+        {/* Mese: la griglia resta anche senza attività, con la nota al posto della legenda (DESIGN.md §6, D-CAL-2) */}
+        {griglia && (
+          <div key={chiavePeriodo} className={s.mese} data-verso={verso}>
+            <div className={s.calendario}>
+              <div className={s.sigleMese} aria-hidden>
+                {settimana.map((g) => (
+                  <span key={g} className={s.sigla}>
+                    {fmt(g, { weekday: 'short' })}
+                  </span>
+                ))}
+              </div>
+              <div className={s.griglia}>
+                {griglia.map(({ giorno: g, delMese }) => {
+                  if (!delMese) return <span key={g} />;
+                  const { n, tipi, livello } = dayLoad(blocchi(g));
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      className={s.cella}
+                      data-carico={livello ?? undefined}
+                      aria-pressed={g === giorno}
+                      aria-current={g === oggi ? 'date' : undefined}
+                      aria-label={t('cellaMese', {
+                        giorno: fmt(g, { weekday: 'long', day: 'numeric', month: 'long' }),
+                        n,
+                      })}
+                      onClick={() => vai({ giorno: g })}
+                    >
+                      <span className={s.numero}>{fmt(g, { day: 'numeric' })}</span>
+                      <span className={s.puntini}>
+                        {tipi.map((tp) => (
+                          <span key={tp} data-tipo={tp} />
+                        ))}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {!pronto ? null : meseVuoto ? (
+                <p className={s.notaMese}>{t('meseVuotoTesto')}</p>
+              ) : (
                 <div className={s.legenda}>
                   {monthLegend(griglia.filter((c) => c.delMese).map((c) => blocchi(c.giorno))).map((v) => (
                     <span key={v.tipo} className={s.voceLegenda} data-tipo={v.tipo}>
@@ -370,18 +338,147 @@ export function Today() {
                     </span>
                   ))}
                 </div>
-              </div>
-              <section className={s.elencoGiorno} aria-label={giornoLungo}>
-                <h2 className={s.giornoTitolo}>{giornoLungo}</h2>
-                {blocchi(giorno).map((b) => (
-                  <Mini key={b.id} b={b} />
-                ))}
-                {blocchi(giorno).length === 0 && <span className={s.libero}>{t('libero')}</span>}
-              </section>
+              )}
             </div>
-          ))}
+            <section className={s.elencoGiorno} aria-label={giornoLungo}>
+              <h2 className={s.giornoTitolo}>{giornoLungo}</h2>
+              {blocchi(giorno).map((b) => (
+                <Mini key={b.id} b={b} />
+              ))}
+              {blocchi(giorno).length === 0 && <span className={s.libero}>{t('libero')}</span>}
+            </section>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Data della testata mobile (S1): giorno della settimana e «30 settembre». Se la forma lunga non entra nella riga
+ * (360 px, nomi lunghi, pill «Oggi» accanto) passa alla breve «Mer» · «30 set» (D-CAL-2); la lunga si misura in una
+ * copia nascosta, così la scelta non oscilla. Al lettore di schermo arriva sempre la data intera.
+ */
+function DataTesta({ giorno }: { giorno: string }) {
+  const riga = useRef<HTMLSpanElement>(null);
+  const misura = useRef<HTMLSpanElement>(null);
+  const [breve, setBreve] = useState(false);
+  // Si misura prima del disegno a ogni giorno (niente fotogramma con la forma lunga troncata), poi a ogni ridimensionamento
+  useLayoutEffect(() => {
+    const [r, m] = [riga.current, misura.current];
+    if (!r || !m) return;
+    const controlla = () => setBreve(m.offsetWidth > r.clientWidth);
+    controlla();
+    const osserva = new ResizeObserver(controlla);
+    osserva.observe(r);
+    osserva.observe(m);
+    return () => osserva.disconnect();
+  }, [giorno]);
+  const righe = (corta: boolean) => (
+    <>
+      <span className={s.giornoSettimana}>{maiuscola(fmt(giorno, { weekday: corta ? 'short' : 'long' }))}</span>
+      <span className={s.giornoMese}>
+        {fmtParti(giorno, { day: 'numeric', month: corta ? 'short' : 'long' }).map((p, i) =>
+          p.type === 'day' ? (
+            <span key={i} className={s.cifra}>
+              {p.value}
+            </span>
+          ) : (
+            p.value
+          ),
+        )}
+      </span>
+    </>
+  );
+  return (
+    <span ref={riga} className={s.data}>
+      <span className={s.soloLettore}>{fmt(giorno, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      <span className={s.righeData} aria-hidden>
+        {righe(breve)}
+      </span>
+      <span ref={misura} className={s.misura} aria-hidden>
+        {righe(false)}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Giornata della vista Giorno: la card apre il Dettaglio, il cerchio fa la spunta diretta (MECC §3, D-DETT-3): completa
+ * subito o apre il Dettaglio sulla sheet giusta (revisione delle fasi, voci rimaste); se nel frattempo la spunta non è
+ * più possibile, o la scrittura fallisce, apre il Dettaglio, che spiega o ha lo stesso comando con il messaggio
+ * d'errore. L'orologio batte al minuto per la card in corso e per la finestra della routine (D-CAL-2).
+ */
+function Giornata({ blocchi, sfondo, verso }: { blocchi: BloccoCalendario[]; sfondo: Sfondo; verso?: Verso }) {
+  const now = useMinuto();
+  const navigate = useNavigate();
+  // Su desktop la fascia senza orario va in coda anche nell'ordine del fuoco (MECC §24, D-DESIGN-1 n. 3)
+  const desktop = useSyncExternalStore(seguiDesktop, eDesktop);
+  const apri = (b: BloccoCalendario, passo?: PassoSpunta) =>
+    navigate(`/attivita/${b.id}`, { state: { ...sfondo, ...(passo && { vista: passo }) } });
+  // `null`: la finestra si è chiusa fra il ridisegno al minuto e il tocco; il Dettaglio dice perché
+  const spunta = (b: BloccoCalendario, istante: number) =>
+    void checkFromCalendar(appDb, b.id, istante, Intl.DateTimeFormat().resolvedOptions().timeZone).then(
+      (passo) => {
+        if (passo !== 'completa') void apri(b, passo ?? undefined);
+      },
+      () => void apri(b),
+    );
+  return (
+    <ol className={s.giornata} data-verso={verso}>
+      {(desktop ? sortDayDesktop(blocchi) : blocchi).map((b) => {
+        const fatta = b.stato === 'completato';
+        // Persi e saltati non si spuntano, salvo i todo (MECC §24): niente cerchio, ma il suo posto resta (titoli allineati)
+        const assente = b.tipo !== 'todo' && (b.stato === 'perso' || b.stato === 'saltato');
+        const sub = sottotitolo(b);
+        return (
+          <li
+            key={b.id}
+            className={s.riga}
+            data-tipo={b.tipo}
+            data-terminale={terminale(b) || undefined}
+            data-completato={fatta || undefined}
+            data-senza-orario={!b.conOrario || undefined}
+            data-in-corso={isLiveBlock(b, now) || undefined}
+          >
+            <span className={b.conOrario ? s.ora : s.priorita} data-alta={b.priorita === 'alta' || undefined}>
+              {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
+            </span>
+            <span className={s.punto} />
+            <div className={s.card}>
+              <span className={s.accento} />
+              {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
+                  completato apre il Dettaglio, dove c'è «Riapri» (§3) */}
+              {fatta || canCheckFromCalendar(b, now) ? (
+                <button
+                  type="button"
+                  className={s.spunta}
+                  data-fatta={fatta || undefined}
+                  tabIndex={fatta ? -1 : undefined}
+                  aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
+                  onClick={() => (fatta ? void apri(b) : spunta(b, Date.now()))}
+                >
+                  {fatta && <Check size={12} strokeWidth={2.75} />}
+                </button>
+              ) : (
+                <span className={s.spunta} data-assente={assente || undefined} aria-hidden />
+              )}
+              {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
+              <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
+                <span className={s.titoloCard}>{titolo(b)}</span>
+                {sub && <span className={s.sub}>{sub}</span>}
+              </Link>
+              {b.conOrario && b.orarioFine && (
+                <span className={`${s.fascia} ${s.soloDesktop}`}>
+                  {b.orarioInizio} – {b.orarioFine}
+                </span>
+              )}
+              <span className={s.badge}>{t(TIPO[b.tipo])}</span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

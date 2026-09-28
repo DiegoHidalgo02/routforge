@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dismissKey, selectNowBlock, statusOf } from './nowBlock';
+import { dismissKey, isLiveBlock, selectNowBlock, statusOf } from './nowBlock';
 import { local } from './time';
 import type { Blocco } from './types';
 
@@ -128,5 +128,30 @@ describe('Adesso — MECCANISMI §14 (in corso e stato)', () => {
     });
     const N = mk('N', 'routine', 9, 10, { fine: null });
     expect(statusOf(N, local(2026, 9, 23, 9, 30))).toEqual({ tipo: 'adesso', minutiAllaFine: null });
+  });
+});
+
+describe('Card in corso nel calendario — MECCANISMI §14 (D-CAL-2)', () => {
+  it('con orario e aperta: in corso da inizio a fine esclusa, oppure `in_corso`', () => {
+    const A = mk('A', 'routine', 9, 10);
+    expect(isLiveBlock(A, local(2026, 9, 23, 8, 59))).toBe(false);
+    expect(isLiveBlock(A, local(2026, 9, 23, 9, 0))).toBe(true);
+    expect(isLiveBlock(A, local(2026, 9, 23, 10, 0))).toBe(false);
+    expect(isLiveBlock(mk('S', 'studio', 9, 10, { stato: 'in_corso' }), local(2026, 9, 23, 8, 55))).toBe(true);
+  });
+  it('`in_corso` resta in corso anche oltre fine + 30′ (sessione che sfora), a differenza del blocco Adesso', () => {
+    const S = mk('S', 'studio', 9, 10, { stato: 'in_corso' });
+    const alle1110 = local(2026, 9, 23, 11, 10);
+    expect(isLiveBlock(S, alle1110)).toBe(true);
+    expect(selectNowBlock([S], alle1110)).toBeNull();
+  });
+  it('senza durata la fine è 23:59 (D-NOW-1): in corso a mezzogiorno', () => {
+    expect(isLiveBlock(mk('N', 'routine', 9, 10, { fine: null }), local(2026, 9, 23, 12, 0))).toBe(true);
+  });
+  it('mai i terminali né i blocchi senza orario, anche dentro la loro fascia', () => {
+    const alle930 = local(2026, 9, 23, 9, 30);
+    for (const stato of ['completato', 'perso', 'saltato', 'parziale', 'indietro'] as const)
+      expect(isLiveBlock(mk('X', 'routine', 9, 10, { stato }), alle930)).toBe(false);
+    expect(isLiveBlock(mk('T', 'todo', 0, 23, { conOrario: false }), alle930)).toBe(false);
   });
 });

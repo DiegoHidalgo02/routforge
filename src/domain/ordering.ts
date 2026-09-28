@@ -14,3 +14,14 @@ export function sortDay<T extends Pick<Blocco, 'conOrario' | 'inizio' | 'priorit
   const peso = (b: T) => (b.conOrario ? 3 : PESO[b.priorita ?? 'normale']);
   return [...blocchi].sort((a, b) => peso(a) - peso(b) || a.inizio - b.inizio);
 }
+
+/**
+ * L'ordine della vista Giorno su desktop (§24, D-DESIGN-1 n. 3): prima i blocchi con orario, poi la fascia senza orario
+ * in coda, sempre per priorità. È anche l'ordine del fuoco, per questo non basta riordinare con il CSS.
+ */
+export function sortDayDesktop<T extends Pick<Blocco, 'conOrario' | 'inizio' | 'priorita'>>(
+  blocchi: readonly T[],
+): T[] {
+  const ordinati = sortDay(blocchi);
+  return [...ordinati.filter((b) => b.conOrario), ...ordinati.filter((b) => !b.conOrario)];
+}

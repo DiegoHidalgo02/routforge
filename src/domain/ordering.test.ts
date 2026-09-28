@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortDay } from './ordering';
+import { sortDay, sortDayDesktop } from './ordering';
 import { local } from './time';
 import type { Blocco, Priorita } from './types';
 
@@ -31,6 +31,16 @@ describe('Priorità nella fascia senza orario — SCENARI A5', () => {
       todo('normale', 'normale'),
     ];
     expect(sortDay(giorno).map((b) => b.id)).toEqual(['alta', 'normale', 'bassa', 'R6', 'R7']);
+  });
+  it('su desktop in coda, dopo i blocchi con orario, sempre per priorità (D-DESIGN-1 n. 3)', () => {
+    const giorno = [
+      timed('R7', 7),
+      todo('bassa', 'bassa'),
+      timed('R6', 6),
+      todo('alta', 'alta'),
+      todo('normale', 'normale'),
+    ];
+    expect(sortDayDesktop(giorno).map((b) => b.id)).toEqual(['R6', 'R7', 'alta', 'normale', 'bassa']);
   });
 });
 

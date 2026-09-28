@@ -1,6 +1,7 @@
 /**
  * Dettaglio di un'attività (S5; FUNZ §4–§6, MECC §3–§5): spunta e annulla, «Saltata», «Completa evento», checklist,
- * revisione delle fasi con il log, follow-up, eliminazione con ripristino. Ogni completamento passa da un'unica
+ * revisione delle fasi con il log, follow-up, eliminazione con ripristino; la spunta diretta dal cerchio della card del
+ * calendario (`checkFromCalendar`, MECC §24, D-DETT-3) usa le stesse regole. Ogni completamento passa da un'unica
  * operazione (§3): `writeCompleted` e `writeReopened` sono gli unici punti che scrivono lo stato, e lì T-019 cancella
  * o ri-arma le notifiche del blocco. Le regole stanno nel dominio (`completion.ts`, `checklist.ts`, `phases.ts`).
  * Eliminare una singola occorrenza di routine = il giorno del suo slot in `dateSaltate` (D-OCC-1; il giorno dello slot,
@@ -11,7 +12,15 @@
 import type { RoutForgeDb, Tabelle } from '../data/db';
 import { get, inTransaction, remove, save, saveBlock, watch } from '../data/repository';
 import { afterToggle, leftoverDraft, toggleItem } from '../domain/checklist';
-import { canComplete, completed, reopened, skipped } from '../domain/completion';
+import {
+  canCheckFromCalendar,
+  canComplete,
+  completed,
+  directCheckStep,
+  reopened,
+  skipped,
+  type PassoSpunta,
+} from '../domain/completion';
 import { followUpDraft, phaseLog } from '../domain/phases';
 import { occurrenceDay } from '../domain/scheduler/occurrences';
 import type { FaseLog, FaseTemplate, Ricorrenza } from '../domain/types';
@@ -88,6 +97,26 @@ export async function completeBlock(
   });
 }
 
+/**
+ * Spunta diretta dal cerchio della card del calendario (§3, §24, D-DETT-3): se non c'è restituisce `null` senza
+ * scrivere; con le fasi o con voci non spuntate non scrive e dice quale sheet del dettaglio aprire (`revisione`,
+ * `residuo`); altrimenti completa subito con la stessa scrittura di «Segna come fatto» (`completa`).
+ */
+export async function checkFromCalendar(
+  db: RoutForgeDb,
+  id: string,
+  now: number,
+  fuso: string,
+): Promise<PassoSpunta | null> {
+  return inTransaction(db, TABELLE, async () => {
+    const d = await readDetail(db, id);
+    if (!d || !canCheckFromCalendar(d.blocco, now)) return null;
+    const passo = directCheckStep(d.blocco, d.fasi.length > 0);
+    if (passo === 'completa') await writeCompleted(db, d.blocco, now, fuso);
+    return passo;
+  });
+}
+
 /** Annulla spunta / «Riapri» (§3): torna programmato, il log fasi sparisce (§5), le voci si azzerano (S5). */
 export async function reopenBlock(db: RoutForgeDb, id: string, now: number, fuso: string): Promise<void> {
   await inTransaction(db, ['blocchi', 'logFasi'], async () => {
@@ -153,7 +182,8 @@ export async function createFollowUps(
 
 /**
  * «Segna come fatto» con voci non spuntate (D-DETT-2): completa il todo lasciando le voci com'erano e crea il todo con
- * le voci rimaste (stessa scadenza). Restituisce l'id del nuovo todo; `null` se non consentito o senza voci rimaste.
+ * le voci rimaste (stessa scadenza). Restituisce l'id del nuovo todo; `null` se non consentito, se il todo è già
+ * completato (una sheet rimasta aperta non crea un secondo todo derivato, D-DETT-3) o senza voci rimaste.
  */
 export async function completeWithLeftover(
   db: RoutForgeDb,
@@ -163,7 +193,7 @@ export async function completeWithLeftover(
 ): Promise<string | null> {
   return inTransaction(db, TABELLE, async () => {
     const b = await get(db, 'blocchi', id);
-    if (!b || b.tipo !== 'todo' || !canComplete(b, now)) return null;
+    if (!b || b.tipo !== 'todo' || b.stato === 'completato' || !canComplete(b, now)) return null;
     const bozza = leftoverDraft(b, now);
     if (!bozza) return null;
     await writeCompleted(db, b, now, fuso);

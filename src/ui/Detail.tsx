@@ -2,7 +2,8 @@
 // sopra la schermata di partenza come «+ Crea»: sheet sotto i 56 px di testa su mobile, pannello di 440 da 1024 px.
 // Badge del tipo, titolo e meta; riga dell'esito; checklist (todo), fasi (routine ed evento: con il log se chiusa),
 // note; footer per tipo. La revisione delle fasi (S9) e il follow-up sono sheet dentro il pannello; «Elimina» ha il
-// toast con «Annulla». Le regole vengono da dominio e servizio (`app/completion.ts`): qui solo la resa. Fuori da
+// toast con «Annulla». Dal cerchio di una card di Oggi il pannello si apre già sulla revisione o sulle voci rimaste
+// (spunta diretta, D-DETT-3). Le regole vengono da dominio e servizio (`app/completion.ts`): qui solo la resa. Fuori da
 // questo task: «Modifica» (T-042), le azioni dello studio (T-016, T-018), l'unità proposta (T-013), le notifiche (T-019).
 import {
   Calendar,
@@ -36,7 +37,7 @@ import {
 } from '../app/completion';
 import { appDb } from '../app/db';
 import { inheritedDay } from '../domain/checklist';
-import { canComplete, shownState } from '../domain/completion';
+import { canCheckFromCalendar, canComplete, directCheckStep, shownState } from '../domain/completion';
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
 import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
@@ -100,12 +101,20 @@ export function Detail() {
   const navigate = useNavigate();
   const location = useLocation();
   const primaSchermata = location.key === 'default';
-  const sfondo = (location.state as { sfondo?: Location } | null)?.sfondo;
+  const rotta = location.state as { sfondo?: Location; vista?: Vista } | null;
+  const sfondo = rotta?.sfondo;
+  const vistaDaOggi = rotta?.vista;
+  // Dal cerchio della card di Oggi (spunta diretta, D-DETT-3) si arriva sulla revisione delle fasi o sulle voci rimaste:
+  // la sheet si apre al primo caricamento solo se il blocco è ancora a quel passo, e lo stato della rotta si consuma
+  // subito, così ricaricare o tornare avanti non la riapre su un blocco già chiuso
+  const passoDaOggi = useRef(vistaDaOggi);
   const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
   const dialogo = useRef<HTMLDialogElement>(null);
   const [d, setD] = useState<DettaglioAttivita>();
   const [sparito, setSparito] = useState(false);
   const [vista, setVista] = useState<Vista>('dettaglio');
+  // La sheet aperta dal cerchio entra insieme al pannello, senza la propria animazione
+  const [subito, setSubito] = useState(false);
   const [saltate, setSaltate] = useState<ReadonlySet<string>>(() => new Set());
   const [scelte, setScelte] = useState<ReadonlySet<string>>(() => new Set());
   const [toast, setToast] = useState<Toast | null>(null);
@@ -121,6 +130,9 @@ export function Detail() {
     dialogo.current?.showModal();
     return () => clearTimeout(timer.current);
   }, []);
+  useEffect(() => {
+    if (vistaDaOggi) void navigate(location.pathname, { replace: true, state: sfondo ? { sfondo } : null });
+  }, [vistaDaOggi, navigate, location.pathname, sfondo]);
   // La sheet interna prende il fuoco; il resto del pannello è inerte finché resta aperta
   useEffect(() => {
     if (sheetAperta) sheet.current?.focus();
@@ -130,7 +142,18 @@ export function Detail() {
     () =>
       watchDetail(appDb, id, (x) => {
         setSparito(!x);
-        if (x) setD(x);
+        if (!x) return;
+        setD(x);
+        const passo = passoDaOggi.current;
+        passoDaOggi.current = undefined;
+        if (
+          passo &&
+          canCheckFromCalendar(x.blocco, Date.now()) &&
+          directCheckStep(x.blocco, x.fasi.length > 0) === passo
+        ) {
+          setVista(passo);
+          setSubito(true);
+        }
       }),
     [id],
   );
@@ -256,13 +279,15 @@ export function Detail() {
     void act(async () => {
       if (!(await fn())) setErrore(true);
     });
-  // Spunta (§3): con fasi si passa dalla revisione a inversione (§5) e si scrive solo al Conferma
+  // Spunta (§3): con fasi si passa dalla revisione a inversione (§5) e si scrive solo al Conferma; con voci rimaste si
+  // sceglie se creare il todo (D-DETT-2). La regola è la stessa della spunta diretta dal cerchio (`directCheckStep`)
   const fatta = () => {
-    if (conFasi) {
+    const passo = directCheckStep(b, conFasi);
+    setSubito(false);
+    if (passo === 'revisione') {
       setSaltate(new Set());
       setVista('revisione');
-    } else if (tipo === 'todo' && fatte < voci.length)
-      setVista('residuo'); // voci rimaste: D-DETT-2
+    } else if (passo === 'residuo') setVista('residuo');
     else esegui(() => completeBlock(appDb, id, ora(), fuso));
   };
   // «Non ora» nella sheet delle voci rimaste: segna fatto e basta (tutte le voci spuntate, S5)
@@ -533,7 +558,14 @@ export function Detail() {
             aria-label={t(vista === 'followup' ? 'nonOra' : 'annulla')}
             onClick={() => setVista('dettaglio')}
           />
-          <div ref={sheet} className={s.sheet} role="dialog" aria-labelledby="sheet-titolo" tabIndex={-1}>
+          <div
+            ref={sheet}
+            className={s.sheet}
+            data-subito={subito || undefined}
+            role="dialog"
+            aria-labelledby="sheet-titolo"
+            tabIndex={-1}
+          >
             <div className={s.manigliaSheet} aria-hidden />
             {vista === 'revisione' ? (
               <>

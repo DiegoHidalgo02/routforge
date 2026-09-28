@@ -50,6 +50,16 @@ export function shiftPeriod(giorno: string, vista: Vista, n: number): string {
   return localDayKey(new Date(d.getFullYear(), d.getMonth() + n, Math.min(d.getDate(), ultimo)).getTime());
 }
 
+/**
+ * Il giorno scelto dopo aver scorso di `n` periodi (D-CAL-2): Giorno e Settimana come `shiftPeriod`; nel Mese oggi se
+ * il mese lo contiene, altrimenti il primo del mese, così la selezione si sposta a vista a ogni scorrimento.
+ */
+export function swipeDay(giorno: string, vista: Vista, n: number, oggi: string): string {
+  if (vista !== 'mese') return shiftPeriod(giorno, vista, n);
+  const mese = shiftPeriod(`${giorno.slice(0, 7)}-01`, 'mese', n).slice(0, 7);
+  return oggi.startsWith(mese) ? oggi : `${mese}-01`;
+}
+
 /** Carico di un giorno per Settimana e Mese: quanti blocchi, di quali tipi (MECC §24) e il livello della cella. */
 export function dayLoad(blocchi: readonly Pick<Blocco, 'tipo'>[]): {
   n: number;

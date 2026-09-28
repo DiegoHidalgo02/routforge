@@ -1,9 +1,11 @@
 /* Oggi (S1 Oggi Mobile/Desktop, 10 Mese): solo token. Il colore del tipo arriva da `data-tipo` sulle variabili locali
-   --fill, --ink, --soft, --deep; gli scarti fuori dalla scala dei mock (10, 6, 3, 2 px) vanno al token più vicino. */
+   --fill, --ink, --soft, --light, --deep; gli scarti fuori dalla scala dei mock (10, 6, 3, 2 px) vanno al token più
+   vicino. */
 [data-tipo='todo'] {
   --fill: var(--color-cat-todo);
   --ink: var(--color-cat-todo-ink);
   --soft: var(--color-cat-todo-soft);
+  --light: var(--color-cat-todo-light);
   --deep: var(--color-cat-todo-deep);
 }
 
@@ -11,6 +13,7 @@
   --fill: var(--color-cat-study);
   --ink: var(--color-cat-study-ink);
   --soft: var(--color-cat-study-soft);
+  --light: var(--color-cat-study-light);
   --deep: var(--color-cat-study-deep);
 }
 
@@ -18,6 +21,7 @@
   --fill: var(--color-cat-routine);
   --ink: var(--color-cat-routine-ink);
   --soft: var(--color-cat-routine-soft);
+  --light: var(--color-cat-routine-light);
   --deep: var(--color-cat-routine-deep);
 }
 
@@ -25,6 +29,7 @@
   --fill: var(--color-cat-event);
   --ink: var(--color-cat-event-ink);
   --soft: var(--color-cat-event-soft);
+  --light: var(--color-cat-event-light);
   --deep: var(--color-cat-event-deep);
 }
 
@@ -37,11 +42,12 @@
   display: none !important;
 }
 
-/* Intestazione: logo, saluto → data, «Oggi» fuori dal giorno corrente, vista */
+/* Intestazione: logo, saluto → data, «Oggi» fuori dal giorno corrente, vista. Il gap 10 del mock va a 8 (a parità il
+   più piccolo): a 360 px lascia più posto alla data (D-CAL-2) */
 .testa {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-height: 40px;
 }
 
@@ -88,7 +94,36 @@
 }
 
 .data {
+  position: relative;
   animation: global(rf-swap-in) var(--dur-swap) var(--ease-swap);
+}
+
+/* Righe visibili della data (forma lunga o breve, D-CAL-2) e copia nascosta della forma lunga, che si misura */
+.righeData {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.misura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  display: flex;
+  flex-direction: column;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Testo per il lettore di schermo: la data intera anche quando si vede la forma breve */
+.soloLettore {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .giornoSettimana {
@@ -254,9 +289,10 @@
   background: var(--color-surface-3);
 }
 
-/* Corpo: si scorre lateralmente per cambiare periodo, in verticale resta lo scroll della pagina */
+/* Corpo: si scorre lateralmente per cambiare periodo, in verticale resta lo scroll della pagina; lo zoom con due dita
+   resta al sistema */
 .corpo {
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 
 /* Striscia della settimana (vista Giorno) */
@@ -422,13 +458,19 @@
   border-radius: var(--radius-pill);
   background: var(--fill);
   color: var(--fill);
-}
-
-/* Alone solo sui todo senza orario (tokens.css `--glow-dot-todo`) */
-[data-senza-orario] .punto {
+  /* Alone del tipo su ogni pallino, come S1 Mobile (scelta dell'utente, D-CAL-2: DESIGN.md §4 lo limitava ai todo
+     senza orario) */
   box-shadow: var(--glow-dot-todo);
 }
 
+/* In corso: pallino nell'ink con il neon animato (S1 `rf-neon`, DESIGN.md §5) */
+[data-in-corso] .punto {
+  background: var(--ink);
+  color: var(--ink);
+  animation: global(rf-neon) var(--dur-neon) ease-in-out infinite;
+}
+
+/* Persi e saltati defilati, senza alone; completati verdi con l'alone della spunta, come l'archivio di S1 */
 [data-terminale] .punto {
   opacity: var(--opacity-archive);
   box-shadow: none;
@@ -436,6 +478,7 @@
 
 [data-completato] .punto {
   background: var(--color-success);
+  box-shadow: var(--glow-success);
 }
 
 .card {
@@ -451,6 +494,23 @@
   border-radius: var(--radius-card);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.card:hover {
+  background: var(--color-surface-card-hover);
+}
+
+/* Il collegamento al dettaglio copre la card (T-009): l'anello del fuoco va sulla card intera; senza `:has()` resta
+   quello del collegamento */
+@supports selector(:has(*)) {
+  .card:has(.testi:focus-visible) {
+    box-shadow: var(--ring-focus);
+  }
+
+  .card .testi:focus-visible {
+    box-shadow: none;
+  }
 }
 
 .accento {
@@ -461,6 +521,29 @@
   width: var(--size-accent-bar);
   border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
   background: var(--fill);
+}
+
+/* Accento della card attività: gradiente light → fill → light (DESIGN.md §5, S1 Mobile); le righe compatte restano piene */
+.card .accento {
+  background: linear-gradient(180deg, var(--light), var(--fill) 50%, var(--light));
+}
+
+/* Card in corso (DESIGN.md §5): ora bianca con alone, bordo «live», accento animato con l'alone nel light del tipo
+   (geometria degli aloni dei pallini; l'overflow della card lo tiene dentro, come nel mock) */
+[data-in-corso] .ora {
+  color: var(--color-text);
+  font-weight: 600;
+  text-shadow: var(--glow-time-live);
+}
+
+[data-in-corso] .card {
+  border-color: var(--color-border-live);
+}
+
+[data-in-corso] .accento {
+  color: var(--light);
+  box-shadow: var(--glow-dot-todo);
+  animation: global(rf-bar) var(--dur-bar) ease-in-out infinite;
 }
 
 .spunta {
@@ -480,12 +563,52 @@
   color: var(--color-bg);
 }
 
+/* Routine persa o saltata: niente cerchio (§24), ma il suo posto resta e i titoli restano allineati */
+.spunta[data-assente] {
+  visibility: hidden;
+}
+
+/* Cerchio della spunta diretta (MECC §3, D-DETT-3): sopra il collegamento della card, area di tocco 44 */
+button.spunta {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-feedback) var(--ease-out),
+    background var(--dur-feedback) var(--ease-out);
+}
+
+button.spunta::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-5) - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+/* Todo «non fatto» nella card in secondo piano (.7): il bordo text-2 tiene il cerchio sopra 3:1 */
+[data-terminale] button.spunta:not([data-fatta]) {
+  border-color: var(--color-text-2);
+}
+
+button.spunta:not([data-fatta]):hover {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
 .testi {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.testi::after {
+  content: '';
+  position: absolute;
+  inset: 0;
 }
 
 .titoloCard,
@@ -537,7 +660,8 @@
   color: var(--color-text-dim);
 }
 
-[data-terminale] .ora {
+[data-terminale] .ora,
+[data-terminale] .priorita {
   color: var(--color-text-3);
 }
 
@@ -844,6 +968,13 @@
   background: var(--fill);
 }
 
+/* Mese senza attività: solo i numeri e la nota text-2 al posto della legenda (DESIGN.md §6, D-CAL-2) */
+.notaMese {
+  margin: 0;
+  color: var(--color-text-2);
+  font: var(--text-sm) / var(--leading-body) var(--font-ui);
+}
+
 .elencoGiorno {
   display: flex;
   flex-direction: column;
@@ -854,6 +985,39 @@
   margin-top: var(--space-2);
   padding-bottom: 0;
   border: 0;
+}
+
+/* Periodo nuovo dopo uno scorrimento o una freccia: entra dal lato verso cui si è scorso (D-CAL-2), come `rf-slide` */
+[data-verso] {
+  animation: scorre var(--dur-layout) var(--ease-standard);
+}
+
+[data-verso='avanti'] {
+  --verso: 1;
+}
+
+[data-verso='indietro'] {
+  --verso: -1;
+}
+
+@keyframes scorre {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--verso) * var(--space-6)));
+  }
+}
+
+/* Riduzione animazioni: le animazioni infinite si fermano (con la durata a .01 ms campionerebbero una fase diversa a
+   ogni frame); il pallino in corso tiene un alone fermo */
+@media (prefers-reduced-motion: reduce) {
+  [data-in-corso] .punto {
+    animation: none;
+    box-shadow: var(--glow-dot-live);
+  }
+
+  [data-in-corso] .accento {
+    animation: none;
+  }
 }
 
 /* Desktop da 1024 px (D-UI-1) */
@@ -889,12 +1053,6 @@
 
   .riga {
     grid-template-columns: 60px minmax(0, 1fr);
-  }
-
-  /* S1 Desktop: i todo senza orario in coda alla giornata, dopo i blocchi con orario (D-DESIGN-1 n. 3).
-     ponytail: riordino solo visivo (order); se le righe diventano focalizzabili (T-009) riordinare nel DOM */
-  .riga[data-senza-orario] {
-    order: 1;
   }
 
   .punto {
@@ -998,7 +1156,12 @@
 
   /* Vista Giorno a due colonne come S1 Desktop: testata e giornata a sinistra, colonna laterale di 360 a destra
      dall'altezza della testata. `.corpo` non genera un riquadro (display: contents) e i suoi figli entrano nella
-     griglia di `.oggi`; i gesti sul corpo arrivano lo stesso, perché gli eventi risalgono il DOM. */
+     griglia di `.oggi`; gli eventi del puntatore arrivano lo stesso, perché risalgono il DOM, ma `touch-action` vale
+     solo sui riquadri: va ripetuto sui figli, altrimenti su uno schermo touch il browser si prende lo scorrimento. */
+  .corpo[data-vista='giorno'] > * {
+    touch-action: pan-y pinch-zoom;
+  }
+
   .oggi:has(> .corpo[data-vista='giorno']) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 360px;

@@ -42,6 +42,14 @@ export function isInProgress(block: Blocco, now: number): boolean {
   return now >= block.inizio && now < effectiveEnd(block);
 }
 
+/**
+ * Card «in corso» del calendario (S1, D-CAL-2): aperta, con orario e in corso come in §14 (`in_corso`, oppure adesso ∈
+ * [inizio, fine)); senza la finestra dei candidati del blocco Adesso, così una sessione oltre fine + 30' resta «in
+ * corso» sulla sua card.
+ */
+export const isLiveBlock = (block: Blocco, now: number): boolean =>
+  block.conOrario && !STATI_TERMINALI.has(block.stato) && isInProgress(block, now);
+
 export function statusOf(block: Blocco, now: number): StatoAdesso {
   // Prima "in corso" (§14: `in_corso` vale anche se avviato in anticipo o a fine passata), poi il tempo
   if (isInProgress(block, now)) {

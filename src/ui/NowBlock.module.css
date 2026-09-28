@@ -1,5 +1,8 @@
-/* Blocco Adesso (S1 NowBlock, DESIGN.md §8): solo token. Il colore dello stato (accento, pallino, eyebrow, numero)
-   arriva da `data-stato` sulle variabili locali --stato e --stato-chiaro; il badge del tipo da `data-tipo`. Gli scarti
+/* Blocco Adesso (S1 NowBlock, DESIGN.md §8): solo token. Un solo colore, quello del tipo (scelta dell'utente, D-NOW-3):
+   accento light → fill → light, pallino dell'eyebrow e badge da `data-tipo`, come la card della stessa attività nella
+   giornata. Lo stato si legge dalle parole e dal peso, senza colore (DESIGN.md §1: mai colore per «passato» o «in
+   ritardo»): eyebrow bianca con «Adesso», text-dim con «Da recuperare», text-2 con «Tra poco» e «Concluso»; numero
+   bianco in font-num; l'accento si anima solo con «Adesso» (rf-bar = in corso, come la card). Gli scarti
    fuori dalla scala dei mock vanno al token più vicino, a parità al più piccolo: 11 → 12, 10 → 8, 7 → 8, 5 → 4, 3 → 4,
    13 → 12, 9 → 8, azione 38 → 36; restano letterali 6 (pallino e suo gap, come i puntini di Oggi) e 1. */
 
@@ -27,44 +30,35 @@
   animation: global(rf-expand) var(--dur-block) var(--ease-out-soft);
 }
 
-.card[data-stato='adesso'] {
-  --stato: var(--color-primary);
-  --stato-chiaro: var(--color-primary-light);
-}
-
-.card[data-stato='tra'],
-.card[data-stato='orario_passato'] {
-  --stato: var(--color-text-2);
-  --stato-chiaro: var(--color-text-dim);
-}
-
-/* Giallo di avviso: il chiaro del gradiente è l'unico giallo chiaro dei token */
-.card[data-stato='recupera'] {
-  --stato: var(--color-warning);
-  --stato-chiaro: var(--color-cat-routine-light);
-}
-
 .card[data-tipo='todo'] {
+  --fill: var(--color-cat-todo);
+  --light: var(--color-cat-todo-light);
   --ink: var(--color-cat-todo-ink);
   --soft: var(--color-cat-todo-soft);
 }
 
 .card[data-tipo='studio'] {
+  --fill: var(--color-cat-study);
+  --light: var(--color-cat-study-light);
   --ink: var(--color-cat-study-ink);
   --soft: var(--color-cat-study-soft);
 }
 
 .card[data-tipo='routine'] {
+  --fill: var(--color-cat-routine);
+  --light: var(--color-cat-routine-light);
   --ink: var(--color-cat-routine-ink);
   --soft: var(--color-cat-routine-soft);
 }
 
 .card[data-tipo='evento'] {
+  --fill: var(--color-cat-event);
+  --light: var(--color-cat-event-light);
   --ink: var(--color-cat-event-ink);
   --soft: var(--color-cat-event-soft);
 }
 
-/* Accento animato senza alone (DESIGN.md §5: nel NowBlock la barra non ha alone, `nowBarGlow: none`; il pallino
+/* Accento del tipo senza alone (DESIGN.md §5: nel NowBlock la barra non ha alone, `nowBarGlow: none`; il pallino
    dell'eyebrow sì, come nel mock) */
 .accento {
   position: absolute;
@@ -73,8 +67,32 @@
   bottom: 0;
   width: var(--size-accent-bar);
   border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
-  background: linear-gradient(180deg, var(--stato-chiaro), var(--stato) 50%, var(--stato-chiaro));
+  background: linear-gradient(180deg, var(--light), var(--fill) 50%, var(--light));
+}
+
+.card[data-stato='adesso'] .accento {
   animation: global(rf-bar) var(--dur-bar) ease-in-out infinite;
+}
+
+/* Colore della parola dello stato, nell'eyebrow e nella riga del compresso */
+.card {
+  --stato-testo: var(--color-text-2);
+}
+
+.card[data-stato='adesso'] {
+  --stato-testo: var(--color-text);
+}
+
+.card[data-stato='recupera'] {
+  --stato-testo: var(--color-text-dim);
+}
+
+.eyebrow,
+.statoCompatto {
+  color: var(--stato-testo);
+  font: 600 var(--text-2xs) / var(--leading-tight) var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -84,10 +102,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--stato);
-  font: 600 var(--text-2xs) / var(--leading-tight) var(--font-ui);
-  letter-spacing: var(--tracking-eyebrow);
-  text-transform: uppercase;
 }
 
 .pallino {
@@ -95,8 +109,8 @@
   height: 6px;
   flex: none;
   border-radius: var(--radius-pill);
-  background: var(--stato);
-  color: var(--stato);
+  background: var(--fill);
+  color: var(--fill);
   box-shadow: var(--glow-dot-week);
 }
 
@@ -198,7 +212,7 @@
 
 .numero {
   flex: none;
-  color: var(--stato);
+  color: var(--color-text);
   font: 600 var(--text-base) / var(--leading-tight) var(--font-num);
   font-variant-numeric: tabular-nums;
 }
@@ -265,6 +279,18 @@
   gap: 1px;
 }
 
+/* Riga del compresso: parola dello stato, poi i numeri */
+.rigaCompatta {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.statoCompatto {
+  flex: none;
+}
+
 .compatta .titolo {
   margin: 0;
   font: 600 var(--text-md) / var(--leading-tight) var(--font-ui);
@@ -298,7 +324,7 @@
 /* Riduzione animazioni: solo dissolvenze (DESIGN.md §4); la barra infinita si ferma, perché con la durata a .01 ms
    campionerebbe una fase diversa a ogni frame */
 @media (prefers-reduced-motion: reduce) {
-  .accento {
+  .card[data-stato='adesso'] .accento {
     animation: none;
   }
 }
