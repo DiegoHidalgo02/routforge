@@ -193,5 +193,6 @@
   "minutiUnita": "min",
   "allInizio": "para começar",
   "allaFine": "para terminar",
-  "ultimoAvvio": "último início"
+  "ultimoAvvio": "último início",
+  "ritornoAssenza": "Olá de novo. Passaram-se {giorni} dias: o plano já se reorganizou e as tarefas passaram para hoje."
 }

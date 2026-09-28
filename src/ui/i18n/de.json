@@ -193,5 +193,6 @@
   "minutiUnita": "min",
   "allInizio": "bis zum Beginn",
   "allaFine": "bis zum Ende",
-  "ultimoAvvio": "spätester Start"
+  "ultimoAvvio": "spätester Start",
+  "ritornoAssenza": "Willkommen zurück. Es sind {giorni} Tage vergangen: Der Plan ist schon neu ausgerichtet, die Todos sind auf heute verschoben."
 }

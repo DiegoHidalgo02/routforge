@@ -6,6 +6,7 @@ import { get, list, listBy, save, saveBlock, saveCourse, type DatiBlocco } from 
 import type { BozzaAttivita } from '../domain/activity';
 import { parseCourse } from '../domain/course/parser';
 import { endOfLocalDay, local } from '../domain/time';
+import { CHIAVE_ULTIMA_APERTURA, readAbsenceNotice } from './absence';
 import { createActivity } from './activities';
 import { watchCalendar } from './calendar';
 import type { Clock } from './ports/clock';
@@ -390,6 +391,7 @@ function orologioFinto(inizio: number) {
 describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
   const routine1820 = () => blocco({ inizio: local(2026, 9, 23, 18, 0), fine: local(2026, 9, 23, 20, 0) });
   const stato = async (id: string) => (await letto(id)).stato;
+  const ultimaApertura = async () => (await get(db, 'preferenze', CHIAVE_ULTIMA_APERTURA))?.valore;
 
   it("all'avvio esegue subito il ciclo", async () => {
     const r = await routine1820();
@@ -423,7 +425,7 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
     stop();
   });
 
-  it('dopo lo stop nessun innesco esegue il ciclo', async () => {
+  it('dopo lo stop nessun innesco esegue il ciclo né registra un’apertura', async () => {
     const r = await routine1820();
     const o = orologioFinto(local(2026, 9, 23, 20, 0));
     const s = createScheduler(db, o.clock);
@@ -433,6 +435,55 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
     o.primoPiano();
     await new Promise<void>((fatto) => setTimeout(fatto, 50));
     expect(await stato(r.id)).toBe('programmato');
+    expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 0));
+  });
+
+  it('l’apertura si registra all’avvio e al ritorno in primo piano, non al battito: tre giorni in background → avviso di ritorno (§9)', async () => {
+    await save(db, 'corsi', { id: 'c1', titolo: 'Corso', sottotitolo: '', importatoIl: 0, esempio: false }, 0);
+    const lunedi = local(2026, 9, 28, 21, 0);
+    const giovedi = local(2026, 10, 1, 8, 0);
+    const o = orologioFinto(lunedi);
+    const s = createScheduler(db, o.clock);
+    const stop = s.start();
+    await vi.waitFor(async () => expect(await ultimaApertura()).toBe(lunedi));
+    o.avanza(60_000); // il battito esegue solo il ciclo
+    await s.run();
+    expect(await ultimaApertura()).toBe(lunedi);
+    o.salta(giovedi - lunedi - 60_000); // tre giorni in background, senza battiti
+    o.primoPiano();
+    await vi.waitFor(async () =>
+      expect(await readAbsenceNotice(db, '2026-10-01')).toEqual({ giorni: 3, giorno: '2026-10-01' }),
+    );
+    expect(await ultimaApertura()).toBe(giovedi);
+    stop();
+  });
+
+  it('una scrittura sulle ricorrenze esegue il ciclo ma non è un’apertura (D-ASSENZA-1)', async () => {
+    const o = orologioFinto(local(2026, 9, 23, 20, 0));
+    const stop = createScheduler(db, o.clock).start();
+    await vi.waitFor(async () => expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 0)));
+    o.salta(31 * 60_000); // 20:31, senza battiti
+    const id = await crea(routine([3], '18:00', '20:00', '2026-09-23'), local(2026, 9, 23, 20, 31));
+    await vi.waitFor(async () => expect((await listBy(db, 'blocchi', 'ricorrenzaId', id))[0]?.stato).toBe('perso'));
+    expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 0));
+    stop();
+  });
+
+  it('con un ciclo fallito l’apertura non si registra: il messaggio direbbe che il piano si è riallineato (FUNZ §2)', async () => {
+    const { corsoId } = await studioC1();
+    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
+    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    const o = orologioFinto(local(2026, 9, 23, 20, 31));
+    const s = createScheduler(db, o.clock);
+    const stop = s.start();
+    await s.run();
+    await new Promise<void>((fatto) => setTimeout(fatto, 50));
+    expect(await ultimaApertura()).toBeUndefined();
+    await db.moduli.put(modulo);
+    o.salta(60_000);
+    o.primoPiano();
+    await vi.waitFor(async () => expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 32)));
+    stop();
   });
 
   it('un ciclo che fallisce non arriva al chiamante e il successivo lavora (CONTESTO §3)', async () => {

@@ -7,7 +7,8 @@
  * qui si leggono i blocchi e si scrive la differenza. Dopo la transazione vengono la riconciliazione delle notifiche
  * (T-019), gli avvisi «perso» e «in ritardo» (T-020, con gli id restituiti da `runCycle`) e la streak, che non si
  * scrive: `currentStreak` la azzera alla lettura (§12, T-018). Criteri: SCENARI C8, G4, B7; A1, A2, B1, B2, C1, E2.
- * Decisione: D-SCHED-1.
+ * All'avvio e al ritorno in primo piano `start()` registra anche l'apertura, per il ritorno dopo un'assenza (§9,
+ * `registerOpening`). Decisioni: D-SCHED-1, D-ASSENZA-1.
  */
 import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, list, listBy, saveBlock, watch } from '../data/repository';
@@ -15,6 +16,7 @@ import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
 import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 import { minutes } from '../domain/time';
+import { registerOpening } from './absence';
 import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
 import type { Clock } from './ports/clock';
@@ -94,7 +96,10 @@ export const BATTITO = minutes(1);
 export interface SchedulerService {
   /** Esegue il ciclo adesso (due insieme si serializzano); `undefined` se fallisce, senza eccezioni verso la UI (CONTESTO §3). */
   run(): Promise<AvvisiCiclo | undefined>;
-  /** Inneschi di §9: subito, al ritorno in primo piano, a ogni battito e a ogni scrittura sulle ricorrenze. Restituisce lo stop. */
+  /**
+   * Inneschi di §9: subito, al ritorno in primo piano, a ogni battito e a ogni scrittura sulle ricorrenze. L'avvio e il
+   * ritorno in primo piano sono anche le aperture del ritorno dopo un'assenza (D-ASSENZA-1). Restituisce lo stop.
+   */
   start(): () => void;
 }
 
@@ -105,11 +110,19 @@ export function createScheduler(db: RoutForgeDb, clock: Clock): SchedulerService
   return {
     run,
     start() {
-      void run();
+      // Un'apertura (§9): il ciclo, poi l'ultima apertura con l'istante dell'apertura, solo se il ciclo è riuscito,
+      // perché il messaggio dice che il piano si è già riallineato (FUNZ §2); un errore resta qui come quello del ciclo
+      const apri = () => {
+        const now = clock.now();
+        void run()
+          .then((esito) => (esito ? registerOpening(db, now) : undefined))
+          .catch(() => undefined);
+      };
+      apri();
       // Creazione, modifica ed eliminazione di routine scrivono `ricorrenze`; la prima emissione è l'avvio, già eseguito
       let avvio = true;
       const stop = [
-        clock.onForeground(() => void run()),
+        clock.onForeground(apri),
         clock.every(BATTITO, () => void run()),
         watch(
           () => list(db, 'ricorrenze'),

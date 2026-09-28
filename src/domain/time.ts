@@ -58,6 +58,15 @@ export function addLocalDays(ms: number, n: number): number {
   ).getTime();
 }
 
+/**
+ * Giorni locali di calendario dal giorno di `a` a quello di `b` (negativi se `b` viene prima): lunedì 23:59 →
+ * mercoledì 00:01 fa 2. I giorni li decidono le mezzanotti locali; le 24 ore sono solo l'unità del conteggio e
+ * l'arrotondamento assorbe i giorni di 23 o 25 ore dell'ora legale (D-TIME-1).
+ */
+export function localDaysBetween(a: number, b: number): number {
+  return Math.round((startOfLocalDay(b) - startOfLocalDay(a)) / (24 * HOUR));
+}
+
 /** Costruttore comodo per test e fixture: data/ora LOCALE. Mese 1-based. */
 export function local(y: number, month1: number, day: number, h = 0, min = 0, s = 0): number {
   return new Date(y, month1 - 1, day, h, min, s, 0).getTime();

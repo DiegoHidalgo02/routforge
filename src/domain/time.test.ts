@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { lostAtInstant } from './lost';
-import { addLocalDays, endOfLocalDay, local, localDayKey, localInstant, localTimeKey, startOfLocalDay } from './time';
+import {
+  addLocalDays,
+  endOfLocalDay,
+  local,
+  localDayKey,
+  localDaysBetween,
+  localInstant,
+  localTimeKey,
+  startOfLocalDay,
+} from './time';
 
 // I test usano solo i getter locali di Date, quindi valgono in qualsiasi fuso.
 // Eseguiti con TZ=Europe/Rome attraversano il cambio d'ora del 25 ottobre 2026.
@@ -19,6 +28,20 @@ describe('Tempo locale — CONTESTO §3 (fuso e ora legale non spostano i blocch
     const mon = new Date(addLocalDays(sat, 2));
     expect([sun.getDate(), sun.getHours()]).toEqual([25, 7]);
     expect([mon.getDate(), mon.getHours()]).toEqual([26, 7]);
+  });
+
+  it("localDaysBetween conta i giorni di calendario, non le 24 ore, anche attraverso il cambio d'ora", () => {
+    expect(localDaysBetween(local(2026, 9, 28, 23, 59), local(2026, 9, 30, 0, 1))).toBe(2); // poco più di 24 ore
+    expect(localDaysBetween(local(2026, 9, 28, 0, 1), local(2026, 9, 29, 23, 59))).toBe(1); // quasi 48 ore
+    expect(localDaysBetween(local(2026, 9, 28, 8, 0), local(2026, 9, 28, 23, 0))).toBe(0);
+    expect(localDaysBetween(local(2026, 9, 30, 8, 0), local(2026, 9, 28, 8, 0))).toBe(-2);
+    expect(localDaysBetween(local(2026, 10, 24, 12, 0), local(2026, 10, 26, 12, 0))).toBe(2); // domenica di 25 ore a Roma
+    // Giorni di 23 ore: Roma il 29 marzo, Los Angeles l'8 marzo, Auckland il 27 settembre (ognuno nel suo fuso di CI)
+    expect(localDaysBetween(local(2026, 3, 28, 12, 0), local(2026, 3, 30, 12, 0))).toBe(2);
+    expect(localDaysBetween(local(2026, 3, 7, 12, 0), local(2026, 3, 9, 12, 0))).toBe(2);
+    expect(localDaysBetween(local(2026, 9, 26, 12, 0), local(2026, 9, 28, 12, 0))).toBe(2);
+    // Dal 1° marzo al 30 novembre cadono i due cambi d'ora di Roma, Los Angeles e Auckland
+    expect(localDaysBetween(local(2026, 3, 1), local(2026, 11, 30, 23, 59))).toBe(274);
   });
 
   it("routine senza durata il giorno del cambio d'ora → persa alle 00:29 del giorno dopo", () => {

@@ -193,5 +193,6 @@
   "minutiUnita": "min",
   "allInizio": "all’inizio",
   "allaFine": "alla fine",
-  "ultimoAvvio": "ultimo avvio"
+  "ultimoAvvio": "ultimo avvio",
+  "ritornoAssenza": "Bentornato. Sono passati {giorni} giorni: il piano si è già riallineato, i todo sono a oggi."
 }

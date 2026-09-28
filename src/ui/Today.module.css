@@ -405,6 +405,71 @@
   margin-top: 0;
 }
 
+/* Ritorno dopo un'assenza (S1 Mobile `absence`, DESIGN.md AbsenceBanner): 48 surface-2 r12 con hairline, icona 16
+   text-2, testo 13/18 con i giorni in font-num, chiudi ghost 32 con area di tocco 44 (DESIGN.md §4); nessuna
+   animazione d'entrata, come nel mock. Gap 10 → 8, rientro destro 6 → 4 e respiro del testo a capo 6 → 4 (a parità
+   il più piccolo). */
+.assenza {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--size-row) + var(--space-1));
+  margin: var(--space-3) 0 0;
+  padding: 0 var(--space-1) 0 var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.iconaAssenza {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.testoAssenza {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-1) 0;
+  font: var(--text-base) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.giorniAssenza {
+  font: 500 var(--text-base) / var(--leading-body) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.chiudiAssenza {
+  position: relative;
+  flex: none;
+  width: var(--space-8);
+  height: var(--space-8);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
+}
+
+.chiudiAssenza::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-8) - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+.chiudiAssenza:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
 .meseMobile {
   margin: var(--space-4) 0 0;
   font: 600 var(--text-lg) / var(--leading-tight) var(--font-ui);
@@ -1178,9 +1243,10 @@ button.spunta:not([data-fatta]):hover {
     grid-column: 1;
   }
 
+  /* Le righe della colonna di sinistra: testata, striscia, data del giorno, messaggio del ritorno (se c'è), giornata */
   .corpo[data-vista='giorno'] > .lato {
     grid-column: 2;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 5;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);

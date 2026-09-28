@@ -90,7 +90,7 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 | `conversazioni`, `messaggi` | `conversazioni.ambito`, `conversazioni.ultimoMessaggio`; `messaggi.conversazioneId` | Elenco raggruppato per età (§18) |
 | `materiali`, `materialiBinari` | `materiali.unitaId`; `materialiBinari.materialeId` | Metadati separati dal PDF (§17) |
 | `fileCodice` | `unitaId`, `sessioneId` | Solo contesto AI |
-| `preferenze` | — (id = chiave) | Impostazioni, streak, sessione attiva, ultima apertura, modello AI, account |
+| `preferenze` | — (id = chiave) | Impostazioni, streak, sessione attiva, ultima apertura (con l'avviso `ritornoAssenza`, D-ASSENZA-1), modello AI, account |
 | `registroNotifiche` | — (id = chiave logica) | Chiave logica → id nativo; derivato, escluso da backup e sync (MECC §1) |
 
 ## 4. Servizi chiave
@@ -102,7 +102,9 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   dà `run()` e `start()`: all'avvio, al ritorno in primo piano, **ogni minuto** (il ciclo intero: B7, fini alle
   23:59) e a ogni scrittura su `ricorrenze` (CRUD di routine, poi la sync); lo avvia `src/main.tsx`. Dopo la
   transazione, in `run()`, la riconciliazione delle notifiche (T-019). Idempotente: rieseguirlo senza cambiamenti non
-  scrive nulla (INV-15); un ciclo che fallisce non scrive e non arriva alla UI.
+  scrive nulla (INV-15); un ciclo che fallisce non scrive e non arriva alla UI. All'avvio e al ritorno in primo piano
+  `start()` registra anche l'apertura, dopo un ciclo riuscito (`registerOpening` di `src/app/absence.ts`, T-014,
+  D-ASSENZA-1): scrive `preferenze.ultimaApertura` fuori dal ciclo e da INV-15.
 - **SessionService** — una sola sessione attiva (§10); stato persistito in `preferenze` per sopravvivere alla chiusura
   (D4); tick derivato dagli istanti assoluti, non da contatori.
 - **NotificationPlanner.desiredSet(now)** — calcola l'insieme desiderato (§13.3) in modo deterministico

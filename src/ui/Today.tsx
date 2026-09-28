@@ -8,11 +8,13 @@
 // Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`); il cerchio della card spunta
 // (MECC §3 «spunta diretta», D-DETT-3). Pallini con l'alone del tipo e card in corso come S1 Mobile (D-CAL-2).
 // Il blocco Adesso (T-010, `NowBlock.tsx`) sta fra la striscia e la giornata su mobile e nella colonna laterale su
-// desktop. Arrivano con il loro task: trascinamento (T-015), ritorno dopo un'assenza (T-013); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
+// desktop. In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Arrivano con il loro
+// task: trascinamento (T-015); l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock
 // non sono nella spec di Oggi (docs/03_HANDOFF_DESIGN_CODE.md §10).
-import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check, RefreshCcw, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams, type Location } from 'react-router';
+import { dismissAbsenceNotice, watchAbsenceNotice } from '../app/absence';
 import { watchCalendar, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar } from '../app/completion';
 import { appDb } from '../app/db';
@@ -20,6 +22,7 @@ import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista
 import { canCheckFromCalendar, type PassoSpunta } from '../domain/completion';
 import { isLiveBlock } from '../domain/nowBlock';
 import { sortDayDesktop } from '../domain/ordering';
+import type { AvvisoAssenza } from '../domain/scheduler/absence';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
 import { maiuscola, sottotitolo, TIPO, titolo } from './format';
@@ -232,6 +235,7 @@ export function Today() {
             </div>
             <hr className={`${s.separatore} ${s.soloMobile}`} />
             <h2 className={`${s.giornoTitolo} ${s.soloDesktop}`}>{giornoLungo}</h2>
+            <RitornoAssenza oggi={oggi} />
             {pronto && blocchi(giorno).length === 0 ? (
               <div key={chiavePeriodo} className={s.vuotoGiorno} data-verso={verso}>
                 <CalendarCheck size={32} strokeWidth={1.5} className={s.iconaVuotoGiorno} />
@@ -400,6 +404,42 @@ function DataTesta({ giorno }: { giorno: string }) {
         {righe(false)}
       </span>
     </span>
+  );
+}
+
+/**
+ * Ritorno dopo un'assenza (FUNZ §2, MECC §9; S1 Mobile `absence`, DESIGN.md AbsenceBanner): dopo almeno due giorni senza
+ * aprire l'app dice una volta che il piano si è già riallineato, con i giorni in font-num; × lo chiude. Lo scrive il
+ * servizio all'apertura e vale solo nel giorno dell'apertura (D-ASSENZA-1). Su desktop, che il design non disegna, sta
+ * nello stesso punto: in testa alla giornata.
+ */
+function RitornoAssenza({ oggi }: { oggi: string }) {
+  const [avviso, setAvviso] = useState<AvvisoAssenza | null>(null);
+  useEffect(() => watchAbsenceNotice(appDb, oggi, setAvviso), [oggi]);
+  // I giorni in font-num dentro la frase tradotta: il segnaposto divide il testo
+  const [prima, dopo = ''] = t('ritornoAssenza').split('{giorni}');
+  // La regione di stato resta montata anche vuota: i lettori di schermo annunciano ciò che vi entra dopo
+  return (
+    <div role="status">
+      {avviso && (
+        <div className={s.assenza}>
+          <RefreshCcw size={16} className={s.iconaAssenza} aria-hidden />
+          <p className={s.testoAssenza}>
+            {prima}
+            <span className={s.giorniAssenza}>{avviso.giorni}</span>
+            {dopo}
+          </p>
+          <button
+            type="button"
+            className={s.chiudiAssenza}
+            aria-label={t('chiudi')}
+            onClick={() => void dismissAbsenceNotice(appDb, Date.now())}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -193,5 +193,6 @@
   "minutiUnita": "min",
   "allInizio": "avant le début",
   "allaFine": "avant la fin",
-  "ultimoAvvio": "dernier départ"
+  "ultimoAvvio": "dernier départ",
+  "ritornoAssenza": "Bon retour. Cela fait {giorni} jours : le plan s’est déjà réorganisé et les tâches sont passées à aujourd’hui."
 }

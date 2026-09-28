@@ -193,5 +193,6 @@
   "minutiUnita": "min",
   "allInizio": "to start",
   "allaFine": "to end",
-  "ultimoAvvio": "latest start"
+  "ultimoAvvio": "latest start",
+  "ritornoAssenza": "Welcome back. It’s been {giorni} days: your plan has already realigned and your todos have moved to today."
 }
