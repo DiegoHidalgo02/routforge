@@ -17,6 +17,8 @@ export const ANCORA_TODO = '12:00';
 
 /** Gradini della durata di un todo con orario, in minuti (§2). */
 export const GRADINI_DURATA = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 210, 240] as const;
+/** Durata predefinita del form «+ Crea» per un todo con orario, in minuti: anche quella del todo senza orario che si trascina su un orario (§15). */
+export const DURATA_TODO = 30;
 /** Anticipi proposti dal promemoria personalizzato, in minuti: 1 g, 1 h, 30/15/10/5', all'inizio (§13.1). */
 export const ANTICIPI = [1440, 60, 30, 15, 10, 5, 0] as const;
 /** Anticipo libero fino a 31 giorni (§13.1). */

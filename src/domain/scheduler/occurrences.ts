@@ -47,7 +47,7 @@ export interface PianoOccorrenze {
 }
 
 /** Istanti di parete nel giorno dato: fine ≤ inizio → il giorno dopo; senza fine → `null` (§2, §7). */
-function wallInstants(
+export function wallInstants(
   giorno: string,
   orarioInizio: string,
   orarioFine: string | null,

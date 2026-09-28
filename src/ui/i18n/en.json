@@ -194,5 +194,17 @@
   "allInizio": "to start",
   "allaFine": "to end",
   "ultimoAvvio": "latest start",
-  "ritornoAssenza": "Welcome back. It’s been {giorni} days: your plan has already realigned and your todos have moved to today."
+  "ritornoAssenza": "Welcome back. It’s been {giorni} days: your plan has already realigned and your todos have moved to today.",
+  "spostaTitolo": "Move: {titolo}",
+  "istruzioniSposta": "Enter to pick up; up and down arrows for a time, left and right for a day; Enter to drop, Esc to cancel.",
+  "fraBlocchi": "Between {a} and {b}",
+  "dopoBlocco": "After {a}",
+  "primaDiBlocco": "Before {b}",
+  "giornoOrarioInvariato": "{quando}, same time",
+  "minutiDurata": "{m} min",
+  "aggancioCinque": "snap 5 min",
+  "persoProgrammato": "missed → scheduled",
+  "spostatoA": "{titolo} moved to {quando}",
+  "notaTrascina": "drag untimed todos and missed items",
+  "annullaAzione": "Undo"
 }

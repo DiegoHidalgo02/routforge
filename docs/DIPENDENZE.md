@@ -28,13 +28,13 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `lucide-react` | runtime | `src/ui`, T-006 | icone Lucide, tratto 1.75 (DESIGN.md §7): gli stessi glifi dei mock, senza copiare i tracciati a mano | D-STACK-1 |
 | `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | runtime | `src/main.tsx`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
 | `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | dev | `eslint.config.js`, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3). `jsx-a11y` 6.10.2 dichiara ESLint fino alla 9: `overrides` in `package.json` gli passa ESLint 10 (il suo codice non usa le API rimosse dalla 10, verificato in T-006); l'override si toglie quando il plugin dichiara la 10 | D-LINT-1, D-STACK-1 |
+| `jsdom` | dev | ambiente dei test della UI dove uno scenario lo richiede (`// @vitest-environment jsdom` in testa al file; resto della suite in `node`), T-015: `src/ui/Today.test.tsx` (G3) | ambiente DOM per Vitest. Versione 29: la 30 chiede Node 22.22 o 24.15, `engines` di `package.json` dice ancora Node 20 | D-STACK-1 |
 
 ## Previste (entrano nel task indicato; stack deciso in T-000, `docs/decisioni/D-STACK-1.md`)
 
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `vite-plugin-pwa` | prevista | dev, web installabile (manifest e service worker), T-035: nome e icona arrivano con CP6 | PWA sulla stessa build di Vite | D-STACK-1 |
-| `jsdom` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | ambiente DOM per Vitest | D-STACK-1 |
 | `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-021 (prima capacità nativa: `cap init`, `cap add android` dopo CP3) e T-035 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
 | `@capacitor-community/keep-awake` | prevista | `src/platform`, T-021 (schermo acceso durante la sessione, MECC §10.4; sul web Wake Lock API, T-017) | lo schermo non si spegne durante la sessione | D-STACK-1 |
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |

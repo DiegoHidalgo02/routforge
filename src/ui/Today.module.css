@@ -730,6 +730,250 @@ button.spunta:not([data-fatta]):hover {
   color: var(--color-text-3);
 }
 
+/* Trascinamento (MECC §15; S1 `drag`, DESIGN.md «Trascinamento», D-DRAG-1). Maniglia a sei punti a destra delle sole
+   card trascinabili (la card stringe il margine destro a 8, come nel mock), sopra il collegamento della card, con il
+   cursore di presa; niente gesti del browser sulla maniglia: al tocco il trascinamento parte subito, il resto della card
+   scorre e si tocca come prima. L'area di tocco 44 cresce verso sinistra, dentro la card, che taglia ciò che sborda */
+.card:has(> .maniglia),
+.sollevata {
+  padding-right: var(--space-2);
+}
+
+.maniglia {
+  position: relative;
+  z-index: 1;
+  width: var(--space-4);
+  height: var(--space-4);
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-checkbox);
+  background: none;
+  color: var(--color-border-strong);
+  cursor: grab;
+  touch-action: none;
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.maniglia::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-4) - var(--size-touch)) / 2) calc(-1 * var(--space-2))
+    calc((var(--space-4) - var(--size-touch)) / 2) calc(var(--space-4) + var(--space-2) - var(--size-touch));
+}
+
+.maniglia:hover,
+.maniglia[aria-pressed='true'] {
+  color: var(--color-text-2);
+}
+
+/* Alla pressione la card si solleva (S1 `style-active`); col mouse si prende da tutta la card, con il cursore di presa
+   sulle sole card trascinabili, e il clic senza movimento apre ancora il Dettaglio */
+.maniglia:active {
+  cursor: grabbing;
+}
+
+.riga:not([data-sollevata]) .card:has(> .maniglia:active) {
+  box-shadow: var(--shadow-drag);
+  transform: scale(var(--scale-drag));
+}
+
+@media (pointer: fine) {
+  .card:has(> .maniglia),
+  .card:has(> .maniglia) .testi {
+    cursor: grab;
+  }
+
+  .riga:not([data-sollevata]) .card:has(> .maniglia):active {
+    box-shadow: var(--shadow-drag);
+    transform: scale(var(--scale-drag));
+  }
+}
+
+/* Durante il trascinamento col puntatore il cursore è la presa chiusa, ovunque */
+.oggi:has([data-sollevata='puntatore']) :is(*, .testi) {
+  cursor: grabbing;
+}
+
+/* Card sollevata: ombra drag, `scale(1.015) rotate(-.5deg)`, bordo live. Da tastiera si solleva sul posto, piena anche
+   se persa (S1 `drag=perso`); dal puntatore si solleva la copia (nello spazio del punto d'inserimento, o nella
+   `.fantasma` che segue il dito fuori dai bersagli) e al suo posto resta l'impronta */
+.sollevata,
+[data-sollevata='tastiera'] .card {
+  opacity: 1;
+  border-color: var(--color-border-live);
+  box-shadow: var(--shadow-drag);
+  transform: scale(var(--scale-drag)) rotate(-0.5deg);
+}
+
+.sollevata > svg {
+  flex: none;
+  color: var(--color-border-strong);
+}
+
+[data-sollevata='tastiera'] .titoloCard {
+  color: var(--color-text);
+}
+
+[data-sollevata='tastiera'] .spunta[data-assente] {
+  visibility: visible;
+}
+
+[data-sollevata='puntatore'] .card {
+  opacity: var(--opacity-disabled);
+}
+
+.fantasma {
+  position: fixed;
+  z-index: 7;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* Il blocco di S1 `drag`, impilato come nel mock: suggerimento, riga di aggancio, card. Su un orario sta nello spazio
+   del punto d'inserimento (dal puntatore con la card sollevata), sulla striscia in testa alla giornata, da tastiera
+   anche sopra la card presa */
+.bloccoAggancio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-left: var(--size-time-column);
+}
+
+/* Suggerimento: 12 nel primary, a capo se non entra */
+.suggerimento {
+  color: var(--color-primary);
+  font: var(--text-sm) / var(--leading-body) var(--font-ui);
+}
+
+/* Riga di aggancio: pill primary soft (l'orario, o giorno e orario), linea tratteggiata 6/6 di 2 px, nota */
+.aggancio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.oraAggancio {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-xs) / 1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.lineaAggancio {
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-primary) 0 calc(var(--space-3) / 2),
+    transparent calc(var(--space-3) / 2) var(--space-3)
+  );
+}
+
+.notaAggancio {
+  flex: none;
+  color: var(--color-text-2);
+  font: var(--text-xs) var(--font-ui);
+}
+
+/* Giorno della striscia sotto la card: anello primary di 2 px sul cerchio (S1 `drag=giorno`) */
+.giornoStriscia[data-bersaglio] .numero {
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+/* Riga del giorno su desktop (S1 Desktop): la data e, a destra, la nota del trascinamento, text-2 a riposo e primary
+   con il suggerimento durante la presa */
+.rigaGiorno {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rigaGiorno .giornoTitolo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.notaGiorno {
+  color: var(--color-text-2);
+  font: var(--text-sm) var(--font-ui);
+  text-align: right;
+}
+
+.notaGiorno[data-attiva] {
+  color: var(--color-primary);
+}
+
+/* Toast con «Annulla» dopo il rilascio (S1 `drag=perso`): sopra la BottomNav su mobile, centrato in basso su desktop.
+   La sua regione di stato resta montata e fuori dal flusso: nella griglia desktop della vista Giorno non prende posto */
+.regioneToast {
+  position: absolute;
+}
+
+.toast {
+  position: fixed;
+  z-index: 6;
+  left: var(--space-page);
+  right: var(--space-page);
+  bottom: calc(var(--space-6) + var(--size-nav-pill) + var(--space-3) + env(safe-area-inset-bottom));
+  height: calc(var(--size-control) + var(--space-1));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-1) 0 var(--space-card-inner);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-3);
+  box-shadow: var(--shadow-toast);
+  animation: global(rf-up) var(--dur-layout) var(--ease-standard);
+}
+
+.testoToast {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 500 var(--text-base) var(--font-ui);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.annullaToast {
+  position: relative;
+  min-height: var(--size-control-sm);
+  flex: none;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+}
+
+.annullaToast::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2);
+}
+
+.annullaToast:hover {
+  background: var(--color-surface-2);
+}
+
 /* Stati vuoti */
 .vuotoGiorno {
   display: flex;
@@ -1128,6 +1372,35 @@ button.spunta:not([data-fatta]):hover {
   .card {
     min-height: 56px;
     padding: 9px var(--space-3) 9px var(--space-card-inner);
+  }
+
+  /* Su desktop la card con la maniglia, e la sua copia sollevata, tengono il margine destro delle altre (S1 Desktop) */
+  .card:has(> .maniglia),
+  .sollevata {
+    padding-right: var(--space-3);
+  }
+
+  /* 60: la colonna dell'orario desktop, come `.riga` (nessun token) */
+  .bloccoAggancio {
+    margin: 0 var(--space-2) 0 60px;
+  }
+
+  .rigaGiorno.soloDesktop {
+    display: flex !important;
+  }
+
+  .notaAggancio {
+    font-size: var(--text-sm);
+  }
+
+  /* Toast centrato in basso nella colonna della giornata, 20 sopra il suo fondo (S1 Desktop `drag=perso`): coi
+     margini, perché `rf-up` anima la trasformazione; 360 e il respiro fra le colonne sono quelli della vista Giorno */
+  .toast {
+    left: calc(var(--size-sidebar) + var(--space-8));
+    right: calc(var(--space-8) + 360px + var(--space-6));
+    bottom: calc(var(--space-8) + var(--space-5));
+    width: fit-content;
+    margin-inline: auto;
   }
 
   .settimana {

@@ -31,6 +31,7 @@ import { watchCourseCards, type SchedaCorso } from '../app/courses';
 import { appDb } from '../app/db';
 import {
   ANTICIPI,
+  DURATA_TODO,
   GRADINI_DURATA,
   MAX_ANTICIPO_SVEGLIA,
   MAX_CARATTERI_VOCE,
@@ -148,7 +149,7 @@ function initial(): Form {
     conFine: false,
     inizio: ora,
     fine: alle(ora, 60),
-    durata: 30,
+    durata: DURATA_TODO,
     orizzonte: 'giorno',
     priorita: 'normale',
     checklist: [],

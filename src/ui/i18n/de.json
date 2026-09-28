@@ -194,5 +194,17 @@
   "allInizio": "bis zum Beginn",
   "allaFine": "bis zum Ende",
   "ultimoAvvio": "spätester Start",
-  "ritornoAssenza": "Willkommen zurück. Es sind {giorni} Tage vergangen: Der Plan ist schon neu ausgerichtet, die Todos sind auf heute verschoben."
+  "ritornoAssenza": "Willkommen zurück. Es sind {giorni} Tage vergangen: Der Plan ist schon neu ausgerichtet, die Todos sind auf heute verschoben.",
+  "spostaTitolo": "Verschieben: {titolo}",
+  "istruzioniSposta": "Eingabe zum Aufnehmen; Pfeile nach oben und unten für eine Uhrzeit, links und rechts für einen Tag; Eingabe zum Ablegen, Esc zum Abbrechen.",
+  "fraBlocchi": "Zwischen {a} und {b}",
+  "dopoBlocco": "Nach {a}",
+  "primaDiBlocco": "Vor {b}",
+  "giornoOrarioInvariato": "{quando}, gleiche Uhrzeit",
+  "minutiDurata": "{m} Min.",
+  "aggancioCinque": "Raster 5 Min.",
+  "persoProgrammato": "verpasst → geplant",
+  "spostatoA": "{titolo} → {quando}",
+  "notaTrascina": "Todos ohne Uhrzeit und Verpasstes ziehen",
+  "annullaAzione": "Rückgängig"
 }
