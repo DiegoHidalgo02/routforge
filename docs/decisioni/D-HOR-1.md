@@ -82,7 +82,9 @@ cambio di fuso e dove ricordare che l'avviso è partito.
 - T-020 spedisce gli avvisi «in ritardo» agli id raccolti (one-shot ~10 s, canale silenzioso, azioni Segna fatto e
   Posticipa, non soggetti alle ore silenziose, §13.4 e §13.6). Per il digest (§13.5) gli arretrati che si sposteranno a
   quel giorno si possono contare con `rollPlan` all'istante del digest, usando id e istanti: giorno locale e ora di
-  parete dei todo in `spostati` sono quelli di prima finché `saveBlock` non li ricalcola.
+  parete dei todo in `spostati` sono quelli di prima finché `saveBlock` non li ricalcola. Esito (D-NOTIF-2): l'avviso è
+  la voce `ritardo:0:<id>` a `ritardoIl` + 10 s dell'insieme desiderato; nel digest gli arretrati sono i todo senza
+  orario di giorni passati per cui vale `isRollingTodo` all'istante del digest, più quelli già rotolati (`ritardoIl`).
 - Un todo collocato a un orario già passato (punto 2 della decisione) non riceve la notifica «scadenza» di §13.2:
   §13.3 non arma notifiche nel passato. Riceve l'avviso «in ritardo», se non l'ha già avuto.
 - L'orizzonte si conta dal giorno attuale del todo: finché rotola coincide con quello di creazione (resta nella stessa

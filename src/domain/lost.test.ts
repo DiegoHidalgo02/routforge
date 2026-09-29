@@ -5,6 +5,7 @@ import {
   isOrphan,
   isRollingTodo,
   lostAtInstant,
+  lostNotificationDue,
   pendingOutcomes,
   recoveryDeadline,
   shouldMarkLost,
@@ -64,6 +65,25 @@ describe('Verifica e recupero — SCENARI B7 (18:00–20:00)', () => {
   it('la scadenza di recupero è a metà durata (19:00) e la marcatura persa alle 20:30', () => {
     expect(recoveryDeadline(b)).toBe(local(2026, 9, 23, 19, 0));
     expect(lostAtInstant(b)).toBe(local(2026, 9, 23, 20, 30));
+  });
+});
+
+describe('Avviso «blocco perso» — MECCANISMI §8 (routine e studio, fine nelle ultime 2 ore)', () => {
+  const b = block({ inizio: local(2026, 9, 23, 18, 0), fine: local(2026, 9, 23, 20, 0) });
+  const alle = (h: number, m: number) => local(2026, 9, 23, h, m);
+
+  it('routine e studio con la fine nelle ultime 2 ore; mai todo ed evento', () => {
+    expect(lostNotificationDue(b, alle(20, 31))).toBe(true);
+    expect(lostNotificationDue({ ...b, tipo: 'studio' }, alle(22, 0))).toBe(true);
+    expect(lostNotificationDue(b, alle(22, 1))).toBe(false);
+    expect(lostNotificationDue({ ...b, tipo: 'todo' }, alle(20, 31))).toBe(false);
+    expect(lostNotificationDue({ ...b, tipo: 'evento' }, alle(20, 31))).toBe(false);
+  });
+
+  it('non se una sessione era partita sul blocco (C8; «conta nel piano» spento, D-ESITO-1) né se è nato dopo la sua fine (D-OCC-1)', () => {
+    expect(lostNotificationDue({ ...b, tipo: 'studio', minutiRitardo: 0 }, alle(20, 31))).toBe(false);
+    expect(lostNotificationDue({ ...b, createdAt: alle(20, 5) }, alle(20, 31))).toBe(false);
+    expect(lostNotificationDue({ ...b, createdAt: alle(19, 0) }, alle(20, 31))).toBe(true);
   });
 });
 

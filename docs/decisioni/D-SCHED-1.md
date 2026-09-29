@@ -91,6 +91,10 @@ timer in `app`, e come B7 («alle 20:30 diventa persa e riceve una notifica») v
   una differenza vuota non chiama la piattaforma.
 - **T-020**: spedisce gli avvisi restituiti da `run()`; decide se avvisare un blocco nato già perso (routine creata dopo
   il suo orario, D-OCC-1: il ciclo innescato dalla creazione la marca subito) e un blocco perso una seconda volta.
+  Esito (D-NOTIF-2): gli avvisi sono voci dell'insieme desiderato derivate da `ritardoIl` e `persoIl`, armate dalla
+  riconciliazione che `run()` esegue dopo il ciclo con lo stesso `now`; gli id di `AvvisiCiclo` restano per la
+  Diagnostica; nessun avviso «perso» per un blocco nato dopo la sua fine o con una sessione già avviata, avviso di nuovo
+  per un perso riprogrammato dall'utente e perso di nuovo.
 - **T-021**: adapter nativo del primo piano con `@capacitor/app` se la WebView non emette `visibilitychange`; verificare
   che `Intl` e `Date` seguano insieme un cambio di fuso ad app aperta.
 - **T-014** si aggancia all'avvio del servizio; **T-034** chiama `run()` dopo una ricezione (le scritture su

@@ -323,5 +323,11 @@
   "notifScadenza": "À faire maintenant · {ora}",
   "notifGiorno": "Aujourd’hui",
   "notifTempoScaduto": "Temps écoulé",
-  "notifSveglia": "Réveil · {titolo}"
+  "notifSveglia": "Réveil · {titolo}",
+  "notifRitardo": "En retard",
+  "notifDigest": "{n} à faire",
+  "notifDigestArretrato": "{n} à faire ({a} en retard)",
+  "notifDigestArretrati": "{n} à faire ({a} en retard)",
+  "notifProva": "Notification de test",
+  "notifProvaCorpo": "Les notifications fonctionnent."
 }

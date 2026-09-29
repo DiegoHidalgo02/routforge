@@ -323,5 +323,11 @@
   "notifScadenza": "Jetzt fällig · {ora}",
   "notifGiorno": "Heute",
   "notifTempoScaduto": "Zeit abgelaufen",
-  "notifSveglia": "Wecker · {titolo}"
+  "notifSveglia": "Wecker · {titolo}",
+  "notifRitardo": "Überfällig",
+  "notifDigest": "{n} zu erledigen",
+  "notifDigestArretrato": "{n} zu erledigen ({a} überfällig)",
+  "notifDigestArretrati": "{n} zu erledigen ({a} überfällig)",
+  "notifProva": "Testbenachrichtigung",
+  "notifProvaCorpo": "Benachrichtigungen funktionieren."
 }

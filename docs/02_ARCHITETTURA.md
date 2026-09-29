@@ -102,7 +102,8 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 - **SchedulerService** (`src/app/scheduler.ts`, T-013, D-SCHED-1) — `runCycle(db, now, fuso)` esegue in **una
   transazione** riancoraggio (D-TIME-2) → estensione delle ricorrenze → spostamento dei todo → reset degli orfani →
   marcatura dei persi → puntatore di ogni corso, con i giudizi di `domain/scheduler/*`, `domain/lost.ts` e
-  `domain/pointer.ts`, e restituisce gli id degli avvisi «in ritardo» e «perso» (T-020). `createScheduler(db, clock)`
+  `domain/pointer.ts`, e restituisce gli id degli avvisi «in ritardo» e «perso» (li arma la riconciliazione dopo il
+  ciclo, derivandoli dalle marcature `ritardoIl` e `persoIl`: T-020, D-NOTIF-2; gli id restano per la Diagnostica). `createScheduler(db, clock)`
   dà `run()` e `start()`: all'avvio, al ritorno in primo piano, **ogni minuto** (il ciclo intero: B7, fini alle
   23:59) e a ogni scrittura su `ricorrenze` (CRUD di routine, poi la sync); lo avvia `src/main.tsx`. Dopo la
   transazione, in `run()`, la riconciliazione delle notifiche (T-019). Idempotente: rieseguirlo senza cambiamenti non
@@ -122,7 +123,11 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   e `schedule(desiderato − registro, o cambiate)`, poi riscrive solo la differenza. Innescata da `run()` dello scheduler
   dopo il ciclo e dal `watch` sui suoi ingressi (ogni mutazione di blocco, routine, sessione e impostazioni); la prima
   riconciliazione del processo riarma tutto. **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**:
-  FNV-1a con segno, collisioni +1 in ordine di chiave, id del registro conservati.
+  FNV-1a con segno, collisioni +1 in ordine di chiave, id del registro conservati. Dentro `desiredSet` stanno anche gli
+  one-shot «perso» e «in ritardo» (da `persoIl` e `ritardoIl` + 10 s), il digest (`domain/notifications/digest.ts`, alla
+  prossima occorrenza dell'orario, contenuto ricalcolato a ogni riconciliazione), i posticipi (`preferenze.posticipi`,
+  tocco + 10') e le ore silenziose (`domain/notifications/quietHours.ts`, non sugli one-shot), così il registro vede
+  gli istanti veri (T-020, D-NOTIF-2); la notifica di prova (`test()`) va direttamente alla porta, fuori dal registro.
 - **CoursePointer.recompute(corsoId)** = `recomputePointer` (`src/app/pointer.ts`, T-013) — `pointerPlan` sui blocchi di
   studio futuri `programmati` del corso, scrive solo gli `unitaId` che cambiano; il ciclo lo chiama per ogni corso
   (dopo la generazione e la marcatura persa, FUNZ §8), T-018 dopo ogni esito.

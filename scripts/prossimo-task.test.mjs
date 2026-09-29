@@ -89,12 +89,10 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
     }
   });
 
-  it('oggi il loop riparte da T-020 con Opus 5.5 (T-019 fatto il 29/09/2026)', () => {
-    expect(prossimoTask(reale, nessunPiano)).toMatchObject({
-      trovato: true,
-      id: 'T-020',
-      modello: 'Opus 5.5',
-    });
+  it('oggi il loop si ferma a T-021, che aspetta il checkpoint CP3 (T-020 fatto il 29/09/2026)', () => {
+    const r = prossimoTask(reale, nessunPiano);
+    expect(r.trovato).toBe(false);
+    expect(r.motivo).toMatch(/T-021 richiede il checkpoint CP3/);
   });
 });
 

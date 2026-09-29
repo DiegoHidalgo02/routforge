@@ -64,6 +64,18 @@ describe('Adapter web — MECCANISMI §13.3 (solo con la scheda aperta), INV-16'
     expect(apri).toHaveBeenCalledWith('/attivita/s1');
   });
 
+  it('il clic sul digest e sulla prova apre Oggi, sul tempo scaduto il timer (T-020)', async () => {
+    const apri = vi.fn();
+    await webNotifications(testi, apri).schedule([
+      voce({ chiave: 'digest:0:2026-09-28', trigger: 'digest', bloccoId: null, idNativo: 8 }),
+      voce({ chiave: 'prova:0:prova', trigger: 'prova', bloccoId: null, idNativo: 9 }),
+      voce({ chiave: 'tempo_scaduto:0:sessione', trigger: 'tempo_scaduto', bloccoId: null, idNativo: 10 }),
+    ]);
+    vi.advanceTimersByTime(60_000);
+    for (const c of create.mock.calls) (c[2] as { onclick: () => void }).onclick();
+    expect(apri.mock.calls.map(([percorso]) => percorso)).toEqual(['/', '/', '/sessione']);
+  });
+
   it('cancel toglie il timer; lo stesso id riarmato sostituisce; la sveglia resta finché la si tocca', async () => {
     const porta = webNotifications(testi, vi.fn());
     await porta.schedule([voce()]);

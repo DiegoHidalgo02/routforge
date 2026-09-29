@@ -1,36 +1,49 @@
 /**
  * Riconciliazione delle notifiche (MECC §13.3; il `NotificationPlanner` di docs/02_ARCHITETTURA.md §4): legge i blocchi
- * della finestra, le ricorrenze, le impostazioni e la sessione attiva, calcola l'insieme desiderato nel dominio
- * (`desiredSet`, `reconcilePlan`) e chiama la porta solo per la differenza col registro. Innescata da `run()` dello
- * scheduler dopo il ciclo e, con `start()`, da ogni scrittura sui propri ingressi (ogni mutazione di blocco, routine,
- * sessione e impostazioni). Non lancia mai: un errore lascia il registro com'era e la successiva riprova (INV-16).
- * Criteri: SCENARI F1, F2, F4, F6, A3, B6, C4, D1, E3. Decisione: D-NOTIF-1.
+ * della finestra, le ricorrenze, le impostazioni, la sessione attiva e i posticipi, calcola l'insieme desiderato nel
+ * dominio (`desiredSet`, `reconcilePlan`) e chiama la porta solo per la differenza col registro. Innescata da `run()`
+ * dello scheduler dopo il ciclo e, con `start()`, da ogni scrittura sui propri ingressi (ogni mutazione di blocco,
+ * routine, sessione, impostazioni e posticipi). Gli avvisi «perso» e «in ritardo» partono da qui, dalle marcature che il
+ * ciclo scrive sui blocchi (T-020, D-NOTIF-2). Non lancia mai: un errore lascia il registro com'era e la successiva
+ * riprova (INV-16). Criteri: SCENARI F1, F2, F3, F4, F5, F6, A1, A3, A4, B6, B7, C4, C8, D1, E3. Decisioni: D-NOTIF-1,
+ * D-NOTIF-2.
  */
 import type { RoutForgeDb } from '../data/db';
 import { MAX_ANTICIPO_MINUTI } from '../domain/activity';
 import { blocksBetween, get, inTransaction, list, purge, save, watch } from '../data/repository';
 import {
+  CHIAVE_PROVA,
   desiredSet,
   IMPOSTAZIONI_NOTIFICHE_DEFAULT,
+  nativeId,
   ORIZZONTE_BLOCCHI_GIORNI,
   reconcilePlan,
+  testNotification,
   type ImpostazioniNotifiche,
 } from '../domain/notifications/desiredSet';
+import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
 import { addLocalDays, localDayKey } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 import type { Clock } from './ports/clock';
 import type { Notifications } from './ports/notifications';
 import { readActiveSession } from './session';
 
-/** Riga di `preferenze` delle impostazioni delle notifiche (§13.1); la UI è di T-032. */
+/** Riga di `preferenze` delle impostazioni delle notifiche (§13.1, §13.4, §13.5); la UI è di T-032. */
 export const CHIAVE_IMPOSTAZIONI_NOTIFICHE = 'notifiche';
+/** Riga di `preferenze` dei tocchi «Posticipa» (§13.2, D-NOTIF-2): chiave della notifica → istante del tocco. */
+export const CHIAVE_POSTICIPI = 'posticipi';
 
 const TIPI: readonly TipoBlocco[] = ['todo', 'evento', 'routine', 'studio'];
+const ORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+const oraLeggibile = (v: unknown): v is string => typeof v === 'string' && ORA.test(v);
 
 const leggibili = (v: unknown): v is ImpostazioniNotifiche => {
   if (typeof v !== 'object' || v === null || !('generale' in v) || !('perTipo' in v)) return false;
-  const { generale, perTipo } = v as { generale: unknown; perTipo: unknown };
+  const { generale, perTipo, oreSilenziose, digest } = v as Record<string, unknown>;
   if (typeof generale !== 'boolean' || typeof perTipo !== 'object' || perTipo === null) return false;
+  const ore = oreSilenziose as Record<string, unknown> | undefined;
+  if (typeof ore?.attive !== 'boolean' || !oraLeggibile(ore.dalle) || !oraLeggibile(ore.alle)) return false;
+  if (!oraLeggibile((digest as Record<string, unknown> | undefined)?.orario)) return false;
   return TIPI.every((t) => {
     const x = (perTipo as Record<string, unknown>)[t] as Record<string, unknown> | undefined;
     return (
@@ -48,20 +61,44 @@ export async function readNotificationSettings(db: RoutForgeDb): Promise<Imposta
   return leggibili(v) ? v : IMPOSTAZIONI_NOTIFICHE_DEFAULT;
 }
 
-/** Gli ingressi dell'insieme desiderato: blocchi da ieri (routine notturne, esito a fine + 10') a oggi + 14 + 31. */
+const posticipiLeggibili = (v: unknown): v is Record<string, number> =>
+  typeof v === 'object' && v !== null && Object.values(v).every((t) => typeof t === 'number');
+
+async function readSnoozes(db: RoutForgeDb): Promise<Record<string, number>> {
+  const v = (await get(db, 'preferenze', CHIAVE_POSTICIPI))?.valore;
+  return posticipiLeggibili(v) ? v : {};
+}
+
+/**
+ * «Posticipa» (§13.2, F5): ricorda l'istante del tocco; è l'insieme desiderato a spostare la voce di 10' se esiste
+ * ancora con lo stato coerente, e la riconciliazione segue dal `watch` di `preferenze`. I tocchi più vecchi di un
+ * giorno escono. La chiama l'azione della notifica (adapter nativo, T-021).
+ */
+export async function snoozeNotification(db: RoutForgeDb, chiave: string, now: number): Promise<void> {
+  await inTransaction(db, ['preferenze'], async () => {
+    const vivi = Object.entries(await readSnoozes(db)).filter(([, t]) => t > addLocalDays(now, -1));
+    await save(db, 'preferenze', { id: CHIAVE_POSTICIPI, valore: Object.fromEntries([...vivi, [chiave, now]]) }, now);
+  });
+}
+
+/**
+ * Gli ingressi dell'insieme desiderato: blocchi da 30 giorni fa (i todo che rotolano nel digest, §13.5, D-HOR-1;
+ * ieri per le routine notturne e l'esito a fine + 10') a oggi + 14 + 31.
+ */
 async function readInputs(db: RoutForgeDb, now: number) {
   const sessione = await readActiveSession(db);
   const b = sessione?.bloccoId ? await get(db, 'blocchi', sessione.bloccoId) : undefined;
   return {
     blocchi: await blocksBetween(
       db,
-      localDayKey(addLocalDays(now, -1)),
+      localDayKey(addLocalDays(now, -GIORNI_INDIETRO)),
       localDayKey(addLocalDays(now, ORIZZONTE_BLOCCHI_GIORNI)),
     ),
     ricorrenze: await list(db, 'ricorrenze'),
     impostazioni: await readNotificationSettings(db),
     sessione,
     titoloSessione: b?.titolo ?? '',
+    posticipi: await readSnoozes(db),
   };
 }
 
@@ -70,6 +107,8 @@ export interface NotificationService {
   reconcile(now: number): Promise<void>;
   /** Osserva gli ingressi e riconcilia a ogni scrittura; la prima emissione è la riconciliazione d'avvio. Restituisce lo stop. */
   start(): () => void;
+  /** La notifica di prova (§13.6): chiede il permesso (qui c'è il gesto dell'utente, D-NOTIF-1 n. 9) e la arma a +6 s. */
+  test(now: number): Promise<void>;
 }
 
 export function createNotifications(db: RoutForgeDb, porta: Notifications, clock: Clock): NotificationService {
@@ -111,5 +150,15 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
         () => readInputs(db, clock.now()),
         () => void reconcile(clock.now()),
       ),
+    async test(now) {
+      try {
+        // Fuori dal registro: non è una notifica di un blocco e la riconciliazione non deve toccarla
+        permessoChiesto = true;
+        await porta.requestPermission();
+        await porta.schedule([{ ...testNotification(now), idNativo: nativeId(CHIAVE_PROVA) }]);
+      } catch {
+        // Nessuna eccezione verso la UI (INV-16)
+      }
+    },
   };
 }

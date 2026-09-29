@@ -323,5 +323,11 @@
   "notifScadenza": "Due now · {ora}",
   "notifGiorno": "Today",
   "notifTempoScaduto": "Time’s up",
-  "notifSveglia": "Alarm · {titolo}"
+  "notifSveglia": "Alarm · {titolo}",
+  "notifRitardo": "Overdue",
+  "notifDigest": "{n} to do",
+  "notifDigestArretrato": "{n} to do ({a} overdue)",
+  "notifDigestArretrati": "{n} to do ({a} overdue)",
+  "notifProva": "Test notification",
+  "notifProvaCorpo": "Notifications are working."
 }

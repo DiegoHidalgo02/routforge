@@ -2,8 +2,8 @@
  * Adapter web della porta `Notifications` (MECC §13.3 «sul web: solo con la scheda aperta»; docs/02_ARCHITETTURA.md §6;
  * D-NOTIF-1). Un timer per id nativo; allo scatto, col permesso concesso, una `Notification` con `tag` = id (due schede
  * sostituiscono invece di duplicare). La sveglia degrada a notifica che resta finché non la si tocca; il clic porta al
- * blocco (o al timer per il tempo scaduto). Senza `Notification` (contesto non sicuro, iOS non installato) tutto è un
- * no-op; nessun ramo lancia (INV-16). L'adapter nativo è di T-021.
+ * blocco (al timer per il tempo scaduto, a Oggi per il digest e la prova). Senza `Notification` (contesto non sicuro,
+ * iOS non installato) tutto è un no-op; nessun ramo lancia (INV-16). L'adapter nativo, con le azioni rapide, è di T-021.
  */
 import type { Notifications, TestiNotifica } from '../app/ports/notifications';
 
@@ -41,7 +41,13 @@ export function webNotifications(testi: TestiNotifica, apri: (percorso: string) 
               });
               n.onclick = () => {
                 window.focus();
-                apri(v.bloccoId ? `/attivita/${encodeURIComponent(v.bloccoId)}` : '/sessione');
+                apri(
+                  v.bloccoId
+                    ? `/attivita/${encodeURIComponent(v.bloccoId)}`
+                    : v.trigger === 'tempo_scaduto'
+                      ? '/sessione'
+                      : '/',
+                );
                 n.close();
               };
             } catch {

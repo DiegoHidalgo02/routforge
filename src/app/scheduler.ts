@@ -5,7 +5,8 @@
  * transazione: tutto o niente, serializzata con le altre schede e con le azioni dell'utente; senza cambiamenti nessuna
  * scrittura (INV-15). Le regole stanno nel dominio (`reanchor`, `rollPlan`, `orphanPlan`, `lostPlan`, `pointerPlan`);
  * qui si leggono i blocchi e si scrive la differenza. Dopo la transazione vengono la riconciliazione delle notifiche
- * (T-019), gli avvisi «perso» e «in ritardo» (T-020, con gli id restituiti da `runCycle`) e la streak, che non si
+ * (T-019), che arma anche gli avvisi «perso» e «in ritardo» derivandoli dalle marcature `persoIl` e `ritardoIl` appena
+ * scritte (T-020, D-NOTIF-2; gli id restituiti da `runCycle` restano per la Diagnostica), e la streak, che non si
  * scrive: `currentStreak` la azzera alla lettura (§12, T-018). Criteri: SCENARI C8, G4, B7; A1, A2, B1, B2, C1, E2.
  * All'avvio e al ritorno in primo piano `start()` registra anche l'apertura, per il ritorno dopo un'assenza (§9,
  * `registerOpening`). Decisioni: D-SCHED-1, D-ASSENZA-1.
@@ -24,7 +25,10 @@ import type { NotificationService } from './notifications';
 import { generateOccurrences } from './recurrences';
 import { readActiveSession } from './session';
 
-/** Ciò che il ciclo consegna ai passi successivi: gli id da avvisare adesso (T-020). */
+/**
+ * Ciò che il ciclo consegna ai passi successivi: gli id avvisati adesso (la riconciliazione li deriva dalle marcature,
+ * T-020, D-NOTIF-2; qui per la Diagnostica, T-032).
+ */
 export interface AvvisiCiclo {
   /** Todo spostati o «non fatti» il cui avviso «in ritardo» parte adesso (§6, §13.6; D-HOR-1). */
   avvisiRitardo: string[];

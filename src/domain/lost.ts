@@ -107,10 +107,17 @@ export function canCheckRoutine(block: Pick<Blocco, 'inizio' | 'fine'>, now: num
   return false;
 }
 
-/** Notifica "blocco perso" (§8): solo routine/studio, solo se la fine è entro le ultime 2 ore. */
-export function lostNotificationDue(block: Blocco, now: number): boolean {
+/**
+ * Notifica "blocco perso" (§8): solo routine/studio, solo se la fine è entro le ultime 2 ore. Non se sul blocco era
+ * partita una sessione (`minutiRitardo`, D-SESS-1: l'utente l'ha già gestito, C8; «conta nel piano» spento, D-ESITO-1)
+ * né se il blocco è nato dopo la propria fine (routine creata dopo il suo orario, D-OCC-1). Decisione: D-NOTIF-2.
+ */
+export function lostNotificationDue(block: Blocco & { createdAt?: number }, now: number): boolean {
   if (block.tipo !== 'routine' && block.tipo !== 'studio') return false;
-  return now - effectiveEnd(block) <= 2 * 60 * minutes(1);
+  if (block.minutiRitardo != null) return false;
+  const fine = effectiveEnd(block);
+  if (block.createdAt !== undefined && block.createdAt > fine) return false;
+  return now - fine <= 2 * 60 * minutes(1);
 }
 
 /**

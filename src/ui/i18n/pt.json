@@ -323,5 +323,11 @@
   "notifScadenza": "Vence agora · {ora}",
   "notifGiorno": "Hoje",
   "notifTempoScaduto": "Tempo esgotado",
-  "notifSveglia": "Alarme · {titolo}"
+  "notifSveglia": "Alarme · {titolo}",
+  "notifRitardo": "Atrasado",
+  "notifDigest": "{n} por fazer",
+  "notifDigestArretrato": "{n} por fazer ({a} atrasado)",
+  "notifDigestArretrati": "{n} por fazer ({a} atrasados)",
+  "notifProva": "Notificação de teste",
+  "notifProvaCorpo": "As notificações funcionam."
 }

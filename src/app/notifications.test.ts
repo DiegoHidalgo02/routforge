@@ -5,17 +5,24 @@ import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list, listBy, save, saveBlock, type DatiBlocco } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import {
+  CHIAVE_PROVA,
   CHIAVE_TEMPO_SCADUTO,
   IMPOSTAZIONI_NOTIFICHE_DEFAULT,
+  RITARDO_ONE_SHOT_MS,
   type VoceRegistro,
 } from '../domain/notifications/desiredSet';
 import type { SceltaSessione } from '../domain/session';
 import { addLocalDays, local } from '../domain/time';
-import type { Promemoria } from '../domain/types';
+import type { Orizzonte, Promemoria } from '../domain/types';
 import { createActivity } from './activities';
 import { completeBlock, deleteBlock, reopenBlock, toggleChecklist } from './completion';
 import { moveBlock } from './drag';
-import { CHIAVE_IMPOSTAZIONI_NOTIFICHE, createNotifications, readNotificationSettings } from './notifications';
+import {
+  CHIAVE_IMPOSTAZIONI_NOTIFICHE,
+  createNotifications,
+  readNotificationSettings,
+  snoozeNotification,
+} from './notifications';
 import type { Clock } from './ports/clock';
 import type { Notifications } from './ports/notifications';
 import { editRecurrence } from './recurrences';
@@ -74,7 +81,8 @@ async function crea(bozza: BozzaAttivita, now: number): Promise<string> {
   if (!r.ok) throw new Error(r.errori.join());
   return r.id;
 }
-const todo = (orario: { inizio: string; durata: number } | null, checklist: string[] = []): BozzaAttivita => ({
+type BozzaTodo = Extract<BozzaAttivita, { tipo: 'todo' }>;
+const todo = (orario: { inizio: string; durata: number } | null, checklist: string[] = []): BozzaTodo => ({
   tipo: 'todo',
   titolo: 'Spesa',
   note: '',
@@ -85,6 +93,12 @@ const todo = (orario: { inizio: string; durata: number } | null, checklist: stri
   priorita: 'normale',
   checklist,
   corsoId: null,
+});
+const senzaOrario = (titolo: string, giorno: string, orizzonte: Orizzonte = 'giorno'): BozzaTodo => ({
+  ...todo(null),
+  titolo,
+  giorno,
+  orizzonte,
 });
 const evento = (
   giorno: string,
@@ -239,7 +253,8 @@ describe('Cambio di stato — SCENARI F6', () => {
       expect(p.vista()).toEqual(['pre:10:r1@17:50', 'inizio:0:r1@18:00', 'verifica:0:r1@18:30']);
       await annulla?.(oggi(9));
       await s.reconcile(oggi(9));
-      expect(p.armate.size).toBe(0);
+      // Di nuovo perso alle 09:00: resta solo il suo avviso «perso» (T-020)
+      expect(p.vista()).toEqual(['perso:0:r1@09:00']);
     });
   });
 
@@ -253,8 +268,9 @@ describe('Cambio di stato — SCENARI F6', () => {
     expect((await get(db, 'blocchi', 'r2'))?.stato).toBe('perso');
     const prima = p.chiamate.length;
     await s.reconcile(oggi(22, 1));
-    expect(p.chiamate.length).toBe(prima);
-    expect(await registro()).toEqual(['inizio:0:r2', 'pre:10:r2', 'verifica:0:r2']);
+    // L'unica chiamata è l'avviso «perso» (T-020): nessun cancel, nessun riarmo delle voci scattate
+    expect(p.chiamate.slice(prima)).toEqual(['schedule perso:0:r2']);
+    expect(await registro()).toEqual(['inizio:0:r2', 'perso:0:r2', 'pre:10:r2', 'verifica:0:r2']);
   });
 
   it('spegnere il tipo todo cancella tutte le notifiche dei todo alla riconciliazione successiva', async () => {
@@ -419,6 +435,220 @@ describe('Registro — MECCANISMI §1, §13.3', () => {
     expect(await readNotificationSettings(db)).toEqual(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
     await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: { generale: 'sì' } }, oggi(8));
     expect(await readNotificationSettings(db)).toEqual(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+  });
+
+  it('ore silenziose e digest (§13.4, §13.5): letti se validi; righe senza di loro (T-019) o con un orario impossibile → default', async () => {
+    const nuove = {
+      ...IMPOSTAZIONI_NOTIFICHE_DEFAULT,
+      oreSilenziose: { attive: true, dalle: '23:00', alle: '06:00' },
+      digest: { orario: '07:30' },
+    };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: nuove }, oggi(8));
+    expect(await readNotificationSettings(db)).toEqual(nuove);
+    const vecchie = { generale: true, perTipo: IMPOSTAZIONI_NOTIFICHE_DEFAULT.perTipo };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: vecchie }, oggi(8));
+    expect(await readNotificationSettings(db)).toEqual(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+    const rotte = { ...nuove, digest: { orario: '25:00' } };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: rotte }, oggi(8));
+    expect(await readNotificationSettings(db)).toEqual(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+  });
+});
+
+describe('Ore silenziose — SCENARI F3', () => {
+  it('22:00–07:00: il todo delle 06:30 (anticipo 30′) avvisa alle 07:00; il digest delle 08:00 resta; il «perso» della notte parte', async () => {
+    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+    imp.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(19));
+    const t = await crea({ ...todo({ inizio: '06:30', durata: 30 }), giorno: '2026-09-29' }, oggi(19));
+    await crea(senzaOrario('Spesa', '2026-09-29'), oggi(19));
+    await blocco({ id: 'r1', tipo: 'routine', inizio: oggi(21), fine: oggi(23) });
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(20)));
+    await s.reconcile(oggi(20));
+    expect(p.vista()).toEqual([
+      'pre:10:r1@20:50',
+      'inizio:0:r1@21:00',
+      `pre:30:${t}@07:00`,
+      `scadenza:0:${t}@07:00`,
+      'verifica:0:r1@07:00',
+      'digest:0:2026-09-29@08:00',
+    ]);
+    await runCycle(db, oggi(23, 31), FUSO);
+    await s.reconcile(oggi(23, 31));
+    expect(p.vista(oggi(23, 31))).toContain('perso:0:r1@23:31');
+  });
+
+  it('digest delle 06:00 dentro la fascia 22:00–07:00: armato alle 07:00 e non cancellato da una riconciliazione alle 06:30', async () => {
+    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+    imp.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' };
+    imp.digest = { orario: '06:00' };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(5));
+    await crea(senzaOrario('Spesa', '2026-09-28'), oggi(5));
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(5)));
+    await s.reconcile(oggi(5));
+    expect(p.vista()).toEqual(['digest:0:2026-09-28@07:00']);
+    const prima = p.chiamate.length;
+    await s.reconcile(oggi(6, 30));
+    expect(p.chiamate.length).toBe(prima);
+    expect(p.vista()).toEqual(['digest:0:2026-09-28@07:00']);
+  });
+});
+
+describe('Digest — SCENARI A4', () => {
+  it('due todo senza orario di oggi e uno di ieri (mese) non fatto: alle 08:00 un solo digest, 3 da fare (1 arretrato) coi titoli', async () => {
+    const marco = await crea(senzaOrario('Chiama Marco', '2026-09-28'), oggi(7));
+    const spesa = await crea(senzaOrario('Spesa', '2026-09-28'), oggi(7));
+    const bolletta = await crea(senzaOrario('Bolletta', '2026-09-27', 'mese'), local(2026, 9, 27, 9, 0));
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(7)));
+    await s.reconcile(oggi(7));
+    const digest = () =>
+      [...p.armate.values()]
+        .filter((v) => v.trigger === 'digest')
+        .sort((a, b) => a.istante - b.istante)
+        .map((v) => [v.chiave, v.istante, v.digest?.totale, v.digest?.arretrati, [...(v.digest?.titoli ?? [])].sort()]);
+    const titoli = ['Bolletta', 'Chiama Marco', 'Spesa'];
+    expect(digest()).toEqual([['digest:0:2026-09-28', oggi(8), 3, 1, titoli]]);
+    // Il ciclo delle 07:01 rotola «Bolletta» a oggi: resta un arretrato e il digest non cambia
+    await runCycle(db, oggi(7, 1), FUSO);
+    expect((await get(db, 'blocchi', bolletta))?.giornoLocale).toBe('2026-09-28');
+    await s.reconcile(oggi(7, 1));
+    expect(digest()).toEqual([['digest:0:2026-09-28', oggi(8), 3, 1, titoli]]);
+    // Dopo le 08:00 il prossimo digest è quello di domani: solo «Bolletta» rotolerà ancora
+    await s.reconcile(oggi(8, 1));
+    expect(digest()).toEqual([
+      ['digest:0:2026-09-28', oggi(8), 3, 1, titoli],
+      ['digest:0:2026-09-29', local(2026, 9, 29, 8, 0), 1, 1, ['Bolletta']],
+    ]);
+    // Senza todo senza orario da fare: nessun digest
+    for (const id of [marco, spesa, bolletta]) await completeBlock(db, id, oggi(8, 2), FUSO);
+    await s.reconcile(oggi(8, 3));
+    expect(digest()).toEqual([['digest:0:2026-09-28', oggi(8), 3, 1, titoli]]);
+  });
+});
+
+describe('Posticipa — SCENARI F5', () => {
+  it('«Posticipa» alle 09:01 sull’«inizio» delle 09:00: voce alle 09:11; dentro le ore silenziose alla loro fine; completata → nulla', async () => {
+    await blocco({ id: 'r1', tipo: 'routine', inizio: oggi(9), fine: oggi(10) });
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(8)));
+    await s.reconcile(oggi(8));
+    await snoozeNotification(db, 'inizio:0:r1', oggi(9, 1));
+    await s.reconcile(oggi(9, 1));
+    expect(p.vista(oggi(9, 1))).toEqual(['inizio:0:r1@09:11', 'verifica:0:r1@09:30']);
+    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
+    imp.oreSilenziose = { attive: true, dalle: '09:15', alle: '09:40' };
+    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(9, 12));
+    await snoozeNotification(db, 'inizio:0:r1', oggi(9, 12));
+    await s.reconcile(oggi(9, 12));
+    expect(p.vista(oggi(9, 12))).toEqual(['inizio:0:r1@09:40', 'verifica:0:r1@09:40']);
+    await completeBlock(db, 'r1', oggi(9, 13), FUSO);
+    await snoozeNotification(db, 'inizio:0:r1', oggi(9, 14));
+    await s.reconcile(oggi(9, 14));
+    expect(p.vista(oggi(9, 14))).toEqual([]);
+  });
+});
+
+describe('Blocco perso — SCENARI B7', () => {
+  it('routine 18:00–20:00 non avviata: il ciclo la marca persa e parte un solo avviso silenzioso 10 s dopo; il ciclo dopo non lo ripete', async () => {
+    await blocco({ id: 'r', tipo: 'routine', inizio: oggi(18), fine: oggi(20) });
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(17)));
+    await s.reconcile(oggi(17));
+    await runCycle(db, oggi(20, 31), FUSO);
+    await s.reconcile(oggi(20, 31));
+    const persi = [...p.armate.values()].filter((v) => v.trigger === 'perso');
+    expect(persi.map((v) => [v.chiave, v.istante, v.silenzioso, v.oneShot, v.azioni])).toEqual([
+      ['perso:0:r', oggi(20, 31) + RITARDO_ONE_SHOT_MS, true, true, []],
+    ]);
+    const prima = p.chiamate.length;
+    await runCycle(db, oggi(20, 32), FUSO);
+    await s.reconcile(oggi(20, 32));
+    expect(p.chiamate.length).toBe(prima);
+    expect(await registro()).toContain('perso:0:r');
+  });
+
+  it('un perso ripreso col trascinamento e perso di nuovo riceve un nuovo avviso (D-NOTIF-2)', async () => {
+    await blocco({ id: 'r', tipo: 'routine', inizio: oggi(18), fine: oggi(19) });
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(17)));
+    await runCycle(db, oggi(19, 31), FUSO);
+    await s.reconcile(oggi(19, 31));
+    expect(p.vista(oggi(19, 31))).toEqual(['perso:0:r@19:31']);
+    await moveBlock(db, 'r', { inizio: oggi(20) }, oggi(19, 32), FUSO);
+    await runCycle(db, oggi(21, 31), FUSO);
+    await s.reconcile(oggi(21, 31));
+    expect(p.vista(oggi(21, 31))).toEqual(['perso:0:r@21:31']);
+  });
+
+  it('un’occorrenza nata già persa non riceve l’avviso: routine creata alle 19:40 per le 18:00–19:00 di ogni giorno (D-OCC-1)', async () => {
+    const rid = await crea(routine('18:00', '19:00'), oggi(19, 40));
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(19, 40)));
+    await runCycle(db, oggi(19, 41), FUSO);
+    expect((await get(db, 'blocchi', `${rid}:2026-09-28:18:00`))?.stato).toBe('perso');
+    await s.reconcile(oggi(19, 41));
+    // Entro le 2 ore dalla fine: solo la nascita dopo la fine esclude l'avviso
+    expect(p.vista().some((v) => v.startsWith('perso:'))).toBe(false);
+    expect(p.vista()).toContain(`pre:10:${rid}:2026-09-29:18:00@17:50`);
+  });
+});
+
+describe('Avviso «perso» — SCENARI C8 (sessione avviata, poi abbandonata o chiusa senza contare nel piano)', () => {
+  it('il blocco di studio riportato a programmato e poi giudicato perso non riceve l’avviso «perso»', async () => {
+    await blocco({ id: 's1', inizio: oggi(9), fine: oggi(10) });
+    await blocco({ id: 's2', inizio: oggi(9), fine: oggi(10) });
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(8)));
+    await s.reconcile(oggi(8));
+    await startSession(db, 's1', scelta, oggi(9, 10), FUSO);
+    await abandonSession(db, oggi(9, 20), FUSO);
+    await startSession(db, 's2', scelta, oggi(9, 21), FUSO);
+    await endSession(db, oggi(9, 40), FUSO, { esito: 'continua', confidenza: null, nota: '', contaNelPiano: false });
+    expect((await get(db, 'blocchi', 's2'))?.stato).toBe('programmato');
+    await runCycle(db, oggi(10, 40), FUSO);
+    expect([(await get(db, 'blocchi', 's1'))?.stato, (await get(db, 'blocchi', 's2'))?.stato]).toEqual([
+      'perso',
+      'perso',
+    ]);
+    await s.reconcile(oggi(10, 40));
+    expect(p.vista(oggi(10, 40)).filter((v) => v.startsWith('perso:'))).toEqual([]);
+  });
+});
+
+describe('Todo in ritardo — SCENARI A1', () => {
+  it('«Chiama Marco» non fatto alle 00:30: un solo avviso silenzioso 10 s dopo con Segna fatto e Posticipa; il giorno dopo nulla', async () => {
+    const id = await crea(senzaOrario('Chiama Marco', '2026-09-27'), local(2026, 9, 27, 10, 0));
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(local(2026, 9, 27, 10, 0)));
+    await s.reconcile(local(2026, 9, 27, 10, 0));
+    await runCycle(db, oggi(0, 30), FUSO);
+    await s.reconcile(oggi(0, 30));
+    const ritardo = [...p.armate.values()].filter((v) => v.trigger === 'ritardo');
+    expect(ritardo.map((v) => [v.chiave, v.istante, v.silenzioso, v.azioni])).toEqual([
+      [`ritardo:0:${id}`, oggi(0, 30) + RITARDO_ONE_SHOT_MS, true, ['segna_fatto', 'posticipa']],
+    ]);
+    const prima = p.chiamate.length;
+    await runCycle(db, local(2026, 9, 29, 0, 30), FUSO);
+    await s.reconcile(local(2026, 9, 29, 0, 30));
+    expect(p.chiamate.length).toBe(prima);
+  });
+});
+
+describe('Prova — MECCANISMI §13.6, FUNZ §7.6', () => {
+  it('test(): chiede il permesso e arma la notifica di prova a +6 s, fuori dal registro', async () => {
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(8)));
+    await s.test(oggi(8));
+    expect(p.porta.requestPermission).toHaveBeenCalledTimes(1);
+    expect([...p.armate.values()].map((v) => [v.chiave, v.istante, v.oneShot])).toEqual([
+      [CHIAVE_PROVA, oggi(8) + 6_000, true],
+    ]);
+    expect(await registro()).toEqual([]);
+    await blocco({ id: 's1', inizio: oggi(9), fine: oggi(10) });
+    await s.reconcile(oggi(8, 1));
+    expect(p.porta.requestPermission).toHaveBeenCalledTimes(1);
   });
 });
 
