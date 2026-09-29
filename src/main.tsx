@@ -11,12 +11,15 @@ import './ui/styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
+import { createNotifications } from './app/notifications';
 import { createScheduler } from './app/scheduler';
 import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
+import { webNotifications } from './platform/notifications';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
+import { testiNotifica } from './ui/notificationTexts';
 
 document.documentElement.lang = lingua;
 // Schermo acceso e Non Disturbare della sessione (MECC §10.4): adapter web; i nativi con T-021.
@@ -35,4 +38,12 @@ if (radice)
 void navigator.storage?.persist?.().catch(() => false);
 // Ciclo dello scheduler (MECC §9, D-SCHED-1): subito, al ritorno in primo piano, a ogni minuto e alle modifiche delle
 // routine. Non blocca il primo disegno: le query live delle schermate mostrano il risultato quando arriva.
-createScheduler(appDb, webClock).start();
+// Notifiche (MECC §13.3, D-NOTIF-1): riconciliate dopo ogni ciclo e a ogni scrittura sui loro ingressi; sul web solo
+// con la scheda aperta. Il clic porta alla rotta con la navigazione della cronologia, che il router ascolta.
+const apri = (percorso: string) => {
+  history.pushState(null, '', percorso);
+  dispatchEvent(new PopStateEvent('popstate'));
+};
+const notifiche = createNotifications(appDb, webNotifications(testiNotifica, apri), webClock);
+createScheduler(appDb, webClock, notifiche).start();
+notifiche.start();

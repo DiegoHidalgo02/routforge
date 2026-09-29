@@ -564,3 +564,25 @@ describe('Cambio giorno — SCENARI G4 (app aperta a mezzanotte fra martedì e m
     stop();
   });
 });
+
+describe('Ciclo — MECCANISMI §9 (notifiche dopo la transazione)', () => {
+  it('run() riconcilia con il now del ciclo, dopo il ciclo: il blocco è già perso', async () => {
+    const r = await blocco({ inizio: local(2026, 9, 23, 18, 0), fine: local(2026, 9, 23, 20, 0) });
+    const visti: string[] = [];
+    const reconcile = vi.fn(async (now: number) => {
+      visti.push(`${now}:${(await letto(r.id)).stato}`);
+    });
+    const now = local(2026, 9, 23, 20, 31);
+    await createScheduler(db, orologioFinto(now).clock, { reconcile }).run();
+    expect(visti).toEqual([`${now}:perso`]);
+  });
+
+  it('con il ciclo fallito riconcilia comunque; una riconciliazione che rigetta non rompe run()', async () => {
+    const { corsoId } = await studioC1();
+    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
+    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    const reconcile = vi.fn(() => Promise.reject(new Error('guasta')));
+    await expect(createScheduler(db, orologioFinto(LUNEDI).clock, { reconcile }).run()).resolves.toBeUndefined();
+    expect(reconcile).toHaveBeenCalledWith(LUNEDI);
+  });
+});

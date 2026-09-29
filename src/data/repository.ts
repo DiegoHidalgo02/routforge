@@ -121,6 +121,14 @@ export async function remove<K extends NomeTabella>(db: RoutForgeDb, nome: K, id
   });
 }
 
+/**
+ * Cancellazione fisica, ammessa solo per il registro delle notifiche: è derivato, ricostruito a ogni riconciliazione e
+ * mai in backup né sync, quindi non ha cancellazioni da propagare (MECC §1, INV-14; T-019).
+ */
+export async function purge(db: RoutForgeDb, nome: 'registroNotifiche', ids: readonly string[]): Promise<void> {
+  await tabella(db, nome).bulkDelete([...ids]);
+}
+
 /** Crea o aggiorna un blocco; `fuso` è il fuso corrente del dispositivo (D-TIME-2). */
 export async function saveBlock(db: RoutForgeDb, dati: DatiBlocco, now: number, fuso: string): Promise<RigaBlocco> {
   return db.transaction('rw', db.blocchi, async () => {

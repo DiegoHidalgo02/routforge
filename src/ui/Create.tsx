@@ -2,7 +2,8 @@
 // mobile una sheet sotto i 56 px di testa, da 1024 px un pannello a destra di 440 (DESIGN.md, S4 Desktop). La
 // validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Il todo non ha data né
 // corso (S4 Crea, D-DESIGN-1 n. 20): parte da oggi e l'orizzonte dice fin dove rotola. L'anticipo
-// libero del promemoria (MECC §13.1) il dominio lo accetta; il campo arriva con T-019.
+// libero del promemoria (MECC §13.1, fino a 31 giorni) non è nel mock: riga «Altro anticipo» con le chip di S4
+// (T-019, divergenza 35).
 import {
   AlarmClock,
   ArrowRight,
@@ -33,6 +34,7 @@ import {
   ANTICIPI,
   DURATA_TODO,
   GRADINI_DURATA,
+  MAX_ANTICIPO_MINUTI,
   MAX_ANTICIPO_SVEGLIA,
   MAX_CARATTERI_VOCE,
   MAX_VOCI_CHECKLIST,
@@ -103,7 +105,17 @@ const anticipo = (min: number) =>
       ? t('anticipoGiorno')
       : min === 60
         ? t('anticipoOra')
-        : t('anticipoMin', { n: min });
+        : min % 1440 === 0
+          ? t('anticipoGiorni', { n: min / 1440 })
+          : min % 60 === 0
+            ? t('anticipoOre', { n: min / 60 })
+            : t('anticipoMin', { n: min });
+/** Unità dell'anticipo libero (MECC §13.1 «libero fino a 31 giorni», FUNZ §7.2), in minuti. */
+const UNITA_ANTICIPO: { min: number; chiave: Chiave }[] = [
+  { min: 1, chiave: 'unitaMinuti' },
+  { min: 60, chiave: 'unitaOre' },
+  { min: 1440, chiave: 'unitaGiorni' },
+];
 const alle = (hhmm: string, min: number) => {
   const [h, m] = hhmm.split(':').map(Number) as [number, number];
   const tot = (h * 60 + m + min) % 1440;
@@ -363,6 +375,7 @@ export function Create() {
   const [corsi, setCorsi] = useState<SchedaCorso[]>([]);
   const [errore, setErrore] = useState(false);
   const [inCorso, setInCorso] = useState(false);
+  const [libero, setLibero] = useState({ n: '', unita: 1440 });
   const set = (p: Partial<Form>) => setF((x) => ({ ...x, ...p }));
 
   useEffect(() => {
@@ -384,6 +397,13 @@ export function Create() {
   const fineErrata = tipo === 'evento' && minuti !== null && endsNextDay(f.inizio, f.fine);
   const giornoDopo = !fineErrata && minuti !== null && endsNextDay(f.inizio, f.fine);
   const svegliabili = f.anticipi.filter((m) => m <= MAX_ANTICIPO_SVEGLIA).sort((a, b) => b - a);
+  const liberi = f.anticipi.filter((m) => !(ANTICIPI as readonly number[]).includes(m)).sort((a, b) => b - a);
+  const minutiLiberi = Number(libero.n) * libero.unita;
+  const liberoValido =
+    Number.isInteger(minutiLiberi) &&
+    minutiLiberi > 0 &&
+    minutiLiberi <= MAX_ANTICIPO_MINUTI &&
+    !f.anticipi.includes(minutiLiberi);
 
   // Un solo salvataggio alla volta: un doppio tocco non crea due attività
   const crea = async () => {
@@ -697,7 +717,52 @@ export function Create() {
                         {anticipo(m)}
                       </Chip>
                     ))}
+                    {liberi.map((m) => (
+                      <Chip key={m} on disabled={senzaOrario} onClick={() => set({ anticipi: toggle(f.anticipi, m) })}>
+                        <Check size={12} strokeWidth={2.5} className={s.iconaInk} />
+                        {anticipo(m)}
+                      </Chip>
+                    ))}
                   </div>
+                  {!senzaOrario && (
+                    <div className={s.gruppoStretto}>
+                      <span className={s.info}>
+                        {t('anticipoAltro')} <span className={s.notaDebole}>· {t('anticipoMassimo')}</span>
+                      </span>
+                      <div className={s.chips}>
+                        <input
+                          className={`${s.chip} ${s.numeroAnticipo}`}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={libero.n}
+                          aria-label={t('anticipoAltro')}
+                          onChange={(e) => setLibero({ ...libero, n: e.currentTarget.value })}
+                        />
+                        {UNITA_ANTICIPO.map((u) => (
+                          <Chip
+                            key={u.min}
+                            on={libero.unita === u.min}
+                            onClick={() => setLibero({ ...libero, unita: u.min })}
+                          >
+                            {t(u.chiave)}
+                          </Chip>
+                        ))}
+                        <button
+                          type="button"
+                          className={s.chip}
+                          aria-label={t('aggiungiAnticipo')}
+                          disabled={!liberoValido}
+                          onClick={() => {
+                            set({ anticipi: [...f.anticipi, minutiLiberi] });
+                            setLibero({ ...libero, n: '' });
+                          }}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {senzaOrario ? (
                     <span className={s.info}>{t('promemoriaTuttoGiorno')}</span>
                   ) : (

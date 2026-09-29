@@ -307,5 +307,21 @@
   "suggerimentoParziale": "Amanhã o ponteiro propõe de novo a mesma unidade.",
   "fonteRoutine": "rotina {ora}",
   "fonteRecupero": "recuperação",
-  "fonteLibera": "sessão livre"
+  "fonteLibera": "sessão livre",
+  "anticipoGiorni": "{n} dias",
+  "anticipoOre": "{n} horas",
+  "anticipoAltro": "Outro aviso",
+  "unitaMinuti": "min",
+  "unitaOre": "horas",
+  "unitaGiorni": "dias",
+  "aggiungiAnticipo": "Adicionar aviso",
+  "anticipoMassimo": "até 31 dias",
+  "notifPre": "Em {tempo} · {ora}",
+  "notifInizio": "Começa agora · {ora}",
+  "notifVerifica": "Conseguiu começar? Era às {ora}",
+  "notifEsito": "Como correu? Registe o resultado",
+  "notifScadenza": "Vence agora · {ora}",
+  "notifGiorno": "Hoje",
+  "notifTempoScaduto": "Tempo esgotado",
+  "notifSveglia": "Alarme · {titolo}"
 }

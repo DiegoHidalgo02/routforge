@@ -20,6 +20,7 @@ import { registerOpening } from './absence';
 import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
 import type { Clock } from './ports/clock';
+import type { NotificationService } from './notifications';
 import { generateOccurrences } from './recurrences';
 import { readActiveSession } from './session';
 
@@ -92,10 +93,21 @@ export interface SchedulerService {
   start(): () => void;
 }
 
-export function createScheduler(db: RoutForgeDb, clock: Clock): SchedulerService {
+export function createScheduler(
+  db: RoutForgeDb,
+  clock: Clock,
+  notifiche?: Pick<NotificationService, 'reconcile'>,
+): SchedulerService {
   // Due cicli insieme si serializzano da soli: IndexedDB esegue una transazione di scrittura alla volta sulle stesse
   // tabelle (§7). Un errore non arriva al chiamante e non ferma i successivi; la Diagnostica è di T-032 (D-SCHED-1 n. 8).
-  const run = (): Promise<AvvisiCiclo | undefined> => runCycle(db, clock.now(), clock.fuso()).catch(() => undefined);
+  // Dopo la transazione, riuscita o no (i dati restano consistenti), la riconciliazione delle notifiche con lo stesso
+  // istante (§13.3, D-NOTIF-1 n. 6)
+  const run = async (): Promise<AvvisiCiclo | undefined> => {
+    const now = clock.now();
+    const esito = await runCycle(db, now, clock.fuso()).catch(() => undefined);
+    await notifiche?.reconcile(now).catch(() => undefined);
+    return esito;
+  };
   return {
     run,
     start() {

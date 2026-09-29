@@ -89,13 +89,11 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
     }
   });
 
-  it('oggi il loop riparte da T-019, fase piano con Fable 5.1 (T-018 fatto il 29/09/2026)', () => {
+  it('oggi il loop riparte da T-020 con Opus 5.5 (T-019 fatto il 29/09/2026)', () => {
     expect(prossimoTask(reale, nessunPiano)).toMatchObject({
       trovato: true,
-      id: 'T-019',
-      fase: 'piano',
-      modello: 'Fable 5.1',
-      usaFable: true,
+      id: 'T-020',
+      modello: 'Opus 5.5',
     });
   });
 });

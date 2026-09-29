@@ -20,6 +20,7 @@ import type {
 import type { DatiEsito } from '../domain/outcome';
 import type { StatoCarta } from '../domain/sm2';
 import type { SessioneChiusa } from '../domain/timer';
+import type { VoceRegistro } from '../domain/notifications/desiredSet';
 import type { BloccoAncorato, FaseLog, Ricorrenza } from '../domain/types';
 
 /** Campi comuni di un record vivo (D-DATA-1, INV-14). */
@@ -74,8 +75,11 @@ export interface Tabelle {
   fileCodice: Riga<{ unitaId: string | null; sessioneId: string | null }>;
   /** Una riga per impostazione, id = chiave (D-DATA-2). */
   preferenze: Riga<{ valore: unknown }>;
-  /** Derivato, escluso da backup e sync (MECC §1): id = chiave logica della notifica (T-019). */
-  registroNotifiche: Riga<{ idNativo: number }>;
+  /**
+   * Derivato, escluso da backup e sync (MECC §1): id = chiave logica della notifica, la voce armata con il suo id nativo
+   * (T-019, D-NOTIF-1). Si cancella fisicamente con `purge` (INV-14).
+   */
+  registroNotifiche: Riga<VoceRegistro>;
 }
 
 /** Versione 1: chiave primaria `id`, poi gli indici (sintassi Dexie: `[a+b]` composto). */

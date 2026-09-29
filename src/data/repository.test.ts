@@ -14,6 +14,7 @@ import {
   listBy,
   listKeyRange,
   newId,
+  purge,
   remove,
   save,
   saveBlock,
@@ -222,6 +223,31 @@ describe("Log fasi: id = blocco dell'occorrenza — MECC §5, D-DATA-2", () => {
     expect(await get(db, 'logFasi', 'b-1')).toBeUndefined();
     const terzo = await save(db, 'logFasi', { id: 'b-1', ricorrenzaId: 'r-1', fasi: [] }, local(2026, 9, 24, 9, 2));
     expect([terzo.createdAt, terzo.deletedAt]).toEqual([T0, null]);
+  });
+});
+
+describe('Registro notifiche — MECCANISMI §1, INV-14', () => {
+  it('id = chiave; purge cancella fisicamente, senza tombstone', async () => {
+    const voce = {
+      id: 'pre:5:b1',
+      chiave: 'pre:5:b1',
+      istante: T1,
+      trigger: 'pre' as const,
+      anticipo: 5,
+      bloccoId: 'b1',
+      tipo: 'studio' as const,
+      titolo: 'Studio',
+      inizioBlocco: T1,
+      sveglia: false,
+      silenzioso: false,
+      azioni: [],
+      oneShot: false,
+      idNativo: 42,
+    };
+    await save(db, 'registroNotifiche', voce, T0);
+    expect((await list(db, 'registroNotifiche')).map((r) => [r.id, r.idNativo])).toEqual([['pre:5:b1', 42]]);
+    await purge(db, 'registroNotifiche', ['pre:5:b1']);
+    expect(await db.registroNotifiche.get('pre:5:b1')).toBeUndefined();
   });
 });
 

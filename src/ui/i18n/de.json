@@ -307,5 +307,21 @@
   "suggerimentoParziale": "Morgen schlägt der Zeiger dieselbe Einheit erneut vor.",
   "fonteRoutine": "Routine {ora}",
   "fonteRecupero": "Nachholen",
-  "fonteLibera": "freie Sitzung"
+  "fonteLibera": "freie Sitzung",
+  "anticipoGiorni": "{n} Tage",
+  "anticipoOre": "{n} Stunden",
+  "anticipoAltro": "Andere Erinnerung",
+  "unitaMinuti": "Min.",
+  "unitaOre": "Std.",
+  "unitaGiorni": "Tage",
+  "aggiungiAnticipo": "Erinnerung hinzufügen",
+  "anticipoMassimo": "bis zu 31 Tage",
+  "notifPre": "In {tempo} · {ora}",
+  "notifInizio": "Jetzt geht’s los · {ora}",
+  "notifVerifica": "Hast du angefangen? Es war um {ora}",
+  "notifEsito": "Wie lief es? Ergebnis eintragen",
+  "notifScadenza": "Jetzt fällig · {ora}",
+  "notifGiorno": "Heute",
+  "notifTempoScaduto": "Zeit abgelaufen",
+  "notifSveglia": "Wecker · {titolo}"
 }

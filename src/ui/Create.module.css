@@ -203,6 +203,14 @@
   cursor: not-allowed;
 }
 
+/* Campo dell'anticipo libero (T-019): una chip che si scrive */
+.numeroAnticipo {
+  width: calc(var(--space-10) * 2);
+  color: var(--color-text);
+  text-align: center;
+  cursor: text;
+}
+
 .tipo[data-tipo='todo'] {
   --fill: var(--color-cat-todo);
 }

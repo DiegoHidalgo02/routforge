@@ -24,3 +24,4 @@ export * from './drag';
 export * from './session';
 export * from './timer';
 export * from './outcome';
+export * from './notifications/desiredSet';

@@ -43,10 +43,12 @@ src/
 │                Già presente: sample-course/ (M0, M1 del corso di esempio, copia dell'export del design: D-SAMPLE-1).
 ├── app/         Servizi: SchedulerService (cicli §9), SessionService (timer §10), NotificationPlanner (§13),
 │                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
-│   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, Alarms, DoNotDisturb, Widget, FileSystem,
+│   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, DoNotDisturb, Widget, FileSystem,
 │                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test.
 │                Già presente: clock (T-013; l'orologio finto sta nel test che lo usa); device (ScreenAwake,
-│                DoNotDisturb, T-017: tenute da `app/sessionDevice.ts`, iniettate da `main.tsx`)
+│                DoNotDisturb, T-017: tenute da `app/sessionDevice.ts`, iniettate da `main.tsx`); notifications
+│                (T-019, D-NOTIF-1: la sveglia è un attributo della voce, nessuna porta Alarms; adapter web
+│                `platform/notifications.ts`, testi da `ui/notificationTexts.ts` iniettati da `main.tsx`)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
 │                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
 └── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
@@ -114,10 +116,13 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   scrive con `writeOutcome` di `src/app/outcome.ts` (T-018, D-ESITO-1): unità, blocco (o blocco retroattivo della
   libera che conta), streak in `preferenze.streak` e puntatore del corso. «Registra esito» senza sessione è
   `registerOutcome` dello stesso modulo.
-- **NotificationPlanner.desiredSet(now)** — calcola l'insieme desiderato (§13.3) in modo deterministico
-  (id = hash di trigger+anticipo+blocco); l'adapter fa `cancel(registro − desiderato)` e `schedule(desiderato − registro)`.
-  **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**; l'hash deve produrre un intero in
-  [-2147483648, 2147483647] (chiave logica testuale → id numerico nel registro), gestendo le collisioni.
+- **NotificationPlanner** = `createNotifications` (`src/app/notifications.ts`, T-019, D-NOTIF-1) — `desiredSet(…, now)`
+  di `src/domain/notifications/desiredSet.ts` calcola l'insieme desiderato (§13.3) in modo deterministico (chiave
+  `trigger:anticipo:blocco`); `reconcilePlan` confronta col registro e il servizio chiama `cancel(registro − desiderato)`
+  e `schedule(desiderato − registro, o cambiate)`, poi riscrive solo la differenza. Innescata da `run()` dello scheduler
+  dopo il ciclo e dal `watch` sui suoi ingressi (ogni mutazione di blocco, routine, sessione e impostazioni); la prima
+  riconciliazione del processo riarma tutto. **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**:
+  FNV-1a con segno, collisioni +1 in ordine di chiave, id del registro conservati.
 - **CoursePointer.recompute(corsoId)** = `recomputePointer` (`src/app/pointer.ts`, T-013) — `pointerPlan` sui blocchi di
   studio futuri `programmati` del corso, scrive solo gli `unitaId` che cambiano; il ciclo lo chiama per ogni corso
   (dopo la generazione e la marcatura persa, FUNZ §8), T-018 dopo ogni esito.
@@ -148,7 +153,7 @@ resta fuori dal dominio.
 | Capacità | Web | Android | iOS | Note |
 |---|---|---|---|---|
 | Notifiche locali | solo scheda aperta | sì (background) | sì | plugin `@capacitor/local-notifications` |
-| Sveglie a schermo intero | no | full-screen intent + `SCHEDULE_EXACT_ALARM` | limitato (notifica critica/time-sensitive) | plugin nativo da scrivere (T-021) |
+| Sveglie a schermo intero | no: notifica che resta finché la si tocca (`requireInteraction`, D-NOTIF-1) | full-screen intent + `SCHEDULE_EXACT_ALARM` | limitato (notifica critica/time-sensitive) | plugin nativo da scrivere (T-021) |
 | Non Disturbare | no | `ACCESS_NOTIFICATION_POLICY` | non disponibile → iperfocus vale comunque (§10.4) | T-017 |
 | Widget | no | Kotlin AppWidget (T-023) | "se disponibile" (WidgetKit, dopo) | |
 | Backup su cartella documenti | download | `@capacitor/filesystem` Documents | Files | §22 |
@@ -182,8 +187,8 @@ anche gli avvisi (D-LINT-1). Per la UI, Vitest + Testing Library solo dove uno s
 | Orologi dei dispositivi e «ultimo vince» (MECC §25) | sync: `updatedAt` dal dispositivo; due orologi sfasati invertono l'esito di un conflitto | sorgente dell'istante decisa al **CP4** (D-SYNC-1); test di fusione con orologi sfasati in T-033 | prima di T-033 |
 | Chiave AI nella sync (MECC §25) e nel backup (MECC §22 + §1) | privacy dell'utente | cifratura lato client per la sync (D-SYNC-1); esclusione o cifratura nel backup (D-BACKUP-1) | CP4, prima di T-030 e T-033 |
 | Numeri di modulo/unità duplicati nello ZIP | id del parser in collisione | **deciso** (D-PARSE-3, T-003): duplicato saltato con avviso, test nel parser | fatto |
-| Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | hash → intero a 32 bit, gestione collisioni, test dedicato | T-019 |
-| Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la riconciliazione all'avvio (ciclo §9) le ricrea; la Diagnostica mostra lo stato del permesso | T-019, T-021 |
+| Id delle notifiche interi a 32 bit (Android) | registro notifiche, riconciliazione | **deciso** (D-NOTIF-1): FNV-1a con segno, collisioni +1, test in `src/domain/notifications/desiredSet.test.ts` | fatto (T-019) |
+| Permesso "sveglie esatte" revocabile dall'utente (Android 12+): l'app si riavvia e le notifiche esatte programmate vengono cancellate | notifiche e sveglie | la prima riconciliazione del processo riarma tutto il desiderato (T-019, fatto); la Diagnostica mostra lo stato del permesso | T-021, T-032 |
 | Doze (Android): le notifiche `allowWhileIdle` possono scattare al massimo una volta ogni 9 minuti per app | trigger ravvicinati (pre, inizio, verifica) | test su dispositivo con Doze; per le sveglie usare le API di allarme esatto | T-021 |
 | Archiviazione del browser rimovibile dal sistema (web e WebView) | dati locali (IndexedDB) | richiedere archiviazione persistente (`navigator.storage.persist()`) al primo avvio, mostrarne lo stato in Diagnostica, ricordare il backup | richiesta all'avvio in `src/main.tsx` (T-006, fatto); stato in Diagnostica (T-032) |
 | Gate eseguito a ogni fine turno (hook Stop) più lento man mano che crescono i test (UI in particolare) | loop agentico | quando `npm run verify` supera ~60 s, separare `verify` (dominio + unità + regole) da `verify:completo` (UI) e usare il primo nell'hook | quando serve |

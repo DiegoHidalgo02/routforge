@@ -307,5 +307,21 @@
   "suggerimentoParziale": "Tomorrow the pointer suggests the same unit again.",
   "fonteRoutine": "routine {ora}",
   "fonteRecupero": "catch-up",
-  "fonteLibera": "free session"
+  "fonteLibera": "free session",
+  "anticipoGiorni": "{n} days",
+  "anticipoOre": "{n} hours",
+  "anticipoAltro": "Other reminder",
+  "unitaMinuti": "min",
+  "unitaOre": "hours",
+  "unitaGiorni": "days",
+  "aggiungiAnticipo": "Add reminder",
+  "anticipoMassimo": "up to 31 days",
+  "notifPre": "In {tempo} · {ora}",
+  "notifInizio": "Starting now · {ora}",
+  "notifVerifica": "Did you get started? It was at {ora}",
+  "notifEsito": "How did it go? Log the outcome",
+  "notifScadenza": "Due now · {ora}",
+  "notifGiorno": "Today",
+  "notifTempoScaduto": "Time’s up",
+  "notifSveglia": "Alarm · {titolo}"
 }
