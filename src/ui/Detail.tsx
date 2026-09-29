@@ -4,7 +4,8 @@
 // note; footer per tipo. La revisione delle fasi (S9) e il follow-up sono sheet dentro il pannello; «Elimina» ha il
 // toast con «Annulla». Dal cerchio di una card di Oggi il pannello si apre già sulla revisione o sulle voci rimaste
 // (spunta diretta, D-DETT-3). Le regole vengono da dominio e servizio (`app/completion.ts`): qui solo la resa. Fuori da
-// questo task: «Modifica» (T-042), le azioni dello studio (T-016, T-018), l'unità proposta (T-013), le notifiche (T-019).
+// questo task: «Modifica» (T-042), gli esiti dello studio (T-018), l'unità proposta (T-013), le notifiche (T-019). Le
+// azioni di sessione dello studio (Avvia · Anticipa · Recupera · Riprendi · Ripasso) vengono da `studyActions` (T-016).
 import {
   Calendar,
   CalendarClock,
@@ -16,6 +17,7 @@ import {
   Info,
   List,
   MapPin,
+  Play,
   Repeat,
   SquareCheckBig,
   StickyNote,
@@ -36,7 +38,9 @@ import {
   type DettaglioAttivita,
 } from '../app/completion';
 import { appDb } from '../app/db';
+import { watchActiveSession } from '../app/session';
 import { inheritedDay } from '../domain/checklist';
+import { studyActions, type AzioneStudio, type SessioneAttiva } from '../domain/session';
 import { canCheckFromCalendar, canComplete, directCheckStep, shownState } from '../domain/completion';
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
@@ -46,6 +50,7 @@ import { useMinuto } from './clock';
 import { durata, maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
+import { useStudyAction } from './Session';
 
 const TIPO: Record<TipoBlocco, Chiave> = {
   todo: 'tipoTodo',
@@ -81,6 +86,25 @@ const inverti = (insieme: ReadonlySet<string>, id: string): Set<string> => {
   if (!n.delete(id)) n.add(id);
   return n;
 };
+
+/** Etichette delle azioni di sessione nel footer di S5 (studio). */
+const AZIONE_STUDIO: Record<AzioneStudio, Chiave> = {
+  inizia: 'avviaSessione',
+  anticipa: 'anticipaSessione',
+  libera: 'sessioneLibera',
+  recupera: 'sessioneRecupera',
+  riprendi: 'riprendiSessione',
+  ripasso: 'ripassoLibera',
+};
+/** Suggerimenti di S5 per lo studio: anticipo, ripasso e sessione libera di un altro giorno. */
+const suggerimentoStudio = (azione: AzioneStudio | undefined): string | null =>
+  azione === 'anticipa'
+    ? t('suggerimentoAnticipo')
+    : azione === 'ripasso'
+      ? t('suggerimentoRipasso')
+      : azione === 'libera'
+        ? t('suggerimentoStudioAltroGiorno')
+        : null;
 
 type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo';
 interface Toast {
@@ -119,6 +143,9 @@ export function Detail() {
   const [scelte, setScelte] = useState<ReadonlySet<string>>(() => new Set());
   const [toast, setToast] = useState<Toast | null>(null);
   const [errore, setErrore] = useState(false);
+  const [attiva, setAttiva] = useState<SessioneAttiva | null>(null);
+  useEffect(() => watchActiveSession(appDb, setAttiva), []);
+  const avviaSessione = useStudyAction();
   // L'orologio batte al minuto e si riallinea al ritorno in primo piano (G4); le scritture usano l'istante del clic
   const now = useMinuto();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -272,7 +299,9 @@ export function Detail() {
           ? t('suggerimentoRoutinePersa')
           : tipo === 'evento' && stato === 'concluso'
             ? t('suggerimentoConcluso')
-            : null;
+            : tipo === 'studio'
+              ? suggerimentoStudio(studyActions(b, now, attiva)[0])
+              : null;
 
   // Una spunta rifiutata dal servizio (finestra chiusa nel frattempo, §3) si segnala come le eccezioni
   const esegui = (fn: () => Promise<boolean>) =>
@@ -394,6 +423,28 @@ export function Detail() {
           </button>
         </>
       );
+  } else if (tipo === 'studio') {
+    // Azioni della sessione (S5 studio, §10.1): la primaria a destra, la libera accanto in anticipo; «Registra esito» con T-018
+    const [prima, seconda] = studyActions(b, now, attiva);
+    piede = (
+      <>
+        {seconda && (
+          <button type="button" className={`${s.azione} ${s.secondaria}`} onClick={() => avviaSessione(seconda, b)}>
+            {t(AZIONE_STUDIO[seconda])}
+          </button>
+        )}
+        {prima && (
+          <button
+            type="button"
+            className={`${s.azione} ${prima === 'ripasso' || prima === 'libera' ? `${s.secondaria} ${s.larga}` : s.primaria}`}
+            onClick={() => avviaSessione(prima, b)}
+          >
+            {prima !== 'ripasso' && <Play size={14} fill="currentColor" />}
+            {t(AZIONE_STUDIO[prima])}
+          </button>
+        )}
+      </>
+    );
   } else if (tipo === 'evento' && b.stato !== 'completato')
     piede = (
       <button type="button" className={`${s.azione} ${s.primaria}`} onClick={fatta}>

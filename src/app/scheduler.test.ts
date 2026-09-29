@@ -10,7 +10,8 @@ import { CHIAVE_ULTIMA_APERTURA, readAbsenceNotice } from './absence';
 import { createActivity } from './activities';
 import { watchCalendar } from './calendar';
 import type { Clock } from './ports/clock';
-import { CHIAVE_SESSIONE_ATTIVA, createScheduler, runCycle } from './scheduler';
+import { createScheduler, runCycle } from './scheduler';
+import { CHIAVE_SESSIONE_ATTIVA } from './session';
 
 // La lib della radice è ES2022 senza DOM né Node (D-TS-1): si dichiara il solo timer che serve a un test
 declare const setTimeout: (fatto: () => void, ms: number) => unknown;
@@ -170,7 +171,8 @@ describe('Orfani — SCENARI C8 (app chiusa a metà sessione, riaperta 40 minuti
 
   it('con la sessione attiva che lo punta resta in corso', async () => {
     const b = await studio();
-    await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: { bloccoId: b.id } }, local(2026, 9, 23, 9, 5));
+    const avvio = local(2026, 9, 23, 9, 5);
+    await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: { bloccoId: b.id, avvio } }, avvio);
     await runCycle(db, local(2026, 9, 23, 10, 40), FUSO);
     expect((await letto(b.id)).stato).toBe('in_corso');
   });

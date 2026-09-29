@@ -11,7 +11,7 @@
  * `registerOpening`). Decisioni: D-SCHED-1, D-ASSENZA-1.
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, list, listBy, saveBlock, watch } from '../data/repository';
+import { inTransaction, list, listBy, saveBlock, watch } from '../data/repository';
 import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
 import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
@@ -21,13 +21,7 @@ import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
 import type { Clock } from './ports/clock';
 import { generateOccurrences } from './recurrences';
-
-/**
- * Riga di `preferenze` della sessione attiva (MECC §1 «sessione attiva»; docs/02_ARCHITETTURA.md §4): il ciclo ne legge
- * solo `valore.bloccoId`, il blocco che la sessione punta (§8, orfani). La scrivono T-016 e T-017, nella stessa
- * transazione dello stato del blocco (D-SCHED-1).
- */
-export const CHIAVE_SESSIONE_ATTIVA = 'sessioneAttiva';
+import { readActiveSession } from './session';
 
 /** Ciò che il ciclo consegna ai passi successivi: gli id da avvisare adesso (T-020). */
 export interface AvvisiCiclo {
@@ -40,12 +34,6 @@ export interface AvvisiCiclo {
 }
 
 const TABELLE_CICLO = ['blocchi', 'ricorrenze', 'preferenze', 'corsi', 'unita', 'moduli'] as const;
-
-async function bloccoSessioneAttiva(db: RoutForgeDb): Promise<string | null> {
-  const valore = (await get(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA))?.valore;
-  const bloccoId = typeof valore === 'object' && valore !== null && 'bloccoId' in valore ? valore.bloccoId : null;
-  return typeof bloccoId === 'string' ? bloccoId : null;
-}
 
 function leggibile(r: Ricorrenza, now: number): boolean {
   try {
@@ -73,7 +61,8 @@ export function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<Av
     // 2. Spostamento dei todo (§6)
     const spostati = await rollTodos(db, now, fuso);
     // 3. Reset degli orfani (§8): tornano `programmati` e il passo 4 li giudica
-    const attivo = await bloccoSessioneAttiva(db);
+    // Il blocco che la sessione attiva punta (`preferenze.sessioneAttiva`, scritta da `app/session.ts`, D-SCHED-1)
+    const attivo = (await readActiveSession(db))?.bloccoId ?? null;
     for (const b of orphanPlan(await listBy(db, 'blocchi', 'stato', 'in_corso'), attivo, now))
       await saveBlock(db, b, now, fuso);
     // 4. Marcatura dei persi (§8; il todo «non fatto», §6)

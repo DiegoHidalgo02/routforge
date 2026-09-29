@@ -7,6 +7,7 @@ import { Courses } from './Courses';
 import { Create } from './Create';
 import { Detail } from './Detail';
 import { Section } from './Section';
+import { ActiveSession, SessionSetup } from './Session';
 import { Shell } from './Shell';
 import { Today } from './Today';
 
@@ -22,6 +23,8 @@ function Rotte() {
           <Route path="attivita/:id" element={<Detail />} />
           <Route path="statistiche" element={<Section titolo="statistiche" />} />
           <Route path="corsi" element={<Courses />} />
+          <Route path="sessione/setup" element={<SessionSetup />} />
+          <Route path="sessione" element={<ActiveSession />} />
           <Route path="notifiche" element={<Section titolo="notifiche" indietro />} />
           <Route path="impostazioni" element={<Section titolo="impostazioni" indietro />} />
           <Route path="account" element={<Section titolo="account" indietro />} />

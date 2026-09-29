@@ -77,6 +77,10 @@ export interface Blocco {
    * la azzerano (T-042, T-015; D-HOR-1).
    */
   orarioOriginale?: string | null;
+  /** Solo studio: minuti di cui «Anticipa sessione» ha spostato prima il blocco (§10.1, C4; puntualità di §20). */
+  minutiAnticipo?: number | null;
+  /** Solo studio: ritardo all'avvio in routine o recupero, adesso − inizio in minuti, mai negativo (§10.1, C5; D-SESS-1). */
+  minutiRitardo?: number | null;
   // Campi della creazione (§2): assenti nei blocchi di prova dei meccanismi che non li usano.
   titolo?: string;
   note?: string;

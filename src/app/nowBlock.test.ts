@@ -127,8 +127,8 @@ describe('Adesso — MECCANISMI §14 (candidati di ieri e di domani a cavallo di
   });
 });
 
-describe('Adesso — MECCANISMI §14 (dati per S1: titolo del corso dello studio)', () => {
-  it('un blocco di studio porta il titolo del suo corso; gli altri no', async () => {
+describe('Adesso — MECCANISMI §14 (dati per S1: corso e unità dello studio)', () => {
+  it('un blocco di studio porta il titolo del suo corso e il numero dell’unità puntata; gli altri no', async () => {
     const D = 23;
     const corso = await save(
       db,
@@ -136,12 +136,37 @@ describe('Adesso — MECCANISMI §14 (dati per S1: titolo del corso dello studio
       { titolo: 'Syllabus', sottotitolo: '', importatoIl: local(2026, 9, 1), esempio: false },
       local(2026, 9, 1),
     );
-    await blocco('Studio', local(2026, 9, D, 9, 0), local(2026, 9, D, 10, 0), { tipo: 'studio', corsoId: corso.id });
+    const unita = await save(
+      db,
+      'unita',
+      {
+        corsoId: corso.id,
+        moduloId: 'm0',
+        moduloNumero: 0,
+        numero: '0.7',
+        ordine: 7,
+        titolo: 'Event loop',
+        markdown: '',
+        concettoCore: null,
+        oreStimate: null,
+        difficolta: null,
+        stato: 'non_iniziata',
+        progresso: 0,
+        minuti: 0,
+        confidenza: null,
+      },
+      local(2026, 9, 1),
+    );
+    await blocco('Studio', local(2026, 9, D, 9, 0), local(2026, 9, D, 10, 0), {
+      tipo: 'studio',
+      corsoId: corso.id,
+      unitaId: unita.id,
+    });
     await blocco('Palestra', local(2026, 9, D, 11, 0), local(2026, 9, D, 12, 0));
     const { blocchi } = await nowInputs(db, `2026-09-${D}`);
-    expect(blocchi.map((b) => [b.titolo, b.corsoTitolo])).toEqual([
-      ['Studio', 'Syllabus'],
-      ['Palestra', undefined],
+    expect(blocchi.map((b) => [b.titolo, b.corsoTitolo, b.unitaNumero])).toEqual([
+      ['Studio', 'Syllabus', '0.7'],
+      ['Palestra', undefined, undefined],
     ]);
   });
 });

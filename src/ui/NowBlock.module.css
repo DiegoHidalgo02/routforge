@@ -228,7 +228,7 @@
   font: var(--text-sm) / var(--leading-tight) var(--font-ui);
 }
 
-/* Azione (DESIGN.md §8: 38 r11): «Apri» nello stile secondario del mock; i primari della sessione arrivano con T-016 */
+/* Azione (DESIGN.md §8: 38 r11): «Apri» nello stile secondario del mock; per lo studio l'azione della sessione, primary */
 .azione {
   position: relative;
   grid-column: 2;
@@ -259,6 +259,23 @@
 
 .azione:hover {
   background: var(--color-surface-3);
+}
+
+/* Azione della sessione per lo studio (Inizia · Anticipa · Recupera · Riprendi): primary nella cornice del mock */
+.primaria {
+  gap: var(--space-2);
+  border-color: transparent;
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-soft);
+}
+
+.primaria:hover {
+  background: var(--color-primary-hover);
+}
+
+.primaria:focus-visible {
+  box-shadow: var(--ring-focus);
 }
 
 /* Compresso allo scorrimento (S1 Mobile «Blocco Adesso compresso»): 48 di altezza, pallino · titolo e numeri · azione */

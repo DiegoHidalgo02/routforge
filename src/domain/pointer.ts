@@ -47,7 +47,7 @@ export type BloccoPuntatore = Pick<Blocco, 'id' | 'tipo' | 'stato' | 'inizio' | 
 export const criteriaMet = (criteri: readonly { fatto: boolean }[]): boolean => criteri.every((c) => c.fatto);
 
 /** Ordine di percorso: modulo → unità. */
-export function sortedUnits(units: readonly UnitaPercorso[]): UnitaPercorso[] {
+export function sortedUnits<U extends UnitaPercorso>(units: readonly U[]): U[] {
   return [...units].sort((a, b) => a.moduloNumero - b.moduloNumero || a.ordine - b.ordine);
 }
 

@@ -13,16 +13,23 @@ import { shiftPeriod } from '../domain/calendar';
 import { dismissKey } from '../domain/nowBlock';
 import { localDayKey } from '../domain/time';
 import type { Blocco } from '../domain/types';
+import type { SessioneAttiva } from '../domain/session';
 import type { BloccoCalendario } from './calendar';
+import { readActiveSession } from './session';
 
-/** Un blocco come lo mostra il blocco Adesso: orari di parete e, per lo studio, il titolo del corso (sottotitolo di S1). */
-export type BloccoAdesso = BloccoCalendario & { corsoTitolo?: string };
+/**
+ * Un blocco come lo mostra il blocco Adesso: orari di parete e, per lo studio, il titolo del corso e il numero
+ * dell'unità puntata (sottotitolo «corso · Unità n.n» di S1).
+ */
+export type BloccoAdesso = BloccoCalendario & { corsoTitolo?: string; unitaNumero?: string };
 
 export interface IngressiAdesso {
   /** I blocchi vivi di ieri, di oggi e di domani, in ordine d'inizio: il dominio sceglie fra questi. */
   blocchi: BloccoAdesso[];
   /** Chiavi di chiusura `giorno|blocco` (`dismissKey`) memorizzate. */
   chiusi: ReadonlySet<string>;
+  /** La sessione attiva, per l'azione dello studio (Riprendi, T-016). */
+  attiva: SessioneAttiva | null;
 }
 
 /** Riga di `preferenze` con le chiavi di chiusura del giorno corrente (le altre si potano a ogni chiusura). */
@@ -38,12 +45,23 @@ export async function nowInputs(db: RoutForgeDb, oggi: string): Promise<Ingressi
   const blocchi = await blocksBetween(db, shiftPeriod(oggi, 'giorno', -1), shiftPeriod(oggi, 'giorno', 1));
   const corsi = new Map((await list(db, 'corsi')).map((c) => [c.id, c.titolo]));
   const chiusi = new Set(await chiusure(db));
+  const numero = async (unitaId: string | null | undefined) =>
+    unitaId ? (await get(db, 'unita', unitaId))?.numero : undefined;
   return {
-    blocchi: blocchi.map((b) => {
-      const corsoTitolo = b.tipo === 'studio' && b.corsoId ? corsi.get(b.corsoId) : undefined;
-      return corsoTitolo === undefined ? b : { ...b, corsoTitolo };
-    }),
+    blocchi: await Promise.all(
+      blocchi.map(async (b) => {
+        if (b.tipo !== 'studio') return b;
+        const corsoTitolo = b.corsoId ? corsi.get(b.corsoId) : undefined;
+        const unitaNumero = await numero(b.unitaId);
+        return {
+          ...b,
+          ...(corsoTitolo !== undefined && { corsoTitolo }),
+          ...(unitaNumero !== undefined && { unitaNumero }),
+        };
+      }),
+    ),
     chiusi,
+    attiva: await readActiveSession(db),
   };
 }
 

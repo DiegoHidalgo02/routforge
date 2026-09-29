@@ -14,6 +14,11 @@
     max(var(--space-page), env(safe-area-inset-left));
 }
 
+/* La sessione (S15) riempie il contenuto da bordo a bordo: il pannello ha il suo padding e il suo footer */
+.main[data-piena] {
+  padding: 0;
+}
+
 .sidebar {
   display: none;
 }
@@ -88,6 +93,10 @@
   .main {
     overflow: auto;
     padding: var(--space-6) var(--space-8) var(--space-8);
+  }
+
+  .main[data-piena] {
+    padding: 0;
   }
 
   .bottomNav {

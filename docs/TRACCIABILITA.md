@@ -31,18 +31,18 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | C1 | MECC §11, FORMATO §4 | domain/pointer (`assignPointer`, `pointerPlan`) · app/pointer (`recomputePointer`) · app/scheduler (puntatore a ogni ciclo, anche dopo la creazione della routine) | T-001, T-013 | src/domain/pointer.test.ts, src/app/pointer.test.ts, src/app/scheduler.test.ts | coperto |
 | C2 | MECC §11, §12 | domain/pointer (progresso) · domain/streak · app/session | T-001, T-018 | src/domain/pointer.test.ts, src/domain/streak.test.ts | parziale |
 | C3 | MECC §11 | domain/pointer · app/session | T-001, T-018 | src/domain/pointer.test.ts | parziale |
-| C4 | MECC §10.1 | app/session (setup, anticipo) | T-016 | — | nessuno |
-| C5 | MECC §10.1, §20 | app/session (recupero, ritardo) · domain/stats | T-016 | — | nessuno |
+| C4 | MECC §10.1 | domain/session (`sessionContext`, `studyActions`, `anticipatedBlock`, `startPlan`) · app/session (`anticipateSession`, `startSession`) · ui S1 blocco Adesso e S5 (Anticipa · Sessione libera) | T-016 | src/domain/session.test.ts, src/app/session.test.ts | coperto |
+| C5 | MECC §10.1, §20 | domain/session (recupero, `minutiRitardo`) · app/session · ui S15 setup · domain/stats | T-016, T-018, T-029 | src/domain/session.test.ts, src/app/session.test.ts, src/ui/Session.test.tsx (T-016: in corso con ritardo 80'; esito con T-018, puntualità con T-029) | parziale |
 | C6 | MECC §8, §11 | domain/lost (esiti pendenti) · app/session (Registra esito) · ui Notifiche | T-001, T-018, T-022 | src/domain/lost.test.ts | parziale |
 | C7 | MECC §11 | app/session (blocco retroattivo) · domain/pointer | T-018 | — | nessuno |
 | C8 | MECC §8, §9, §10.5 | domain/lost (`isOrphan`) · domain/scheduler/cycle (`orphanPlan`) · app/scheduler (orfani prima dei persi, sessione attiva in `preferenze.sessioneAttiva`) · app/session (abbandono → `programmato`, T-017) | T-013, T-017 | src/domain/lost.test.ts, src/domain/scheduler/cycle.test.ts, src/app/scheduler.test.ts | parziale |
-| C9 | MECC §7, §10.1, §11, §12 | app/session (setup senza corso) · domain/pointer | T-016, T-018 | — | nessuno |
+| C9 | MECC §7, §10.1, §11, §12 | domain/session (`lockedUnit`, `courseDefaultUnit`, `startPlan`) · app/session (setup senza corso, `setupInputs`) · domain/pointer | T-016, T-018 | src/domain/session.test.ts, src/app/session.test.ts (T-016: scelta dell'unità 1.2 o di nulla nel setup; esito e streak con T-018) | parziale |
 | D1 | MECC §10.2, §13.6 | domain/session/timer (ancorata all'orologio) | T-017 | — | nessuno |
 | D2 | MECC §10.2 | domain/session/timer (ancorata al focus) | T-017 | — | nessuno |
 | D3 | MECC §10.3 | domain/pomodoro · app/session (cambio unità) | T-001, T-017 | src/domain/pomodoro.test.ts | parziale |
 | D4 | MECC §10.4, FUNZ §11.2 | app/session (persistenza in preferenze) · platform/widget | T-017 | — | nessuno |
 | D5 | MECC §10.4, §20 | app/session (iperfocus) · platform/doNotDisturb · domain/stats | T-017, T-029 | — | nessuno |
-| D6 | MECC §10.1 | app/session (una sola sessione) | T-016 | — | nessuno |
+| D6 | MECC §10.1 | app/session (una sola sessione: `startSession` restituisce quella attiva) · ui S15 (il setup porta a `/sessione`) | T-016 | src/app/session.test.ts, src/ui/Session.test.tsx (il timer vero è di T-017) | coperto |
 | E1 | MECC §3, §5 | domain/phases (log, follow-up) · app/completion · ui Dettaglio S5 (revisione e follow-up) | T-009 | src/domain/phases.test.ts, src/app/completion.test.ts (T-009: evento completato, log 1 fatta + 1 saltata, todo «Stampare analisi» senza orario nel giorno dell'evento con orizzonte giorno; E1 allineato a D-DETT-1 e D-DETT-2 il 25/09/2026) | coperto |
 | E2 | MECC §3, §8, §20 | domain/lost (evento mai perso) · domain/scheduler/cycle (mai marcato né avvisato) · domain/completion (stato «concluso») · app/completion · app/scheduler · ui Dettaglio S5 · domain/stats | T-001, T-009, T-013 | src/domain/lost.test.ts, src/domain/scheduler/cycle.test.ts, src/domain/completion.test.ts, src/app/completion.test.ts, src/app/scheduler.test.ts | parziale |
 | E3 | MECC §13.2, §14, §24 | domain/nowBlock · app/nowBlock · domain/notifications (08:00) | T-001, T-010, T-019 | src/domain/nowBlock.test.ts, src/app/nowBlock.test.ts | parziale |

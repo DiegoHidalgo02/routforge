@@ -1,0 +1,408 @@
+/* Sessione di studio (S15 Sessione Panel `setup`): colonna di 560 al centro, barra con l'indietro, footer con «Inizia»
+   primary. Su mobile a schermo pieno senza BottomNav (Shell), su desktop nel contenuto accanto alla sidebar (S15
+   Desktop). Restano misure del mock senza token: interruttore 44×26 con pomello 22 come in Crea (S4), indietro 40,
+   «Scegli» 28, colonna 560 e bottone 520, gap 10 e 6, padding 7 del badge e 14 della card, righe 28/18/16/14/12,
+   campo dei minuti 96. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.barra {
+  display: flex;
+  padding: var(--space-2) var(--space-2) 0;
+}
+
+.indietro {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.indietro:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.corpo {
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-2) var(--space-5) 28px;
+}
+
+.gruppo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.badge {
+  align-self: flex-start;
+  height: var(--size-badge);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-cat-study-soft);
+  color: var(--color-cat-study-ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.titolo {
+  margin: 0;
+  font: 600 var(--text-3xl) / 28px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.origine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.origine[data-contesto='recupero'] {
+  color: var(--color-warning);
+}
+
+.intestazione {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.etichetta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.nota {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.notaScura {
+  color: var(--color-text-3);
+  font: var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.cambia {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-segment);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.cambia:hover {
+  background: var(--color-surface-2);
+}
+
+.corso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Card dell'unità (S15): surface-2 r12, eyebrow primary «Unità n.n», tag a destra, titolo 15/20, corso sotto */
+.unita {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-feedback) var(--ease-out);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.unita:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+}
+
+.unita:disabled {
+  cursor: default;
+}
+
+.unita[aria-pressed='true'] {
+  border-color: var(--color-selected);
+}
+
+.unitaTesta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 12px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.tag {
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) var(--font-ui);
+}
+
+.unitaTitolo {
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.unitaCorso {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.num {
+  font-family: var(--font-num);
+  font-weight: 500;
+}
+
+.fine {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-num);
+}
+
+.valore {
+  color: var(--color-text);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Pill del mock: 32, bordo border su surface, testo text-2; scelta = bianca con testo scuro */
+.chip {
+  position: relative;
+  height: var(--size-chip);
+  min-width: var(--size-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out);
+}
+
+.chip::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+}
+
+/* Cifre delle durate e di «Inizia · 45 min» in font-num, col peso del contenitore (dopo `.chip`, che ha `font:`) */
+.cifre {
+  font-family: var(--font-num);
+}
+
+.campo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.campo input {
+  width: 96px;
+  height: var(--size-control);
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 500 var(--text-md) var(--font-num);
+}
+
+.interruttore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--size-control);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: 500 var(--text-md) / 18px var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.colonna {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.knob {
+  position: relative;
+  width: var(--size-control);
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-2);
+  transition:
+    left var(--dur-feedback) var(--ease-out),
+    background var(--dur-feedback) var(--ease-out);
+}
+
+.interruttore[aria-checked='true'] .knob {
+  background: var(--color-primary);
+}
+
+.interruttore[aria-checked='true'] .knob::after {
+  left: 20px;
+  background: var(--color-selected-ink);
+}
+
+/* Footer fisso del pannello: solo hairline e fondo surface (DESIGN.md §2) */
+.piede {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.inizia,
+.abbandona {
+  flex: 1;
+  max-width: 520px;
+  min-height: var(--size-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.inizia {
+  background: var(--color-primary);
+  color: var(--color-selected-ink);
+  box-shadow: var(--shadow-primary);
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.inizia:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.inizia:active:not(:disabled) {
+  transform: scale(var(--scale-press));
+  background: var(--color-primary-active);
+}
+
+.inizia:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.inizia:disabled {
+  opacity: var(--opacity-disabled);
+}
+
+.abbandona {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.abbandona:hover {
+  background: var(--color-surface-3);
+}
+
+.inCorso {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 12px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+/* Desktop (D-UI-1): nel contenuto accanto alla sidebar, alto quanto la finestra */
+@media (min-width: 1024px) {
+  .pagina {
+    min-height: 100vh;
+  }
+}

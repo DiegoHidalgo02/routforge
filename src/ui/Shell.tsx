@@ -9,9 +9,10 @@ import s from './Shell.module.css';
 
 export function Shell() {
   // S20 Shell Mobile: niente BottomNav su Notifiche e sulle viste interne di Impostazioni (Account, Diagnostica), che hanno
-  // l'indietro; Impostazioni stessa la tiene
+  // l'indietro; Impostazioni stessa la tiene. La sessione (S15 Mobile) è a schermo pieno
   const location = useLocation();
-  const barra = !['/notifiche', '/account', '/diagnostica'].includes(location.pathname);
+  const sessione = location.pathname.startsWith('/sessione');
+  const barra = !['/notifiche', '/account', '/diagnostica'].includes(location.pathname) && !sessione;
   // «+ Crea» si apre sopra la schermata corrente (App.tsx)
   const sfondo = { sfondo: location };
   return (
@@ -45,7 +46,7 @@ export function Shell() {
           </NavLink>
         </div>
       </aside>
-      <main className={s.main}>
+      <main className={s.main} data-piena={sessione || undefined}>
         <Outlet />
       </main>
       {barra && (
