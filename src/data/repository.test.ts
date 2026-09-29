@@ -46,31 +46,41 @@ const occorrenza = (giorno: number, h = 7, extra: Partial<Blocco> = {}): Blocco 
   ...extra,
 });
 
+const PRATICA = { unitaId: 'u1', tipo: 'quiz', creataIl: T0 };
+
 describe('Identità e tombstone — MECC §25, D-DATA-1, D-DATA-2', () => {
   it('senza id assegna un UUID v4; aggiornando conserva createdAt e aggiorna updatedAt', async () => {
-    const a = await save(db, 'sessioni', { avvio: T0, bloccoId: null }, T0);
+    const a = await save(db, 'pratiche', PRATICA, T0);
     expect(a.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    const b = await save(db, 'sessioni', { id: a.id, avvio: T0, bloccoId: 'b-1' }, T1);
-    expect(b).toEqual({ id: a.id, avvio: T0, bloccoId: 'b-1', createdAt: T0, updatedAt: T1, deletedAt: null });
-    expect(await list(db, 'sessioni')).toEqual([b]);
+    const b = await save(db, 'pratiche', { id: a.id, unitaId: 'u1', tipo: 'trivia', creataIl: T0 }, T1);
+    expect(b).toEqual({
+      id: a.id,
+      unitaId: 'u1',
+      tipo: 'trivia',
+      creataIl: T0,
+      createdAt: T0,
+      updatedAt: T1,
+      deletedAt: null,
+    });
+    expect(await list(db, 'pratiche')).toEqual([b]);
   });
 
   it('una tombstone non si legge né si elenca; risalvare lo stesso id la rianima conservando createdAt', async () => {
-    const a = await save(db, 'sessioni', { avvio: T0, bloccoId: null }, T0);
-    await remove(db, 'sessioni', a.id, T1);
-    expect(await get(db, 'sessioni', a.id)).toBeUndefined();
-    expect(await list(db, 'sessioni')).toEqual([]);
+    const a = await save(db, 'pratiche', PRATICA, T0);
+    await remove(db, 'pratiche', a.id, T1);
+    expect(await get(db, 'pratiche', a.id)).toBeUndefined();
+    expect(await list(db, 'pratiche')).toEqual([]);
     const t2 = local(2026, 9, 24, 10, 0);
-    const b = await save(db, 'sessioni', { id: a.id, avvio: T0, bloccoId: null }, t2);
+    const b = await save(db, 'pratiche', { id: a.id, ...PRATICA }, t2);
     expect([b.createdAt, b.updatedAt, b.deletedAt]).toEqual([T0, t2, null]);
   });
 
   it('eliminare un record assente o già eliminato non scrive nulla', async () => {
-    const a = await save(db, 'sessioni', { avvio: T0, bloccoId: null }, T0);
-    await remove(db, 'sessioni', a.id, T1);
-    await remove(db, 'sessioni', a.id, local(2026, 9, 25, 9, 0));
-    await remove(db, 'sessioni', 'inesistente', T1);
-    expect(await db.sessioni.toArray()).toEqual([{ id: a.id, createdAt: T0, updatedAt: T1, deletedAt: T1 }]);
+    const a = await save(db, 'pratiche', PRATICA, T0);
+    await remove(db, 'pratiche', a.id, T1);
+    await remove(db, 'pratiche', a.id, local(2026, 9, 25, 9, 0));
+    await remove(db, 'pratiche', 'inesistente', T1);
+    expect(await db.pratiche.toArray()).toEqual([{ id: a.id, createdAt: T0, updatedAt: T1, deletedAt: T1 }]);
   });
 
   it('accetta un id deterministico: una preferenza per chiave (id = chiave)', async () => {

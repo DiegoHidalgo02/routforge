@@ -1,26 +1,64 @@
 // Sessione di studio (S15 Sessione Panel/Mobile/Desktop, 05 Sessione `setup`; FUNZ §11.1, MECC §10.1). Il setup su
 // `/sessione/setup?blocco=<id>` (sessione sul blocco: il contesto lo decide l'orologio) o `?unita=<id>` (sessione
 // libera, anche senza unità): cosa studiare, quanto, modalità, iperfocus; «Inizia» scrive la sessione attiva e porta a
-// `/sessione`. Con una sessione già attiva il setup porta lì (D6). `/sessione` è il segnaposto del timer (T-017): cosa
-// è in corso e «Abbandona». Le regole stanno in `domain/session.ts` e `app/session.ts`. Decisione: D-SESS-1.
-import { ChevronLeft, Clock, Crosshair, ListIcon, Play, RefreshCcw, Repeat } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router';
+// `/sessione`. Con una sessione già attiva il setup porta lì (D6). `/sessione` è il timer (T-017, MECC §10.2–§10.5),
+// il banner «Sessione in corso» lo riapre. Le regole stanno in `domain/session.ts`, `domain/timer.ts` e
+// `app/session.ts`. Decisioni: D-SESS-1, D-TIMER-1.
+import {
+  ChevronDown,
+  ChevronLeft,
+  CircleAlert,
+  Clock,
+  Crosshair,
+  ListIcon,
+  Lock,
+  Pause,
+  Play,
+  RefreshCcw,
+  Repeat,
+} from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { appDb } from '../app/db';
 import {
   abandonSession,
   anticipateSession,
+  editActiveSession,
+  endSession,
   startSession,
+  watchSessionView,
   watchSetupInputs,
   type CorsoSetup,
   type IngressiSetup,
   type UnitaSetup,
+  type VistaSessione,
 } from '../app/session';
-import { lockedUnit, startContext, startPlan, type AzioneStudio, type Modalita } from '../domain/session';
+import { disableDoNotDisturb, enableDoNotDisturb, keepScreenOn } from '../app/sessionDevice';
+import {
+  lockedUnit,
+  startContext,
+  startPlan,
+  type AzioneStudio,
+  type Modalita,
+  type SessioneAttiva,
+} from '../domain/session';
 import { MINUTE, localTimeKey } from '../domain/time';
+import {
+  addInterruption,
+  changeUnit,
+  currentStudyUnit,
+  exitLocked,
+  pauseSession,
+  segmentTimeline,
+  resumeSession,
+  skipSegment,
+  summary,
+  timerState,
+  type StatoTimer,
+} from '../domain/timer';
 import type { Blocco } from '../domain/types';
-import { useMinuto } from './clock';
-import { durata as durataBreve, titolo as titoloBlocco } from './format';
+import { useMinuto, useSecondo } from './clock';
+import { durata as durataBreve, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Session.module.css';
 
@@ -101,12 +139,14 @@ export function SessionSetup() {
   // Quanto e fino a quando li decide il dominio (routine: fine del blocco); all'avvio passa la scelta dell'utente, così
   // se la fine passa fra il disegno e il clic il recupero parte con la durata scelta
   const routine = contesto === 'routine';
+  const senzaFine = !routine && durata === null;
   const sceltaUtente = {
     unitaId,
     corsoId: materia?.corso.id ?? null,
     durata: durata === 'personalizzata' ? minuti : durata,
     modalita,
-    iperfocus,
+    // L'iperfocus blocca l'uscita «fino alla fine»: col cronometro non c'è una fine (D-TIMER-1)
+    iperfocus: iperfocus && !senzaFine,
   };
   const anteprima = startPlan(b, sceltaUtente, now).sessione;
   // Libera: ancorata al focus (§10.2), la fine prevista è quella senza pause
@@ -130,42 +170,21 @@ export function SessionSetup() {
       .catch(() => setInAvvio(false));
   };
 
+  const scegli = (id: string | null) => {
+    setScelta(id);
+    setElenco(false);
+  };
   const scheda = (u: UnitaSetup, corso: CorsoSetup, scelta: boolean) => (
-    <button
+    <SchedaUnita
       key={u.id}
-      type="button"
-      className={s.unita}
-      aria-pressed={elenco ? scelta : undefined}
-      disabled={bloccata !== null}
-      onClick={() => {
-        setScelta(u.id);
-        setElenco(false);
-      }}
-    >
-      <span className={s.unitaTesta}>
-        <span className={s.eyebrow}>
-          {t('modulo')} <span className={s.num}>{String(u.moduloNumero).padStart(2, '0')}</span> · {t('unita')}{' '}
-          <span className={s.num}>{u.numero}</span>
-        </span>
-        {corso.proposta === u.id && <span className={s.tag}>{t('dalPuntatore')}</span>}
-      </span>
-      <span className={s.unitaTitolo}>{u.titolo}</span>
-      <span className={s.unitaCorso}>{corso.titolo}</span>
-    </button>
+      u={u}
+      corso={corso}
+      premuta={elenco ? scelta : undefined}
+      disabilitata={bloccata !== null}
+      onScegli={scegli}
+    />
   );
-  const nessuna = (
-    <button
-      type="button"
-      className={s.unita}
-      aria-pressed={elenco ? unitaId === null : undefined}
-      onClick={() => {
-        setScelta(null);
-        setElenco(false);
-      }}
-    >
-      <span className={s.unitaTitolo}>{t('nessunaUnita')}</span>
-    </button>
-  );
+  const nessuna = <SchedaNessuna premuta={elenco ? unitaId === null : undefined} onScegli={scegli} />;
 
   return (
     <div className={s.pagina}>
@@ -309,13 +328,14 @@ export function SessionSetup() {
         <button
           type="button"
           role="switch"
-          aria-checked={iperfocus}
+          aria-checked={sceltaUtente.iperfocus}
+          disabled={senzaFine}
           className={s.interruttore}
           onClick={() => setIperfocus((x) => !x)}
         >
           <span className={s.colonna}>
             <span>{t('iperfocus')}</span>
-            <span className={s.notaScura}>{t('iperfocusNota')}</span>
+            <span className={s.notaScura}>{t(senzaFine ? 'sbloccoSenzaFine' : 'iperfocusNota')}</span>
           </span>
           <span className={s.knob} />
         </button>
@@ -333,47 +353,469 @@ export function SessionSetup() {
   );
 }
 
-/** Segnaposto del timer (T-017): cosa è in corso, da quando, fino a quando, e l'abbandono (§10.5). */
+/** Card dell'unità (S15): surface-2, eyebrow «Modulo 00 · Unità 0.7», tag del puntatore, titolo e corso. */
+function SchedaUnita(p: {
+  u: UnitaSetup;
+  corso: CorsoSetup;
+  premuta: boolean | undefined;
+  disabilitata?: boolean;
+  onScegli: (id: string) => void;
+}) {
+  const { u, corso } = p;
+  return (
+    <button
+      type="button"
+      className={s.unita}
+      aria-pressed={p.premuta}
+      disabled={p.disabilitata}
+      onClick={() => p.onScegli(u.id)}
+    >
+      <span className={s.unitaTesta}>
+        <span className={s.eyebrow}>
+          {t('modulo')} <span className={s.num}>{String(u.moduloNumero).padStart(2, '0')}</span> · {t('unita')}{' '}
+          <span className={s.num}>{u.numero}</span>
+        </span>
+        {corso.proposta === u.id && <span className={s.tag}>{t('dalPuntatore')}</span>}
+      </span>
+      <span className={s.unitaTitolo}>{u.titolo}</span>
+      <span className={s.unitaCorso}>{corso.titolo}</span>
+    </button>
+  );
+}
+
+function SchedaNessuna(p: { premuta: boolean | undefined; onScegli: (id: null) => void }) {
+  return (
+    <button type="button" className={s.unita} aria-pressed={p.premuta} onClick={() => p.onScegli(null)}>
+      <span className={s.unitaTitolo}>{t('nessunaUnita')}</span>
+    </button>
+  );
+}
+
+/** La sessione attiva con unità e orario; `undefined` fino alla prima lettura. */
+export function useSessionView(): VistaSessione | null | undefined {
+  const [vista, setVista] = useState<VistaSessione | null>();
+  useEffect(() => watchSessionView(appDb, setVista), []);
+  return vista;
+}
+
+const minutiDi = (ms: number) => Math.round(ms / MINUTE);
+
+/** Il numero del timer: conto alla rovescia, «+04:12» nel tempo extra, focus trascorso nel cronometro (FUNZ §11.2). */
+function testoTimer(st: StatoTimer): string {
+  if (st.restante === null) return orologio(st.focus);
+  return st.finita ? `+${orologio(st.extra)}` : orologio(st.restante, true);
+}
+
+/** «Modulo 00 · Unità 0.7 · routine 16:00» (S15). */
+function Sottotitolo({ v }: { v: VistaSessione }) {
+  const origine =
+    v.sessione.contesto === 'routine'
+      ? t('fonteRoutine', { ora: v.orario ?? '' })
+      : t(v.sessione.contesto === 'recupero' ? 'fonteRecupero' : 'fonteLibera');
+  return (
+    <span className={s.sottotitolo}>
+      {v.unita && (
+        <>
+          {t('modulo')} <span className={s.num}>{String(v.unita.moduloNumero).padStart(2, '0')}</span> · {t('unita')}{' '}
+          <span className={s.num}>{v.unita.numero}</span> ·{' '}
+        </>
+      )}
+      {origine}
+    </span>
+  );
+}
+
+/**
+ * «Sessione in corso» (S1 SessionShell, S15 Desktop): banner in testa al contenuto su mobile, card nella sidebar su
+ * desktop; «Riprendi» riporta al timer (FUNZ §11.2, D4).
+ */
+export function SessionBanner({ vista, variante }: { vista: VistaSessione; variante: 'banner' | 'sidebar' }) {
+  const now = useSecondo();
+  const tempo = testoTimer(timerState(vista.sessione, now));
+  const titolo = vista.unita?.titolo ?? t('sessioneDiStudio');
+  if (variante === 'sidebar')
+    return (
+      <Link to="/sessione" className={s.bannerSidebar}>
+        <span className={s.bannerEtichetta}>
+          <span className={s.pallino} />
+          {t('sessioneInCorso')}
+        </span>
+        <span className={s.bannerTempo}>{tempo}</span>
+        <span className={s.bannerTitolo}>{titolo}</span>
+      </Link>
+    );
+  return (
+    <div className={s.banner}>
+      <span className={s.pallinoLive} />
+      <span className={s.bannerTesto}>
+        {t('sessioneInCorso')} · <span className={s.bannerCifre}>{tempo}</span> · {titolo}
+      </span>
+      <Link to="/sessione" className={s.bannerRiprendi}>
+        {t('riprendi')}
+      </Link>
+    </div>
+  );
+}
+
+/** Tempo del messaggio «Interruzione iperfocus registrata», come il toast del trascinamento (D-DRAG-1). */
+const AVVISO_MS = 5000;
+
+/**
+ * Timer della sessione (S15 `timer`, `iperfocus`, sheet di chiusura; MECC §10.2–§10.5): i valori li deriva
+ * `domain/timer.ts` dagli istanti salvati, ogni secondo. Schermo acceso finché il timer è aperto; in iperfocus schermo
+ * intero, indietro assorbito, Non Disturbare se concesso, uscita con conferma. «Termina» apre il riepilogo; l'esito è di
+ * T-018. Decisione: D-TIMER-1.
+ */
 export function ActiveSession() {
+  const vista = useSessionView();
   const ingressi = useIngressi(null);
   const navigate = useNavigate();
-  if (!ingressi) return null;
-  const a = ingressi.attiva;
-  if (!a) return <Navigate to="/" replace />;
-  const materia = unitaDi(ingressi.corsi, a.unitaId);
+  const now = useSecondo();
+  const [foglio, setFoglio] = useState(false);
+  const [elenco, setElenco] = useState(false);
+  const [uscita, setUscita] = useState<'no' | 'tentativo' | 'registrata'>('no');
+  const [dnd, setDnd] = useState(false);
+  const [inChiusura, setInChiusura] = useState(false);
+  const attiva = Boolean(vista);
+  const bloccata = vista ? exitLocked(vista.sessione, now) : false;
+
+  useEffect(() => (attiva ? keepScreenOn() : undefined), [attiva]);
+  useEffect(() => {
+    if (!bloccata) return;
+    let vivo = true;
+    void enableDoNotDisturb().then((x) => {
+      if (vivo) setDnd(x);
+    });
+    return () => {
+      vivo = false;
+      disableDoNotDisturb();
+    };
+  }, [bloccata]);
+  useEffect(() => {
+    if (!bloccata) return;
+    // Indietro inattivo (D5): una voce di cronologia in più assorbe l'indietro, che chiede conferma
+    const trattieni = () => window.history.pushState(window.history.state, '', window.location.href);
+    trattieni();
+    const indietro = () => {
+      trattieni();
+      setUscita('tentativo');
+    };
+    window.addEventListener('popstate', indietro);
+    return () => window.removeEventListener('popstate', indietro);
+  }, [bloccata]);
+  useEffect(() => {
+    if (uscita !== 'registrata') return;
+    const id = setTimeout(() => setUscita('no'), AVVISO_MS);
+    return () => clearTimeout(id);
+  }, [uscita]);
+
+  if (vista === undefined) return null;
+  if (vista === null) return <Navigate to="/" replace />;
+
+  const sx = vista.sessione;
+  const st = timerState(sx, now);
+  const tempo = testoTimer(st);
+  const titolo = vista.unita?.titolo ?? t('sessioneDiStudio');
+  const piano = sx.durata === null ? '' : inMinuti(sx.durata);
+  const meta =
+    st.restante === null
+      ? t('metaCronometro')
+      : st.finita
+        ? t('oltreTotali', { durata: piano, totale: orologio(st.focus) })
+        : t('restanoDi', { durata: piano });
+  const stato = st.finita && st.restante !== null ? 'extra' : st.inPausa ? 'pausa' : 'corre';
+  const barra = st.avanzamento !== null && (
+    <div className={s.barraTimer}>
+      <div className={s.riempimento} style={{ width: `${Math.round(st.avanzamento * 100)}%` }} />
+    </div>
+  );
+  // Bloccata solo con una fine (`exitLocked`)
+  const sblocco = t('sbloccoAlle', { ora: localTimeKey(st.fine ?? now) });
+
+  const modifica = (f: (x: SessioneAttiva, n: number) => SessioneAttiva) => {
+    const n = adesso();
+    void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
+  };
+  const chiudi = (abbandona: boolean) => {
+    if (inChiusura) return;
+    setInChiusura(true);
+    void (abbandona ? abandonSession(appDb, adesso(), fuso()) : endSession(appDb, adesso(), fuso()))
+      .catch(() => null)
+      .then(() => navigate('/', { replace: true }));
+  };
+  const interruzione = (
+    <button type="button" className={s.pill} onClick={() => modifica((x, n) => addInterruption(x, n))}>
+      <CircleAlert size={12} strokeWidth={2} />
+      {t('interruzione')} <span className={s.contoPill}>{sx.interruzioni.length}</span>
+    </button>
+  );
+  const pillIperfocus = (
+    <span className={s.pillIperfocus}>
+      <Lock size={12} strokeWidth={2} />
+      {t('iperfocus')}
+    </span>
+  );
+
+  if (bloccata)
+    return (
+      <div className={s.iperfocus}>
+        <div className={s.iperTesta}>
+          {pillIperfocus}
+          <span className={s.iperDnd}>{t(dnd ? 'nonDisturbareAttivo' : 'nonDisturbareNo')}</span>
+        </div>
+        <div className={s.iperCentro}>
+          <div className={s.iperTitoli}>
+            <span className={s.iperTitolo}>{titolo}</span>
+            <Sottotitolo v={vista} />
+          </div>
+          <span className={s.tempoGrande} data-stato={stato}>
+            {tempo}
+          </span>
+          {barra}
+          <span className={s.meta}>{meta}</span>
+          <span className={s.sblocco}>{sblocco}</span>
+        </div>
+        <div className={s.iperPiede}>
+          {interruzione}
+          <button type="button" className={s.pillEsci} onClick={() => setUscita('tentativo')}>
+            {t('esci')}
+          </button>
+        </div>
+        {uscita === 'tentativo' && (
+          <Foglio titolo="uscita-titolo" scuro onEsc={() => setUscita('no')}>
+            <div className={s.foglioTesta}>
+              <span id="uscita-titolo" className={s.foglioTitolo}>
+                {t('uscitaBloccata')}
+              </span>
+              <span className={s.foglioNota}>
+                {sblocco}. {t('uscitaTesto')}
+              </span>
+            </div>
+            <div className={s.foglioAzioni}>
+              <button
+                type="button"
+                className={s.esciComunque}
+                onClick={() => {
+                  modifica((x, n) => addInterruption(x, n, true));
+                  setUscita('registrata');
+                }}
+              >
+                {t('esciComunque')}
+              </button>
+              <button type="button" className={s.inizia} onClick={() => setUscita('no')}>
+                {t('resta')}
+              </button>
+            </div>
+          </Foglio>
+        )}
+      </div>
+    );
+
+  const segmenti = segmentTimeline(sx);
+  const seg = st.segmento;
+  const r = foglio ? summary(sx, now) : null;
+  const numeroUnita = (id: string) => unitaDi(ingressi?.corsi ?? [], id)?.unita.numero ?? '—';
+  const pianificata = sx.unitaId ? numeroUnita(sx.unitaId) : null;
+
   return (
-    <div className={s.pagina}>
-      <div className={s.corpo}>
-        <div className={s.gruppo}>
-          <span className={s.inCorso}>{t('sessioneInCorso')}</span>
-          <h1 className={s.titolo}>{materia?.unita.titolo ?? t('sessioneDiStudio')}</h1>
-          {materia && (
-            <span className={s.nota}>
-              {materia.corso.titolo} · {t('unita')} <span className={s.num}>{materia.unita.numero}</span>
+    <div className={s.timer}>
+      <div className={s.testaTimer} data-stato={stato}>
+        <button type="button" className={s.indietro} aria-label={t('riduci')} onClick={() => navigate('/')}>
+          <ChevronDown size={18} />
+        </button>
+        <span className={s.titoli}>
+          <span className={s.titoloTimer}>{titolo}</span>
+          <Sottotitolo v={vista} />
+        </span>
+        <div className={s.quadrante}>
+          <span className={s.tempoBox}>
+            <span className={s.tempo} data-stato={stato}>
+              {tempo}
             </span>
-          )}
-          <span className={s.origine}>
-            <Clock size={14} />
-            <span>
-              {t('avviataAlle', { ora: localTimeKey(a.avvio) })}
-              {a.fine !== null && ` · ${t('finePrevista')} ${localTimeKey(a.fine)}`}
+            <span className={s.meta}>
+              {meta}
+              {stato === 'extra' ? (
+                <span className={s.badgeExtra}>{t('tempoExtra')}</span>
+              ) : stato === 'pausa' ? (
+                <span className={s.badgePausa}>{t('inPausa')}</span>
+              ) : (
+                <span className={s.pulsa} />
+              )}
             </span>
           </span>
+          <span className={s.comandi}>
+            <button
+              type="button"
+              className={s.tondo}
+              aria-label={t(st.inPausa ? 'riprendi' : 'pausa')}
+              onClick={() => modifica(st.inPausa ? resumeSession : pauseSession)}
+            >
+              {st.inPausa ? <Play size={16} fill="currentColor" /> : <Pause size={16} strokeWidth={2.25} />}
+            </button>
+            <button type="button" className={s.termina} onClick={() => setFoglio(true)}>
+              {t('termina')}
+            </button>
+          </span>
+        </div>
+        {barra}
+        <div className={s.strumenti}>
+          {seg && (
+            <>
+              <span className={s.segmenti}>
+                {segmenti.map((x, i) => (
+                  <span
+                    key={i}
+                    className={s.segmento}
+                    data-tipo={x.tipo}
+                    data-fase={i < seg.indice ? 'fatto' : i === seg.indice ? 'corrente' : undefined}
+                    style={{ width: Math.max(6, Math.round((x.fine - x.inizio) / MINUTE / 5)) }}
+                  />
+                ))}
+                <span className={s.segConto}>
+                  {seg.indice + 1} / {seg.totale}
+                </span>
+              </span>
+              <button
+                type="button"
+                className={s.pill}
+                disabled={seg.indice >= seg.totale - 1}
+                onClick={() => modifica(skipSegment)}
+              >
+                {t('saltaSegmento')}
+              </button>
+            </>
+          )}
+          {interruzione}
+          <button type="button" className={s.pill} aria-expanded={elenco} onClick={() => setElenco((x) => !x)}>
+            {t('cambiaUnita')}
+          </button>
+          {sx.iperfocus && pillIperfocus}
         </div>
       </div>
-      <div className={s.piede}>
-        <button
-          type="button"
-          className={s.abbandona}
-          onClick={() =>
-            void abandonSession(appDb, adesso(), fuso())
-              .catch(() => undefined)
-              .then(() => navigate('/', { replace: true }))
-          }
-        >
-          {t('abbandona')}
-        </button>
+
+      {elenco && ingressi && (
+        <div className={s.elencoUnita}>
+          <SchedaNessuna
+            premuta={currentStudyUnit(sx) === null}
+            onScegli={() => {
+              modifica((x, n) => changeUnit(x, n, null));
+              setElenco(false);
+            }}
+          />
+          {ingressi.corsi.map((c) => (
+            <div key={c.id} className={s.corso}>
+              <span className={s.nota}>{c.titolo}</span>
+              {c.unita.map((u) => (
+                <SchedaUnita
+                  key={u.id}
+                  u={u}
+                  corso={c}
+                  premuta={currentStudyUnit(sx) === u.id}
+                  onScegli={(id) => {
+                    modifica((x, n) => changeUnit(x, n, id));
+                    setElenco(false);
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {uscita === 'registrata' && (
+        <div className={s.avviso} role="status">
+          <CircleAlert size={16} />
+          <span>{t('uscitaRegistrata')}</span>
+        </div>
+      )}
+
+      {r && (
+        <Foglio titolo="riepilogo-titolo" onEsc={() => setFoglio(false)}>
+          <div className={s.foglioTesta}>
+            <span id="riepilogo-titolo" className={s.foglioTitolo}>
+              {t('comeAndata')}
+            </span>
+            <span className={s.foglioNota}>
+              <span className={s.num}>
+                {minutiDi(r.focus)} {t('minutiUnita')}
+              </span>
+              {pianificata && (
+                <>
+                  {' '}
+                  · {t('unita')} <span className={s.num}>{pianificata}</span>
+                </>
+              )}
+              {minutiDi(r.extra) > 0 && ` · ${t('extraBreve', { min: minutiDi(r.extra) })}`}
+            </span>
+          </div>
+          <div className={s.righe}>
+            <Riga etichetta={t('riepilogoFocus')} valore={`${minutiDi(r.focus)} ${t('minutiUnita')}`} />
+            <Riga
+              etichetta={t('riepilogoPause')}
+              valore={`${r.numeroPause} · ${minutiDi(r.durataPause)} ${t('minutiUnita')}`}
+            />
+            {segmenti.length > 0 && (
+              <>
+                <Riga
+                  etichetta={t('riepilogoPauseSegmento')}
+                  valore={`${minutiDi(r.pauseSegmento)} ${t('minutiUnita')}`}
+                />
+                <Riga etichetta={t('riepilogoSegmenti')} valore={`${r.segmentiCompletati} / ${segmenti.length}`} />
+              </>
+            )}
+            <Riga etichetta={t('riepilogoInterruzioni')} valore={String(r.interruzioni)} />
+            {Object.entries(r.perUnita).map(([id, ms]) => (
+              <Riga
+                key={id}
+                etichetta={`${t('unita')} ${numeroUnita(id)}`}
+                valore={`${minutiDi(ms)} ${t('minutiUnita')}`}
+              />
+            ))}
+          </div>
+          <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={() => chiudi(true)}>
+            {t('abbandonaSessione')}
+          </button>
+          <div className={s.foglioAzioni}>
+            <button type="button" className={s.continua} onClick={() => setFoglio(false)}>
+              {t('continuaStudiare')}
+            </button>
+            <button type="button" className={s.inizia} disabled={inChiusura} onClick={() => chiudi(false)}>
+              {t('termina')}
+            </button>
+          </div>
+        </Foglio>
+      )}
+    </div>
+  );
+}
+
+/** Sheet dal basso (S16 debrief, «Uscita bloccata»): prende il fuoco all'apertura, Esc la chiude. */
+function Foglio(p: { titolo: string; scuro?: boolean; onEsc: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { onEsc } = p;
+  useEffect(() => ref.current?.focus(), []);
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onEsc();
+    };
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [onEsc]);
+  return (
+    <div className={s.velo} data-scuro={p.scuro ? '' : undefined}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={p.titolo} tabIndex={-1} className={s.foglio}>
+        <span className={s.maniglia} />
+        {p.children}
       </div>
     </div>
+  );
+}
+
+function Riga({ etichetta, valore }: { etichetta: string; valore: string }) {
+  return (
+    <span className={s.riga}>
+      {etichetta}
+      <span className={s.rigaValore}>{valore}</span>
+    </span>
   );
 }

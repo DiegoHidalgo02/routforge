@@ -6,10 +6,11 @@
    fuori dalla scala dei mock vanno al token più vicino, a parità al più piccolo: 11 → 12, 10 → 8, 7 → 8, 5 → 4, 3 → 4,
    13 → 12, 9 → 8, azione 38 → 36; restano letterali 6 (pallino e suo gap, come i puntini di Oggi) e 1. */
 
-/* Appiccicato in testa su mobile: il fondo copre ciò che scorre sotto (S1 Mobile) */
+/* Appiccicato in testa su mobile: il fondo copre ciò che scorre sotto (S1 Mobile); con una sessione attiva scende sotto
+   il suo banner (`--offset-sessione` della Shell, T-017) */
 .fisso {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: calc(env(safe-area-inset-top, 0px) + var(--offset-sessione, 0px));
   z-index: 3;
   padding: var(--space-2) 0;
   background: var(--color-bg);

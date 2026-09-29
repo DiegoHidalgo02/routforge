@@ -2,12 +2,22 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { get, save, saveBlock } from '../data/repository';
+import { get, list, save, saveBlock } from '../data/repository';
 import type { SceltaSessione } from '../domain/session';
-import { local } from '../domain/time';
+import { local, MINUTE } from '../domain/time';
+import { addInterruption, changeUnit, pauseSession, resumeSession, timerState } from '../domain/timer';
 import type { Blocco, StatoUnita } from '../domain/types';
 import { runCycle } from './scheduler';
-import { abandonSession, anticipateSession, readActiveSession, setupInputs, startSession } from './session';
+import {
+  abandonSession,
+  anticipateSession,
+  editActiveSession,
+  endSession,
+  readActiveSession,
+  readSessionView,
+  setupInputs,
+  startSession,
+} from './session';
 
 const FUSO = 'Europe/Rome';
 // Lunedì 28 settembre 2026 (oggi nei test).
@@ -154,6 +164,85 @@ describe('Abbandono — MECCANISMI §8, §10.5', () => {
     await startSession(db, 's1', scelta(), oggi(10, 20), FUSO);
     expect(await anticipateSession(db, 's2', oggi(14, 40), FUSO)).toBe(false);
     expect((await get(db, 'blocchi', 's2'))?.inizio).toBe(oggi(15));
+  });
+  it('l’abbandono resta in `sessioni` come `abbandonata` (statistiche §20)', async () => {
+    await startSession(db, null, scelta({ iperfocus: true }), oggi(9), FUSO);
+    await abandonSession(db, oggi(9, 5), FUSO);
+    expect(await list(db, 'sessioni')).toMatchObject([
+      { chiusura: 'abbandonata', iperfocus: true, chiusaIl: oggi(9, 5) },
+    ]);
+  });
+});
+
+describe('Persistenza — SCENARI D4', () => {
+  it('la sessione e le sue pause sopravvivono alla chiusura: riaperta 12 minuti dopo ha 12 minuti di focus', async () => {
+    await startSession(db, null, scelta(), oggi(9), FUSO);
+    await editActiveSession(db, (s) => pauseSession(s, oggi(9, 2)), oggi(9, 2));
+    await editActiveSession(db, (s) => resumeSession(s, oggi(9, 4)), oggi(9, 4));
+    db.close();
+    await db.open();
+    const s = await readActiveSession(db);
+    expect(s && timerState(s, oggi(9, 14))).toMatchObject({ focus: 12 * MINUTE, inPausa: false });
+  });
+  it('una sessione salvata prima del timer (T-016) si legge con i campi del timer vuoti', async () => {
+    const { pause, interruzioni, cambiUnita, salti, ...vecchia } = await startSession(
+      db,
+      null,
+      scelta(),
+      oggi(9),
+      FUSO,
+    );
+    void [pause, interruzioni, cambiUnita, salti];
+    await save(db, 'preferenze', { id: 'sessioneAttiva', valore: vecchia }, oggi(9));
+    expect(await readActiveSession(db)).toMatchObject({ pause: [], interruzioni: [], cambiUnita: [], salti: [] });
+  });
+  it('senza sessione attiva la modifica non scrive nulla', async () => {
+    expect(await editActiveSession(db, (s) => pauseSession(s, oggi(9)), oggi(9))).toBeNull();
+    expect(await list(db, 'preferenze')).toEqual([]);
+  });
+});
+
+describe('Pomodoro multi-materia — SCENARI D3', () => {
+  it('cambiata l’unità, timer e banner mostrano la nuova; l’esito resta sulla pianificata', async () => {
+    await save(db, 'unita', unita('u11', 1, 1, '1.1', 'non_iniziata'), 1);
+    await save(db, 'unita', unita('u12', 1, 2, '1.2', 'non_iniziata'), 1);
+    await studio('s1', { inizio: oggi(9), fine: oggi(10), unitaId: 'u11', corsoId: 'c2' });
+    await startSession(db, 's1', scelta({ modalita: 'p25' }), oggi(9), FUSO);
+    await editActiveSession(db, (s) => changeUnit(s, oggi(9, 30), 'u12'), oggi(9, 30));
+    const vista = await readSessionView(db);
+    expect(vista).toMatchObject({ unita: { numero: '1.2' }, orario: '09:00', sessione: { unitaId: 'u11' } });
+    const chiusa = await endSession(db, oggi(10), FUSO);
+    expect(chiusa?.riepilogo.perUnita).toEqual({ u11: 25 * MINUTE, u12: 25 * MINUTE });
+  });
+});
+
+describe('Iperfocus — SCENARI D5', () => {
+  it('«Esci comunque» salva l’interruzione «iperfocus», che arriva nel riepilogo come uscita d’emergenza', async () => {
+    await startSession(db, null, scelta({ iperfocus: true }), oggi(9), FUSO);
+    await editActiveSession(db, (s) => addInterruption(s, oggi(9, 20), true), oggi(9, 20));
+    const chiusa = await endSession(db, oggi(9, 54), FUSO);
+    expect(chiusa?.riepilogo).toMatchObject({ usciteEmergenza: 1, extra: 4 * MINUTE });
+    expect(await list(db, 'sessioni')).toMatchObject([{ chiusura: 'completata', riepilogo: { usciteEmergenza: 1 } }]);
+  });
+});
+
+describe('Chiusura — MECCANISMI §10.5', () => {
+  it('«Termina» salva la sessione, riporta il blocco a programmato e toglie la sessione attiva, insieme', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta(), oggi(9, 10), FUSO);
+    const chiusa = await endSession(db, oggi(9, 40), FUSO);
+    expect(chiusa).toMatchObject({ chiusura: 'terminata_prima', bloccoId: 's1', riepilogo: { focus: 30 * MINUTE } });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'programmato', minutiRitardo: 10 });
+    expect(await readActiveSession(db)).toBeNull();
+    expect(await endSession(db, oggi(9, 41), FUSO)).toBeNull();
+    expect(await list(db, 'sessioni')).toHaveLength(1);
+  });
+  it('ponte fino a T-018: una routine terminata dopo 30 minuti dalla sua fine, senza esito, il ciclo la marca persa', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta(), oggi(9), FUSO);
+    await endSession(db, oggi(10, 40), FUSO);
+    await runCycle(db, oggi(10, 41), FUSO);
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('perso');
   });
 });
 

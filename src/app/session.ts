@@ -3,8 +3,9 @@
  * memorizzata in `preferenze.sessioneAttiva` (MECC §1) e scritta nella stessa transazione dello stato del blocco, perché
  * il ciclo tratta da orfano ogni `in_corso` che la sessione attiva non punta (§8, D-SCHED-1). Le regole (contesto,
  * anticipo, ritardo, materia) stanno in `domain/session.ts`; qui si leggono e si scrivono le righe. «Anticipa» qui e
- * all'avvio T-019 riconcilierà le notifiche (ri-armo e verifica cancellata, §10.1). L'abbandono è il minimo perché una
- * sessione avviata abbia un'uscita prima del timer (T-017, D-SESS-1). Criteri: SCENARI C4, C5, C9 (setup), D6.
+ * all'avvio T-019 riconcilierà le notifiche (ri-armo e verifica cancellata, §10.1). Il timer (§10.2–§10.5, T-017) salva
+ * i suoi istanti nella stessa riga e chiude la sessione in `sessioni`; nulla la chiude da solo, nemmeno dopo un crash
+ * (D4, D-TIMER-1). Criteri: SCENARI C4, C5, C9 (setup), D4, D5 (uscita registrata), D6.
  */
 import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, list, remove, save, saveBlock, watch } from '../data/repository';
@@ -13,9 +14,11 @@ import {
   anticipatedBlock,
   courseDefaultUnit,
   startPlan,
+  TIMER_VUOTO,
   type SceltaSessione,
   type SessioneAttiva,
 } from '../domain/session';
+import { closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
 
@@ -28,15 +31,42 @@ export const CHIAVE_SESSIONE_ATTIVA = 'sessioneAttiva';
 /** La sessione attiva, se c'è. */
 export async function readActiveSession(db: RoutForgeDb): Promise<SessioneAttiva | null> {
   const valore = (await get(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA))?.valore;
-  // La riga la scrive solo questo servizio; una riga illeggibile (dato rotto) vale come nessuna sessione
+  // La riga la scrive solo questo servizio; una riga illeggibile (dato rotto) vale come nessuna sessione. Una sessione
+  // avviata prima del timer (T-016) non ha i suoi campi: partono vuoti
   return typeof valore === 'object' && valore !== null && 'avvio' in valore && typeof valore.avvio === 'number'
-    ? (valore as SessioneAttiva)
+    ? { ...TIMER_VUOTO, ...(valore as SessioneAttiva) }
     : null;
 }
 
 /** Osserva la sessione attiva: `onChange` riceve subito e a ogni avvio o abbandono. Restituisce lo stop. */
 export const watchActiveSession = (db: RoutForgeDb, onChange: (s: SessioneAttiva | null) => void): (() => void) =>
   watch(() => readActiveSession(db), onChange);
+
+/** Ciò che mostrano il timer e il banner «Sessione in corso» (S15, S1). */
+export interface VistaSessione {
+  sessione: SessioneAttiva;
+  /** L'unità su cui va il tempo adesso, cambi d'unità compresi (§10.3). */
+  unita: { titolo: string; numero: string; moduloNumero: number } | null;
+  /** Orario d'inizio del blocco, per «routine 16:00». */
+  orario: string | null;
+}
+
+export async function readSessionView(db: RoutForgeDb): Promise<VistaSessione | null> {
+  const s = await readActiveSession(db);
+  if (!s) return null;
+  const unitaId = currentStudyUnit(s);
+  const u = unitaId ? await get(db, 'unita', unitaId) : undefined;
+  const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
+  return {
+    sessione: s,
+    unita: u ? { titolo: u.titolo, numero: u.numero, moduloNumero: u.moduloNumero } : null,
+    orario: b?.orarioInizio ?? null,
+  };
+}
+
+/** Osserva la vista della sessione attiva. Restituisce lo stop. */
+export const watchSessionView = (db: RoutForgeDb, onChange: (v: VistaSessione | null) => void): (() => void) =>
+  watch(() => readSessionView(db), onChange);
 
 export interface UnitaSetup {
   id: string;
@@ -134,15 +164,47 @@ export function anticipateSession(db: RoutForgeDb, bloccoId: string, now: number
 }
 
 /**
- * Abbandono (§8, §10.5: nessun esito): il blocco `in_corso` della sessione torna subito `programmato` (un parziale
- * ripreso resta parziale) e la sessione attiva sparisce, nella stessa transazione (D-SCHED-1). Il ritardo resta, come
- * nel reset degli orfani (D-SESS-1). Il timer e il riepilogo arrivano con T-017.
+ * Modifica la sessione attiva con una funzione del timer (`pauseSession`, `skipSegment`, … di `domain/timer.ts`) e la
+ * salva; `null` se non c'è. Una modifica che non cambia nulla non scrive.
  */
-export function abandonSession(db: RoutForgeDb, now: number, fuso: string): Promise<void> {
-  return inTransaction(db, ['blocchi', 'preferenze'], async () => {
+export function editActiveSession(
+  db: RoutForgeDb,
+  change: (s: SessioneAttiva) => SessioneAttiva,
+  now: number,
+): Promise<SessioneAttiva | null> {
+  return inTransaction(db, ['preferenze'], async () => {
     const s = await readActiveSession(db);
-    const b = s?.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
+    if (!s) return null;
+    const nuova = change(s);
+    if (nuova !== s) await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: nuova }, now);
+    return nuova;
+  });
+}
+
+/**
+ * Chiusura (§10.5): la sessione con tipo e riepilogo va in `sessioni` (statistiche §20, anche gli abbandoni), il blocco
+ * `in_corso` torna `programmato` (un parziale ripreso resta parziale) e la sessione attiva sparisce, nella stessa
+ * transazione (§8, D-SCHED-1). Il ritardo resta, come nel reset degli orfani (D-SESS-1). Senza esito il blocco resta da
+ * registrare come ogni programmato passato (§8 esiti pendenti): l'esito nella chiusura è di T-018. `null` se non c'è.
+ */
+function close(db: RoutForgeDb, now: number, fuso: string, abbandonata: boolean): Promise<SessioneChiusa | null> {
+  return inTransaction(db, ['blocchi', 'preferenze', 'sessioni'], async () => {
+    const s = await readActiveSession(db);
+    if (!s) return null;
+    const chiusa = closeSession(s, now, abbandonata);
+    await save(db, 'sessioni', chiusa, now);
+    const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
     if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
     await remove(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA, now);
+    return chiusa;
   });
+}
+
+/** «Termina» (§10.5): `completata` o `terminata prima` secondo il traguardo. */
+export const endSession = (db: RoutForgeDb, now: number, fuso: string): Promise<SessioneChiusa | null> =>
+  close(db, now, fuso, false);
+
+/** Abbandono (§8, §10.5: nessun esito). */
+export async function abandonSession(db: RoutForgeDb, now: number, fuso: string): Promise<void> {
+  await close(db, now, fuso, true);
 }

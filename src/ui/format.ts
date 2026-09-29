@@ -11,6 +11,15 @@ export const durata = (min: number): string => {
   return m ? t('durata', { h, m: String(m).padStart(2, '0') }) : t('oreBrevi', { h });
 };
 
+/** Tempo del timer «24:19», «1:05:00»; `perEccesso` per il conto alla rovescia, che mostra 50:00 all'avvio. */
+export const orologio = (ms: number, perEccesso = false): string => {
+  const sec = Math.max(0, perEccesso ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
+  const due = (n: number) => String(n).padStart(2, '0');
+  const h = Math.floor(sec / 3600);
+  const mm = `${due(Math.floor((sec % 3600) / 60))}:${due(sec % 60)}`;
+  return h ? `${h}:${mm}` : mm;
+};
+
 /** Iniziale maiuscola nella lingua dell'app (i nomi di giorni e mesi di `Intl` nascono minuscoli). */
 export const maiuscola = (x: string): string => x.charAt(0).toLocaleUpperCase(lingua) + x.slice(1);
 

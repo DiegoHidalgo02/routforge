@@ -4,8 +4,8 @@
 import { useEffect, useState } from 'react';
 import { localDayKey, MINUTE } from '../domain/time';
 
-/** Chiama `fn` al cambio di ogni minuto e quando la pagina torna visibile; restituisce lo stop. */
-function aOgniMinuto(fn: () => void): () => void {
+/** Chiama `fn` al cambio di ogni minuto (o di ogni `ms`) e quando la pagina torna visibile; restituisce lo stop. */
+function aOgniMinuto(fn: () => void, ms = MINUTE): () => void {
   let timer: ReturnType<typeof setTimeout>;
   const prossimo = () => {
     timer = setTimeout(
@@ -13,7 +13,7 @@ function aOgniMinuto(fn: () => void): () => void {
         fn();
         prossimo();
       },
-      MINUTE - (Date.now() % MINUTE),
+      ms - (Date.now() % ms),
     );
   };
   const quandoVisibile = () => {
@@ -31,6 +31,13 @@ function aOgniMinuto(fn: () => void): () => void {
 export function useMinuto(): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => aOgniMinuto(() => setNow(Date.now())), []);
+  return now;
+}
+
+/** L'istante corrente al secondo, per il timer della sessione (T-017): i valori li deriva `domain/timer.ts`. */
+export function useSecondo(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => aOgniMinuto(() => setNow(Date.now()), 1000), []);
   return now;
 }
 

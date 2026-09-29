@@ -319,6 +319,14 @@
     background var(--dur-feedback) var(--ease-out);
 }
 
+.interruttore:disabled {
+  cursor: default;
+}
+
+.interruttore:disabled .knob {
+  opacity: var(--opacity-disabled);
+}
+
 .interruttore[aria-checked='true'] .knob {
   background: var(--color-primary);
 }
@@ -400,9 +408,724 @@
   text-transform: uppercase;
 }
 
-/* Desktop (D-UI-1): nel contenuto accanto alla sidebar, alto quanto la finestra */
+/* ---- Timer (S15 `timer`, T-017). Restano misure del mock senza token: timer 44 (mobile) e 26 (desktop, --text-stat),
+   pulsanti tondi 44/40, segmenti alti 6 con larghezza minuti / 5 (minimo 6), barra 3, gap 10 e 6, righe 18/16. Il
+   fondo della testa nel tempo extra (#161C28 nel mock) non ha token: resta surface. ---- */
+.timer {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.testaTimer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'riduci titoli'
+    'quadrante quadrante'
+    'barra barra'
+    'strumenti strumenti';
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: 10px;
+  padding: var(--space-2) var(--space-3) 14px var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.testaTimer > .indietro {
+  grid-area: riduci;
+}
+
+.titoli {
+  grid-area: titoli;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.titoloTimer {
+  overflow: hidden;
+  font: 600 var(--text-md) / 18px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sottotitolo {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.quadrante {
+  grid-area: quadrante;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-1) var(--space-1) 0;
+}
+
+.tempoBox {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tempo,
+.tempoGrande {
+  color: var(--color-text);
+  font: 600 var(--text-timer) / 48px var(--font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  transition: color var(--dur-layout) var(--ease-out);
+}
+
+.tempo[data-stato='pausa'],
+.tempoGrande[data-stato='pausa'] {
+  color: var(--color-text-2);
+}
+
+.tempo[data-stato='extra'],
+.tempoGrande[data-stato='extra'] {
+  color: var(--color-primary);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.pulsa {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  animation: global(rf-pulse) var(--dur-pulse) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulsa {
+    animation: none;
+  }
+}
+
+.badgeExtra,
+.badgePausa {
+  height: var(--size-badge);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.badgeExtra {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.badgePausa {
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+.comandi {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tondo {
+  width: var(--size-control);
+  height: var(--size-control);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.tondo:hover {
+  background: var(--color-surface-3);
+}
+
+.termina {
+  height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary);
+  color: var(--color-selected-ink);
+  box-shadow: var(--shadow-primary);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.termina:hover {
+  background: var(--color-primary-hover);
+}
+
+.termina:active {
+  transform: scale(var(--scale-press));
+  background: var(--color-primary-active);
+}
+
+.termina:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.barraTimer {
+  grid-area: barra;
+  height: 3px;
+  margin-top: var(--space-1);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+}
+
+.riempimento {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.strumenti {
+  grid-area: strumenti;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px var(--space-1) 0;
+}
+
+.pill,
+.pillEsci {
+  position: relative;
+  height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.pill::after,
+.pillEsci::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.pill:hover:not(:disabled),
+.pillEsci:hover {
+  background: var(--color-surface-2);
+}
+
+.pill:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+.pill[aria-expanded='true'] {
+  border-color: var(--color-selected);
+}
+
+.pillEsci {
+  color: var(--color-text-2);
+}
+
+.pillEsci:hover {
+  color: var(--color-text);
+}
+
+.contoPill {
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.segmenti {
+  height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-3);
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+}
+
+.segmento {
+  height: 6px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-3);
+}
+
+.segmento[data-fase='fatto'][data-tipo='studio'],
+.segmento[data-fase='corrente'][data-tipo='studio'] {
+  background: var(--color-primary);
+}
+
+.segmento[data-fase='fatto'][data-tipo='pausa'] {
+  background: var(--color-data-2);
+}
+
+.segmento[data-fase='corrente'][data-tipo='pausa'] {
+  background: var(--color-border-strong);
+}
+
+.segConto {
+  margin-left: var(--space-1);
+  color: var(--color-text);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.pillIperfocus {
+  height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.strumenti > .pillIperfocus {
+  margin-left: auto;
+}
+
+.elencoUnita {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-4) var(--space-5);
+}
+
+.avviso {
+  position: fixed;
+  z-index: 6;
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  left: var(--space-4);
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-cat-routine-soft);
+  color: var(--color-warning);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+/* Iperfocus a schermo intero (S15 `iperfocus`, DESIGN.md §8): sopra la shell, niente indietro né «Termina» */
+.iperfocus {
+  position: fixed;
+  z-index: 7;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.iperTesta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5) 0;
+}
+
+.iperTesta > .pillIperfocus {
+  height: var(--size-chip-sm);
+}
+
+.iperDnd {
+  margin-left: auto;
+  color: var(--color-text-3);
+  font: var(--text-sm) var(--font-ui);
+}
+
+.iperCentro {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.iperCentro > .barraTimer {
+  width: 100%;
+  max-width: 280px;
+}
+
+.iperTitoli {
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iperTitolo {
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+}
+
+.sblocco {
+  max-width: 280px;
+  color: var(--color-text-2);
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.iperPiede {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+/* Sheet dal basso (debrief S16 e «Uscita bloccata»): surface-2 r24 in alto, maniglia 36×4, ombra footer */
+.velo {
+  position: fixed;
+  z-index: 8;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  background: var(--overlay-sheet);
+}
+
+/* «Uscita bloccata» sopra l'iperfocus: velo più scuro del mock (.72) */
+.velo[data-scuro] {
+  background: var(--overlay-sheet-frame);
+}
+
+.foglio {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: calc(100dvh - var(--space-10));
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--color-surface-2);
+  box-shadow: var(--shadow-footer);
+  animation: global(rf-up) var(--dur-layout) var(--ease-standard);
+}
+
+.maniglia {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+}
+
+.foglioTesta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.foglioTitolo {
+  font: 600 var(--text-xl) / 24px var(--font-ui);
+}
+
+.foglioNota {
+  color: var(--color-text-2);
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.righe {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3) 14px;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface);
+}
+
+.riga {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-2);
+  font: var(--text-base) var(--font-ui);
+}
+
+.rigaValore {
+  color: var(--color-text);
+  font: 500 var(--text-base) var(--font-num);
+}
+
+.foglioAzioni {
+  display: flex;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.foglioAzioni > .inizia {
+  max-width: none;
+}
+
+.continua,
+.esciComunque,
+.abbandonaLink {
+  min-height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: transparent;
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.continua {
+  color: var(--color-text-2);
+}
+
+.continua:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
+.esciComunque {
+  flex: 1;
+  color: var(--color-danger-ink);
+}
+
+.esciComunque:hover {
+  background: var(--color-danger-soft);
+}
+
+.abbandonaLink {
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  padding: 0;
+  color: var(--color-danger-ink);
+  font-size: var(--text-base);
+}
+
+/* Banner «Sessione in corso» (S1 SessionShell): sticky in testa, sopra il blocco Adesso (z 5), ombra float */
+.banner {
+  position: sticky;
+  z-index: 5;
+  top: env(safe-area-inset-top, 0px);
+  height: var(--size-control);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-2);
+  padding: 0 6px 0 var(--space-3);
+  border: 1px solid var(--color-data-area);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary-soft);
+  box-shadow: var(--shadow-float);
+}
+
+.pallinoLive,
+.pallino {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pallinoLive {
+  box-shadow: var(--glow-dot-live);
+}
+
+.pallino {
+  width: 6px;
+  height: 6px;
+}
+
+.bannerTesto {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font: 500 var(--text-base) var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bannerCifre {
+  font: 600 var(--text-base) var(--font-num);
+}
+
+.bannerRiprendi::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.bannerRiprendi {
+  position: relative;
+  height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control-sm);
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+}
+
+.bannerRiprendi:hover {
+  background: var(--color-session-hover);
+}
+
+.bannerSidebar {
+  display: none;
+}
+
+/* Desktop (D-UI-1): nel contenuto accanto alla sidebar, alto quanto la finestra; timer in riga nella testa (S15
+   Desktop), senza barra; il banner lascia il posto alla card nella sidebar */
 @media (min-width: 1024px) {
-  .pagina {
+  .pagina,
+  .timer {
     min-height: 100vh;
+  }
+
+  .testaTimer {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'riduci titoli quadrante'
+      'strumenti strumenti strumenti';
+    row-gap: 0;
+    padding: 10px var(--space-3) 10px var(--space-2);
+  }
+
+  .testaTimer > .barraTimer {
+    display: none;
+  }
+
+  .quadrante {
+    gap: var(--space-3);
+    padding: 0;
+  }
+
+  .tempoBox {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .tempo {
+    font-size: var(--text-stat);
+    line-height: 28px;
+    letter-spacing: -0.02em;
+  }
+
+  .tondo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .termina {
+    height: 40px;
+    border-radius: var(--radius-control);
+    font-size: var(--text-base);
+  }
+
+  .strumenti {
+    padding: var(--space-2) var(--space-3) 0 60px;
+  }
+
+  .foglio {
+    max-width: 560px;
+  }
+
+  /* Sheet e avviso nel contenuto, non sopra la sidebar (S15 Desktop); l'iperfocus copre tutto (divergenza 33) */
+  .velo {
+    left: var(--size-sidebar);
+  }
+
+  .avviso {
+    left: calc(var(--size-sidebar) + var(--space-4));
+  }
+
+  .bannerSidebar:hover {
+    border-color: var(--color-border-live);
+  }
+
+  .banner {
+    display: none;
+  }
+
+  .bannerSidebar {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-3);
+    border: 1px solid var(--color-data-area);
+    border-radius: var(--radius-control-lg);
+    background: var(--color-primary-soft);
+    color: var(--color-text);
+  }
+
+  .bannerEtichetta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-primary);
+    font: 600 var(--text-2xs) / 12px var(--font-ui);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+
+  .bannerTempo {
+    font: 600 var(--text-xl-2) / 24px var(--font-num);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bannerTitolo {
+    overflow: hidden;
+    color: var(--color-text-2);
+    font: var(--text-sm) / 16px var(--font-ui);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

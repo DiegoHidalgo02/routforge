@@ -45,12 +45,14 @@ src/
 │                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
 │   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, Alarms, DoNotDisturb, Widget, FileSystem,
 │                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test.
-│                Già presente: clock (T-013; l'orologio finto sta nel test che lo usa)
+│                Già presente: clock (T-013; l'orologio finto sta nel test che lo usa); device (ScreenAwake,
+│                DoNotDisturb, T-017: tenute da `app/sessionDevice.ts`, iniettate da `main.tsx`)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
 │                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
 └── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
-                 Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView)
+                 Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView); device
+                 (Wake Lock e Non Disturbare assente sul web, T-017)
 ```
 
 **Regola**: `ui → app → data → domain`. `platform` è iniettato in `app` tramite le porte (`src/app/ports/*.ts`) così
@@ -83,7 +85,7 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 | `corsi`, `moduli`, `unita`, `sezioni`, `risorse` | `corsoId` su ogni livello sotto il corso; `moduloId`, `unitaId`, `sezioneId` verso il genitore | Albero import; `unita.markdown` integrale (fonte AI). Non si salvano i campi che il dominio calcola: stato dei moduli, conteggi, unità corrente. `saveCourse` scrive l'albero in una transazione; risorsa = sezione + posizione (`…:R1`); `corsi.esempio` marca il corso di esempio (D-IMPORT-1) |
 | `ricorrenze` | `corsoId` | Tipo `Ricorrenza` del dominio: giorni, ora di parete e fuso (D-TIME-2), date, date saltate, fasi (template con id stabili); promemoria in T-019. «Attiva» si calcola (fine assente o ≥ oggi, §7): IndexedDB non indicizza i booleani |
 | `blocchi` | `[giornoLocale+inizio]`, `ricorrenzaId`, `stato`, `tipo`, `corsoId` | Un record per occorrenza, con id = slot della ricorrenza (D-DATA-2): resta lo stesso se l'utente la sposta (C4) e la generazione la ritrova con `get`. `giornoLocale`, `orarioInizio`, `orarioFine` e `fuso` li deriva `saveBlock` dagli istanti e li conserva se gli istanti non cambiano (D-TIME-2) |
-| `sessioni` | `avvio`, `bloccoId` | Focus, pause, segmenti, interruzioni (incl. "iperfocus"), minuti per unità, tipo di chiusura |
+| `sessioni` | `avvio`, `bloccoId` | Sessioni chiuse (`SessioneChiusa`, T-017): la sessione attiva con i suoi istanti, `chiusura` (`completata`, `terminata_prima`, `abbandonata`), `chiusaIl` (fine reale) e `riepilogo` (focus, extra, pause, segmenti, interruzioni incl. "iperfocus", minuti per unità) |
 | `logFasi` | `ricorrenzaId` | id = id del blocco dell'occorrenza: un log per occorrenza, ricompletare sovrascrive (§5) |
 | `mazzi`, `carte` | `mazzi.unitaId`; `carte.mazzoId`, `carte.scadenza` | Stato SM-2 per carta (`facilita`, `intervalloGiorni`, `scadenza`, come `StatoCarta` del dominio) |
 | `pratiche` | `unitaId`, `tipo`, `creataIl` | Quiz, DevSwipe, Bug Hunter, Trivia + risultati |
@@ -105,8 +107,10 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   scrive nulla (INV-15); un ciclo che fallisce non scrive e non arriva alla UI. All'avvio e al ritorno in primo piano
   `start()` registra anche l'apertura, dopo un ciclo riuscito (`registerOpening` di `src/app/absence.ts`, T-014,
   D-ASSENZA-1): scrive `preferenze.ultimaApertura` fuori dal ciclo e da INV-15.
-- **SessionService** — una sola sessione attiva (§10); stato persistito in `preferenze` per sopravvivere alla chiusura
-  (D4); tick derivato dagli istanti assoluti, non da contatori.
+- **SessionService** (`src/app/session.ts`, T-016, T-017) — una sola sessione attiva (§10); stato persistito in
+  `preferenze.sessioneAttiva` per sopravvivere alla chiusura (D4): solo istanti (pause, interruzioni, cambi d'unità,
+  salti), il timer li deriva con `domain/timer.ts` (D-TIMER-1). `endSession` e `abandonSession` salvano la sessione
+  chiusa in `sessioni` con tipo e riepilogo, nella stessa transazione del blocco.
 - **NotificationPlanner.desiredSet(now)** — calcola l'insieme desiderato (§13.3) in modo deterministico
   (id = hash di trigger+anticipo+blocco); l'adapter fa `cancel(registro − desiderato)` e `schedule(desiderato − registro)`.
   **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**; l'hash deve produrre un intero in

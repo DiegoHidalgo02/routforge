@@ -10,7 +10,7 @@
  * - «Anticipa sessione» sposta il blocco di oggi ad adesso con la stessa durata e registra i minuti di anticipo.
  * - Materia: blocco con unità puntata → quella; senza unità → scelta libera (corso → unità corrente, o prima non
  *   completata né saltata; oppure nessuna); libera → quella scelta, anche nessuna.
- * Il timer (regimi, pomodoro, iperfocus) è di T-017; gli esiti di T-018.
+ * Il timer (regimi, pomodoro, iperfocus) è in `timer.ts` (T-017); gli esiti di T-018.
  */
 import { effectiveEnd } from './lost';
 import { currentUnit, sortedUnits, type ModuloPercorso, type UnitaPercorso } from './pointer';
@@ -42,7 +42,23 @@ export interface SessioneAttiva extends SceltaSessione {
   contesto: Exclude<Contesto, 'anticipo'>;
   avvio: number;
   fine: number | null;
+  /** Pause dell'utente (§10.2); `fine: null` = in pausa adesso. Il timer le legge in `timer.ts` (T-017, D-TIMER-1). */
+  pause: { inizio: number; fine: number | null }[];
+  /** Interruzioni annotate (§10.4); `iperfocus` = uscita forzata dall'iperfocus, uscita d'emergenza (§20). */
+  interruzioni: { istante: number; iperfocus: boolean }[];
+  /** Cambi d'unità a metà sessione (§10.3, multi-materia): da `istante` il tempo va a `unitaId`. */
+  cambiUnita: { istante: number; unitaId: string | null }[];
+  /** Istanti dei «salta segmento» del pomodoro (§10.3). */
+  salti: number[];
 }
+
+/** I campi del timer di una sessione appena avviata (T-017). */
+export const TIMER_VUOTO: Pick<SessioneAttiva, 'pause' | 'interruzioni' | 'cambiUnita' | 'salti'> = {
+  pause: [],
+  interruzioni: [],
+  cambiUnita: [],
+  salti: [],
+};
 
 /** Le azioni di sessione di un blocco di studio (S1 blocco Adesso, S5 footer): la prima è la primaria. */
 export type AzioneStudio = 'inizia' | 'anticipa' | 'libera' | 'recupera' | 'riprendi' | 'ripasso';
@@ -124,7 +140,10 @@ export function startPlan<B extends Blocco>(
 ): { sessione: SessioneAttiva; blocco: B | null } {
   const contesto = startContext(b, now);
   if (!b || contesto === 'libera')
-    return { sessione: { ...scelta, bloccoId: null, contesto: 'libera', avvio: now, fine: null }, blocco: null };
+    return {
+      sessione: { ...scelta, ...TIMER_VUOTO, bloccoId: null, contesto: 'libera', avvio: now, fine: null },
+      blocco: null,
+    };
   const materia = b.unitaId ? { unitaId: b.unitaId, corsoId: b.corsoId ?? null } : {};
   const fineBlocco = effectiveEnd(b);
   const tempo =
@@ -136,7 +155,7 @@ export function startPlan<B extends Blocco>(
   // avvio (D-SESS-1)
   const ritardo = b.minutiRitardo ?? Math.max(0, Math.round((now - b.inizio) / MINUTE));
   return {
-    sessione: { ...scelta, ...materia, ...tempo, bloccoId: b.id, contesto, avvio: now },
+    sessione: { ...scelta, ...TIMER_VUOTO, ...materia, ...tempo, bloccoId: b.id, contesto, avvio: now },
     blocco: b.stato === 'parziale' ? null : { ...b, stato: 'in_corso', minutiRitardo: ritardo },
   };
 }

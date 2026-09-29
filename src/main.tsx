@@ -12,11 +12,15 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
 import { createScheduler } from './app/scheduler';
+import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
+import { webDoNotDisturb, webScreenAwake } from './platform/device';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
 
 document.documentElement.lang = lingua;
+// Schermo acceso e Non Disturbare della sessione (MECC §10.4): adapter web; i nativi con T-021.
+configureSessionDevice({ schermo: webScreenAwake, nonDisturbare: webDoNotDisturb });
 
 const radice = document.getElementById('root');
 if (radice)

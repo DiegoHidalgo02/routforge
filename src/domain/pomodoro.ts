@@ -62,21 +62,4 @@ export function planSegments(preset: PresetPomodoro, totalMinutes: number | null
 export function totalMinutes(segments: readonly Segmento[]): number {
   return segments.reduce((acc, s) => acc + s.minuti, 0);
 }
-
-/**
- * Attribuzione del tempo per unità: ogni segmento di studio può avere un'unità
- * diversa; le pause non si attribuiscono. L'esito resta sull'unità pianificata (§10.3).
- * @param unitBySegment unità attiva per indice di segmento (undefined = nessuna)
- */
-export function minutesByUnit(
-  segments: readonly Segmento[],
-  unitBySegment: ReadonlyArray<string | undefined>,
-): Map<string, number> {
-  const acc = new Map<string, number>();
-  segments.forEach((seg, i) => {
-    const unit = unitBySegment[i];
-    if (seg.tipo !== 'studio' || !unit) return;
-    acc.set(unit, (acc.get(unit) ?? 0) + seg.minuti);
-  });
-  return acc;
-}
+// Il tempo per unità si attribuisce sul tempo reale, non sui minuti pianificati: `summary` di `timer.ts` (D-TIMER-1).
