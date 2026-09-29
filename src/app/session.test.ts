@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list, save, saveBlock } from '../data/repository';
+import type { DatiEsito } from '../domain/outcome';
 import type { SceltaSessione } from '../domain/session';
 import { local, MINUTE } from '../domain/time';
 import { addInterruption, changeUnit, pauseSession, resumeSession, timerState } from '../domain/timer';
@@ -48,6 +49,7 @@ const studio = (id: string, over: Partial<Blocco> = {}) =>
     oggi(7),
     FUSO,
   );
+const ESITO: DatiEsito = { esito: 'continua', confidenza: null, nota: '', contaNelPiano: true };
 const scelta = (over: Partial<SceltaSessione> = {}): SceltaSessione => ({
   unitaId: null,
   corsoId: null,
@@ -91,6 +93,12 @@ describe('Recupero tardivo e ritardo — SCENARI C5', () => {
     expect(s).toMatchObject({ contesto: 'recupero', bloccoId: 's1', durata: 50, fine: oggi(11, 10) });
     expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'in_corso', minutiRitardo: 80 });
     expect(await readActiveSession(db)).toEqual(s);
+  });
+  it('l’esito registrato lo chiude e il ritardo resta (T-018)', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta({ durata: 50 }), oggi(10, 20), FUSO);
+    await endSession(db, oggi(11, 10), FUSO, { ...ESITO, esito: 'completata' });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'completato', minutiRitardo: 80, minuti: 50 });
   });
   it('il ciclo non tratta da orfano il blocco della sessione attiva (D-SCHED-1)', async () => {
     await studio('s1', { inizio: oggi(9), fine: oggi(10) });
@@ -211,7 +219,7 @@ describe('Pomodoro multi-materia — SCENARI D3', () => {
     await editActiveSession(db, (s) => changeUnit(s, oggi(9, 30), 'u12'), oggi(9, 30));
     const vista = await readSessionView(db);
     expect(vista).toMatchObject({ unita: { numero: '1.2' }, orario: '09:00', sessione: { unitaId: 'u11' } });
-    const chiusa = await endSession(db, oggi(10), FUSO);
+    const chiusa = await endSession(db, oggi(10), FUSO, ESITO);
     expect(chiusa?.riepilogo.perUnita).toEqual({ u11: 25 * MINUTE, u12: 25 * MINUTE });
   });
 });
@@ -220,29 +228,29 @@ describe('Iperfocus — SCENARI D5', () => {
   it('«Esci comunque» salva l’interruzione «iperfocus», che arriva nel riepilogo come uscita d’emergenza', async () => {
     await startSession(db, null, scelta({ iperfocus: true }), oggi(9), FUSO);
     await editActiveSession(db, (s) => addInterruption(s, oggi(9, 20), true), oggi(9, 20));
-    const chiusa = await endSession(db, oggi(9, 54), FUSO);
+    const chiusa = await endSession(db, oggi(9, 54), FUSO, ESITO);
     expect(chiusa?.riepilogo).toMatchObject({ usciteEmergenza: 1, extra: 4 * MINUTE });
     expect(await list(db, 'sessioni')).toMatchObject([{ chiusura: 'completata', riepilogo: { usciteEmergenza: 1 } }]);
   });
 });
 
 describe('Chiusura — MECCANISMI §10.5', () => {
-  it('«Termina» salva la sessione, riporta il blocco a programmato e toglie la sessione attiva, insieme', async () => {
+  it('la chiusura salva la sessione con l’esito, scrive il blocco e toglie la sessione attiva, insieme', async () => {
     await studio('s1', { inizio: oggi(9), fine: oggi(10) });
     await startSession(db, 's1', scelta(), oggi(9, 10), FUSO);
-    const chiusa = await endSession(db, oggi(9, 40), FUSO);
+    const chiusa = await endSession(db, oggi(9, 40), FUSO, ESITO);
     expect(chiusa).toMatchObject({ chiusura: 'terminata_prima', bloccoId: 's1', riepilogo: { focus: 30 * MINUTE } });
-    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'programmato', minutiRitardo: 10 });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'parziale', minutiRitardo: 10, minuti: 30 });
     expect(await readActiveSession(db)).toBeNull();
-    expect(await endSession(db, oggi(9, 41), FUSO)).toBeNull();
-    expect(await list(db, 'sessioni')).toHaveLength(1);
+    expect(await endSession(db, oggi(9, 41), FUSO, ESITO)).toBeNull();
+    expect(await list(db, 'sessioni')).toMatchObject([{ esito: ESITO }]);
   });
-  it('ponte fino a T-018: una routine terminata dopo 30 minuti dalla sua fine, senza esito, il ciclo la marca persa', async () => {
+  it('con l’esito il ciclo non marca più persa una routine chiusa dopo 30 minuti dalla sua fine', async () => {
     await studio('s1', { inizio: oggi(9), fine: oggi(10) });
     await startSession(db, 's1', scelta(), oggi(9), FUSO);
-    await endSession(db, oggi(10, 40), FUSO);
+    await endSession(db, oggi(10, 40), FUSO, ESITO);
     await runCycle(db, oggi(10, 41), FUSO);
-    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('perso');
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('parziale');
   });
 });
 

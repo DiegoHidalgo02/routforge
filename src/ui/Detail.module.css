@@ -167,8 +167,16 @@
   color: var(--color-success);
 }
 
+/* Continua dello studio (S5 `parziale`): i toni del primary */
+.esito[data-parziale] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
 .esitoOra {
+  flex: none;
   margin-left: auto;
+  white-space: nowrap;
   font: 500 var(--text-sm) var(--font-num);
   font-variant-numeric: tabular-nums;
 }
@@ -480,6 +488,9 @@
   background: var(--color-surface-2);
   box-shadow: var(--shadow-footer);
   animation: global(rf-up) var(--dur-layout) var(--ease-standard);
+  /* Lo sheet dell'esito (T-018) è alto: su uno schermo basso scorre invece di uscire dal pannello */
+  max-height: calc(100% - var(--space-10));
+  overflow: auto;
 }
 
 /* Aperta dal cerchio di Oggi insieme al pannello (D-DETT-3): entra con il pannello, senza una seconda salita */

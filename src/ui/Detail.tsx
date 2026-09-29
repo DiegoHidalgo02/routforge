@@ -4,8 +4,9 @@
 // note; footer per tipo. La revisione delle fasi (S9) e il follow-up sono sheet dentro il pannello; «Elimina» ha il
 // toast con «Annulla». Dal cerchio di una card di Oggi il pannello si apre già sulla revisione o sulle voci rimaste
 // (spunta diretta, D-DETT-3). Le regole vengono da dominio e servizio (`app/completion.ts`): qui solo la resa. Fuori da
-// questo task: «Modifica» (T-042), gli esiti dello studio (T-018), l'unità proposta (T-013), le notifiche (T-019). Le
-// azioni di sessione dello studio (Avvia · Anticipa · Recupera · Riprendi · Ripasso) vengono da `studyActions` (T-016).
+// questo task: «Modifica» (T-042), l'unità proposta (T-013), le notifiche (T-019). Le azioni di sessione dello studio
+// (Avvia · Anticipa · Recupera · Riprendi · Ripasso) vengono da `studyActions` (T-016); «Registra esito» senza sessione
+// apre lo sheet dell'esito di S16 (T-018, D-ESITO-1).
 import {
   Calendar,
   CalendarClock,
@@ -38,19 +39,21 @@ import {
   type DettaglioAttivita,
 } from '../app/completion';
 import { appDb } from '../app/db';
+import { registerOutcome } from '../app/outcome';
 import { watchActiveSession } from '../app/session';
 import { inheritedDay } from '../domain/checklist';
+import { canRegisterOutcome, plannedMinutes, type DatiEsito } from '../domain/outcome';
 import { studyActions, type AzioneStudio, type SessioneAttiva } from '../domain/session';
 import { canCheckFromCalendar, canComplete, directCheckStep, shownState } from '../domain/completion';
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
 import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
-import type { TipoBlocco } from '../domain/types';
+import type { StatoBlocco, TipoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
 import { durata, maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
-import { useStudyAction } from './Session';
+import { SchedaEsito, useStudyAction } from './Session';
 
 const TIPO: Record<TipoBlocco, Chiave> = {
   todo: 'tipoTodo',
@@ -96,6 +99,13 @@ const AZIONE_STUDIO: Record<AzioneStudio, Chiave> = {
   riprendi: 'riprendiSessione',
   ripasso: 'ripassoLibera',
 };
+/** Esito dello studio nella OutcomeRow di S5 (§11), per stato del blocco. */
+const ESITO_STUDIO: Partial<Record<StatoBlocco, Chiave>> = {
+  completato: 'esitoCompletata',
+  parziale: 'esitoContinua',
+  indietro: 'esitoIndietro',
+  saltato: 'esitoSalta',
+};
 /** Suggerimenti di S5 per lo studio: anticipo, ripasso e sessione libera di un altro giorno. */
 const suggerimentoStudio = (azione: AzioneStudio | undefined): string | null =>
   azione === 'anticipa'
@@ -106,7 +116,7 @@ const suggerimentoStudio = (azione: AzioneStudio | undefined): string | null =>
         ? t('suggerimentoStudioAltroGiorno')
         : null;
 
-type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo';
+type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo' | 'esito';
 interface Toast {
   testo: string;
   annulla: () => void;
@@ -258,13 +268,31 @@ export function Detail() {
     if (tipo === 'studio') meta.push({ Icona: Clock, tono: 'num', testo: orari });
   }
 
-  // OutcomeRow (S5): esito scritto, oppure «concluso» per l'evento con la fine passata (§3); gli esiti dello studio con T-018
+  // OutcomeRow (S5): esito scritto, oppure «concluso» per l'evento con la fine passata (§3); per lo studio l'esito di §11
+  // con confidenza e minuti
   const conto = (ms: number | null | undefined) => (ms == null ? '' : quando(ms, now));
   const voci = b.checklist ?? [];
   const fatte = voci.filter((v) => v.fatta).length;
   const saltateLog = log?.filter((f) => f.stato === 'saltata').length ?? 0;
-  let esito: { testo: string; ora: string; ok: boolean } | null = null;
-  if (b.stato === 'completato' && tipo !== 'studio') {
+  const registrabile = canRegisterOutcome(b, now);
+  const dettagliStudio = [
+    b.confidenza ? t('confidenzaDi', { c: b.confidenza }) : null,
+    b.stato === 'completato' && b.minuti != null ? `${b.minuti} ${t('minutiUnita')}` : null,
+  ].filter((x): x is string => x !== null);
+  let esito: { testo: string; ora: string; ok: boolean; parziale?: boolean } | null = null;
+  if (tipo === 'studio' && ESITO_STUDIO[b.stato]) {
+    const testo = [t(ESITO_STUDIO[b.stato] ?? 'esitoCompletata')];
+    if (b.stato === 'parziale') testo.push([t('esitoParziale'), ...dettagliStudio].join(', '));
+    else if (b.stato === 'indietro') testo.push(t('esitoRigaIndietro'));
+    else if (b.stato === 'saltato') testo.push(t('esitoRigaSalta'));
+    else testo.push(...dettagliStudio);
+    esito = {
+      testo: testo.join(' · '),
+      ora: conto(b.chiusoIl),
+      ok: b.stato === 'completato',
+      parziale: b.stato === 'parziale',
+    };
+  } else if (b.stato === 'completato' && tipo !== 'studio') {
     const testo =
       tipo === 'todo'
         ? voci.length
@@ -299,9 +327,14 @@ export function Detail() {
           ? t('suggerimentoRoutinePersa')
           : tipo === 'evento' && stato === 'concluso'
             ? t('suggerimentoConcluso')
-            : tipo === 'studio'
-              ? suggerimentoStudio(studyActions(b, now, attiva)[0])
-              : null;
+            : tipo === 'studio' && b.stato === 'perso'
+              ? t('suggerimentoStudioPerso')
+              : tipo === 'studio' && registrabile
+                ? t('suggerimentoRecupero')
+                : tipo === 'studio'
+                  ? (suggerimentoStudio(studyActions(b, now, attiva)[0]) ??
+                    (b.stato === 'parziale' ? t('suggerimentoParziale') : null))
+                  : null;
 
   // Una spunta rifiutata dal servizio (finestra chiusa nel frattempo, §3) si segnala come le eccezioni
   const esegui = (fn: () => Promise<boolean>) =>
@@ -370,6 +403,12 @@ export function Detail() {
         { todo: true },
       );
     });
+  const registraEsito = ({ esito, confidenza, nota }: DatiEsito) =>
+    void act(async () => {
+      const ok = await registerOutcome(appDb, id, { esito, confidenza, nota }, ora(), fuso);
+      setVista('dettaglio');
+      if (!ok) setErrore(true);
+    });
   const elimina = () => {
     const prima = d;
     mostraToast(t('eliminata', { titolo }), () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
@@ -424,24 +463,44 @@ export function Detail() {
         </>
       );
   } else if (tipo === 'studio') {
-    // Azioni della sessione (S5 studio, §10.1): la primaria a destra, la libera accanto in anticipo; «Registra esito» con T-018
+    // Azioni della sessione (S5 studio, §10.1): la primaria a destra, la libera accanto in anticipo. «Registra esito»
+    // (§11) è la primaria del perso, con «Recupera» accanto; col solo orario passato la primaria resta «Recupera»
     const [prima, seconda] = studyActions(b, now, attiva);
+    const esitoBottone = (primaria: boolean) => (
+      <button
+        type="button"
+        className={`${s.azione} ${primaria ? s.primaria : s.secondaria}`}
+        onClick={() => setVista('esito')}
+      >
+        {t('registraEsito')}
+      </button>
+    );
     piede = (
       <>
+        {registrabile && b.stato !== 'perso' && esitoBottone(false)}
         {seconda && (
           <button type="button" className={`${s.azione} ${s.secondaria}`} onClick={() => avviaSessione(seconda, b)}>
             {t(AZIONE_STUDIO[seconda])}
           </button>
         )}
-        {prima && (
-          <button
-            type="button"
-            className={`${s.azione} ${prima === 'ripasso' || prima === 'libera' ? `${s.secondaria} ${s.larga}` : s.primaria}`}
-            onClick={() => avviaSessione(prima, b)}
-          >
-            {prima !== 'ripasso' && <Play size={14} fill="currentColor" />}
-            {t(AZIONE_STUDIO[prima])}
-          </button>
+        {prima && registrabile && b.stato === 'perso' ? (
+          <>
+            <button type="button" className={`${s.azione} ${s.secondaria}`} onClick={() => avviaSessione(prima, b)}>
+              {t(AZIONE_STUDIO[prima])}
+            </button>
+            {esitoBottone(true)}
+          </>
+        ) : (
+          prima && (
+            <button
+              type="button"
+              className={`${s.azione} ${prima === 'ripasso' || prima === 'libera' ? `${s.secondaria} ${s.larga}` : s.primaria}`}
+              onClick={() => avviaSessione(prima, b)}
+            >
+              {prima !== 'ripasso' && <Play size={14} fill="currentColor" />}
+              {t(AZIONE_STUDIO[prima])}
+            </button>
+          )
         )}
       </>
     );
@@ -506,7 +565,7 @@ export function Detail() {
             ))}
           </div>
           {esito && (
-            <div className={s.esito} data-ok={esito.ok || undefined}>
+            <div className={s.esito} data-ok={esito.ok || undefined} data-parziale={esito.parziale || undefined}>
               {esito.ok && <Check size={16} />}
               {esito.testo}
               <span className={s.esitoOra}>{esito.ora}</span>
@@ -618,7 +677,22 @@ export function Detail() {
             tabIndex={-1}
           >
             <div className={s.manigliaSheet} aria-hidden />
-            {vista === 'revisione' ? (
+            {vista === 'esito' ? (
+              // «Registra esito» senza sessione (§11, C6): minuti = durata pianificata, conta sempre
+              <SchedaEsito
+                titoloId="sheet-titolo"
+                minuti={plannedMinutes(b, 'completata')}
+                extra={0}
+                unitaId={b.unitaId ?? null}
+                conta={null}
+                contaIniziale
+                confidenza={Boolean(b.unitaId)}
+                annulla="annulla"
+                onAnnulla={() => setVista('dettaglio')}
+                inCorso={false}
+                onRegistra={registraEsito}
+              />
+            ) : vista === 'revisione' ? (
               <>
                 <div className={s.testiSheet}>
                   <span id="sheet-titolo" className={s.titoloSheet}>

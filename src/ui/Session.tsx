@@ -5,6 +5,9 @@
 // il banner «Sessione in corso» lo riapre. Le regole stanno in `domain/session.ts`, `domain/timer.ts` e
 // `app/session.ts`. Decisioni: D-SESS-1, D-TIMER-1.
 import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
   ChevronDown,
   ChevronLeft,
   CircleAlert,
@@ -16,6 +19,8 @@ import {
   Play,
   RefreshCcw,
   Repeat,
+  SkipForward,
+  type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
@@ -34,6 +39,7 @@ import {
   type VistaSessione,
 } from '../app/session';
 import { disableDoNotDisturb, enableDoNotDisturb, keepScreenOn } from '../app/sessionDevice';
+import { countsByDefault, outcomeHints, type DatiEsito } from '../domain/outcome';
 import {
   lockedUnit,
   startContext,
@@ -56,7 +62,7 @@ import {
   timerState,
   type StatoTimer,
 } from '../domain/timer';
-import type { Blocco } from '../domain/types';
+import type { Blocco, Esito } from '../domain/types';
 import { useMinuto, useSecondo } from './clock';
 import { durata as durataBreve, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
@@ -463,8 +469,8 @@ const AVVISO_MS = 5000;
 /**
  * Timer della sessione (S15 `timer`, `iperfocus`, sheet di chiusura; MECC §10.2–§10.5): i valori li deriva
  * `domain/timer.ts` dagli istanti salvati, ogni secondo. Schermo acceso finché il timer è aperto; in iperfocus schermo
- * intero, indietro assorbito, Non Disturbare se concesso, uscita con conferma. «Termina» apre il riepilogo; l'esito è di
- * T-018. Decisione: D-TIMER-1.
+ * intero, indietro assorbito, Non Disturbare se concesso, uscita con conferma. «Termina» apre lo sheet dell'esito (S16),
+ * «Registra esito» chiude la sessione con l'esito e mostra la schermata finale (`done`). Decisioni: D-TIMER-1, D-ESITO-1.
  */
 export function ActiveSession() {
   const vista = useSessionView();
@@ -476,6 +482,7 @@ export function ActiveSession() {
   const [uscita, setUscita] = useState<'no' | 'tentativo' | 'registrata'>('no');
   const [dnd, setDnd] = useState(false);
   const [inChiusura, setInChiusura] = useState(false);
+  const [fatto, setFatto] = useState<{ dati: DatiEsito; puntatore: string | null; minuti: number } | null>(null);
   const attiva = Boolean(vista);
   const bloccata = vista ? exitLocked(vista.sessione, now) : false;
 
@@ -509,8 +516,29 @@ export function ActiveSession() {
     return () => clearTimeout(id);
   }, [uscita]);
 
+  if (fatto)
+    return (
+      <div className={s.fatto}>
+        <span className={s.fattoIcona}>
+          <Check size={30} strokeWidth={2.5} />
+        </span>
+        <span className={s.fattoTesti}>
+          <h1 className={s.fattoTitolo}>{t('esitoDi', { esito: etichettaEsito(fatto.dati.esito) })}</h1>
+          <span className={s.fattoTesto}>{t(fatto.dati.contaNelPiano ? 'esitoFattoTesto' : 'contaNo')}</span>
+        </span>
+        <span className={`${s.righe} ${s.fattoRighe}`}>
+          <Riga etichetta={t('durataCampo')} valore={`${fatto.minuti} ${t('minutiUnita')}`} />
+          <Riga etichetta={t('sicurezza')} valore={etichettaConfidenza(fatto.dati.confidenza)} />
+          {fatto.puntatore && <Riga etichetta={t('puntatore')} valore={fatto.puntatore} puntatore />}
+        </span>
+        <button type="button" className={s.abbandona} onClick={() => navigate('/', { replace: true })}>
+          {t('tornaOggi')}
+        </button>
+      </div>
+    );
   if (vista === undefined) return null;
-  if (vista === null) return <Navigate to="/" replace />;
+  // Durante la chiusura la sessione sparisce prima che arrivi la schermata finale
+  if (vista === null) return inChiusura ? null : <Navigate to="/" replace />;
 
   const sx = vista.sessione;
   const st = timerState(sx, now);
@@ -536,12 +564,22 @@ export function ActiveSession() {
     const n = adesso();
     void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
   };
-  const chiudi = (abbandona: boolean) => {
+  const abbandona = () => {
     if (inChiusura) return;
     setInChiusura(true);
-    void (abbandona ? abandonSession(appDb, adesso(), fuso()) : endSession(appDb, adesso(), fuso()))
+    void abandonSession(appDb, adesso(), fuso())
       .catch(() => null)
       .then(() => navigate('/', { replace: true }));
+  };
+  // Registrato l'esito resta la schermata finale (S15 `done`); senza chiusura (già chiusa altrove, errore) si torna a Oggi
+  const registra = (dati: DatiEsito, puntatore: string | null) => {
+    if (inChiusura) return;
+    setInChiusura(true);
+    void endSession(appDb, adesso(), fuso(), dati)
+      .catch(() => null)
+      .then((c) =>
+        c ? setFatto({ dati, puntatore, minuti: minutiDi(c.riepilogo.focus) }) : navigate('/', { replace: true }),
+      );
   };
   const interruzione = (
     <button type="button" className={s.pill} onClick={() => modifica((x, n) => addInterruption(x, n))}>
@@ -614,8 +652,6 @@ export function ActiveSession() {
   const segmenti = segmentTimeline(sx);
   const seg = st.segmento;
   const r = foglio ? summary(sx, now) : null;
-  const numeroUnita = (id: string) => unitaDi(ingressi?.corsi ?? [], id)?.unita.numero ?? '—';
-  const pianificata = sx.unitaId ? numeroUnita(sx.unitaId) : null;
 
   return (
     <div className={s.timer}>
@@ -730,62 +766,172 @@ export function ActiveSession() {
       )}
 
       {r && (
-        <Foglio titolo="riepilogo-titolo" onEsc={() => setFoglio(false)}>
-          <div className={s.foglioTesta}>
-            <span id="riepilogo-titolo" className={s.foglioTitolo}>
-              {t('comeAndata')}
-            </span>
-            <span className={s.foglioNota}>
-              <span className={s.num}>
-                {minutiDi(r.focus)} {t('minutiUnita')}
-              </span>
-              {pianificata && (
-                <>
-                  {' '}
-                  · {t('unita')} <span className={s.num}>{pianificata}</span>
-                </>
-              )}
-              {minutiDi(r.extra) > 0 && ` · ${t('extraBreve', { min: minutiDi(r.extra) })}`}
-            </span>
-          </div>
-          <div className={s.righe}>
-            <Riga etichetta={t('riepilogoFocus')} valore={`${minutiDi(r.focus)} ${t('minutiUnita')}`} />
-            <Riga
-              etichetta={t('riepilogoPause')}
-              valore={`${r.numeroPause} · ${minutiDi(r.durataPause)} ${t('minutiUnita')}`}
-            />
-            {segmenti.length > 0 && (
-              <>
-                <Riga
-                  etichetta={t('riepilogoPauseSegmento')}
-                  valore={`${minutiDi(r.pauseSegmento)} ${t('minutiUnita')}`}
-                />
-                <Riga etichetta={t('riepilogoSegmenti')} valore={`${r.segmentiCompletati} / ${segmenti.length}`} />
-              </>
-            )}
-            <Riga etichetta={t('riepilogoInterruzioni')} valore={String(r.interruzioni)} />
-            {Object.entries(r.perUnita).map(([id, ms]) => (
-              <Riga
-                key={id}
-                etichetta={`${t('unita')} ${numeroUnita(id)}`}
-                valore={`${minutiDi(ms)} ${t('minutiUnita')}`}
-              />
-            ))}
-          </div>
-          <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={() => chiudi(true)}>
-            {t('abbandonaSessione')}
-          </button>
-          <div className={s.foglioAzioni}>
-            <button type="button" className={s.continua} onClick={() => setFoglio(false)}>
-              {t('continuaStudiare')}
+        <Foglio titolo="esito-titolo" onEsc={() => setFoglio(false)}>
+          <SchedaEsito
+            titoloId="esito-titolo"
+            minuti={minutiDi(r.focus)}
+            extra={minutiDi(r.extra)}
+            unitaId={sx.unitaId}
+            conta={sx.bloccoId ? 'routine' : 'libera'}
+            contaIniziale={countsByDefault(sx)}
+            confidenza
+            annulla="continuaStudiare"
+            onAnnulla={() => setFoglio(false)}
+            inCorso={inChiusura}
+            onRegistra={registra}
+          >
+            <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={abbandona}>
+              {t('abbandonaSessione')}
             </button>
-            <button type="button" className={s.inizia} disabled={inChiusura} onClick={() => chiudi(false)}>
-              {t('termina')}
-            </button>
-          </div>
+          </SchedaEsito>
         </Foglio>
       )}
     </div>
+  );
+}
+
+const ESITI: { id: Esito; chiave: Chiave; Icona: LucideIcon }[] = [
+  { id: 'completata', chiave: 'esitoCompletata', Icona: Check },
+  { id: 'continua', chiave: 'esitoContinua', Icona: ArrowRight },
+  { id: 'indietro', chiave: 'esitoIndietro', Icona: ArrowLeft },
+  { id: 'salta', chiave: 'esitoSalta', Icona: SkipForward },
+];
+const CONFIDENZA: Chiave[] = ['confidenza1', 'confidenza2', 'confidenza3', 'confidenza4', 'confidenza5'];
+export const etichettaEsito = (e: Esito): string => t(ESITI.find((x) => x.id === e)?.chiave ?? 'esitoCompletata');
+export const etichettaConfidenza = (c: number | null): string => {
+  const chiave = c ? CONFIDENZA[c - 1] : undefined;
+  return chiave ? t(chiave) : '—';
+};
+
+/**
+ * Contenuto dello sheet dell'esito (S16 debrief; MECC §11, FUNZ §11.3): i quattro esiti con l'unità che nominano,
+ * confidenza 1–5, nota, «Conta nel piano»; «Registra esito» si accende con un esito scelto. Lo usano la chiusura del
+ * timer e «Registra esito» del Dettaglio, che non ha «Conta nel piano» (conta sempre) e, senza unità, nemmeno la
+ * confidenza (§11). `onRegistra` riceve anche il testo del puntatore per la schermata finale. Decisione: D-ESITO-1.
+ */
+export function SchedaEsito(p: {
+  titoloId: string;
+  minuti: number;
+  extra: number;
+  unitaId: string | null;
+  conta: 'routine' | 'libera' | null;
+  contaIniziale: boolean;
+  confidenza: boolean;
+  annulla: Chiave;
+  onAnnulla: () => void;
+  inCorso: boolean;
+  onRegistra: (dati: DatiEsito, puntatore: string | null) => void;
+  children?: ReactNode;
+}) {
+  const ingressi = useIngressi(null);
+  const [esito, setEsito] = useState<Esito | null>(null);
+  const [confidenza, setConfidenza] = useState<number | null>(null);
+  const [nota, setNota] = useState('');
+  const [conta, setConta] = useState(p.contaIniziale);
+  const materia = unitaDi(ingressi?.corsi ?? [], p.unitaId);
+  const numero = (id: string) => materia?.corso.unita.find((u) => u.id === id)?.numero ?? '';
+  const h = materia && outcomeHints(materia.corso.unita, materia.unita.id);
+  const sotto: Record<Esito, string | null> = h
+    ? {
+        completata: h.successiva ? t('puntatorePassaA', { n: numero(h.successiva) }) : t('puntatoreAvanza'),
+        continua: t('restaSulla', { n: materia.unita.numero }),
+        indietro: h.precedente ? t('ripetiLa', { n: numero(h.precedente) }) : t('ripetiQuesta'),
+        salta: t('passaOltre'),
+      }
+    : { completata: null, continua: null, indietro: null, salta: null };
+  const contaVale = p.conta === null || conta;
+  const registra = () =>
+    esito &&
+    p.onRegistra(
+      { esito, confidenza: p.confidenza ? confidenza : null, nota, contaNelPiano: contaVale },
+      contaVale ? sotto[esito] : null,
+    );
+
+  return (
+    <>
+      <div className={s.foglioTesta}>
+        <span id={p.titoloId} className={s.foglioTitolo}>
+          {t('comeAndata')}
+        </span>
+        <span className={s.foglioNota}>
+          <span className={s.num}>
+            {p.minuti} {t('minutiUnita')}
+          </span>
+          {materia && (
+            <>
+              {' '}
+              · {t('unita')} <span className={s.num}>{materia.unita.numero}</span>
+            </>
+          )}
+          {p.extra > 0 && ` · ${t('extraBreve', { min: p.extra })}`}
+        </span>
+      </div>
+      <div className={s.esiti}>
+        {ESITI.map(({ id, chiave, Icona }) => (
+          <button key={id} type="button" className={s.esito} aria-pressed={esito === id} onClick={() => setEsito(id)}>
+            <span className={s.esitoTesta}>
+              <Icona size={16} strokeWidth={2} />
+              {t(chiave)}
+            </span>
+            {sotto[id] && <span className={s.esitoSotto}>{sotto[id]}</span>}
+          </button>
+        ))}
+      </div>
+      {p.confidenza && (
+        <div className={s.gruppoEsito}>
+          <span className={s.intestazione}>
+            <span className={s.etichetta}>{t('quantoSicuro')}</span>
+            <span className={s.etichettaConfidenza}>{etichettaConfidenza(confidenza)}</span>
+          </span>
+          <span className={s.confidenze} role="group" aria-label={t('quantoSicuro')}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={s.confidenza}
+                aria-pressed={confidenza === n}
+                onClick={() => setConfidenza(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </span>
+        </div>
+      )}
+      <textarea
+        className={s.notaEsito}
+        placeholder={t('notaSessione')}
+        aria-label={t('notaSessione')}
+        value={nota}
+        onChange={(e) => setNota(e.target.value)}
+      />
+      {p.conta && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={conta}
+          className={s.interruttore}
+          onClick={() => setConta((x) => !x)}
+        >
+          <span className={s.colonna}>
+            <span>{t('contaNelPiano')}</span>
+            <span className={s.notaScura}>
+              {t(conta ? (p.conta === 'routine' ? 'contaRoutine' : 'contaLibera') : 'contaNo')}
+            </span>
+          </span>
+          <span className={s.knob} />
+        </button>
+      )}
+      {p.children}
+      <div className={s.foglioAzioni}>
+        <button type="button" className={s.continua} onClick={p.onAnnulla}>
+          {t(p.annulla)}
+        </button>
+        <button type="button" className={s.inizia} disabled={!esito || p.inCorso} onClick={registra}>
+          {t('registraEsito')}
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -811,11 +957,13 @@ function Foglio(p: { titolo: string; scuro?: boolean; onEsc: () => void; childre
   );
 }
 
-function Riga({ etichetta, valore }: { etichetta: string; valore: string }) {
+function Riga({ etichetta, valore, puntatore }: { etichetta: string; valore: string; puntatore?: boolean }) {
   return (
     <span className={s.riga}>
       {etichetta}
-      <span className={s.rigaValore}>{valore}</span>
+      <span className={s.rigaValore} data-puntatore={puntatore || undefined}>
+        {valore}
+      </span>
     </span>
   );
 }

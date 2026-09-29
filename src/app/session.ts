@@ -9,6 +9,7 @@
  */
 import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, list, remove, save, saveBlock, watch } from '../data/repository';
+import { retroactiveBlock, sessionMinutes, type DatiEsito } from '../domain/outcome';
 import { criteriaMet, sortedUnits } from '../domain/pointer';
 import {
   anticipatedBlock,
@@ -21,6 +22,7 @@ import {
 import { closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
+import { TABELLE_ESITO, writeOutcome } from './outcome';
 
 /**
  * Riga di `preferenze` della sessione attiva (MECC §1; docs/02_ARCHITETTURA.md §4). Il ciclo ne legge `bloccoId` con
@@ -181,30 +183,47 @@ export function editActiveSession(
   });
 }
 
+/** Una sessione chiusa con l'esito scelto (`null` = abbandonata), come sta in `sessioni`. */
+export type SessioneRegistrata = SessioneChiusa & { esito: DatiEsito | null };
+
 /**
- * Chiusura (§10.5): la sessione con tipo e riepilogo va in `sessioni` (statistiche §20, anche gli abbandoni), il blocco
- * `in_corso` torna `programmato` (un parziale ripreso resta parziale) e la sessione attiva sparisce, nella stessa
- * transazione (§8, D-SCHED-1). Il ritardo resta, come nel reset degli orfani (D-SESS-1). Senza esito il blocco resta da
- * registrare come ogni programmato passato (§8 esiti pendenti): l'esito nella chiusura è di T-018. `null` se non c'è.
+ * Chiusura (§10.5, §11): la sessione con tipo, riepilogo ed esito va in `sessioni` (statistiche §20, anche gli
+ * abbandoni) e la sessione attiva sparisce, nella stessa transazione dell'esito (§8, D-SCHED-1). Se conta nel piano
+ * l'esito va sul blocco della sessione (anche un parziale ripreso, D-SESS-1) o su un blocco retroattivo della libera;
+ * altrimenti, e nell'abbandono, il blocco `in_corso` torna `programmato` (un parziale ripreso resta parziale). Il
+ * ritardo resta, come nel reset degli orfani (D-SESS-1). `null` se non c'è.
  */
-function close(db: RoutForgeDb, now: number, fuso: string, abbandonata: boolean): Promise<SessioneChiusa | null> {
-  return inTransaction(db, ['blocchi', 'preferenze', 'sessioni'], async () => {
+function close(
+  db: RoutForgeDb,
+  now: number,
+  fuso: string,
+  esito: DatiEsito | null,
+): Promise<SessioneRegistrata | null> {
+  return inTransaction(db, ['sessioni', ...TABELLE_ESITO], async () => {
     const s = await readActiveSession(db);
     if (!s) return null;
-    const chiusa = closeSession(s, now, abbandonata);
+    const chiusa = { ...closeSession(s, now, esito === null), esito };
     await save(db, 'sessioni', chiusa, now);
     const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
-    if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
+    if (esito?.contaNelPiano) {
+      const { minuti, perUnita } = sessionMinutes(chiusa.riepilogo);
+      const blocco = b ?? retroactiveBlock(s.avvio, now, s.unitaId, s.corsoId);
+      await writeOutcome(db, { blocco, unitaId: s.unitaId, minuti, minutiPerUnita: perUnita, dati: esito }, now, fuso);
+    } else if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
     await remove(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA, now);
     return chiusa;
   });
 }
 
-/** «Termina» (§10.5): `completata` o `terminata prima` secondo il traguardo. */
-export const endSession = (db: RoutForgeDb, now: number, fuso: string): Promise<SessioneChiusa | null> =>
-  close(db, now, fuso, false);
+/** «Registra esito» dallo sheet di chiusura (§10.5, §11): `completata` o `terminata prima` secondo il traguardo. */
+export const endSession = (
+  db: RoutForgeDb,
+  now: number,
+  fuso: string,
+  esito: DatiEsito,
+): Promise<SessioneRegistrata | null> => close(db, now, fuso, esito);
 
 /** Abbandono (§8, §10.5: nessun esito). */
 export async function abandonSession(db: RoutForgeDb, now: number, fuso: string): Promise<void> {
-  await close(db, now, fuso, true);
+  await close(db, now, fuso, null);
 }

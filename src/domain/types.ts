@@ -67,8 +67,14 @@ export interface Blocco {
   ricorrenzaId?: string | null;
   /** Istante della marcatura "perso" (§8); assente se mai perso. */
   persoIl?: number | null;
-  /** Istante in cui l'utente ha chiuso il blocco: completato (§3) o saltato (FUNZ §4.3); `null` da riaperto. Gli esiti di studio arrivano con T-018. */
+  /** Istante in cui l'utente ha chiuso il blocco: completato (§3), saltato (FUNZ §4.3) o esito di studio (§11); `null` da riaperto. */
   chiusoIl?: number | null;
+  /** Solo studio: confidenza 1–5 dell'esito (§11); `null` se non scelta (D-ESITO-1). */
+  confidenza?: number | null;
+  /** Solo studio: nota dell'esito (§11), distinta dalle `note` ereditate dalla routine (D-ESITO-1). */
+  notaEsito?: string | null;
+  /** Solo studio: minuti dell'esito, focus della sessione o durata pianificata senza sessione (§11, D-ESITO-1). */
+  minuti?: number | null;
   /** Solo todo: istante dell'avviso «todo in ritardo» (§6, §13.6), una volta per todo; assente se mai avvisato (D-HOR-1). */
   ritardoIl?: number | null;
   /**

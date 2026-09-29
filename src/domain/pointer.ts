@@ -12,7 +12,14 @@
  * sempre aperto; il puntatore NON entra in un modulo bloccato. Senza criteri, tutti i moduli
  * sono aperti (coerente con C1, dove il corso non ha criteri).
  */
-import { STATI_UNITA_PENDENTI, type Blocco, type Esito, type StatoUnita, type StatoModulo } from './types';
+import {
+  STATI_UNITA_PENDENTI,
+  type Blocco,
+  type Esito,
+  type StatoBlocco,
+  type StatoUnita,
+  type StatoModulo,
+} from './types';
 
 export interface UnitaPercorso {
   id: string;
@@ -142,8 +149,16 @@ export function partialProgress(totalMinutes: number, estimatedHours?: number | 
   return Math.min(0.95, totalMinutes / denominator);
 }
 
-export interface InputEsito {
-  unita: readonly UnitaPercorso[];
+/** Stato del blocco di studio per esito (tabella §11). */
+export const STATO_ESITO = {
+  completata: 'completato',
+  continua: 'parziale',
+  indietro: 'indietro',
+  salta: 'saltato',
+} as const satisfies Record<Esito, StatoBlocco>;
+
+export interface InputEsito<U extends UnitaPercorso = UnitaPercorso> {
+  unita: readonly U[];
   /** Unità pianificata sul blocco (o scelta nel setup). */
   unitaPianificataId: string;
   esito: Esito;
@@ -153,17 +168,17 @@ export interface InputEsito {
   unitaPrecedenteId?: string | null | undefined;
 }
 
-export interface RisultatoEsito {
-  unita: UnitaPercorso[];
+export interface RisultatoEsito<U extends UnitaPercorso = UnitaPercorso> {
+  unita: U[];
   /** Stato risultante del blocco di studio (§11, tabella). */
-  statoBlocco: 'completato' | 'parziale' | 'indietro' | 'saltato';
+  statoBlocco: (typeof STATO_ESITO)[Esito];
 }
 
 /**
  * Applica l'esito all'unità e restituisce lo stato del blocco (tabella §11).
  * Non tocca il puntatore: il chiamante lo ricalcola con `assignPointer`.
  */
-export function applyOutcome(input: InputEsito): RisultatoEsito {
+export function applyOutcome<U extends UnitaPercorso>(input: InputEsito<U>): RisultatoEsito<U> {
   const { unita, unitaPianificataId, esito, minuti, unitaPrecedenteId } = input;
   const next = unita.map((u) => ({ ...u }));
   const planned = next.find((u) => u.id === unitaPianificataId);
@@ -176,20 +191,20 @@ export function applyOutcome(input: InputEsito): RisultatoEsito {
     case 'completata':
       planned.stato = 'completata';
       planned.progresso = 1;
-      return { unita: next, statoBlocco: 'completato' };
+      break;
     case 'continua':
       planned.stato = 'parziale';
       planned.progresso = partialProgress(planned.minuti, planned.oreStimate);
-      return { unita: next, statoBlocco: 'parziale' };
+      break;
     case 'indietro': {
       const target = (unitaPrecedenteId && next.find((u) => u.id === unitaPrecedenteId)) || planned;
       target.stato = 'da_rivedere'; // progresso invariato
-      return { unita: next, statoBlocco: 'indietro' };
+      break;
     }
     case 'salta':
       planned.stato = 'saltata'; // progresso invariato
-      return { unita: next, statoBlocco: 'saltato' };
   }
+  return { unita: next, statoBlocco: STATO_ESITO[esito] };
 }
 
 /** Unità precedente nel percorso (ordine modulo → unità), o null se è la prima. */

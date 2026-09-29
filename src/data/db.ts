@@ -17,6 +17,7 @@ import type {
   SezioneImportata,
   UnitaImportata,
 } from '../domain/course/parser';
+import type { DatiEsito } from '../domain/outcome';
 import type { StatoCarta } from '../domain/sm2';
 import type { SessioneChiusa } from '../domain/timer';
 import type { BloccoAncorato, FaseLog, Ricorrenza } from '../domain/types';
@@ -55,8 +56,11 @@ export interface Tabelle {
    * resta lo stesso se l'utente la sposta (C4) e la generazione la ritrova con `get`, senza indici univoci.
    */
   blocchi: Riga<BloccoAncorato>;
-  /** Sessioni chiuse con tipo e riepilogo (MECC §10.5, T-017); la sessione attiva sta in `preferenze`. */
-  sessioni: Riga<SessioneChiusa>;
+  /**
+   * Sessioni chiuse con tipo e riepilogo (MECC §10.5, T-017) ed esito scelto (§11, T-018; `null` = abbandonata; assente
+   * nelle righe scritte prima di T-018); la sessione attiva sta in `preferenze`.
+   */
+  sessioni: Riga<SessioneChiusa & { esito?: DatiEsito | null }>;
   // Tabelle dei passi successivi: per ora solo i campi indicizzati; il task che le usa aggiunge il resto.
   /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2); `fasi` è la fotografia al Conferma (T-009). */
   logFasi: Riga<{ ricorrenzaId: string | null; fasi: FaseLog[] }>;

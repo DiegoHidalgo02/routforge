@@ -944,6 +944,184 @@
   font-size: var(--text-base);
 }
 
+/* Esiti dello sheet S16: griglia 2×2 di card su surface, scelta = bianca con testo scuro */
+.esiti {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.esito {
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    border-color var(--dur-feedback) var(--ease-out);
+}
+
+.esito:hover {
+  border-color: var(--color-border-strong);
+}
+
+.esitoTesta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: 600 var(--text-md) var(--font-ui);
+}
+
+.esitoTesta svg {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.esitoSotto {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.esito[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+}
+
+.esito[aria-pressed='true'] svg {
+  color: var(--color-selected-ink);
+}
+
+.esito[aria-pressed='true'] .esitoSotto {
+  color: var(--color-border-strong);
+}
+
+.gruppoEsito {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.etichettaConfidenza {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.confidenze {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.confidenza {
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 500 var(--text-md) var(--font-num);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.confidenza[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+}
+
+.notaEsito {
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 10px var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-md) / 20px var(--font-ui);
+  resize: none;
+}
+
+.notaEsito::placeholder {
+  color: var(--color-text-2);
+}
+
+.notaEsito:focus {
+  border-color: var(--color-primary);
+}
+
+/* Schermata finale (S15 `done`): esito, riepilogo breve, «Torna a Oggi» */
+.fatto {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-10);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.fattoIcona {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.fattoTesti {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fattoTitolo {
+  margin: 0;
+  font: 600 var(--text-3xl) / 28px var(--font-ui);
+  letter-spacing: -0.01em;
+}
+
+.fattoTesto {
+  max-width: 320px;
+  color: var(--color-text-2);
+  font: var(--text-md) / 20px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.fattoRighe {
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+  background: var(--color-surface-2);
+  text-align: left;
+}
+
+.rigaValore[data-puntatore] {
+  color: var(--color-primary);
+  font-family: var(--font-ui);
+}
+
+.fatto > .abbandona {
+  flex: none;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-6);
+}
+
 /* Banner «Sessione in corso» (S1 SessionShell): sticky in testa, sopra il blocco Adesso (z 5), ombra float */
 .banner {
   position: sticky;
