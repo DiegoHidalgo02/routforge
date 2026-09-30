@@ -25,5 +25,4 @@ export * from './session';
 export * from './timer';
 export * from './outcome';
 export * from './notifications/desiredSet';
-export * from './notifications/quietHours';
 export * from './notifications/digest';

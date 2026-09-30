@@ -437,12 +437,8 @@ describe('Registro — MECCANISMI §1, §13.3', () => {
     expect(await readNotificationSettings(db)).toEqual(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
   });
 
-  it('ore silenziose e digest (§13.4, §13.5): letti se validi; righe senza di loro (T-019) o con un orario impossibile → default', async () => {
-    const nuove = {
-      ...IMPOSTAZIONI_NOTIFICHE_DEFAULT,
-      oreSilenziose: { attive: true, dalle: '23:00', alle: '06:00' },
-      digest: { orario: '07:30' },
-    };
+  it('orario del digest (§13.5): letto se valido; righe senza di lui (T-019) o con un orario impossibile → default', async () => {
+    const nuove = { ...IMPOSTAZIONI_NOTIFICHE_DEFAULT, digest: { orario: '07:30' } };
     await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: nuove }, oggi(8));
     expect(await readNotificationSettings(db)).toEqual(nuove);
     const vecchie = { generale: true, perTipo: IMPOSTAZIONI_NOTIFICHE_DEFAULT.perTipo };
@@ -454,11 +450,8 @@ describe('Registro — MECCANISMI §1, §13.3', () => {
   });
 });
 
-describe('Ore silenziose — SCENARI F3', () => {
-  it('22:00–07:00: il todo delle 06:30 (anticipo 30′) avvisa alle 07:00; il digest delle 08:00 resta; il «perso» della notte parte', async () => {
-    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
-    imp.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' };
-    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(19));
+describe('Nessuna fascia silenziosa — SCENARI F3', () => {
+  it('il todo delle 06:30 (anticipo 30′) avvisa alle 06:00; il digest alle 08:00; il «perso» delle 23:31 parte: nessun rinvio', async () => {
     const t = await crea({ ...todo({ inizio: '06:30', durata: 30 }), giorno: '2026-09-29' }, oggi(19));
     await crea(senzaOrario('Spesa', '2026-09-29'), oggi(19));
     await blocco({ id: 'r1', tipo: 'routine', inizio: oggi(21), fine: oggi(23) });
@@ -468,30 +461,14 @@ describe('Ore silenziose — SCENARI F3', () => {
     expect(p.vista()).toEqual([
       'pre:10:r1@20:50',
       'inizio:0:r1@21:00',
-      `pre:30:${t}@07:00`,
-      `scadenza:0:${t}@07:00`,
-      'verifica:0:r1@07:00',
+      'verifica:0:r1@22:00',
+      `pre:30:${t}@06:00`,
+      `scadenza:0:${t}@06:30`,
       'digest:0:2026-09-29@08:00',
     ]);
     await runCycle(db, oggi(23, 31), FUSO);
     await s.reconcile(oggi(23, 31));
     expect(p.vista(oggi(23, 31))).toContain('perso:0:r1@23:31');
-  });
-
-  it('digest delle 06:00 dentro la fascia 22:00–07:00: armato alle 07:00 e non cancellato da una riconciliazione alle 06:30', async () => {
-    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
-    imp.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' };
-    imp.digest = { orario: '06:00' };
-    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(5));
-    await crea(senzaOrario('Spesa', '2026-09-28'), oggi(5));
-    const p = portaFinta();
-    const s = createNotifications(db, p.porta, orologio(oggi(5)));
-    await s.reconcile(oggi(5));
-    expect(p.vista()).toEqual(['digest:0:2026-09-28@07:00']);
-    const prima = p.chiamate.length;
-    await s.reconcile(oggi(6, 30));
-    expect(p.chiamate.length).toBe(prima);
-    expect(p.vista()).toEqual(['digest:0:2026-09-28@07:00']);
   });
 });
 
@@ -529,7 +506,7 @@ describe('Digest — SCENARI A4', () => {
 });
 
 describe('Posticipa — SCENARI F5', () => {
-  it('«Posticipa» alle 09:01 sull’«inizio» delle 09:00: voce alle 09:11; dentro le ore silenziose alla loro fine; completata → nulla', async () => {
+  it('«Posticipa» alle 09:01 sull’«inizio» delle 09:00: voce alle 09:11; un secondo tocco la sposta ancora; completata → nulla', async () => {
     await blocco({ id: 'r1', tipo: 'routine', inizio: oggi(9), fine: oggi(10) });
     const p = portaFinta();
     const s = createNotifications(db, p.porta, orologio(oggi(8)));
@@ -537,12 +514,9 @@ describe('Posticipa — SCENARI F5', () => {
     await snoozeNotification(db, 'inizio:0:r1', oggi(9, 1));
     await s.reconcile(oggi(9, 1));
     expect(p.vista(oggi(9, 1))).toEqual(['inizio:0:r1@09:11', 'verifica:0:r1@09:30']);
-    const imp = structuredClone(IMPOSTAZIONI_NOTIFICHE_DEFAULT);
-    imp.oreSilenziose = { attive: true, dalle: '09:15', alle: '09:40' };
-    await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore: imp }, oggi(9, 12));
     await snoozeNotification(db, 'inizio:0:r1', oggi(9, 12));
     await s.reconcile(oggi(9, 12));
-    expect(p.vista(oggi(9, 12))).toEqual(['inizio:0:r1@09:40', 'verifica:0:r1@09:40']);
+    expect(p.vista(oggi(9, 12))).toEqual(['inizio:0:r1@09:22', 'verifica:0:r1@09:30']);
     await completeBlock(db, 'r1', oggi(9, 13), FUSO);
     await snoozeNotification(db, 'inizio:0:r1', oggi(9, 14));
     await s.reconcile(oggi(9, 14));

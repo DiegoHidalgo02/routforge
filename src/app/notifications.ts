@@ -28,7 +28,7 @@ import type { Clock } from './ports/clock';
 import type { Notifications } from './ports/notifications';
 import { readActiveSession } from './session';
 
-/** Riga di `preferenze` delle impostazioni delle notifiche (§13.1, §13.4, §13.5); la UI è di T-032. */
+/** Riga di `preferenze` delle impostazioni delle notifiche (§13.1, §13.5); la UI è di T-032. */
 export const CHIAVE_IMPOSTAZIONI_NOTIFICHE = 'notifiche';
 /** Riga di `preferenze` dei tocchi «Posticipa» (§13.2, D-NOTIF-2): chiave della notifica → istante del tocco. */
 export const CHIAVE_POSTICIPI = 'posticipi';
@@ -39,10 +39,8 @@ const oraLeggibile = (v: unknown): v is string => typeof v === 'string' && ORA.t
 
 const leggibili = (v: unknown): v is ImpostazioniNotifiche => {
   if (typeof v !== 'object' || v === null || !('generale' in v) || !('perTipo' in v)) return false;
-  const { generale, perTipo, oreSilenziose, digest } = v as Record<string, unknown>;
+  const { generale, perTipo, digest } = v as Record<string, unknown>;
   if (typeof generale !== 'boolean' || typeof perTipo !== 'object' || perTipo === null) return false;
-  const ore = oreSilenziose as Record<string, unknown> | undefined;
-  if (typeof ore?.attive !== 'boolean' || !oraLeggibile(ore.dalle) || !oraLeggibile(ore.alle)) return false;
   if (!oraLeggibile((digest as Record<string, unknown> | undefined)?.orario)) return false;
   return TIPI.every((t) => {
     const x = (perTipo as Record<string, unknown>)[t] as Record<string, unknown> | undefined;

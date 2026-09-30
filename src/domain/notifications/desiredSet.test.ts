@@ -71,8 +71,7 @@ describe('Livelli — MECCANISMI §13.1', () => {
     });
   });
 
-  it('default: ore silenziose spente ma pronte sulle 22:30–07:00 del mock S22, digest alle 08:00 (§13.5)', () => {
-    expect(DEF.oreSilenziose).toEqual({ attive: false, dalle: '22:30', alle: '07:00' });
+  it('default: digest alle 08:00 (§13.5)', () => {
     expect(DEF.digest).toEqual({ orario: '08:00' });
   });
 
@@ -525,28 +524,24 @@ describe('One-shot — MECCANISMI §6, §8, §13.6, SCENARI B7, A1', () => {
     expect(oneShotNotifications({ ...nonFatto, ritardoIl: null }, DEF)).toEqual([]);
   });
 
-  it('F3: gli one-shot non seguono le ore silenziose (il «perso» delle 23:30 parte comunque)', () => {
-    const notte = conImp((i) => (i.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' }));
+  it('F3: il «perso» delle 23:30 parte all’istante della marcatura, anche a mezzanotte per una routine senza durata', () => {
     const b = { ...persa, inizio: oggi(21), fine: oggi(23), persoIl: oggi(23, 30) };
-    expect(insieme([b], notte, oggi(23, 30)).map((x) => [x.chiave, x.istante])).toEqual([
+    expect(insieme([b], DEF, oggi(23, 30)).map((x) => [x.chiave, x.istante])).toEqual([
       ['perso:0:r', oggi(23, 30) + RITARDO_ONE_SHOT_MS],
     ]);
-    // Routine senza durata di ieri (fine 23:59), marcata persa alle 00:30: avviso alle 00:30, dentro la fascia
+    // Routine senza durata di ieri (fine 23:59), marcata persa alle 00:30: avviso alle 00:30
     const senzaDurata = {
       ...persa,
       inizio: local(2026, 9, 27, 7, 0),
       fine: null,
       persoIl: oggi(0, 30),
     };
-    expect(insieme([senzaDurata], notte, oggi(0, 30)).map((x) => x.istante)).toEqual([
-      oggi(0, 30) + RITARDO_ONE_SHOT_MS,
-    ]);
+    expect(insieme([senzaDurata], DEF, oggi(0, 30)).map((x) => x.istante)).toEqual([oggi(0, 30) + RITARDO_ONE_SHOT_MS]);
   });
 });
 
-describe('Ore silenziose nell’insieme — MECCANISMI §13.4, SCENARI F3', () => {
-  it('il todo delle 06:30 con anticipo 30′ avvisa alle 07:00, non alle 06:00; il digest delle 08:00 non è toccato', () => {
-    const notte = conImp((i) => (i.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' }));
+describe('Nessuna fascia silenziosa — MECCANISMI §13.4, SCENARI F3', () => {
+  it('il todo delle 06:30 con anticipo 30′ avvisa alle 06:00 e scade alle 06:30; il digest alle 08:00: nessun rinvio', () => {
     const t = blocco({ id: 't', tipo: 'todo', inizio: oggi(6, 30), fine: oggi(7) });
     const senza = blocco({
       id: 's',
@@ -556,9 +551,9 @@ describe('Ore silenziose nell’insieme — MECCANISMI §13.4, SCENARI F3', () =
       fine: oggi(23, 59),
       titolo: 'Spesa',
     });
-    expect(insieme([t, senza], notte, oggi(0)).map((x) => [x.chiave, x.istante])).toEqual([
-      ['pre:30:t', oggi(7)],
-      ['scadenza:0:t', oggi(7)],
+    expect(insieme([t, senza], DEF, oggi(0)).map((x) => [x.chiave, x.istante])).toEqual([
+      ['pre:30:t', oggi(6)],
+      ['scadenza:0:t', oggi(6, 30)],
       ['digest:0:2026-09-28', oggi(8)],
     ]);
   });
@@ -571,14 +566,6 @@ describe('Posticipa — MECCANISMI §13.2, SCENARI F5', () => {
     expect(POSTICIPO_MS).toBe(minutes(10));
     expect(insieme([r], DEF, oggi(9, 1), { 'inizio:0:r': oggi(9, 1) }).map((x) => [x.chiave, x.istante])).toEqual([
       ['inizio:0:r', oggi(9, 11)],
-      ['verifica:0:r', oggi(9, 30)],
-    ]);
-  });
-
-  it('dentro le ore silenziose il posticipo va alla fine della fascia', () => {
-    const imp = conImp((i) => (i.oreSilenziose = { attive: true, dalle: '09:05', alle: '09:30' }));
-    expect(insieme([r], imp, oggi(9, 1), { 'inizio:0:r': oggi(9, 1) }).map((x) => [x.chiave, x.istante])).toEqual([
-      ['inizio:0:r', oggi(9, 30)],
       ['verifica:0:r', oggi(9, 30)],
     ]);
   });
@@ -602,9 +589,6 @@ describe('Posticipa — MECCANISMI §13.2, SCENARI F5', () => {
     expect(insieme([t], DEF, oggi(0, 31), { 'ritardo:0:t': oggi(0, 31) }).map((x) => [x.chiave, x.istante])).toEqual([
       ['ritardo:0:t', oggi(0, 41)],
     ]);
-    // Il posticipo di un one-shot segue le ore silenziose (§13.4: «posticipi»)
-    const notte = conImp((i) => (i.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' }));
-    expect(insieme([t], notte, oggi(0, 31), { 'ritardo:0:t': oggi(0, 31) }).map((x) => x.istante)).toEqual([oggi(7)]);
   });
 
   it('senza l’azione Posticipa il tocco non conta (tempo scaduto); un tocco più vecchio dello scatto non sposta nulla', () => {
@@ -663,20 +647,6 @@ describe('Digest nell’insieme — MECCANISMI §13.5, SCENARI A4', () => {
     expect(digestNotification([], DEF, oggi(7))).toBeNull();
     const presto = conImp((i) => (i.digest.orario = '06:30'));
     expect(digestNotification(blocchi, presto, oggi(7))?.istante).toBe(local(2026, 9, 29, 6, 30));
-  });
-
-  it('digest delle 06:00 dentro le ore silenziose 22:00–07:00: alle 07:00, e alle 06:30 è ancora quello di oggi', () => {
-    const notte = conImp((i) => {
-      i.digest.orario = '06:00';
-      i.oreSilenziose = { attive: true, dalle: '22:00', alle: '07:00' };
-    });
-    expect(insieme(blocchi, notte, oggi(5)).map((x) => [x.chiave, x.istante])).toEqual([
-      ['digest:0:2026-09-28', oggi(7)],
-    ]);
-    expect(insieme(blocchi, notte, oggi(6, 30)).map((x) => [x.chiave, x.istante])).toEqual([
-      ['digest:0:2026-09-28', oggi(7)],
-    ]);
-    expect(insieme(blocchi, notte, oggi(7, 1)).map((x) => x.chiave)).toEqual(['digest:0:2026-09-29']);
   });
 });
 

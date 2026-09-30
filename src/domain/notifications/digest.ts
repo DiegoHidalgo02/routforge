@@ -9,7 +9,6 @@ import { isRollingTodo } from '../lost';
 import { sortDay } from '../ordering';
 import { addLocalDays, localDayKey, localInstant } from '../time';
 import type { Blocco } from '../types';
-import { quietShift, type OreSilenziose } from './quietHours';
 
 export interface ImpostazioniDigest {
   /** Ora di parete "HH:MM" del digest (§13.5: default 08:00). */
@@ -26,15 +25,10 @@ export interface DigestNotifica {
 /** §13.5: «fino a 3 titoli». */
 export const TITOLI_DIGEST = 3;
 
-/**
- * La prossima occorrenza dell'orario del digest (nominale, prima delle ore silenziose): oggi se il suo scatto, spostato
- * dalla fascia silenziosa se ci cade dentro (§13.4), non è ancora passato; altrimenti domani. Così una riconciliazione
- * fra l'orario nominale e la fine della fascia non cambia giorno al digest, che resterebbe cancellato.
- */
-export function nextDigestInstant(now: number, orario: string, ore?: OreSilenziose): number {
+/** La prossima occorrenza dell'orario del digest: oggi se non è ancora passata, altrimenti domani. */
+export function nextDigestInstant(now: number, orario: string): number {
   const oggi = localInstant(localDayKey(now), orario);
-  const scatto = ore ? quietShift(oggi, ore) : oggi;
-  return scatto >= now ? oggi : localInstant(localDayKey(addLocalDays(now, 1)), orario);
+  return oggi >= now ? oggi : localInstant(localDayKey(addLocalDays(now, 1)), orario);
 }
 
 /**

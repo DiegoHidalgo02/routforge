@@ -1,9 +1,11 @@
 # D-NOTIF-2 — Ore silenziose, digest, posticipi e avvisi one-shot
 
-**Stato**: applicata il 29/09/2026 (T-020): `src/domain/notifications/quietHours.ts`, `src/domain/notifications/digest.ts`,
-`src/domain/notifications/desiredSet.ts`, `src/domain/lost.ts` (`lostNotificationDue`), `src/app/notifications.ts`,
-`src/platform/notifications.ts`, `src/ui/notificationTexts.ts`, i sei JSON di `src/ui/i18n/`. Revisione indipendente
-`spec-reviewer`. Riga nel registro: `docs/01_DECISIONI.md`.
+**Stato**: applicata il 29/09/2026 (T-020): `src/domain/notifications/digest.ts`, `src/domain/notifications/desiredSet.ts`,
+`src/domain/lost.ts` (`lostNotificationDue`), `src/app/notifications.ts`, `src/platform/notifications.ts`,
+`src/ui/notificationTexts.ts`, i sei JSON di `src/ui/i18n/`. Revisione indipendente `spec-reviewer`. Riga nel registro:
+`docs/01_DECISIONI.md`. **Il 30/09/2026** l'utente ha confermato il punto 2 (contraddizione n. 28) e ha tolto le ore
+silenziose: il punto 3, la parte «ore silenziose» dei punti 4, 5 e 7 e la sezione «Da chiedere» sono superati da
+D-NOTIF-3 (T-045: `quietHours.ts` rimosso).
 
 ## Contesto
 MECC §13.4–§13.6 danno la fascia silenziosa, il digest e gli avvisi one-shot; §13.2 il posticipo; §6 e §8 gli avvisi

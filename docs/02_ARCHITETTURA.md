@@ -37,7 +37,7 @@ src/
 ├── domain/      Meccanismi puri (TS senza I/O). Già presenti: time, types, sm2, streak, pomodoro,
 │                practice, pointer, lost, nowBlock, course/parser, activity, ordering, calendar, language,
 │                scheduler/occurrences (T-011), scheduler/horizon (T-012), scheduler/cycle (T-013). In arrivo:
-│                notifications/ (desiredSet, quietHours, digest), session/ (timer, outcome), stats, sync/ (merge).
+│                notifications/ (desiredSet, digest), session/ (timer, outcome), stats, sync/ (merge).
 │                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
 ├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.
 │                Già presente: sample-course/ (M0, M1 del corso di esempio, copia dell'export del design: D-SAMPLE-1).
@@ -125,9 +125,9 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   riconciliazione del processo riarma tutto. **Vincolo**: su Android l'id di una notifica locale è un **intero a 32 bit**:
   FNV-1a con segno, collisioni +1 in ordine di chiave, id del registro conservati. Dentro `desiredSet` stanno anche gli
   one-shot «perso» e «in ritardo» (da `persoIl` e `ritardoIl` + 10 s), il digest (`domain/notifications/digest.ts`, alla
-  prossima occorrenza dell'orario, contenuto ricalcolato a ogni riconciliazione), i posticipi (`preferenze.posticipi`,
-  tocco + 10') e le ore silenziose (`domain/notifications/quietHours.ts`, non sugli one-shot), così il registro vede
-  gli istanti veri (T-020, D-NOTIF-2); la notifica di prova (`test()`) va direttamente alla porta, fuori dal registro.
+  prossima occorrenza dell'orario, contenuto ricalcolato a ogni riconciliazione) e i posticipi (`preferenze.posticipi`,
+  tocco + 10'), così il registro vede gli istanti veri (T-020, D-NOTIF-2); nessuna fascia silenziosa dell'app
+  (D-NOTIF-3, T-045); la notifica di prova (`test()`) va direttamente alla porta, fuori dal registro.
 - **CoursePointer.recompute(corsoId)** = `recomputePointer` (`src/app/pointer.ts`, T-013) — `pointerPlan` sui blocchi di
   studio futuri `programmati` del corso, scrive solo gli `unitaId` che cambiano; il ciclo lo chiama per ogni corso
   (dopo la generazione e la marcatura persa, FUNZ §8), T-018 dopo ogni esito.
@@ -160,6 +160,7 @@ resta fuori dal dominio.
 | Notifiche locali | solo scheda aperta | sì (background) | sì | plugin `@capacitor/local-notifications` |
 | Sveglie a schermo intero | no: notifica che resta finché la si tocca (`requireInteraction`, D-NOTIF-1) | full-screen intent + `SCHEDULE_EXACT_ALARM` | limitato (notifica critica/time-sensitive) | plugin nativo da scrivere (T-021) |
 | Non Disturbare | no | `ACCESS_NOTIFICATION_POLICY` | non disponibile → iperfocus vale comunque (§10.4) | T-017 |
+| Timer con app chiusa (D-TIMER-2) | no: solo Wake Lock a scheda aperta; battiti e intervallo non verificato (T-047) | servizio in primo piano con notifica-cronometro (T-021) | Live Activity + notifica «tempo scaduto» (T-036) | il tempo oltre 30' dall'ultimo battito non conta nel focus |
 | Widget | no | Kotlin AppWidget (T-023) | "se disponibile" (WidgetKit, dopo) | |
 | Backup su cartella documenti | download | `@capacitor/filesystem` Documents | Files | §22 |
 | TTS (Trivia) | Web Speech API | `@capacitor-community/text-to-speech` | idem | §18 |

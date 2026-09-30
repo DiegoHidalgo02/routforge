@@ -29,14 +29,6 @@ describe('Digest — MECCANISMI §13.5, SCENARI A4', () => {
     expect(nextDigestInstant(oggi(20), '06:30')).toBe(local(2026, 9, 29, 6, 30));
   });
 
-  it('con l’orario dentro le ore silenziose (§13.4) conta lo scatto spostato: alle 06:30 il digest delle 06:00 è ancora oggi', () => {
-    const notte = { attive: true, dalle: '22:00', alle: '07:00' };
-    expect(nextDigestInstant(oggi(6, 30), '06:00', notte)).toBe(oggi(6));
-    expect(nextDigestInstant(oggi(7), '06:00', notte)).toBe(oggi(6)); // alle 07:00 in punto scatta adesso
-    expect(nextDigestInstant(oggi(7) + 1000, '06:00', notte)).toBe(local(2026, 9, 29, 6, 0));
-    expect(nextDigestInstant(oggi(6, 30), '06:00', { ...notte, attive: false })).toBe(local(2026, 9, 29, 6, 0));
-  });
-
   it('A4: due todo senza orario di oggi e uno di ieri con orizzonte mese: 3 da fare, 1 arretrato, i tre titoli', () => {
     const blocchi = [
       todo({ id: 'a', titolo: 'Chiama Marco' }),

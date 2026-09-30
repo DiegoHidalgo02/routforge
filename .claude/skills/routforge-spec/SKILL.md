@@ -20,10 +20,10 @@ Uno scenario batte un meccanismo; un meccanismo batte una funzionalità.
 | Routine: generazione occorrenze (28 gg), modifica, eliminazione | §7 | B1, B6 |
 | Persi, recupero, orfani, esiti pendenti | §8 | B4, B7, C6, C8 |
 | Cicli dello scheduler (ordine vincolante) | §9 | G4 |
-| Sessione: contesti, regimi, pomodoro, iperfocus, chiusura | §10 | C4, C5, D1–D6 |
+| Sessione: contesti, regimi, pomodoro, iperfocus, continuità (D-TIMER-2), chiusura e abbandono oltre soglia (D-SESS-2) | §10 | C4, C5, D1–D7 |
 | Esiti e puntatore | §11 | C1–C3, C7, C9 |
 | Streak | §12 | C2 |
-| Notifiche: livelli, trigger, finestra 14 gg, ore silenziose, digest | §13 | F1–F6, A4 |
+| Notifiche: livelli, trigger, finestra 14 gg, digest, one-shot (nessuna fascia silenziosa, D-NOTIF-3) | §13 | F1–F6, A4 |
 | Blocco "Adesso" | §14 | G1, G2, E3 |
 | Trascinamento | §15 | G3 |
 | Import corso | §16 (+ FORMATO_CORSO) | H1 |
@@ -38,7 +38,7 @@ Uno scenario batte un meccanismo; un meccanismo batte una funzionalità.
 | Sincronizzazione | §25 | J1–J5 |
 
 ## Numeri che ricorrono
-30' (grazia "perso"); 28 giorni (orizzonte occorrenze); 14 giorni (finestra notifiche, +31 per i blocchi
+30' (grazia "perso"; intervallo non verificato della sessione); 65% (abbandono oltre soglia → Continua); 28 giorni (orizzonte occorrenze); 14 giorni (finestra notifiche, +31 per i blocchi
 considerati); 5 s (niente notifiche entro); ~10 s (one-shot); 10' (posticipa, esito a fine+10'); 3 giorni /
 max 5 (esiti pendenti); 2 ore (notifica "perso"); 60 voci / 120 caratteri (checklist); 20 MB, 40 pagine,
 60.000 caratteri (PDF); 500 KB (file di codice); 84 giorni (mappa di calore); 5–25 passo 5 (generazione);

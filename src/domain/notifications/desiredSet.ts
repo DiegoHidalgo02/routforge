@@ -1,14 +1,15 @@
 /**
  * Insieme desiderato delle notifiche, identificatori e piano di riconciliazione.
  * Fonti: RoutForge_MECCANISMI.md §13.1 (livelli), §13.2 (trigger, posticipa), §13.3 (finestra, id, riconciliazione),
- * §13.4 (ore silenziose), §13.5 (digest), §13.6 e §10.4 («tempo scaduto», «blocco perso», «todo in ritardo», prova),
+ * §13.4 (nessuna fascia silenziosa: D-NOTIF-3), §13.5 (digest), §13.6 e §10.4 («tempo scaduto», «blocco perso», «todo in ritardo», prova),
  * §10.1 (anticipo e avvio), §8 (scadenza di recupero, avviso «blocco perso»), §6 (avviso «todo in ritardo»).
  * Criteri: SCENARI F1, F2, F3, F4, F5, F6, A1, A3, A4, B4, B6, B7, C4, C8, D1, E3. Decisioni: D-NOTIF-1, D-NOTIF-2.
  *
  * - Fusione generale → tipo → istanza; le occorrenze usano il promemoria della definizione; fusione vuota → nulla.
  * - `programmato` → tutte le voci; `in_corso` → solo «esito» (F1); stati terminali e `perso` → nulla, salvo gli
  *   one-shot derivati dalle marcature del ciclo: «perso» da `persoIl`, «ritardo» da `ritardoIl` (10 s dopo).
- * - Posticipi (tocco + 10') e ore silenziose si applicano qui, prima della finestra: il registro vede l'istante vero.
+ * - I posticipi (tocco + 10') si applicano qui, prima della finestra: il registro vede l'istante vero. Nessuna voce
+ *   viene rinviata per l'orario: il silenzio è del sistema operativo (D-NOTIF-3).
  * - Finestra: scatti in [now, now + 14 giorni locali]; si arma solo ciò che scatta almeno 5 s dopo (`reconcilePlan`).
  * - Chiave `trigger:anticipo:bloccoId`, id nativo FNV-1a a 32 bit con segno, collisioni risolte con +1.
  */
@@ -18,7 +19,6 @@ import type { SessioneAttiva } from '../session';
 import { addLocalDays, localDayKey, localInstant, minutes, startOfLocalDay } from '../time';
 import { STATI_TERMINALI, type AnticipoPromemoria, type Blocco, type Ricorrenza, type TipoBlocco } from '../types';
 import { digestContent, nextDigestInstant, type DigestNotifica, type ImpostazioniDigest } from './digest';
-import { quietShift, type OreSilenziose } from './quietHours';
 
 export type TriggerNotifica =
   | 'pre'
@@ -55,7 +55,7 @@ export interface NotificaPianificata {
   sveglia: boolean;
   silenzioso: boolean;
   azioni: AzioneNotifica[];
-  /** Avviso one-shot: le ore silenziose non lo spostano (§13.4). */
+  /** Avviso one-shot (§13.6): parte all'istante della marcatura o della prova. */
   oneShot: boolean;
   /** Solo per il trigger «digest»: conteggio, arretrati e titoli (§13.5). */
   digest?: DigestNotifica;
@@ -69,14 +69,10 @@ export interface ImpostazioniTipo {
 export interface ImpostazioniNotifiche {
   generale: boolean;
   perTipo: Record<TipoBlocco, ImpostazioniTipo>;
-  oreSilenziose: OreSilenziose;
   digest: ImpostazioniDigest;
 }
 
-/**
- * Default di §13.1 n. 2 (todo 30', studio 5', routine 10', evento 15') e §13.5 (digest alle 08:00); ore silenziose
- * spente, con la fascia del mock S22 pronta per quando si accendono (D-NOTIF-2).
- */
+/** Default di §13.1 n. 2 (todo 30', studio 5', routine 10', evento 15') e §13.5 (digest alle 08:00). */
 export const IMPOSTAZIONI_NOTIFICHE_DEFAULT: ImpostazioniNotifiche = {
   generale: true,
   perTipo: {
@@ -85,7 +81,6 @@ export const IMPOSTAZIONI_NOTIFICHE_DEFAULT: ImpostazioniNotifiche = {
     routine: { attivo: true, anticipi: [10], silenzioso: false },
     evento: { attivo: true, anticipi: [15], silenzioso: false },
   },
-  oreSilenziose: { attive: false, dalle: '22:30', alle: '07:00' },
   digest: { orario: '08:00' },
 };
 
@@ -192,7 +187,7 @@ export function oneShotNotifications(b: BloccoNotifiche, imp: ImpostazioniNotifi
   return voci;
 }
 
-/** Tutte le voci di un blocco secondo §13.2 e §13.6, senza finestra né ore silenziose. */
+/** Tutte le voci di un blocco secondo §13.2 e §13.6, senza finestra né posticipi. */
 export function blockNotifications(
   b: BloccoNotifiche,
   definizione: Ricorrenza | undefined,
@@ -264,7 +259,7 @@ export function digestNotification(
   now: number,
 ): NotificaPianificata | null {
   if (!imp.generale || !imp.perTipo.todo.attivo) return null;
-  const istante = nextDigestInstant(now, imp.digest.orario, imp.oreSilenziose);
+  const istante = nextDigestInstant(now, imp.digest.orario);
   const digest = digestContent(blocchi, istante);
   if (!digest) return null;
   return {
@@ -304,9 +299,8 @@ export function testNotification(now: number): NotificaPianificata {
 
 /**
  * L'insieme desiderato adesso (§13.3): voci dei blocchi, digest e tempo scaduto; poi i posticipi (§13.2: tocco + 10',
- * solo sulle voci che esistono ancora e hanno l'azione, così lo stato coerente è già deciso) e le ore silenziose (§13.4:
- * non sugli one-shot, sì sui posticipi); infine la finestra (da adesso a 14 giorni: «non desiderato» significa cambiato
- * o scattato, F6), ordinato per istante e poi per chiave.
+ * solo sulle voci che esistono ancora e hanno l'azione, così lo stato coerente è già deciso); infine la finestra (da
+ * adesso a 14 giorni: «non desiderato» significa cambiato o scattato, F6), ordinato per istante e poi per chiave.
  */
 export function desiredSet(
   input: {
@@ -334,8 +328,7 @@ export function desiredSet(
     .map((n) => {
       const tocco = input.posticipi?.[n.chiave];
       const posticipata = tocco !== undefined && n.azioni.includes('posticipa') && tocco + POSTICIPO_MS > n.istante;
-      const istante = posticipata ? tocco + POSTICIPO_MS : n.istante;
-      return posticipata || !n.oneShot ? { ...n, istante: quietShift(istante, imp.oreSilenziose) } : n;
+      return posticipata ? { ...n, istante: tocco + POSTICIPO_MS } : n;
     })
     .filter((n) => n.istante >= now && n.istante <= a)
     .sort((x, y) => x.istante - y.istante || (x.chiave < y.chiave ? -1 : x.chiave > y.chiave ? 1 : 0));
