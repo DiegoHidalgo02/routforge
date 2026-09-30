@@ -1,7 +1,7 @@
 /**
  * Timer della sessione di studio: regimi, pause, pomodoro, tempo extra, iperfocus, chiusura e riepilogo.
- * Fonte: RoutForge_MECCANISMI.md §10.2–§10.5 (FUNZ §11.2) — criteri: SCENARI D1, D2, D3, D4, D5 (lato dominio).
- * Decisione: D-TIMER-1.
+ * Fonte: RoutForge_MECCANISMI.md §10.2–§10.5 (FUNZ §11.2) — criteri: SCENARI D1, D2, D3, D4, D5, D7 (lato dominio).
+ * Decisioni: D-TIMER-1, D-SESS-2.
  *
  * - Tutto deriva da istanti assoluti salvati nella sessione attiva (avvio, pause, salti, cambi d'unità): nessun
  *   contatore, così il timer riprende giusto dopo la chiusura dell'app (D4).
@@ -14,7 +14,11 @@
  *   il segmento corrente in quell'istante. Il tempo per unità esclude le pause dei segmenti.
  * - Iperfocus: uscita bloccata finché la sessione non è finita o non c'è un'uscita forzata (interruzione «iperfocus»);
  *   senza una fine (cronometro) nessun blocco.
+ * - «Abbandona» dal 65% della durata pianificata in su (focus, pause e tempo extra esclusi) chiude come terminata prima
+ *   con l'esito Continua; solo con un blocco e una durata (D-SESS-2). La durata pianificata è quella della sessione, la
+ *   stessa del tempo extra: per una routine avviata in ritardo è il tempo fino alla fine del blocco.
  */
+import type { DatiEsito } from './outcome';
 import { planSegments, PRESETS, type PresetPomodoro, type TipoSegmento } from './pomodoro';
 import type { Modalita, SessioneAttiva } from './session';
 import { MINUTE } from './time';
@@ -27,6 +31,10 @@ const pausedBefore = (s: SessioneAttiva, t: number): number =>
 
 /** Tempo attivo (trascorso − pause) all'istante `t`. */
 const activeAt = (s: SessioneAttiva, t: number): number => Math.max(0, t - s.avvio - pausedBefore(s, t));
+
+/** Durata pianificata in ms (§10.2): fine − avvio se ancorata all'orologio, altrimenti la durata; `null` col cronometro. */
+const plannedMs = (s: SessioneAttiva): number | null =>
+  s.durata === null ? null : s.fine !== null ? s.fine - s.avvio : s.durata * MINUTE;
 
 export const isPaused = (s: SessioneAttiva): boolean => s.pause.some((p) => p.fine === null);
 
@@ -48,7 +56,7 @@ export function segmentTimeline(s: SessioneAttiva): SegmentoTimer[] {
   if (s.modalita === 'continua') return [];
   const preset = PRESET[s.modalita];
   const fisso = s.durata === null ? planSegments(preset, null) : null;
-  const totale = s.durata === null ? Infinity : s.fine !== null ? s.fine - s.avvio : s.durata * MINUTE;
+  const totale = plannedMs(s) ?? Infinity;
   const salti = s.salti.map((x) => activeAt(s, x)).sort((a, b) => a - b);
   const out: SegmentoTimer[] = [];
   let inizio = 0;
@@ -222,14 +230,43 @@ export interface SessioneChiusa extends SessioneAttiva {
 
 /**
  * Chiude la sessione adesso: una pausa aperta si chiude qui. `completata` se il traguardo è raggiunto, o per il
- * cronometro che non ne ha (D-TIMER-1); altrimenti `terminata_prima`; `abbandonata` se l'utente abbandona.
+ * cronometro che non ne ha (D-TIMER-1); altrimenti `terminata_prima`. `forzata` la impone: `abbandonata` se l'utente
+ * abbandona, `terminata_prima` per l'abbandono oltre soglia (`abandonPlan`).
  */
-export function closeSession(s: SessioneAttiva, now: number, abbandonata = false): SessioneChiusa {
+export function closeSession(
+  s: SessioneAttiva,
+  now: number,
+  forzata?: Exclude<TipoChiusura, 'completata'>,
+): SessioneChiusa {
   const chiusa = resumeSession(s, now);
-  const chiusura: TipoChiusura = abbandonata
-    ? 'abbandonata'
-    : chiusa.durata === null || timerState(chiusa, now).finita
-      ? 'completata'
-      : 'terminata_prima';
+  const chiusura: TipoChiusura =
+    forzata ?? (chiusa.durata === null || timerState(chiusa, now).finita ? 'completata' : 'terminata_prima');
   return { ...chiusa, chiusura, chiusaIl: now, riepilogo: summary(chiusa, now) };
+}
+
+/** Dal 65% della durata pianificata «Abbandona» chiude con l'esito Continua (§10.5, D-SESS-2); in percento. */
+export const SOGLIA_ABBANDONO = 65;
+
+/**
+ * Percento intero della durata pianificata già studiata (focus: pause escluse; tetto 100, il tempo extra non lo alza):
+ * `null` senza blocco o col cronometro, dove la soglia dell'abbandono non vale (§10.5, D-SESS-2).
+ */
+export function focusPercent(s: SessioneAttiva, now: number): number | null {
+  const durata = s.bloccoId === null ? null : plannedMs(s);
+  if (durata === null) return null;
+  return durata > 0 ? Math.min(100, Math.floor((activeAt(s, now) * 100) / durata)) : 100;
+}
+
+/**
+ * «Abbandona» (§10.5, D-SESS-2): dal 65% in su la sessione si chiude come terminata prima con l'esito Continua che conta
+ * nel piano, senza confidenza né nota; sotto, abbandonata senza esito.
+ */
+export function abandonPlan(
+  s: SessioneAttiva,
+  now: number,
+): { chiusura: Exclude<TipoChiusura, 'completata'>; esito: DatiEsito | null } {
+  const percento = focusPercent(s, now);
+  return percento !== null && percento >= SOGLIA_ABBANDONO
+    ? { chiusura: 'terminata_prima', esito: { esito: 'continua', confidenza: null, nota: '', contaNelPiano: true } }
+    : { chiusura: 'abbandonata', esito: null };
 }

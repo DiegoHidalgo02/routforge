@@ -1,8 +1,9 @@
 # D-SESS-2 — Abbandono oltre soglia: al 65% del pianificato l'abbandono diventa «Continua»
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
-**da applicare** con T-046; **spec allineata il 30/09/2026** con il testo in fondo (scenario D7; `deny` su `docs/spec`
-tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
+**applicata** con T-046 il 30/09/2026 (con la precisazione in fondo); **spec allineata il 30/09/2026** con il testo in
+fondo (scenario D7; `deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga
+nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 MECC §10.5: `abbandonata` = nessun esito, blocco → `programmato`; il ciclo lo marca poi `perso` (C8) e, con D-NOTIF-2,
@@ -14,8 +15,10 @@ streak +1, niente «perso». Il council proponeva in alternativa una domanda olt
 «Abbandona comunque»); l'utente ha confermato l'automatismo.
 
 ## Decisione
-1. **Soglia** = focus / durata pianificata del blocco ≥ **65%**, calcolata all'istante dell'abbandono; pause e tempo
-   extra esclusi (il focus è già trascorso − pause; il tempo extra oltre la durata non alza il rapporto oltre 1).
+1. **Soglia** = focus / durata pianificata della sessione ≥ **65%**, calcolata all'istante dell'abbandono; pause e tempo
+   extra esclusi (il focus è già trascorso − pause; il tempo extra oltre la durata non alza il rapporto oltre 1). La
+   durata pianificata è quella di §10.2, la stessa del tempo extra: fine − avvio se ancorata all'orologio, altrimenti la
+   durata scelta (precisazione di T-046, in fondo; prima diceva «del blocco»).
 2. **Sopra la soglia**: la sessione si chiude come `terminata_prima` con l'esito **Continua** registrato tramite la
    scrittura unica degli esiti (`endSession` → `writeOutcome`, D-ESITO-1): blocco `parziale` con i minuti, unità
    `parziale` con il progresso di §11, streak di §12, puntatore ricalcolato; «conta nel piano» sì; confidenza e nota
@@ -23,9 +26,11 @@ streak +1, niente «perso». Il council proponeva in alternativa una domanda olt
    D-SESS-1 n. 5, o il Dettaglio se T-046 aggiunge la correzione).
 3. **Sotto la soglia**: abbandono come oggi (nessun esito, blocco → `programmato`, sessione `abbandonata` nelle
    statistiche).
-4. **Ambito**: solo le sessioni collegate a un blocco con durata pianificata (routine di studio, recupero con durata
-   scelta: la durata pianificata è quella del blocco; con il cronometro nessuna soglia). Non vale per le sessioni
-   libere senza blocco né per le routine generiche, che non hanno un timer.
+4. **Ambito**: solo le sessioni collegate a un blocco e con una durata (routine di studio: il tempo fino alla fine del
+   blocco; recupero con durata scelta: quella durata; con il cronometro nessuna soglia). Non vale per le sessioni
+   libere senza blocco né per le routine generiche, che non hanno un timer. (Prima di T-046: «la durata pianificata è
+   quella del blocco»; con quella lettura un recupero da 25' su un blocco da 60' si fermerebbe al 41% e la soglia non
+   scatterebbe mai.)
 5. **UI**: il link «Abbandona · nessun esito» (S16, S15 banner) mostra sotto la soglia il testo attuale e sopra la
    soglia «Chiudi come Continua (65%)», così l'utente sa che cosa succede; la schermata finale dice che l'esito è stato
    registrato. Aspetto da confermare con `design-checker` (divergenza 38).
@@ -57,7 +62,18 @@ statistiche e puntatore); soglia sul tempo a orologio (le pause darebbero credit
 - Riapre la domanda di D-TIMER-1 n. 8 per una sessione rimasta aperta dopo un crash: con D-TIMER-2 l'intervallo non
   verificato non conta nel focus, quindi la soglia si calcola sul focus confermato.
 
+## Precisazione di T-046 (30/09/2026, da confermare con l'utente)
+I n. 1 e 4 dicevano «durata pianificata del blocco». Il codice usa la **durata pianificata della sessione**, la stessa
+del tempo extra e dell'avanzamento del timer (§10.2, §10.4): fine − avvio per una sessione ancorata all'orologio (una
+routine 09:00–10:00 avviata alle 09:30 conta sui 30' residui: bastano 19,5' invece di 39'), la durata scelta per un
+recupero. È la lettura letterale delle parole dell'utente («65% del tempo della sessione»), mantiene coerente il tetto
+del 100% con il tempo extra e fa scattare la soglia anche nei recuperi (con la durata del blocco un recupero da 25' su
+60' non la raggiungerebbe mai). Il testo di spec («focus / durata pianificata») ammette entrambe le letture: il revisore
+`spec-reviewer` lo conferma. Se l'utente preferisce la durata del blocco basta leggerlo in `abandonSession` e passarne
+la durata a `focusPercent`.
+
 ## Verifica
-Con T-046: `src/domain/timer.test.ts` (soglia, pause e tempo extra esclusi, cronometro escluso), `src/app/session.test.ts`
-(D7 dal database: esito Continua scritto, streak, puntatore; sotto soglia abbandono e perso), `src/ui/Session.test.tsx`
-(testo del link).
+Fatta con T-046: `src/domain/timer.test.ts` («Abbandono oltre soglia — SCENARI D7»: 65% e 58%, pause e tempo extra
+esclusi, recupero sulla durata scelta, libera e cronometro senza soglia), `src/app/session.test.ts` (D7 dal database:
+esito Continua scritto, blocco `parziale` con 39 minuti, unità `parziale`, streak; sotto soglia abbandono e perso),
+`src/ui/Session.test.tsx` (testo del link e schermata finale).

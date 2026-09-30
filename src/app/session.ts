@@ -19,7 +19,7 @@ import {
   type SceltaSessione,
   type SessioneAttiva,
 } from '../domain/session';
-import { closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
+import { abandonPlan, closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
 import { TABELLE_ESITO, writeOutcome } from './outcome';
@@ -191,24 +191,27 @@ export type SessioneRegistrata = SessioneChiusa & { esito: DatiEsito | null };
  * abbandoni) e la sessione attiva sparisce, nella stessa transazione dell'esito (§8, D-SCHED-1). Se conta nel piano
  * l'esito va sul blocco della sessione (anche un parziale ripreso, D-SESS-1) o su un blocco retroattivo della libera;
  * altrimenti, e nell'abbandono, il blocco `in_corso` torna `programmato` (un parziale ripreso resta parziale). Il
- * ritardo resta, come nel reset degli orfani (D-SESS-1). `null` se non c'è.
+ * ritardo resta, come nel reset degli orfani (D-SESS-1). Un abbandono dal 65% della durata pianificata è una chiusura
+ * con l'esito Continua (`abandonPlan`, §10.5, D-SESS-2). `null` se non c'è.
  */
 function close(
   db: RoutForgeDb,
   now: number,
   fuso: string,
-  esito: DatiEsito | null,
+  esito: DatiEsito | 'abbandono',
 ): Promise<SessioneRegistrata | null> {
   return inTransaction(db, ['sessioni', ...TABELLE_ESITO], async () => {
     const s = await readActiveSession(db);
     if (!s) return null;
-    const chiusa = { ...closeSession(s, now, esito === null), esito };
+    const piano = esito === 'abbandono' ? abandonPlan(s, now) : { chiusura: undefined, esito };
+    const chiusa = { ...closeSession(s, now, piano.chiusura), esito: piano.esito };
     await save(db, 'sessioni', chiusa, now);
     const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
-    if (esito?.contaNelPiano) {
+    if (piano.esito?.contaNelPiano) {
       const { minuti, perUnita } = sessionMinutes(chiusa.riepilogo);
       const blocco = b ?? retroactiveBlock(s.avvio, now, s.unitaId, s.corsoId);
-      await writeOutcome(db, { blocco, unitaId: s.unitaId, minuti, minutiPerUnita: perUnita, dati: esito }, now, fuso);
+      const dati = piano.esito;
+      await writeOutcome(db, { blocco, unitaId: s.unitaId, minuti, minutiPerUnita: perUnita, dati }, now, fuso);
     } else if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
     await remove(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA, now);
     return chiusa;
@@ -223,7 +226,6 @@ export const endSession = (
   esito: DatiEsito,
 ): Promise<SessioneRegistrata | null> => close(db, now, fuso, esito);
 
-/** Abbandono (§8, §10.5: nessun esito). */
-export async function abandonSession(db: RoutForgeDb, now: number, fuso: string): Promise<void> {
-  await close(db, now, fuso, null);
-}
+/** «Abbandona» (§8, §10.5): nessun esito, oppure Continua dal 65% della durata pianificata (D-SESS-2, D7). */
+export const abandonSession = (db: RoutForgeDb, now: number, fuso: string): Promise<SessioneRegistrata | null> =>
+  close(db, now, fuso, 'abbandono');

@@ -8,6 +8,7 @@ import type { SceltaSessione } from '../domain/session';
 import { local, MINUTE } from '../domain/time';
 import { addInterruption, changeUnit, pauseSession, resumeSession, timerState } from '../domain/timer';
 import type { Blocco, StatoUnita } from '../domain/types';
+import { readStreak } from './outcome';
 import { runCycle } from './scheduler';
 import {
   abandonSession,
@@ -179,6 +180,51 @@ describe('Abbandono — MECCANISMI §8, §10.5', () => {
     expect(await list(db, 'sessioni')).toMatchObject([
       { chiusura: 'abbandonata', iperfocus: true, chiusaIl: oggi(9, 5) },
     ]);
+  });
+});
+
+describe('Abbandono oltre soglia — SCENARI D7', () => {
+  // Routine sul blocco 09:00–10:00 (unità 1.1) avviata alle 09:00; il blocco di studio delle 15:00 dello stesso corso
+  // riceve l'unità dal puntatore (§11)
+  const avvia = async () => {
+    await save(db, 'unita', unita('u11', 1, 1, '1.1', 'non_iniziata'), 1);
+    await save(db, 'unita', unita('u12', 1, 2, '1.2', 'non_iniziata'), 1);
+    await studio('s1', { inizio: oggi(9), fine: oggi(10), unitaId: 'u11', corsoId: 'c2' });
+    await studio('s2', { unitaId: null, corsoId: 'c2' });
+    await startSession(db, 's1', scelta(), oggi(9), FUSO);
+  };
+  it('«Abbandona» alle 09:40 con 39 minuti di focus (65%): terminata prima con esito Continua, blocco parziale con 39 minuti, unità parziale, streak, puntatore', async () => {
+    await avvia();
+    await editActiveSession(db, (s) => pauseSession(s, oggi(9, 20)), oggi(9, 20));
+    await editActiveSession(db, (s) => resumeSession(s, oggi(9, 21)), oggi(9, 21));
+    const chiusa = await abandonSession(db, oggi(9, 40), FUSO);
+    expect(chiusa).toMatchObject({
+      chiusura: 'terminata_prima',
+      esito: { esito: 'continua', confidenza: null, nota: '', contaNelPiano: true },
+    });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({
+      stato: 'parziale',
+      minuti: 39,
+      confidenza: null,
+      notaEsito: null,
+    });
+    expect((await get(db, 'unita', 'u11'))?.stato).toBe('parziale');
+    // Puntatore ricalcolato (D-SESS-2 n. 2): la 1.1 resta la prima pendente e va al blocco delle 15:00
+    expect((await get(db, 'blocchi', 's2'))?.unitaId).toBe('u11');
+    expect(await readStreak(db, oggi(9, 40))).toBe(1);
+    expect(await readActiveSession(db)).toBeNull();
+    expect(await list(db, 'sessioni')).toMatchObject([{ chiusura: 'terminata_prima', esito: { esito: 'continua' } }]);
+  });
+  it('«Abbandona» alle 09:35 con 35 minuti di focus (58%): abbandono, blocco programmato e perso dopo le 10:30 (§8: fine passata da più di 30 minuti)', async () => {
+    await avvia();
+    expect(await abandonSession(db, oggi(9, 35), FUSO)).toMatchObject({ chiusura: 'abbandonata', esito: null });
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('programmato');
+    expect((await get(db, 'unita', 'u11'))?.stato).toBe('non_iniziata');
+    expect(await readStreak(db, oggi(9, 35))).toBe(0);
+    await runCycle(db, oggi(10, 30), FUSO);
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('programmato');
+    await runCycle(db, oggi(10, 31), FUSO);
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('perso');
   });
 });
 

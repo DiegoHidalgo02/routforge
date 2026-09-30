@@ -50,10 +50,12 @@ import {
 } from '../domain/session';
 import { MINUTE, localTimeKey } from '../domain/time';
 import {
+  abandonPlan,
   addInterruption,
   changeUnit,
   currentStudyUnit,
   exitLocked,
+  focusPercent,
   pauseSession,
   segmentTimeline,
   resumeSession,
@@ -470,7 +472,9 @@ const AVVISO_MS = 5000;
  * Timer della sessione (S15 `timer`, `iperfocus`, sheet di chiusura; MECC §10.2–§10.5): i valori li deriva
  * `domain/timer.ts` dagli istanti salvati, ogni secondo. Schermo acceso finché il timer è aperto; in iperfocus schermo
  * intero, indietro assorbito, Non Disturbare se concesso, uscita con conferma. «Termina» apre lo sheet dell'esito (S16),
- * «Registra esito» chiude la sessione con l'esito e mostra la schermata finale (`done`). Decisioni: D-TIMER-1, D-ESITO-1.
+ * «Registra esito» chiude la sessione con l'esito e mostra la schermata finale (`done`). «Abbandona» dal 65% della durata
+ * pianificata dice «Chiudi come Continua (n%)» e finisce nella stessa schermata (D-SESS-2, divergenza 38). Decisioni:
+ * D-TIMER-1, D-ESITO-1, D-SESS-2.
  */
 export function ActiveSession() {
   const vista = useSessionView();
@@ -482,7 +486,13 @@ export function ActiveSession() {
   const [uscita, setUscita] = useState<'no' | 'tentativo' | 'registrata'>('no');
   const [dnd, setDnd] = useState(false);
   const [inChiusura, setInChiusura] = useState(false);
-  const [fatto, setFatto] = useState<{ dati: DatiEsito; puntatore: string | null; minuti: number } | null>(null);
+  /** La chiusura registrata; `percento` solo per l'abbandono oltre soglia (D-SESS-2). */
+  const [fatto, setFatto] = useState<{
+    dati: DatiEsito;
+    puntatore: string | null;
+    minuti: number;
+    percento: number | null;
+  } | null>(null);
   const attiva = Boolean(vista);
   const bloccata = vista ? exitLocked(vista.sessione, now) : false;
 
@@ -524,7 +534,11 @@ export function ActiveSession() {
         </span>
         <span className={s.fattoTesti}>
           <h1 className={s.fattoTitolo}>{t('esitoDi', { esito: etichettaEsito(fatto.dati.esito) })}</h1>
-          <span className={s.fattoTesto}>{t(fatto.dati.contaNelPiano ? 'esitoFattoTesto' : 'contaNo')}</span>
+          <span className={s.fattoTesto}>
+            {fatto.percento !== null
+              ? t('esitoAutomaticoTesto', { pct: fatto.percento })
+              : t(fatto.dati.contaNelPiano ? 'esitoFattoTesto' : 'contaNo')}
+          </span>
         </span>
         <span className={`${s.righe} ${s.fattoRighe}`}>
           <Riga etichetta={t('durataCampo')} valore={`${fatto.minuti} ${t('minutiUnita')}`} />
@@ -564,12 +578,22 @@ export function ActiveSession() {
     const n = adesso();
     void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
   };
+  // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma; altrimenti si torna a Oggi
   const abbandona = () => {
     if (inChiusura) return;
     setInChiusura(true);
     void abandonSession(appDb, adesso(), fuso())
       .catch(() => null)
-      .then(() => navigate('/', { replace: true }));
+      .then((c) =>
+        c?.esito
+          ? setFatto({
+              dati: c.esito,
+              puntatore: null,
+              minuti: minutiDi(c.riepilogo.focus),
+              percento: focusPercent(c, c.chiusaIl),
+            })
+          : navigate('/', { replace: true }),
+      );
   };
   // Registrato l'esito resta la schermata finale (S15 `done`); senza chiusura (già chiusa altrove, errore) si torna a Oggi
   const registra = (dati: DatiEsito, puntatore: string | null) => {
@@ -578,7 +602,9 @@ export function ActiveSession() {
     void endSession(appDb, adesso(), fuso(), dati)
       .catch(() => null)
       .then((c) =>
-        c ? setFatto({ dati, puntatore, minuti: minutiDi(c.riepilogo.focus) }) : navigate('/', { replace: true }),
+        c
+          ? setFatto({ dati, puntatore, minuti: minutiDi(c.riepilogo.focus), percento: null })
+          : navigate('/', { replace: true }),
       );
   };
   const interruzione = (
@@ -652,6 +678,8 @@ export function ActiveSession() {
   const segmenti = segmentTimeline(sx);
   const seg = st.segmento;
   const r = foglio ? summary(sx, now) : null;
+  // Il link dice che cosa farà «Abbandona» adesso (§10.5, D-SESS-2)
+  const conEsito = r !== null && abandonPlan(sx, now).esito !== null;
 
   return (
     <div className={s.timer}>
@@ -781,7 +809,7 @@ export function ActiveSession() {
             onRegistra={registra}
           >
             <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={abbandona}>
-              {t('abbandonaSessione')}
+              {conEsito ? t('chiudiComeContinua', { pct: focusPercent(sx, now) ?? 0 }) : t('abbandonaSessione')}
             </button>
           </SchedaEsito>
         </Foglio>

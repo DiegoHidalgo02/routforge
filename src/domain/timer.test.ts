@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { TIMER_VUOTO, type SessioneAttiva } from './session';
 import { local, MINUTE } from './time';
 import {
+  abandonPlan,
   addInterruption,
   changeUnit,
   closeSession,
   currentStudyUnit,
   exitLocked,
+  focusPercent,
   pauseSession,
   resumeSession,
   segmentTimeline,
@@ -157,12 +159,46 @@ describe('Chiusura — MECCANISMI §10.5', () => {
     const c = closeSession(inPausa, ore(9, 30));
     expect(c).toMatchObject({ chiusura: 'terminata_prima', chiusaIl: ore(9, 30), pause: [{ fine: ore(9, 30) }] });
     expect(c.riepilogo).toMatchObject({ focus: 20 * MINUTE, numeroPause: 1, durataPause: 10 * MINUTE });
-    expect(closeSession(sessione(), ore(9, 30), true).chiusura).toBe('abbandonata');
+    expect(closeSession(sessione(), ore(9, 30), 'abbandonata').chiusura).toBe('abbandonata');
     expect(closeSession(sessione({ durata: null }), ore(9, 5)).chiusura).toBe('completata');
   });
   it('una pausa doppia o una ripresa senza pausa non cambiano nulla', () => {
     const s = pauseSession(sessione(), ore(9, 10));
     expect(pauseSession(s, ore(9, 11))).toBe(s);
     expect(resumeSession(sessione(), ore(9, 11)).pause).toEqual([]);
+  });
+});
+
+describe('Abbandono oltre soglia — SCENARI D7', () => {
+  // Routine sul blocco 09:00–10:00 avviata alle 09:00: durata pianificata 60 minuti (D-SESS-2)
+  const routine = sessione({ contesto: 'routine', bloccoId: 'b1', avvio: ore(9), fine: ore(10), durata: 60 });
+  const CONTINUA = { esito: 'continua', confidenza: null, nota: '', contaNelPiano: true };
+  it('alle 09:40 con 39 minuti di focus (65%, §10.5): terminata prima con l’esito Continua che conta nel piano', () => {
+    const s = resumeSession(pauseSession(routine, ore(9, 20)), ore(9, 21));
+    expect(focusPercent(s, ore(9, 40))).toBe(65);
+    expect(abandonPlan(s, ore(9, 40))).toEqual({ chiusura: 'terminata_prima', esito: CONTINUA });
+  });
+  it('alle 09:35 con 35 minuti di focus (58%): abbandono senza esito', () => {
+    expect(focusPercent(routine, ore(9, 35))).toBe(58);
+    expect(abandonPlan(routine, ore(9, 35))).toEqual({ chiusura: 'abbandonata', esito: null });
+  });
+  it('le pause non contano: 40 minuti di orologio con 10 di pausa sono al 50%', () => {
+    const s = resumeSession(pauseSession(routine, ore(9, 20)), ore(9, 30));
+    expect(focusPercent(s, ore(9, 40))).toBe(50);
+    expect(abandonPlan(s, ore(9, 40)).esito).toBeNull();
+  });
+  it('il tempo extra non alza la quota oltre il 100%', () => {
+    expect(focusPercent(routine, ore(10, 10))).toBe(100);
+  });
+  it('un recupero da 25 minuti sul blocco: la quota è sulla durata scelta, la stessa del tempo extra', () => {
+    const r = sessione({ contesto: 'recupero', bloccoId: 'b1', avvio: ore(10, 20), fine: ore(10, 45), durata: 25 });
+    expect(focusPercent(r, ore(10, 40))).toBe(80);
+  });
+  it('senza blocco o col cronometro la soglia non vale: sempre abbandono', () => {
+    expect(focusPercent(sessione(), ore(9, 49))).toBeNull();
+    expect(abandonPlan(sessione(), ore(9, 49))).toEqual({ chiusura: 'abbandonata', esito: null });
+    const cronometro = sessione({ contesto: 'recupero', bloccoId: 'b1', durata: null });
+    expect(focusPercent(cronometro, ore(12))).toBeNull();
+    expect(abandonPlan(cronometro, ore(12)).esito).toBeNull();
   });
 });

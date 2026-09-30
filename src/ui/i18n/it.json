@@ -271,6 +271,8 @@
   "extraBreve": "tempo extra +{min} min",
   "continuaStudiare": "Continua a studiare",
   "abbandonaSessione": "Abbandona · nessun esito",
+  "chiudiComeContinua": "Chiudi come Continua ({pct}%)",
+  "esitoAutomaticoTesto": "Hai studiato il {pct}% del pianificato: la sessione è chiusa prima della fine con l’esito Continua.",
   "esitoCompletata": "Completata",
   "esitoContinua": "Continua",
   "esitoIndietro": "Indietro",

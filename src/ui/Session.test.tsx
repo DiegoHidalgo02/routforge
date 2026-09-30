@@ -9,9 +9,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appDb } from '../app/db';
-import { readActiveSession, startSession } from '../app/session';
+import { editActiveSession, readActiveSession, startSession } from '../app/session';
 import type { SceltaSessione } from '../domain/session';
 import { local } from '../domain/time';
+import { pauseSession, resumeSession } from '../domain/timer';
 import { ActiveSession, SessionBanner, SessionSetup, useSessionView } from './Session';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -144,6 +145,36 @@ describe('Iperfocus — SCENARI D5 (UI)', () => {
     await vi.waitFor(() => expect(box.textContent).toContain('Finish'));
     expect(box.textContent).toContain('“Hyperfocus” interruption recorded');
     expect((await readActiveSession(appDb))?.interruzioni).toMatchObject([{ iperfocus: true }]);
+  });
+});
+
+describe('Abbandono oltre soglia — SCENARI D7 (UI)', () => {
+  // Routine sul blocco 09:00–10:00 avviata alle 09:00 (60 minuti pianificati)
+  const alle9 = local(2026, 9, 28, 9);
+  it('alle 09:40 con 39 minuti di focus (65%) il link dice «Close as Continue (65%)» e la schermata finale conferma l’esito', async () => {
+    await studio('s1', 9);
+    await startSession(appDb, 's1', scelta(), alle9, FUSO);
+    await editActiveSession(appDb, (x) => pauseSession(x, alle9 + 20 * 60_000), alle9 + 20 * 60_000);
+    await editActiveSession(appDb, (x) => resumeSession(x, alle9 + 21 * 60_000), alle9 + 21 * 60_000);
+    vi.setSystemTime(alle9 + 40 * 60_000);
+    mostra('/sessione');
+    await vi.waitFor(() => expect(box.textContent).toContain('Finish'));
+    bottone('Finish').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Close as Continue (65%)'));
+    bottone('Close as Continue (65%)').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Outcome · Continue'));
+    expect(box.textContent).toContain('You studied 65% of the plan');
+    expect(await appDb.blocchi.get('s1')).toMatchObject({ stato: 'parziale', minuti: 39 });
+  });
+  it('sotto la soglia (35 minuti, 58%) il link resta «Abandon · no outcome»', async () => {
+    await studio('s1', 9);
+    await startSession(appDb, 's1', scelta(), alle9, FUSO);
+    vi.setSystemTime(alle9 + 35 * 60_000);
+    mostra('/sessione');
+    await vi.waitFor(() => expect(box.textContent).toContain('Finish'));
+    bottone('Finish').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Abandon · no outcome'));
+    expect(box.textContent).not.toContain('Close as Continue');
   });
 });
 

@@ -271,6 +271,8 @@
   "extraBreve": "temps en plus +{min} min",
   "continuaStudiare": "Continuer à étudier",
   "abbandonaSessione": "Abandonner · sans résultat",
+  "chiudiComeContinua": "Clore comme Continuer ({pct}%)",
+  "esitoAutomaticoTesto": "Tu as étudié {pct}% du prévu : la session est close avant la fin avec le résultat Continuer.",
   "esitoCompletata": "Terminée",
   "esitoContinua": "Continuer",
   "esitoIndietro": "Retour",

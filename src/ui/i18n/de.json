@@ -271,6 +271,8 @@
   "extraBreve": "Zusatzzeit +{min} Min.",
   "continuaStudiare": "Weiterlernen",
   "abbandonaSessione": "Abbrechen · ohne Ergebnis",
+  "chiudiComeContinua": "Als „Weiter“ beenden ({pct}%)",
+  "esitoAutomaticoTesto": "Du hast {pct}% des Geplanten gelernt: die Sitzung wurde vorzeitig mit dem Ergebnis „Weiter“ beendet.",
   "esitoCompletata": "Abgeschlossen",
   "esitoContinua": "Weiter",
   "esitoIndietro": "Zurück",
