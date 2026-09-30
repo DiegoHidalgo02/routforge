@@ -65,7 +65,8 @@
 - Test della UI: jsdom c'è da T-015 (`// @vitest-environment jsdom` in testa al file) ma non impagina: `useOggi`, `useMinuto` e il banner del ritorno sono verificati solo nel browser (G4 `parziale`).
 
 **Ambiente e strumenti**
-- Nessun remote git: la CI e `/security-review` non hanno mai girato (revisioni manuali; il rischio di un `.md` enorme nello ZIP decompresso in memoria va limitato con T-021).
+- Remote `origin` configurato (GitHub, `DiegoHidalgo02/routforge`) ma `main` è avanti di 40 commit e nulla è stato pushato di recente: la CI e `/security-review` non hanno mai girato (revisioni manuali; il rischio di un `.md` enorme nello ZIP decompresso in memoria va limitato con T-021).
+- Da chiudere (30/09, chiesto dall'utente): verifica nel browser a 360 e 1280 di T-046/T-047 (script CDP da scrivere sul modello di `coverage/cdp-t043.mjs`: sessione avviata 40′ prima, ricaricamento → avviso del battito, «Conta nel focus», sheet con «Chiudi come Continua», schermata finale, variante iperfocus); battiti solo a scheda visibile sul web (D-TIMER-2 n. 1): aggiungere `visible(): boolean` alla porta `Clock` (adapter web con `document.visibilityState`, orologi finti in `scheduler.test.ts`, `session.test.ts`, `notifications.test.ts`), saltare il battito in `startHeartbeat` quando non visibile, revisione indipendente (cambio di porta), aggiornare la scheda D-TIMER-2.
 - `npm audit`: due avvisi moderati su `@vitest/mocker` (correzione solo con Vitest 5); `eslint-plugin-jsx-a11y` usa `overrides` per ESLint 10 (`docs/DIPENDENZE.md`).
 - `scripts/loop.sh` risulta modificato su Windows: `git config core.fileMode false` prima di `git add` (se già aggiunto: `git update-index --chmod=+x scripts/loop.sh`).
 - Favicon e icone arrivano con CP6 (T-035); `crypto.randomUUID` richiede un contesto sicuro, iOS da verificare in T-036.
