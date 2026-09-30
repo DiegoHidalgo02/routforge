@@ -5,7 +5,8 @@
  * anticipo, ritardo, materia) stanno in `domain/session.ts`; qui si leggono e si scrivono le righe. «Anticipa» qui e
  * all'avvio T-019 riconcilierà le notifiche (ri-armo e verifica cancellata, §10.1). Il timer (§10.2–§10.5, T-017) salva
  * i suoi istanti nella stessa riga e chiude la sessione in `sessioni`; nulla la chiude da solo, nemmeno dopo un crash
- * (D4, D-TIMER-1). Criteri: SCENARI C4, C5, C9 (setup), D4, D5 (uscita registrata), D6.
+ * (D4, D-TIMER-1): i battiti di `startHeartbeat` (§10.4, D-TIMER-2) rendono non verificato il tempo senza continuità.
+ * Criteri: SCENARI C4, C5, C9 (setup), D4, D5 (uscita registrata), D6, D7 (abbandono oltre soglia).
  */
 import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, list, remove, save, saveBlock, watch } from '../data/repository';
@@ -19,10 +20,12 @@ import {
   type SceltaSessione,
   type SessioneAttiva,
 } from '../domain/session';
-import { abandonPlan, closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
+import { MINUTE } from '../domain/time';
+import { abandonPlan, beat, closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
 import { TABELLE_ESITO, writeOutcome } from './outcome';
+import type { Clock } from './ports/clock';
 
 /**
  * Riga di `preferenze` della sessione attiva (MECC §1; docs/02_ARCHITETTURA.md §4). Il ciclo ne legge `bloccoId` con
@@ -34,10 +37,27 @@ export const CHIAVE_SESSIONE_ATTIVA = 'sessioneAttiva';
 export async function readActiveSession(db: RoutForgeDb): Promise<SessioneAttiva | null> {
   const valore = (await get(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA))?.valore;
   // La riga la scrive solo questo servizio; una riga illeggibile (dato rotto) vale come nessuna sessione. Una sessione
-  // avviata prima del timer (T-016) non ha i suoi campi: partono vuoti
-  return typeof valore === 'object' && valore !== null && 'avvio' in valore && typeof valore.avvio === 'number'
-    ? { ...TIMER_VUOTO, ...(valore as SessioneAttiva) }
-    : null;
+  // avviata prima del timer (T-016) o dei battiti (T-047) non ha i loro campi: partono vuoti, l'ultimo battito è l'avvio
+  if (typeof valore !== 'object' || valore === null || !('avvio' in valore) || typeof valore.avvio !== 'number')
+    return null;
+  const v = valore as Omit<SessioneAttiva, 'ultimoBattito'> & { ultimoBattito?: number };
+  return { ...TIMER_VUOTO, ...v, ultimoBattito: v.ultimoBattito ?? v.avvio };
+}
+
+/**
+ * Battiti di continuità (§10.4, D-TIMER-2): l'istante corrente nella sessione attiva subito, a ogni minuto e al ritorno
+ * in primo piano, finché l'app è aperta; più di 30' dall'ultimo battito restano registrati come intervallo non
+ * verificato (`beat`). Fuori dalla transazione del ciclo (INV-15); senza sessione non scrive; un errore resta qui
+ * (INV-16). Su Android il servizio in primo piano di T-021 terrà vivi i battiti anche con l'app chiusa. Restituisce lo stop.
+ */
+export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
+  const batti = () => {
+    const now = clock.now();
+    void editActiveSession(db, (s) => beat(s, now), now).catch(() => null);
+  };
+  batti();
+  const stop = [clock.every(MINUTE, batti), clock.onForeground(batti)];
+  return () => stop.forEach((smetti) => smetti());
 }
 
 /** Osserva la sessione attiva: `onChange` riceve subito e a ogni avvio o abbandono. Restituisce lo stop. */

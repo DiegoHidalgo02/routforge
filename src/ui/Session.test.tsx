@@ -12,7 +12,7 @@ import { appDb } from '../app/db';
 import { editActiveSession, readActiveSession, startSession } from '../app/session';
 import type { SceltaSessione } from '../domain/session';
 import { local } from '../domain/time';
-import { pauseSession, resumeSession } from '../domain/timer';
+import { beat, pauseSession, resumeSession } from '../domain/timer';
 import { ActiveSession, SessionBanner, SessionSetup, useSessionView } from './Session';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -101,7 +101,49 @@ describe('Una sola sessione — SCENARI D6 (UI)', () => {
   });
 });
 
-describe('Persistenza — SCENARI D4 (UI)', () => {
+describe('Persistenza e continuità — SCENARI D4 (UI)', () => {
+  it('riaperta 45 minuti dopo l’ultimo battito: avviso con l’ora, la durata e il tempo residuo; «Count as focus» li attribuisce', async () => {
+    await startSession(appDb, null, scelta(), ADESSO, FUSO);
+    // Il battito della riapertura (`startHeartbeat`, main.tsx) registra l'intervallo
+    const riapertura = ADESSO + 45 * 60_000;
+    await editActiveSession(appDb, (x) => beat(x, riapertura), riapertura);
+    vi.setSystemTime(riapertura);
+    mostra('/sessione');
+    await vi.waitFor(() =>
+      expect(box.textContent).toContain('Unverified since about 10:20: 45 min outside focus · 50 min left'),
+    );
+    expect(box.textContent).toContain('50:00');
+    bottone('Count as focus').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('05:00'));
+    expect(box.textContent).not.toContain('Unverified');
+    expect((await readActiveSession(appDb))?.intervalliNonVerificati).toEqual([
+      { da: ADESSO, a: ADESSO + 45 * 60_000, contato: true },
+    ]);
+  });
+  it('ancorata all’orologio (routine 09:00–10:00) riaperta alle 09:45: il residuo è la fine del blocco, 15 minuti', async () => {
+    const alle9 = local(2026, 9, 28, 9);
+    await studio('s1', 9);
+    await startSession(appDb, 's1', scelta(), alle9, FUSO);
+    await editActiveSession(appDb, (x) => beat(x, alle9 + 45 * 60_000), alle9 + 45 * 60_000);
+    vi.setSystemTime(alle9 + 45 * 60_000);
+    mostra('/sessione');
+    await vi.waitFor(() =>
+      expect(box.textContent).toContain('Unverified since about 09:00: 45 min outside focus · 15 min left'),
+    );
+    expect(box.textContent).toContain('15:00');
+  });
+  it('nell’iperfocus l’avviso compare lo stesso e «Count as focus» anticipa l’ora di sblocco', async () => {
+    await startSession(appDb, null, scelta({ iperfocus: true }), ADESSO, FUSO);
+    const riapertura = ADESSO + 45 * 60_000;
+    await editActiveSession(appDb, (x) => beat(x, riapertura), riapertura);
+    vi.setSystemTime(riapertura);
+    mostra('/sessione');
+    await vi.waitFor(() => expect(box.textContent).toContain('Exit unlocks at 11:55'));
+    expect(box.textContent).toContain('Unverified since about 10:20: 45 min outside focus · 50 min left');
+    bottone('Count as focus').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Exit unlocks at 11:10'));
+    expect(box.textContent).not.toContain('Unverified');
+  });
   it('riaperta 12 minuti dopo, il banner mostra la sessione e «Resume» riporta al timer', async () => {
     await startSession(appDb, null, scelta(), ADESSO, FUSO);
     vi.setSystemTime(ADESSO + 12 * 60_000);

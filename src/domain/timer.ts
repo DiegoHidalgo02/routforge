@@ -1,12 +1,16 @@
 /**
  * Timer della sessione di studio: regimi, pause, pomodoro, tempo extra, iperfocus, chiusura e riepilogo.
  * Fonte: RoutForge_MECCANISMI.md §10.2–§10.5 (FUNZ §11.2) — criteri: SCENARI D1, D2, D3, D4, D5, D7 (lato dominio).
- * Decisioni: D-TIMER-1, D-SESS-2.
+ * Decisioni: D-TIMER-1, D-TIMER-2, D-SESS-2.
  *
- * - Tutto deriva da istanti assoluti salvati nella sessione attiva (avvio, pause, salti, cambi d'unità): nessun
+ * - Tutto deriva da istanti assoluti salvati nella sessione attiva (avvio, pause, salti, cambi d'unità, battiti): nessun
  *   contatore, così il timer riprende giusto dopo la chiusura dell'app (D4).
- * - Tempo attivo = trascorso − pause dell'utente = focus (§10.2); le pause dei segmenti del pomodoro contano nel focus
- *   e nel totale (§10.3) e il riepilogo le riporta a parte.
+ * - Tempo attivo = trascorso − pause dell'utente − intervalli non verificati non contati = focus (§10.2, §10.4); le
+ *   pause dei segmenti del pomodoro contano nel focus e nel totale (§10.3) e il riepilogo le riporta a parte.
+ * - Continuità (D-TIMER-2): il battito (`beat`, dal servizio subito alla riapertura e ogni minuto) registra come
+ *   intervallo non verificato più di 30' dall'ultimo battito; l'intervallo resta fuori dal focus e dalle pause finché
+ *   l'utente non lo conta (`countInterval`). La fine ancorata all'orologio non si sposta; quella ancorata al focus segue
+ *   il focus confermato.
  * - Ancorata all'orologio (`fine` presente): finisce a `fine`, la pausa non la sposta; ancorata al focus (libera con
  *   durata): finisce quando il focus arriva alla durata; cronometro (senza durata): mai finita.
  * - Oltre la fine il timer prosegue: tempo extra = tempo attivo dopo la fine (orologio) o focus − durata (focus).
@@ -20,17 +24,47 @@
  */
 import type { DatiEsito } from './outcome';
 import { planSegments, PRESETS, type PresetPomodoro, type TipoSegmento } from './pomodoro';
-import type { Modalita, SessioneAttiva } from './session';
-import { MINUTE } from './time';
+import type { IntervalloNonVerificato, Modalita, SessioneAttiva } from './session';
+import { MINUTE, minutes } from './time';
 
 const PRESET: Record<Exclude<Modalita, 'continua'>, PresetPomodoro> = { p25: '25/5', p50: '50/10', p90: '90/20' };
+
+/** Più di 30 minuti dall'ultimo battito = intervallo non verificato (§10.4, D-TIMER-2: la soglia degli orfani di §8). */
+export const SOGLIA_NON_VERIFICATO = minutes(30);
 
 /** Millisecondi di pausa dell'utente prima di `t`. */
 const pausedBefore = (s: SessioneAttiva, t: number): number =>
   s.pause.reduce((acc, p) => acc + Math.max(0, Math.min(p.fine ?? t, t) - p.inizio), 0);
 
-/** Tempo attivo (trascorso − pause) all'istante `t`. */
-const activeAt = (s: SessioneAttiva, t: number): number => Math.max(0, t - s.avvio - pausedBefore(s, t));
+/** Ms degli intervalli non verificati non contati prima di `t` (§10.4); disgiunti dalle pause, che `beat` chiude. */
+const unverifiedBefore = (s: SessioneAttiva, t: number): number =>
+  s.intervalliNonVerificati.reduce((acc, i) => acc + (i.contato ? 0 : Math.max(0, Math.min(i.a, t) - i.da)), 0);
+
+/** Tempo attivo (trascorso − pause − intervalli non contati) all'istante `t`. */
+const activeAt = (s: SessioneAttiva, t: number): number =>
+  Math.max(0, t - s.avvio - pausedBefore(s, t) - unverifiedBefore(s, t));
+
+/**
+ * Battito di continuità (§10.4, D-TIMER-2): registra l'istante; se dall'ultimo battito sono passati più di 30' registra
+ * l'intervallo come non verificato. Una pausa rimasta aperta è verificata solo fino all'ultimo battito: si chiude lì,
+ * così l'intervallo non conta nemmeno come pausa volontaria e «Conta nel focus» ha effetto.
+ */
+export function beat(s: SessioneAttiva, now: number): SessioneAttiva {
+  if (now - s.ultimoBattito <= SOGLIA_NON_VERIFICATO) return { ...s, ultimoBattito: now };
+  const nonVerificato: IntervalloNonVerificato = { da: s.ultimoBattito, a: now, contato: false };
+  return {
+    ...s,
+    ultimoBattito: now,
+    pause: s.pause.map((p) => (p.fine === null ? { ...p, fine: Math.max(p.inizio, s.ultimoBattito) } : p)),
+    intervalliNonVerificati: [...s.intervalliNonVerificati, nonVerificato],
+  };
+}
+
+/** «Conta nel focus» (§10.4): l'intervallo non verificato che inizia a `da` entra nel focus. */
+export const countInterval = (s: SessioneAttiva, da: number): SessioneAttiva => ({
+  ...s,
+  intervalliNonVerificati: s.intervalliNonVerificati.map((i) => (i.da === da ? { ...i, contato: true } : i)),
+});
 
 /** Durata pianificata in ms (§10.2): fine − avvio se ancorata all'orologio, altrimenti la durata; `null` col cronometro. */
 const plannedMs = (s: SessioneAttiva): number | null =>

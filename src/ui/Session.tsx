@@ -53,6 +53,7 @@ import {
   abandonPlan,
   addInterruption,
   changeUnit,
+  countInterval,
   currentStudyUnit,
   exitLocked,
   focusPercent,
@@ -473,8 +474,10 @@ const AVVISO_MS = 5000;
  * `domain/timer.ts` dagli istanti salvati, ogni secondo. Schermo acceso finché il timer è aperto; in iperfocus schermo
  * intero, indietro assorbito, Non Disturbare se concesso, uscita con conferma. «Termina» apre lo sheet dell'esito (S16),
  * «Registra esito» chiude la sessione con l'esito e mostra la schermata finale (`done`). «Abbandona» dal 65% della durata
- * pianificata dice «Chiudi come Continua (n%)» e finisce nella stessa schermata (D-SESS-2, divergenza 38). Decisioni:
- * D-TIMER-1, D-ESITO-1, D-SESS-2.
+ * pianificata dice «Chiudi come Continua (n%)» e finisce nella stessa schermata (D-SESS-2, divergenza 38). Alla
+ * riapertura dopo più di 30' senza battiti un avviso mostra l'intervallo non verificato (ora circa, durata, tempo
+ * residuo) con «Conta nel focus», anche nell'iperfocus (§10.4, D-TIMER-2, divergenza 38). Decisioni: D-TIMER-1,
+ * D-TIMER-2, D-ESITO-1, D-SESS-2.
  */
 export function ActiveSession() {
   const vista = useSessionView();
@@ -619,6 +622,24 @@ export function ActiveSession() {
       {t('iperfocus')}
     </span>
   );
+  // Intervalli non verificati alla riapertura (§10.4, D-TIMER-2): ora dell'ultimo battito (circa), durata per eccesso,
+  // tempo residuo; restano finché l'utente non li conta. Anche nell'iperfocus, dove l'ora di sblocco ne dipende
+  const residuo = st.restante === null ? null : inMinuti(minutiDi(st.restante));
+  const avvisiNonVerificati = sx.intervalliNonVerificati
+    .filter((i) => !i.contato)
+    .map((i) => {
+      const dati = { ora: localTimeKey(i.da), min: Math.ceil((i.a - i.da) / MINUTE) };
+      return (
+        <div key={i.da} className={s.nonVerificato} role="status">
+          <span>
+            {residuo === null ? t('nonVerificatoSenzaFine', dati) : t('nonVerificato', { ...dati, restante: residuo })}
+          </span>
+          <button type="button" className={s.pill} onClick={() => modifica((x) => countInterval(x, i.da))}>
+            {t('contaNelFocus')}
+          </button>
+        </div>
+      );
+    });
 
   if (bloccata)
     return (
@@ -639,6 +660,7 @@ export function ActiveSession() {
           <span className={s.meta}>{meta}</span>
           <span className={s.sblocco}>{sblocco}</span>
         </div>
+        {avvisiNonVerificati}
         <div className={s.iperPiede}>
           {interruzione}
           <button type="button" className={s.pillEsci} onClick={() => setUscita('tentativo')}>
@@ -756,6 +778,8 @@ export function ActiveSession() {
           {sx.iperfocus && pillIperfocus}
         </div>
       </div>
+
+      {avvisiNonVerificati}
 
       {elenco && ingressi && (
         <div className={s.elencoUnita}>

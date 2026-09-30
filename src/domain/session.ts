@@ -10,7 +10,8 @@
  * - «Anticipa sessione» sposta il blocco di oggi ad adesso con la stessa durata e registra i minuti di anticipo.
  * - Materia: blocco con unità puntata → quella; senza unità → scelta libera (corso → unità corrente, o prima non
  *   completata né saltata; oppure nessuna); libera → quella scelta, anche nessuna.
- * Il timer (regimi, pomodoro, iperfocus) è in `timer.ts` (T-017); gli esiti di T-018.
+ * Il timer (regimi, pomodoro, iperfocus, battiti e intervalli non verificati) è in `timer.ts` (T-017, T-047); gli esiti
+ * di T-018.
  */
 import { effectiveEnd } from './lost';
 import { currentUnit, sortedUnits, type ModuloPercorso, type UnitaPercorso } from './pointer';
@@ -34,6 +35,16 @@ export interface SceltaSessione {
 }
 
 /**
+ * Intervallo di continuità non verificata (§10.4, D-TIMER-2): più di 30' dall'ultimo battito. Fuori dal focus e dalle
+ * pause finché l'utente non lo attribuisce al focus (`contato`).
+ */
+export interface IntervalloNonVerificato {
+  da: number;
+  a: number;
+  contato: boolean;
+}
+
+/**
  * Valore di `preferenze.sessioneAttiva` (MECC §1; D-SCHED-1: il ciclo ne legge `bloccoId`). `fine` è l'istante
  * ancorato all'orologio (routine, recupero con durata); `null` per la libera e il cronometro.
  */
@@ -50,14 +61,22 @@ export interface SessioneAttiva extends SceltaSessione {
   cambiUnita: { istante: number; unitaId: string | null }[];
   /** Istanti dei «salta segmento» del pomodoro (§10.3). */
   salti: number[];
+  /** Ultimo battito di continuità (§10.4, D-TIMER-2): all'avvio è l'avvio; poi lo scrive il servizio ogni minuto. */
+  ultimoBattito: number;
+  /** Intervalli non verificati già riconosciuti da un battito (§10.4, D-TIMER-2). */
+  intervalliNonVerificati: IntervalloNonVerificato[];
 }
 
-/** I campi del timer di una sessione appena avviata (T-017). */
-export const TIMER_VUOTO: Pick<SessioneAttiva, 'pause' | 'interruzioni' | 'cambiUnita' | 'salti'> = {
+/** I campi del timer di una sessione appena avviata (T-017, T-047). */
+export const TIMER_VUOTO: Pick<
+  SessioneAttiva,
+  'pause' | 'interruzioni' | 'cambiUnita' | 'salti' | 'intervalliNonVerificati'
+> = {
   pause: [],
   interruzioni: [],
   cambiUnita: [],
   salti: [],
+  intervalliNonVerificati: [],
 };
 
 /** Le azioni di sessione di un blocco di studio (S1 blocco Adesso, S5 footer): la prima è la primaria. */
@@ -139,9 +158,10 @@ export function startPlan<B extends Blocco>(
   now: number,
 ): { sessione: SessioneAttiva; blocco: B | null } {
   const contesto = startContext(b, now);
+  const base = { ...scelta, ...TIMER_VUOTO, avvio: now, ultimoBattito: now };
   if (!b || contesto === 'libera')
     return {
-      sessione: { ...scelta, ...TIMER_VUOTO, bloccoId: null, contesto: 'libera', avvio: now, fine: null },
+      sessione: { ...base, bloccoId: null, contesto: 'libera', fine: null },
       blocco: null,
     };
   const materia = b.unitaId ? { unitaId: b.unitaId, corsoId: b.corsoId ?? null } : {};
@@ -155,7 +175,7 @@ export function startPlan<B extends Blocco>(
   // avvio (D-SESS-1)
   const ritardo = b.minutiRitardo ?? Math.max(0, Math.round((now - b.inizio) / MINUTE));
   return {
-    sessione: { ...scelta, ...TIMER_VUOTO, ...materia, ...tempo, bloccoId: b.id, contesto, avvio: now },
+    sessione: { ...base, ...materia, ...tempo, bloccoId: b.id, contesto },
     blocco: b.stato === 'parziale' ? null : { ...b, stato: 'in_corso', minutiRitardo: ritardo },
   };
 }

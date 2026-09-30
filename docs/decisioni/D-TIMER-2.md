@@ -1,10 +1,10 @@
 # D-TIMER-2 — Continuità della sessione: battiti, intervallo non verificato, timer con app chiusa
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
-**da applicare** con T-047 (battiti, intervallo non verificato, avviso alla riapertura), T-021 (servizio Android in
-primo piano con la notifica-cronometro) e T-036 (Live Activity iOS); **spec allineata il 30/09/2026** con il testo in
-fondo (`deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel
-registro: `docs/01_DECISIONI.md`. Estende D-TIMER-1 (D4 e il punto 8).
+**applicata** con T-047 il 30/09/2026 (battiti, intervallo non verificato, avviso alla riapertura); **da applicare** con
+T-021 (servizio Android in primo piano con la notifica-cronometro) e T-036 (Live Activity iOS); **spec allineata il
+30/09/2026** con il testo in fondo (`deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita
+dell'utente, INV-5). Riga nel registro: `docs/01_DECISIONI.md`. Estende D-TIMER-1 (D4 e il punto 8).
 
 ## Contesto
 D-TIMER-1 salva solo istanti e riprende il timer dopo la chiusura contando tutto il tempo come focus (D4: riaperta 12'
@@ -68,7 +68,25 @@ background anche su iOS e web.
 - T-029: il focus esclude gli intervalli non contati; «uscite» e interruzioni restano come in D-TIMER-1.
 - D-SESS-2: la soglia del 65% si calcola sul focus confermato.
 
+## Precisazioni di T-047 (30/09/2026)
+- L'intervallo non verificato lo **registra il battito** (`beat`): il servizio batte subito all'avvio dell'app, al
+  ritorno in primo piano e ogni minuto. Il dominio non lo deduce a ogni lettura dall'ultimo battito: così una sessione
+  senza battiti (test, consumatori esterni) conta tutto come focus, come prima, e la classificazione avviene «alla
+  riapertura» come dice il testo. Fra la riapertura e la scrittura del battito il timer può mostrare per un istante il
+  tempo intero come focus.
+- Una **pausa rimasta aperta** è verificata solo fino all'ultimo battito: il battito che registra l'intervallo la chiude
+  lì, così l'intervallo non conta né nel focus né come pausa volontaria (§10.4) e «Conta nel focus» ha effetto; alla
+  riapertura la sessione non è in pausa (uscire dall'interfaccia non mette in pausa, n. 4).
+- L'avviso resta finché l'intervallo non è attribuito (non c'è «lascia fuori»: la spec non lo prevede) e compare anche
+  nell'iperfocus, dove l'ora di sblocco di una sessione ancorata al focus dipende dall'attribuzione.
+- Sul web i battiti proseguono anche a scheda nascosta (Chrome li rallenta a uno al minuto): un'assenza con la scheda
+  aperta conta come focus; solo sospensione, chiusura o riavvio producono intervalli non verificati. Limite accettato:
+  la spec dice che sul web la continuità in background «non è garantita», non che è esclusa, e fermare i battiti a
+  scheda nascosta richiederebbe la visibilità nella porta `Clock`.
+
 ## Verifica
-Con T-047: `src/domain/timer.test.ts` (intervallo non verificato escluso dal focus, attribuzione manuale, 30 minuti
-inclusi/esclusi, fine ancorata invariata), `src/app/session.test.ts` (battito scritto ogni minuto, D4 seconda parte
-dal database), `src/ui/Session.test.tsx` (avviso alla riapertura).
+Fatta con T-047: `src/domain/timer.test.ts` («Persistenza e continuità — SCENARI D4»: intervallo registrato dal
+battito ed escluso dal focus, attribuzione manuale, 30 minuti esatti inclusi e 30'01" esclusi, fine ancorata
+invariata, focus confermato per la soglia di D7, pausa sovrapposta), `src/app/session.test.ts` (battito subito, ogni
+minuto e al primo piano con l'orologio finto; D4 seconda parte dal database; righe vecchie), `src/ui/Session.test.tsx`
+(avviso alla riapertura e «Conta nel focus»).

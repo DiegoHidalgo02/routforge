@@ -1,6 +1,6 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list, save, saveBlock } from '../data/repository';
 import type { DatiEsito } from '../domain/outcome';
@@ -9,6 +9,7 @@ import { local, MINUTE } from '../domain/time';
 import { addInterruption, changeUnit, pauseSession, resumeSession, timerState } from '../domain/timer';
 import type { Blocco, StatoUnita } from '../domain/types';
 import { readStreak } from './outcome';
+import type { Clock } from './ports/clock';
 import { runCycle } from './scheduler';
 import {
   abandonSession,
@@ -18,6 +19,7 @@ import {
   readActiveSession,
   readSessionView,
   setupInputs,
+  startHeartbeat,
   startSession,
 } from './session';
 
@@ -228,7 +230,7 @@ describe('Abbandono oltre soglia — SCENARI D7', () => {
   });
 });
 
-describe('Persistenza — SCENARI D4', () => {
+describe('Persistenza e continuità — SCENARI D4', () => {
   it('la sessione e le sue pause sopravvivono alla chiusura: riaperta 12 minuti dopo ha 12 minuti di focus', async () => {
     await startSession(db, null, scelta(), oggi(9), FUSO);
     await editActiveSession(db, (s) => pauseSession(s, oggi(9, 2)), oggi(9, 2));
@@ -238,23 +240,99 @@ describe('Persistenza — SCENARI D4', () => {
     const s = await readActiveSession(db);
     expect(s && timerState(s, oggi(9, 14))).toMatchObject({ focus: 12 * MINUTE, inPausa: false });
   });
-  it('una sessione salvata prima del timer (T-016) si legge con i campi del timer vuoti', async () => {
-    const { pause, interruzioni, cambiUnita, salti, ...vecchia } = await startSession(
-      db,
-      null,
-      scelta(),
-      oggi(9),
-      FUSO,
-    );
-    void [pause, interruzioni, cambiUnita, salti];
+  it('una sessione salvata prima del timer (T-016) o dei battiti (T-047) si legge con i campi vuoti e il battito all’avvio', async () => {
+    const { pause, interruzioni, cambiUnita, salti, ultimoBattito, intervalliNonVerificati, ...vecchia } =
+      await startSession(db, null, scelta(), oggi(9), FUSO);
+    void [pause, interruzioni, cambiUnita, salti, ultimoBattito, intervalliNonVerificati];
     await save(db, 'preferenze', { id: 'sessioneAttiva', valore: vecchia }, oggi(9));
-    expect(await readActiveSession(db)).toMatchObject({ pause: [], interruzioni: [], cambiUnita: [], salti: [] });
+    expect(await readActiveSession(db)).toMatchObject({
+      pause: [],
+      interruzioni: [],
+      cambiUnita: [],
+      salti: [],
+      ultimoBattito: oggi(9),
+      intervalliNonVerificati: [],
+    });
   });
   it('senza sessione attiva la modifica non scrive nulla', async () => {
     expect(await editActiveSession(db, (s) => pauseSession(s, oggi(9)), oggi(9))).toBeNull();
     expect(await list(db, 'preferenze')).toEqual([]);
   });
+  it('il battito scrive `ultimoBattito` subito, a ogni minuto e al ritorno in primo piano; senza sessione non scrive (§10.4, D-TIMER-2)', async () => {
+    const o = orologioFinto(oggi(9));
+    const stop = startHeartbeat(db, o.clock);
+    o.avanza(MINUTE);
+    await Promise.resolve();
+    expect(await list(db, 'preferenze')).toEqual([]);
+    await startSession(db, null, scelta(), oggi(9, 1), FUSO);
+    o.avanza(MINUTE);
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 2)));
+    // App in secondo piano per 45 minuti: al ritorno l'intervallo è non verificato
+    o.salta(45 * MINUTE);
+    o.primoPiano();
+    await vi.waitFor(async () =>
+      expect(await readActiveSession(db)).toMatchObject({
+        ultimoBattito: oggi(9, 47),
+        intervalliNonVerificati: [{ da: oggi(9, 2), a: oggi(9, 47), contato: false }],
+      }),
+    );
+    stop();
+    o.avanza(MINUTE);
+    await Promise.resolve();
+    expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 47));
+  });
+  it('riaperta 45 minuti dopo l’ultimo battito: la routine è ancora aperta, il focus è fermo, la fine resta quella del blocco', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta(), oggi(9), FUSO);
+    db.close();
+    await db.open();
+    const o = orologioFinto(oggi(9, 45));
+    const stop = startHeartbeat(db, o.clock);
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 45)));
+    const s = await readActiveSession(db);
+    expect(s?.intervalliNonVerificati).toEqual([{ da: oggi(9), a: oggi(9, 45), contato: false }]);
+    expect(s && timerState(s, oggi(9, 45))).toMatchObject({ focus: 0, restante: 15 * MINUTE, fine: oggi(10) });
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('in_corso');
+    stop();
+  });
 });
+
+/**
+ * Orologio finto della porta `Clock` (come in `scheduler.test.ts`): `avanza` fa scattare i battiti il cui multiplo cade
+ * nell'intervallo, `salta` sposta l'ora senza battiti (app in secondo piano), `primoPiano` simula il ritorno.
+ */
+function orologioFinto(inizio: number) {
+  let t = inizio;
+  const battiti = new Set<{ ms: number; fn: () => void }>();
+  const inPrimoPiano = new Set<() => void>();
+  const clock: Clock = {
+    now: () => t,
+    fuso: () => FUSO,
+    every(ms, fn) {
+      const b = { ms, fn };
+      battiti.add(b);
+      return () => void battiti.delete(b);
+    },
+    onForeground(fn) {
+      inPrimoPiano.add(fn);
+      return () => void inPrimoPiano.delete(fn);
+    },
+  };
+  return {
+    clock,
+    avanza(ms: number) {
+      const prima = t;
+      t += ms;
+      for (const b of battiti) if (Math.floor(t / b.ms) > Math.floor(prima / b.ms)) b.fn();
+    },
+    salta(ms: number) {
+      t += ms;
+    },
+    primoPiano() {
+      for (const fn of inPrimoPiano) fn();
+    },
+  };
+}
 
 describe('Pomodoro multi-materia — SCENARI D3', () => {
   it('cambiata l’unità, timer e banner mostrano la nuova; l’esito resta sulla pianificata', async () => {

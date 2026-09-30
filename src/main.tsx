@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
 import { createNotifications } from './app/notifications';
 import { createScheduler } from './app/scheduler';
+import { startHeartbeat } from './app/session';
 import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
@@ -47,3 +48,5 @@ const apri = (percorso: string) => {
 const notifiche = createNotifications(appDb, webNotifications(testiNotifica, apri), webClock);
 createScheduler(appDb, webClock, notifiche).start();
 notifiche.start();
+// Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; il servizio Android è T-021
+startHeartbeat(appDb, webClock);

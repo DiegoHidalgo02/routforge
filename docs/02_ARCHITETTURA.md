@@ -110,9 +110,13 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   scrive nulla (INV-15); un ciclo che fallisce non scrive e non arriva alla UI. All'avvio e al ritorno in primo piano
   `start()` registra anche l'apertura, dopo un ciclo riuscito (`registerOpening` di `src/app/absence.ts`, T-014,
   D-ASSENZA-1): scrive `preferenze.ultimaApertura` fuori dal ciclo e da INV-15.
-- **SessionService** (`src/app/session.ts`, T-016, T-017) — una sola sessione attiva (§10); stato persistito in
+- **SessionService** (`src/app/session.ts`, T-016, T-017, T-046, T-047) — una sola sessione attiva (§10); stato persistito in
   `preferenze.sessioneAttiva` per sopravvivere alla chiusura (D4): solo istanti (pause, interruzioni, cambi d'unità,
-  salti), il timer li deriva con `domain/timer.ts` (D-TIMER-1). `endSession` e `abandonSession` salvano la sessione
+  salti, ultimo battito e intervalli non verificati), il timer li deriva con `domain/timer.ts` (D-TIMER-1, D-TIMER-2).
+  `startHeartbeat(db, clock)` scrive il battito subito, ogni minuto e al ritorno in primo piano con la porta `Clock`,
+  fuori dal ciclo (INV-15); più di 30' dall'ultimo battito diventano un intervallo non verificato, fuori dal focus
+  finché l'utente non lo conta (§10.4). «Abbandona» dal 65% della durata pianificata chiude con l'esito Continua
+  (`abandonPlan`, D-SESS-2). `endSession` e `abandonSession` salvano la sessione
   chiusa in `sessioni` con tipo e riepilogo, nella stessa transazione del blocco; `endSession` riceve l'esito e lo
   scrive con `writeOutcome` di `src/app/outcome.ts` (T-018, D-ESITO-1): unità, blocco (o blocco retroattivo della
   libera che conta), streak in `preferenze.streak` e puntatore del corso. «Registra esito» senza sessione è

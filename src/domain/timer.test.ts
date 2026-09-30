@@ -4,8 +4,10 @@ import { local, MINUTE } from './time';
 import {
   abandonPlan,
   addInterruption,
+  beat,
   changeUnit,
   closeSession,
+  countInterval,
   currentStudyUnit,
   exitLocked,
   focusPercent,
@@ -30,6 +32,7 @@ const sessione = (over: Partial<SessioneAttiva> = {}): SessioneAttiva => ({
   contesto: 'libera',
   avvio: ore(9),
   fine: null,
+  ultimoBattito: over.avvio ?? ore(9),
   ...TIMER_VUOTO,
   ...over,
 });
@@ -120,11 +123,54 @@ describe('Pomodoro multi-materia — SCENARI D3', () => {
   });
 });
 
-describe('Persistenza — SCENARI D4', () => {
+describe('Persistenza e continuità — SCENARI D4', () => {
   it('riaperta 12 minuti dopo, il timer ha 12 minuti in più di focus e non è in pausa', () => {
     // La sessione salvata contiene solo istanti: nessun contatore da far ripartire
     const salvata: SessioneAttiva = JSON.parse(JSON.stringify(sessione())) as SessioneAttiva;
     expect(timerState(salvata, ore(9, 12))).toMatchObject({ focus: 12 * MINUTE, inPausa: false });
+    expect(beat(salvata, ore(9, 12))).toMatchObject({ ultimoBattito: ore(9, 12), intervalliNonVerificati: [] });
+  });
+  it('riaperta 45 minuti dopo l’ultimo battito (> 30 minuti, §10.4): il battito registra l’intervallo non verificato, fuori dal focus; sessione aperta, fine del blocco invariata', () => {
+    const routine = sessione({ contesto: 'routine', bloccoId: 'b1', avvio: ore(9), fine: ore(10), durata: 60 });
+    const ripresa = beat(routine, ore(9, 45));
+    expect(ripresa).toMatchObject({
+      ultimoBattito: ore(9, 45),
+      intervalliNonVerificati: [{ da: ore(9), a: ore(9, 45), contato: false }],
+    });
+    expect(timerState(ripresa, ore(9, 45))).toMatchObject({
+      focus: 0,
+      inPausa: false,
+      finita: false,
+      restante: 15 * MINUTE,
+      fine: ore(10),
+    });
+    expect(timerState(ripresa, ore(9, 50)).focus).toBe(5 * MINUTE);
+    // La soglia dell'abbandono (D7) si calcola sul focus confermato
+    expect(focusPercent(ripresa, ore(9, 50))).toBe(8);
+  });
+  it('ancorata al focus: la ripresa usa il focus confermato e il tempo residuo', () => {
+    const s = beat(beat(sessione(), ore(9, 10)), ore(9, 55));
+    expect(timerState(s, ore(9, 55))).toMatchObject({ focus: 10 * MINUTE, restante: 40 * MINUTE, fine: ore(10, 35) });
+  });
+  it('entro 30 minuti dall’ultimo battito (anche 30 esatti) il tempo conta come focus; oltre no', () => {
+    const esatti = beat(sessione(), ore(9, 30));
+    expect(esatti.intervalliNonVerificati).toEqual([]);
+    expect(timerState(esatti, ore(9, 30)).focus).toBe(30 * MINUTE);
+    expect(timerState(beat(sessione(), ore(9, 30, 1)), ore(9, 30, 1)).focus).toBe(0);
+  });
+  it('«Conta nel focus» attribuisce l’intervallo al focus', () => {
+    const s = beat(sessione(), ore(9, 45));
+    const contato = countInterval(s, ore(9));
+    expect(contato.intervalliNonVerificati).toEqual([{ da: ore(9), a: ore(9, 45), contato: true }]);
+    expect(timerState(contato, ore(9, 46)).focus).toBe(46 * MINUTE);
+  });
+  it('una pausa rimasta aperta è verificata solo fino all’ultimo battito: il battito la chiude lì e l’intervallo non conta come pausa', () => {
+    const s = beat(pauseSession(beat(sessione(), ore(9, 5)), ore(9, 5)), ore(9, 50));
+    expect(s.pause).toEqual([{ inizio: ore(9, 5), fine: ore(9, 5) }]);
+    expect(s.intervalliNonVerificati).toEqual([{ da: ore(9, 5), a: ore(9, 50), contato: false }]);
+    expect(timerState(s, ore(9, 50))).toMatchObject({ focus: 5 * MINUTE, inPausa: false });
+    expect(summary(s, ore(9, 50))).toMatchObject({ durataPause: 0, numeroPause: 1 });
+    expect(timerState(countInterval(s, ore(9, 5)), ore(9, 50)).focus).toBe(50 * MINUTE);
   });
 });
 
