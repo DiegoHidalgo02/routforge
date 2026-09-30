@@ -84,14 +84,17 @@ Sessione libera da 50'. Pausa di 10' → la sessione finisce quando il focus arr
 **D3 — Pomodoro multi-materia**
 Sessione libera 90' pomodoro 25/5: segmenti 25/5/25/5/25/5 (tassellano esattamente i 90'; con 80' l'ultimo segmento sarebbe una pausa troncata a 0 e quindi omessa). Al terzo segmento di studio l'utente cambia unità: i minuti per unità nel riepilogo riflettono 50' sulla prima e 25' sulla seconda; l'esito resta sull'unità pianificata; l'altra riceve solo i minuti.
 
-**D4 — Persistenza**
-Sessione avviata, app chiusa, riaperta 12' dopo: il timer riprende con 12' in più di focus (non in pausa) e il banner permette di rientrare.
+**D4 — Persistenza e continuità**
+Sessione avviata, app chiusa, riaperta 12' dopo: il timer riprende con 12' in più di focus (non in pausa) e il banner permette di rientrare. Riaperta 45' dopo l'ultimo battito: la sessione è ancora aperta; i 45' sono un intervallo non verificato, mostrato alla riapertura con l'ora dell'ultimo battito, la durata e il tempo residuo, e non contano nel focus finché l'utente non li attribuisce; per una sessione ancorata all'orologio la fine resta quella del blocco.
 
 **D5 — Iperfocus**
 Sessione iperfocus 50': schermo intero, tasto indietro inattivo fino alla fine, ora di sblocco visibile, Non Disturbare attivo se permesso. Un tentativo di uscita apre la conferma "Esci comunque / Resta"; "Esci comunque" → interruzione "iperfocus" registrata → conta come uscita d'emergenza in Statistiche. Superata la durata senza uscire, il timer segna "Tempo extra +04:12": nel riepilogo compare "54 min · tempo extra +4 min".
 
 **D6 — Una sola sessione**
 Con una sessione attiva, aprire il setup da un'altra unità porta al timer in corso, non a un nuovo avvio.
+
+**D7 — Abbandono oltre soglia**
+Sessione in modalità routine sul blocco 09:00–10:00 (unità 1.1), avviata alle 09:00. «Abbandona» alle 09:40 con 39' di focus (65%): la sessione si chiude come terminata prima con esito Continua, il blocco è `parziale` con 39 minuti, l'unità 1.1 è `parziale`, la streak aumenta. «Abbandona» alle 09:35 con 35' di focus (58%): abbandono, il blocco torna `programmato` e alle 10:30 è perso.
 
 ## E. Eventi
 
@@ -112,14 +115,14 @@ Occorrenza di studio 09:00–10:00, promemoria Auto: notifiche alle 08:55 (pre),
 **F2 — Personalizzato multiplo con sveglia**
 Evento alle 20:00, personalizzato: 1 giorno, 1 ora, all'inizio come sveglia. Notifiche il giorno prima alle 20:00 e alle 19:00; alle 20:00 una sveglia a schermo intero e nessuna notifica ordinaria.
 
-**F3 — Ore silenziose**
-Ore silenziose 22:00–07:00. Un todo alle 06:30 con anticipo 30' produce la notifica alle 07:00, non alle 06:00. Il digest delle 08:00 non è toccato. La notifica "blocco perso" alle 23:30 parte comunque.
+**F3 — Nessuna fascia silenziosa**
+Un todo alle 06:30 con anticipo 30' produce la notifica alle 06:00; il digest arriva alle 08:00; la notifica "blocco perso" alle 23:30 parte. L'app non rinvia mai una notifica per l'orario: se il telefono è in Non disturbare, decide il sistema.
 
 **F4 — Finestra di 14 giorni**
 Routine per sempre: sono armate solo le notifiche che scattano entro 14 giorni. Aprendo l'app dopo 10 giorni, la finestra si estende. Un evento fra 20 giorni con anticipo "1 giorno" non è armato oggi; lo diventa quando lo scatto entra nei 14 giorni.
 
 **F5 — Posticipa**
-Notifica "inizio" di una routine, "Posticipa": nuova notifica dopo 10' (spostata fuori dalle ore silenziose se serve). Se nel frattempo la routine è stata completata, il posticipo non produce nulla.
+Notifica "inizio" di una routine, "Posticipa": nuova notifica dopo 10'. Se nel frattempo la routine è stata completata, il posticipo non produce nulla.
 
 **F6 — Cambio di stato**
 Completare, eliminare, spostare o perdere un blocco cancella le sue notifiche pendenti; riaprirlo le ri-arma; spegnere il tipo "todo" nelle Impostazioni cancella tutte le notifiche dei todo alla prossima riconciliazione.

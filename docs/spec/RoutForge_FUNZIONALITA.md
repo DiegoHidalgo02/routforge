@@ -160,7 +160,7 @@ Personalizzato = più anticipi insieme fra 1 giorno, 1 ora, 30/15/10/5 minuti, a
 Un unico messaggio al mattino (orario configurabile, default 08:00) che elenca i todo senza orario di oggi, arretrati inclusi.
 
 ### 7.4 Ore silenziose
-Una fascia (anche a cavallo di mezzanotte) in cui le notifiche non partono: vengono spostate alla fine della fascia.
+Non previste: RoutForge non rinvia le notifiche in una fascia propria; il silenzio notturno è quello del Non disturbare del sistema (D-NOTIF-3, 30/09/2026).
 
 ### 7.5 Azioni rapide dalla notifica
 **Inizia** (setup sessione), **Posticipa** (10 minuti), **Segna fatto** (todo), **Registra esito** (routine di studio). Toccando la notifica si apre l'attività corrispondente.
@@ -169,7 +169,7 @@ Una fascia (anche a cavallo di mezzanotte) in cui le notifiche non partono: veng
 "Blocco perso" (routine/studio appena persa), "Todo in ritardo", "Tempo scaduto" a fine sessione di routine, notifica di prova dalle Impostazioni.
 
 ### 7.7 Impostazioni
-Interruttore generale; per tipo: attivo/spento, anticipi di default, canale silenzioso; ore silenziose; digest; notifica di prova; scorciatoia ai permessi di sistema per gli allarmi precisi.
+Interruttore generale; per tipo: attivo/spento, anticipi di default, canale silenzioso; digest; notifica di prova; scorciatoia ai permessi di sistema per gli allarmi precisi.
 
 ### 7.8 Limiti
 Le notifiche sono pronte per i **14 giorni** successivi; la finestra si allunga a ogni apertura. Sul web funzionano solo con la scheda aperta.
@@ -227,7 +227,7 @@ Nelle Impostazioni si vede lo spazio occupato dai materiali e si possono elimina
 Da un'occorrenza di routine di studio, da un'unità (sessione libera), da un recupero, dall'azione "Inizia" di una notifica. Prima si passa da un **setup**: cosa studiare (unità proposta, corso, o libero), quanto (durata della routine, preset 25/50/90, durata personalizzata, cronometro), modalità (**continua** o **pomodoro** 25/5, 50/10, 90/20), **iperfocus** on/off (la modalità a uscita bloccata, §11.2). Una sola sessione attiva alla volta.
 
 ### 11.2 Durante
-- Timer persistente: si può navigare altrove e rientrare da un banner; sopravvive alla chiusura dell'app.
+- Timer persistente: si può navigare altrove e rientrare da un banner; sopravvive alla chiusura dell'app. Su Android continua anche con l'app chiusa, con una notifica persistente che mostra il cronometro; su iOS e sul web no. Un'assenza di più di 30 minuti diventa un intervallo non verificato, mostrato al rientro con l'ora in cui ci si è fermati, la durata e il tempo residuo: non conta come studio finché non lo si attribuisce (MECC §10.4).
 - Pausa/ripresa; annotazione di interruzioni; nel pomodoro i segmenti avanzano da soli e si possono saltare; si può cambiare unità a metà (multi-materia).
 - Schermo tenuto acceso.
 - **Tempo extra**: superata la durata pianificata il timer prosegue e conta in positivo (badge «Tempo extra» e conteggio «+04:12»), senza allarme; il riepilogo lo riporta a parte («49 min · tempo extra +4 min»). Non è l'iperfocus.
@@ -243,7 +243,7 @@ Da un'occorrenza di routine di studio, da un'unità (sessione libera), da un rec
 | **Indietro** | l'unità precedente torna da rivedere |
 | **Salta** | l'unità esce dal percorso senza essere completata |
 
-Più **confidenza** 1–5 e **nota** libera. Si sceglie se la sessione **conta nel piano** (default sì se nasce da una routine). Si può caricare il codice prodotto. Un abbandono (avvio sbagliato) non registra esito.
+Più **confidenza** 1–5 e **nota** libera. Si sceglie se la sessione **conta nel piano** (default sì se nasce da una routine). Si può caricare il codice prodotto. Un abbandono (avvio sbagliato) non registra esito; se però si è già studiato almeno il 65% della durata pianificata, la sessione si chiude con l'esito Continua (MECC §10.5).
 
 ---
 

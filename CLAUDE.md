@@ -11,7 +11,7 @@ iOS, web installabile. Un solo utente, dati sul dispositivo, tutto offline trann
 2. `docs/spec/RoutForge_FUNZIONALITA.md` — cosa fa l'app per l'utente
 3. `docs/spec/RoutForge_MECCANISMI.md` — regole esatte: stati, soglie, algoritmi
 4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile
-5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (54 scenari): un task è finito solo se i suoi scenari passano
+5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (55 scenari): un task è finito solo se i suoi scenari passano
 6. `claude-design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1, `docs/decisioni/D-DESIGN-1.md`): si annota la divergenza e l'utente decide come allineare la spec.
 
 Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e regole in una pagina),

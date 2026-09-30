@@ -1,8 +1,8 @@
 # D-SESS-2 — Abbandono oltre soglia: al 65% del pianificato l'abbandono diventa «Continua»
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
-**da applicare** con T-046; **spec da aggiornare** con il testo in fondo (cartella `docs/spec` protetta dal `deny`: lo
-toglie l'utente). Riga nel registro: `docs/01_DECISIONI.md`.
+**da applicare** con T-046; **spec allineata il 30/09/2026** con il testo in fondo (scenario D7; `deny` su `docs/spec`
+tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 MECC §10.5: `abbandonata` = nessun esito, blocco → `programmato`; il ciclo lo marca poi `perso` (C8) e, con D-NOTIF-2,
@@ -30,7 +30,7 @@ streak +1, niente «perso». Il council proponeva in alternativa una domanda olt
    soglia «Chiudi come Continua (65%)», così l'utente sa che cosa succede; la schermata finale dice che l'esito è stato
    registrato. Aspetto da confermare con `design-checker` (divergenza 38).
 
-## Testo per la spec (da applicare quando `docs/spec` è sbloccata)
+## Testo per la spec (applicato il 30/09/2026)
 - MECC §10.5, dopo il riepilogo: «**Abbandono oltre soglia** (D-SESS-2, 30/09/2026): se la sessione è collegata a un
   blocco con durata pianificata e al momento dell'abbandono focus / durata pianificata ≥ **65%** (pause e tempo extra
   esclusi), la sessione non si abbandona: si chiude come `terminata prima` con l'esito **Continua** registrato (§11,
@@ -42,8 +42,8 @@ streak +1, niente «perso». Il council proponeva in alternativa una domanda olt
   avviata alle 09:00. «Abbandona» alle 09:40 con 39' di focus (65%): la sessione si chiude come terminata prima con
   esito Continua, il blocco è `parziale` con 39 minuti, l'unità 1.1 è `parziale`, la streak aumenta. «Abbandona» alle
   09:35 con 35' di focus (58%): abbandono, il blocco torna `programmato` e alle 10:30 è perso.»
-- Con D7 gli scenari diventano 55: aggiornare `CLAUDE.md` §1 e l'intestazione di `docs/TRACCIABILITA.md`, e
-  aggiungere la riga D7 (T-046, `nessuno`).
+- Con D7 gli scenari sono 55: `CLAUDE.md` §1, l'intestazione di `docs/TRACCIABILITA.md` e la riga D7 (T-046,
+  `nessuno`) sono aggiornati.
 
 ## Alternative scartate
 `Completata` automatica (avanza il puntatore senza una valutazione); domanda oltre soglia (un tocco in più ogni volta;

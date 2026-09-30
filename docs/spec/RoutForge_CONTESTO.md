@@ -111,7 +111,7 @@ In caso di contraddizione prevale il file più in basso nella tabella (uno scena
 2. Attività: creazione dei quattro tipi, calendario Oggi (giorno/settimana/mese), dettaglio, spunta, checklist, fasi.
 3. Scheduler: generazione occorrenze, orizzonte todo, persi, recupero, orfani, cicli.
 4. Sessione di studio: setup, timer, pomodoro, iperfocus, esiti, puntatore, streak.
-5. Notifiche: default, override, trigger, finestra, riconciliazione, ore silenziose, digest, azioni, sveglie.
+5. Notifiche: default, override, trigger, finestra, riconciliazione, digest, azioni, sveglie.
 6. Blocco Adesso, trascinamento, schermata Notifiche, widget e collegamenti diretti.
 7. Materiali, file di codice, AI (chat, quiz, flashcard + SM-2, DevSwipe, Bug Hunter, Audio Flash-Trivia).
 8. Statistiche.

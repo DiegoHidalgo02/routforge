@@ -168,8 +168,12 @@ Preset 25/5, 50/10, 90/20. Segmenti studio/pausa tassellano la durata (ultimo tr
 ### 10.4 Durante
 Schermo acceso; interruzioni annotabili; notifica "tempo scaduto" alla fine per le sessioni ancorate all'orologio. **Tempo extra**: oltre la durata pianificata il timer prosegue in positivo senza allarme; i minuti extra contano nel focus reale e vengono riportati a parte nel riepilogo e nelle statistiche. **Iperfocus** (solo la modalità a uscita bloccata): schermo intero, uscita bloccata fino alla fine con l'ora di sblocco visibile, Non Disturbare di sistema se il permesso è concesso (altrimenti l'iperfocus vale comunque); un tentativo di uscita chiede conferma; uscita confermata = uscita forzata = interruzione etichettata "iperfocus".
 
+**Continuità** (D-TIMER-2, 30/09/2026): la sessione attiva registra un **battito** (istante di continuità) ogni minuto finché l'app è in primo piano e, su Android, finché il servizio in primo piano della sessione è attivo, con una notifica persistente che mostra il cronometro; su iOS e sul web nessuna continuità in background è garantita. Uscire dall'interfaccia non mette in pausa. Alla riapertura, se dall'ultimo battito sono passati più di **30 minuti**, l'intervallo è **non verificato**: non conta nel focus né come pausa volontaria, la sessione resta aperta e l'app mostra quando si è fermata, per quanto e il tempo residuo; l'utente può attribuire a mano l'intervallo al focus. Entro 30 minuti il tempo conta come focus. Per le sessioni ancorate all'orologio la fine non si sposta; per quelle ancorate al focus la ripresa usa il focus confermato e il tempo residuo. Riavvio del dispositivo, arresto forzato e assenza del servizio sono intervalli non verificati, senza attribuzione di causa.
+
 ### 10.5 Chiusura
 Tipo: `completata` (traguardo raggiunto) · `terminata prima` · `abbandonata` (nessun esito; blocco → `programmato`). Riepilogo: focus, tempo extra, minuti di pausa-segmento, numero e minuti di pause, interruzioni, minuti per unità, segmenti completati.
+
+**Abbandono oltre soglia** (D-SESS-2, 30/09/2026): se la sessione è collegata a un blocco con durata pianificata e al momento dell'abbandono focus / durata pianificata ≥ **65%** (pause e tempo extra esclusi), la sessione non si abbandona: si chiude come `terminata prima` con l'esito **Continua** registrato (§11, §12; «conta nel piano» sì), correggibile dal Dettaglio. Sotto la soglia: abbandono (nessun esito, blocco → `programmato`). Non vale per le sessioni senza blocco né per le routine generiche, che non hanno un timer.
 
 ---
 
@@ -217,7 +221,7 @@ Nessun anticipo né sveglia dopo la fusione → nessun promemoria.
 | Todo con orario | "pre" · "scadenza" all'orario |
 | Todo senza orario | nessuno (digest) |
 
-Azioni: studio → Inizia, Posticipa; todo → Segna fatto, Posticipa; esito → Registra esito; altro → Posticipa. La sveglia a schermo intero mostra ora, titolo, orario e tipo del blocco con le stesse azioni del trigger e, per i tipi senza azione specifica, "Apri il blocco" (= tocco). **Posticipa** = +10' con la stessa chiave, rispettando le ore silenziose, solo se lo stato è coerente (`programmato`; `in corso` solo per "esito"; `perso` solo per "in ritardo"). Tocco: si registra l'istante di risposta per quel trigger; "esito"/"perso" → registrazione esito; studio → unità; altro → dettaglio.
+Azioni: studio → Inizia, Posticipa; todo → Segna fatto, Posticipa; esito → Registra esito; altro → Posticipa. La sveglia a schermo intero mostra ora, titolo, orario e tipo del blocco con le stesse azioni del trigger e, per i tipi senza azione specifica, "Apri il blocco" (= tocco). **Posticipa** = +10' con la stessa chiave, solo se lo stato è coerente (`programmato`; `in corso` solo per "esito"; `perso` solo per "in ritardo"). Tocco: si registra l'istante di risposta per quel trigger; "esito"/"perso" → registrazione esito; studio → unità; altro → dettaglio.
 
 ### 13.3 Finestra e riconciliazione
 - Si armano solo le notifiche che **scattano** entro **14 giorni**; si considerano i blocchi che iniziano entro 14 + 31 giorni. Niente entro 5 s o nel passato.
@@ -227,7 +231,7 @@ Azioni: studio → Inizia, Posticipa; todo → Segna fatto, Posticipa; esito →
 - Sul web: solo con la scheda aperta.
 
 ### 13.4 Ore silenziose
-Fascia anche a cavallo di mezzanotte. Notifica dentro la fascia → spostata alla fine (giorno dopo se scavalca). Vale per trigger pianificati, digest, posticipi; **non** per gli avvisi one-shot.
+Non previste (D-NOTIF-3, 30/09/2026): RoutForge non ha una fascia silenziosa propria. Ogni trigger pianificato, il digest e i posticipi si armano all'orario calcolato, senza rinvii da parte dell'app; le sveglie a schermo intero si richiedono all'orario del trigger. Il silenzio lo governano le impostazioni di notifica e il Non disturbare del sistema operativo, che l'app non modifica né aggira.
 
 ### 13.5 Digest
 Alla prossima occorrenza dell'orario (default 08:00): todo senza orario di quel giorno + arretrati che si sposteranno a quel giorno. Corpo: conteggio (+ arretrati) e fino a 3 titoli. Vuoto → nessun digest.

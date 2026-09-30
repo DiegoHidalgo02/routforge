@@ -2,8 +2,9 @@
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
 applicata nel codice con T-045 (rimozione di `src/domain/notifications/quietHours.ts`, del campo `oreSilenziose` e
-degli spostamenti in `desiredSet`); **spec da aggiornare** con il testo in fondo (cartella `docs/spec` protetta dal
-`deny`: lo toglie l'utente). Riga nel registro: `docs/01_DECISIONI.md`. Sostituisce il punto 3 di D-NOTIF-2.
+degli spostamenti in `desiredSet`); **spec allineata il 30/09/2026** con il testo in fondo (`deny` su `docs/spec` tolto
+e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
+Sostituisce il punto 3 di D-NOTIF-2.
 
 ## Contesto
 MECC §13.4, FUNZ §7.4 e lo scenario F3 prevedevano una fascia silenziosa dell'app che rinviava alla sua fine i trigger
@@ -23,7 +24,7 @@ rinviare un promemoria scelto dall'utente (le 06:00 di un blocco delle 06:30) lo
 5. Nessuna migrazione: la riga `preferenze.notifiche` con `oreSilenziose` scritta prima di T-045 è ancora leggibile
    (il campo in più si ignora); il registro delle notifiche si riconcilia da solo con gli istanti non rinviati.
 
-## Testo per la spec (da applicare quando `docs/spec` è sbloccata)
+## Testo per la spec (applicato il 30/09/2026)
 - MECC §13.2, «Posticipa»: togliere «, rispettando le ore silenziose».
 - MECC §13.4, al posto del paragrafo: «Non previste (D-NOTIF-3, 30/09/2026): RoutForge non ha una fascia silenziosa
   propria. Ogni trigger pianificato, il digest e i posticipi si armano all'orario calcolato, senza rinvii da parte

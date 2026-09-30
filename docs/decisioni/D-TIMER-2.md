@@ -2,9 +2,9 @@
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
 **da applicare** con T-047 (battiti, intervallo non verificato, avviso alla riapertura), T-021 (servizio Android in
-primo piano con la notifica-cronometro) e T-036 (Live Activity iOS); **spec da aggiornare** con il testo in fondo
-(cartella `docs/spec` protetta dal `deny`: lo toglie l'utente). Riga nel registro: `docs/01_DECISIONI.md`. Estende
-D-TIMER-1 (D4 e il punto 8).
+primo piano con la notifica-cronometro) e T-036 (Live Activity iOS); **spec allineata il 30/09/2026** con il testo in
+fondo (`deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel
+registro: `docs/01_DECISIONI.md`. Estende D-TIMER-1 (D4 e il punto 8).
 
 ## Contesto
 D-TIMER-1 salva solo istanti e riprende il timer dopo la chiusura contando tutto il tempo come focus (D4: riaperta 12'
@@ -35,7 +35,7 @@ distingue «app in background», «processo ucciso» e «telefono spento»: si o
 5. **Modello**: `SessioneAttiva` guadagna `ultimoBattito` e `intervalliNonVerificati: { da, a, contato: boolean }[]`;
    `domain/timer.ts` esclude dal focus gli intervalli non contati; D4 si estende (scenario D4, seconda parte).
 
-## Testo per la spec (da applicare quando `docs/spec` è sbloccata)
+## Testo per la spec (applicato il 30/09/2026)
 - MECC §10.4, nuovo paragrafo dopo «Iperfocus»: «**Continuità** (D-TIMER-2, 30/09/2026): la sessione attiva registra
   un **battito** (istante di continuità) ogni minuto finché l'app è in primo piano e, su Android, finché il servizio in
   primo piano della sessione è attivo, con una notifica persistente che mostra il cronometro; su iOS e sul web nessuna
