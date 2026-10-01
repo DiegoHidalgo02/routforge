@@ -26,10 +26,10 @@ import {
   type PointerEvent,
 } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams, type Location } from 'react-router';
-import { dismissAbsenceNotice, watchAbsenceNotice } from '../app/absence';
-import { watchCalendar, type BloccoCalendario } from '../app/calendar';
+import { dismissAbsenceNotice, readAbsenceNotice } from '../app/absence';
+import { calendarDays, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar } from '../app/completion';
-import { appDb } from '../app/db';
+import { appDb, watch } from '../app/db';
 import { moveBlock } from '../app/drag';
 import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
 import { canCheckFromCalendar, type PassoSpunta } from '../domain/completion';
@@ -62,11 +62,8 @@ const FRECCE: Record<Vista, [Chiave, Chiave]> = {
   settimana: ['settimanaPrecedente', 'settimanaSuccessiva'],
   mese: ['mesePrecedente', 'meseSuccessivo'],
 };
-const VISTE: { vista: Vista; chiave: Chiave }[] = [
-  { vista: 'giorno', chiave: 'giorno' },
-  { vista: 'settimana', chiave: 'settimana' },
-  { vista: 'mese', chiave: 'mese' },
-];
+/** Le viste, nell'ordine del selettore; la chiave i18n coincide con il nome. */
+const VISTE = ['giorno', 'settimana', 'mese'] as const satisfies readonly Vista[];
 /** Durata del saluto prima della data (S1: 2,6 s, poi 0,4 s di uscita). */
 const SALUTO_MS = 2600;
 /** Spostamento orizzontale che fa passare di periodo. */
@@ -85,15 +82,15 @@ const seguiDesktop = (cambia: () => void) => {
 };
 const eDesktop = () => window.matchMedia(DESKTOP).matches;
 
-const data = (giorno: string) => {
-  const [y = 0, m = 1, d = 1] = giorno.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(lingua, o).format(data(giorno));
+const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(lingua, o).format(localInstant(giorno, '00:00'));
 const fmtParti = (giorno: string, o: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(lingua, o).formatToParts(data(giorno));
+  new Intl.DateTimeFormat(lingua, o).formatToParts(localInstant(giorno, '00:00'));
 const intervallo = (da: string, a: string) =>
-  new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(data(da), data(a));
+  new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(
+    localInstant(da, '00:00'),
+    localInstant(a, '00:00'),
+  );
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
 const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
 /** Il periodo che una vista mostra per un giorno: il giorno, il lunedì della settimana o il mese. */
@@ -161,7 +158,7 @@ export function Today() {
   const location = useLocation();
   // Il giorno di oggi cambia a mezzanotte e al ritorno in primo piano, senza riavvio (G4)
   const oggi = useOggi();
-  const vista = (VISTE.find((v) => v.vista === parametri.get('vista'))?.vista ?? 'giorno') satisfies Vista;
+  const vista = VISTE.find((v) => v === parametri.get('vista')) ?? 'giorno';
   const scelto = parametri.get('giorno') ?? '';
   const giorno = isDayKey(scelto) ? scelto : oggi;
   const settimana = weekOf(giorno);
@@ -170,7 +167,14 @@ export function Today() {
   const chiave = giorni.join();
 
   const [periodo, setPeriodo] = useState<{ chiave: string; giorni: Map<string, BloccoCalendario[]> }>();
-  useEffect(() => watchCalendar(appDb, chiave.split(','), (g) => setPeriodo({ chiave, giorni: g })), [chiave]);
+  useEffect(
+    () =>
+      watch(
+        () => calendarDays(appDb, chiave.split(',')),
+        (g) => setPeriodo({ chiave, giorni: g }),
+      ),
+    [chiave],
+  );
   const blocchi = (g: string) => (periodo?.chiave === chiave ? periodo.giorni.get(g) : undefined) ?? [];
   const pronto = periodo?.chiave === chiave;
 
@@ -299,14 +303,14 @@ export function Today() {
         <div className={`${s.iconeVista} ${s.soloMobile}`} role="group" aria-label={t('vista')}>
           {VISTE.map((v) => (
             <button
-              key={v.vista}
+              key={v}
               type="button"
               className={s.iconaVista}
-              aria-label={t(v.chiave)}
-              aria-pressed={vista === v.vista}
-              onClick={() => vai({ vista: v.vista })}
+              aria-label={t(v)}
+              aria-pressed={vista === v}
+              onClick={() => vai({ vista: v })}
             >
-              <IconaVista vista={v.vista} />
+              <IconaVista vista={v} />
             </button>
           ))}
         </div>
@@ -599,7 +603,7 @@ function DataTesta({ giorno }: { giorno: string }) {
  */
 function RitornoAssenza({ oggi }: { oggi: string }) {
   const [avviso, setAvviso] = useState<AvvisoAssenza | null>(null);
-  useEffect(() => watchAbsenceNotice(appDb, oggi, setAvviso), [oggi]);
+  useEffect(() => watch(() => readAbsenceNotice(appDb, oggi), setAvviso), [oggi]);
   // I giorni in font-num dentro la frase tradotta: il segnaposto divide il testo
   const [prima, dopo = ''] = t('ritornoAssenza').split('{giorni}');
   // La regione di stato resta montata anche vuota: i lettori di schermo annunciano ciò che vi entra dopo
@@ -1017,13 +1021,13 @@ function Segmentato(p: {
     <div className={`${s.segmentato} ${p.className ?? ''}`} role="group" aria-label={t('vista')}>
       {p.viste.map((v) => (
         <button
-          key={v.vista}
+          key={v}
           type="button"
           className={s.segmento}
-          aria-pressed={p.vista === v.vista}
-          onClick={() => p.vai({ vista: v.vista })}
+          aria-pressed={p.vista === v}
+          onClick={() => p.vai({ vista: v })}
         >
-          {t(v.chiave)}
+          {t(v)}
         </button>
       ))}
     </div>

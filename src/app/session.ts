@@ -9,7 +9,7 @@
  * Criteri: SCENARI C4, C5, C9 (setup), D4, D5 (uscita registrata), D6, D7 (abbandono oltre soglia).
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, list, remove, save, saveBlock, watch } from '../data/repository';
+import { get, inTransaction, list, remove, save, saveBlock } from '../data/repository';
 import { retroactiveBlock, sessionMinutes, type DatiEsito } from '../domain/outcome';
 import { criteriaMet, sortedUnits } from '../domain/pointer';
 import {
@@ -62,10 +62,6 @@ export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
   return () => stop.forEach((smetti) => smetti());
 }
 
-/** Osserva la sessione attiva: `onChange` riceve subito e a ogni avvio o abbandono. Restituisce lo stop. */
-export const watchActiveSession = (db: RoutForgeDb, onChange: (s: SessioneAttiva | null) => void): (() => void) =>
-  watch(() => readActiveSession(db), onChange);
-
 /** Ciò che mostrano il timer e il banner «Sessione in corso» (S15, S1). */
 export interface VistaSessione {
   sessione: SessioneAttiva;
@@ -87,10 +83,6 @@ export async function readSessionView(db: RoutForgeDb): Promise<VistaSessione | 
     orario: b?.orarioInizio ?? null,
   };
 }
-
-/** Osserva la vista della sessione attiva. Restituisce lo stop. */
-export const watchSessionView = (db: RoutForgeDb, onChange: (v: VistaSessione | null) => void): (() => void) =>
-  watch(() => readSessionView(db), onChange);
 
 export interface UnitaSetup {
   id: string;
@@ -143,13 +135,6 @@ export async function setupInputs(db: RoutForgeDb, bloccoId: string | null): Pro
       }),
   };
 }
-
-/** Osserva gli ingressi del setup. Restituisce lo stop. */
-export const watchSetupInputs = (
-  db: RoutForgeDb,
-  bloccoId: string | null,
-  onChange: (i: IngressiSetup) => void,
-): (() => void) => watch(() => setupInputs(db, bloccoId), onChange);
 
 /**
  * Avvia la sessione adesso: il contesto lo decide l'orologio (§10.1). Con una sessione già attiva non avvia nulla e

@@ -1,45 +1,16 @@
 /* Oggi (S1 Oggi Mobile/Desktop, 10 Mese): solo token. Il colore del tipo arriva da `data-tipo` sulle variabili locali
-   --fill, --ink, --soft, --light, --deep; gli scarti fuori dalla scala dei mock (10, 6, 3, 2 px) vanno al token più
-   vicino. */
-[data-tipo='todo'] {
-  --fill: var(--color-cat-todo);
-  --ink: var(--color-cat-todo-ink);
-  --soft: var(--color-cat-todo-soft);
-  --light: var(--color-cat-todo-light);
-  --deep: var(--color-cat-todo-deep);
-}
-
-[data-tipo='studio'] {
-  --fill: var(--color-cat-study);
-  --ink: var(--color-cat-study-ink);
-  --soft: var(--color-cat-study-soft);
-  --light: var(--color-cat-study-light);
-  --deep: var(--color-cat-study-deep);
-}
-
-[data-tipo='routine'] {
-  --fill: var(--color-cat-routine);
-  --ink: var(--color-cat-routine-ink);
-  --soft: var(--color-cat-routine-soft);
-  --light: var(--color-cat-routine-light);
-  --deep: var(--color-cat-routine-deep);
-}
-
-[data-tipo='evento'] {
-  --fill: var(--color-cat-event);
-  --ink: var(--color-cat-event-ink);
-  --soft: var(--color-cat-event-soft);
-  --light: var(--color-cat-event-light);
-  --deep: var(--color-cat-event-deep);
-}
-
+   --fill, --ink, --soft, --light, --deep (styles/global.css); gli scarti fuori dalla scala dei mock (10, 6, 3, 2 px)
+   vanno al token più vicino. */
 .oggi {
   display: flex;
   flex-direction: column;
 }
 
-.soloDesktop {
-  display: none !important;
+/* Su mobile gli elementi solo desktop spariscono; da 1024 px tengono il display della loro classe */
+@media (width < 1024px) {
+  .soloDesktop {
+    display: none !important;
+  }
 }
 
 /* Intestazione: logo, saluto → data, «Oggi» fuori dal giorno corrente, vista. Il gap 10 del mock va a 8 (a parità il
@@ -1335,18 +1306,6 @@ button.spunta:not([data-fatta]):hover {
     display: none !important;
   }
 
-  .soloDesktop {
-    display: revert !important;
-  }
-
-  .frecce.soloDesktop {
-    display: flex !important;
-  }
-
-  .segmentato.soloDesktop {
-    display: grid !important;
-  }
-
   .testa {
     min-height: var(--size-chip);
   }
@@ -1461,16 +1420,12 @@ button.spunta:not([data-fatta]):hover {
   }
 
   .elencoGiorno {
-    padding: var(--space-3);
+    gap: 0;
+    padding: var(--space-3) var(--space-3) var(--space-1);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
     background: var(--color-surface);
     box-shadow: var(--shadow-card);
-  }
-
-  .elencoGiorno {
-    gap: 0;
-    padding: var(--space-3) var(--space-3) var(--space-1);
   }
 
   .elencoGiorno .giornoTitolo {

@@ -11,8 +11,8 @@
 import { Play, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, type Location } from 'react-router';
-import { appDb } from '../app/db';
-import { dismissNowBlock, watchNowInputs, type IngressiAdesso } from '../app/nowBlock';
+import { appDb, watch } from '../app/db';
+import { dismissNowBlock, nowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { selectNowBlock, type StatoAdesso } from '../domain/nowBlock';
 import { studyActions, type AzioneStudio } from '../domain/session';
 import { localDayKey, localTimeKey } from '../domain/time';
@@ -65,7 +65,7 @@ export function NowBlock({ sfondo }: { sfondo: { sfondo: Location } }) {
   const now = useMinuto();
   const oggi = localDayKey(now);
   const [ingressi, setIngressi] = useState<IngressiAdesso>();
-  useEffect(() => watchNowInputs(appDb, oggi, setIngressi), [oggi]);
+  useEffect(() => watch(() => nowInputs(appDb, oggi), setIngressi), [oggi]);
   const compatto = useCompatto();
   const avvia = useStudyAction();
 

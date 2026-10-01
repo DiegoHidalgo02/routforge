@@ -5,7 +5,7 @@
  * `esempio` dà il badge «Esempio» (D-IMPORT-1). Ordine: dal più vecchio import al più recente.
  */
 import type { RoutForgeDb } from '../data/db';
-import { list, watch } from '../data/repository';
+import { list } from '../data/repository';
 
 export interface SchedaCorso {
   id: string;
@@ -39,7 +39,3 @@ export async function courseCards(db: RoutForgeDb): Promise<SchedaCorso[]> {
       };
     });
 }
-
-/** Osserva l'elenco: `onChange` riceve le schede subito e dopo ogni import o eliminazione. Restituisce lo stop. */
-export const watchCourseCards = (db: RoutForgeDb, onChange: (schede: SchedaCorso[]) => void): (() => void) =>
-  watch(() => courseCards(db), onChange);

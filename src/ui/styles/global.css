@@ -23,3 +23,38 @@ a {
   outline: 2px solid transparent;
   box-shadow: var(--ring-focus);
 }
+
+/* Colore del tipo di attività (S1, S4, S5, Adesso): da `data-tipo` alle variabili locali --fill, --ink, --soft,
+   --light, --deep, lette da card, badge, pannelli e accenti. Globale per costruzione: i selettori d'attributo non
+   sono rinominati dai CSS Modules, quindi vale una sola copia. */
+[data-tipo='todo'] {
+  --fill: var(--color-cat-todo);
+  --ink: var(--color-cat-todo-ink);
+  --soft: var(--color-cat-todo-soft);
+  --light: var(--color-cat-todo-light);
+  --deep: var(--color-cat-todo-deep);
+}
+
+[data-tipo='studio'] {
+  --fill: var(--color-cat-study);
+  --ink: var(--color-cat-study-ink);
+  --soft: var(--color-cat-study-soft);
+  --light: var(--color-cat-study-light);
+  --deep: var(--color-cat-study-deep);
+}
+
+[data-tipo='routine'] {
+  --fill: var(--color-cat-routine);
+  --ink: var(--color-cat-routine-ink);
+  --soft: var(--color-cat-routine-soft);
+  --light: var(--color-cat-routine-light);
+  --deep: var(--color-cat-routine-deep);
+}
+
+[data-tipo='evento'] {
+  --fill: var(--color-cat-event);
+  --ink: var(--color-cat-event-ink);
+  --soft: var(--color-cat-event-soft);
+  --light: var(--color-cat-event-light);
+  --deep: var(--color-cat-event-deep);
+}

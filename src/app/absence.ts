@@ -7,7 +7,7 @@
  * apertura» (T-014). Decisione: D-ASSENZA-1.
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, list, remove, save, watch } from '../data/repository';
+import { get, inTransaction, list, remove, save } from '../data/repository';
 import { absenceNotice, noticeOfDay, type AvvisoAssenza } from '../domain/scheduler/absence';
 
 /** Riga di `preferenze` con l'istante dell'ultima apertura (MECC §1 «ultima apertura»). */
@@ -40,13 +40,6 @@ export function registerOpening(db: RoutForgeDb, now: number): Promise<void> {
 /** L'avviso da mostrare nel giorno locale `oggi` ("YYYY-MM-DD"), o `null`. */
 export const readAbsenceNotice = async (db: RoutForgeDb, oggi: string): Promise<AvvisoAssenza | null> =>
   noticeOfDay(avvisoLetto((await get(db, 'preferenze', CHIAVE_RITORNO_ASSENZA))?.valore), oggi);
-
-/** Osserva l'avviso di `oggi`: `onChange` lo riceve subito e dopo ogni scrittura. Restituisce lo stop. */
-export const watchAbsenceNotice = (
-  db: RoutForgeDb,
-  oggi: string,
-  onChange: (avviso: AvvisoAssenza | null) => void,
-): (() => void) => watch(() => readAbsenceNotice(db, oggi), onChange);
 
 /**
  * Chiude l'avviso (× del banner): non torna, perché l'ultima apertura è già aggiornata. Se la scrittura fallisce

@@ -4,7 +4,7 @@
  * 0,5 s su 500 blocchi (indice `[giornoLocale+inizio]`, una sola lettura per periodo).
  */
 import type { RoutForgeDb } from '../data/db';
-import { blocksBetween, watch } from '../data/repository';
+import { blocksBetween } from '../data/repository';
 import { sortDay } from '../domain/ordering';
 import type { Blocco, OraDiParete } from '../domain/types';
 
@@ -25,10 +25,3 @@ export async function calendarDays(
   for (const [g, blocchi] of periodo) periodo.set(g, sortDay(blocchi));
   return periodo;
 }
-
-/** Osserva il periodo: `onChange` riceve i giorni subito e dopo ogni scrittura sui blocchi. Restituisce lo stop. */
-export const watchCalendar = (
-  db: RoutForgeDb,
-  giorni: readonly string[],
-  onChange: (periodo: Map<string, BloccoCalendario[]>) => void,
-): (() => void) => watch(() => calendarDays(db, giorni), onChange);

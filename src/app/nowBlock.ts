@@ -8,7 +8,7 @@
  * `selectNowBlock` a ogni minuto senza rileggere. Criteri: SCENARI G1, G2, E3. Decisione: D-NOW-2.
  */
 import type { RoutForgeDb } from '../data/db';
-import { blocksBetween, get, inTransaction, list, save, watch } from '../data/repository';
+import { blocksBetween, get, inTransaction, list, save } from '../data/repository';
 import { shiftPeriod } from '../domain/calendar';
 import { dismissKey } from '../domain/nowBlock';
 import { localDayKey } from '../domain/time';
@@ -64,10 +64,6 @@ export async function nowInputs(db: RoutForgeDb, oggi: string): Promise<Ingressi
     attiva: await readActiveSession(db),
   };
 }
-
-/** Osserva gli ingressi: `onChange` riceve subito e dopo ogni scrittura su blocchi, corsi o preferenze. Restituisce lo stop. */
-export const watchNowInputs = (db: RoutForgeDb, oggi: string, onChange: (i: IngressiAdesso) => void): (() => void) =>
-  watch(() => nowInputs(db, oggi), onChange);
 
 /** Chiude il blocco Adesso per oggi (§14): la chiave vale per questo blocco e questo giorno; le chiavi di altri giorni si potano. */
 export async function dismissNowBlock(db: RoutForgeDb, block: Pick<Blocco, 'id'>, now: number): Promise<void> {

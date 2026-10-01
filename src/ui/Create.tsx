@@ -28,8 +28,8 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { createActivity } from '../app/activities';
-import { watchCourseCards, type SchedaCorso } from '../app/courses';
-import { appDb } from '../app/db';
+import { courseCards, type SchedaCorso } from '../app/courses';
+import { appDb, watch } from '../app/db';
 import {
   ANTICIPI,
   DURATA_TODO,
@@ -46,9 +46,9 @@ import {
   type Termine,
 } from '../domain/activity';
 import { horizonLastDay } from '../domain/lost';
-import { localDayKey, local } from '../domain/time';
+import { local, localDayKey, localInstant } from '../domain/time';
 import type { Orizzonte, Priorita } from '../domain/types';
-import { durata } from './format';
+import { durata, fmtData, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
 
@@ -86,18 +86,10 @@ const UNITA: [NonNullable<Termine>['unita'], Chiave][] = [
   ['settimane', 'unitaSettimane'],
   ['mesi', 'unitaMesi'],
 ];
-/** Lunedì → domenica, come nel mock; 0 = domenica (`localWeekday`). */
-const SETTIMANA = [1, 2, 3, 4, 5, 6, 0];
-
-const fmtData = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'narrow' });
 const fmtNumero = new Intl.DateTimeFormat(lingua, { day: 'numeric' });
 const fmtMese = new Intl.DateTimeFormat(lingua, { month: 'long', year: 'numeric' });
 const fmtSettimana = new Intl.DateTimeFormat(lingua, { weekday: 'long' });
-const dataDi = (giorno: string) => {
-  const [y, m, d] = giorno.split('-').map(Number) as [number, number, number];
-  return local(y, m, d);
-};
 const anticipo = (min: number) =>
   min === 0
     ? t('anticipoInizio')
@@ -241,7 +233,7 @@ function Interruttore({ on, onClick, children }: { on: boolean; onClick: () => v
  * selettore. `grande` = data dell'evento e del todo (giorno a 26); altrimenti il campo «Inizio» della ricorrenza.
  */
 function CampoData(p: { giorno: string; grande?: boolean; onChange: (g: string) => void }) {
-  const d = dataDi(p.giorno);
+  const d = localInstant(p.giorno, '00:00');
   return (
     <label className={p.grande ? s.data : s.campo}>
       {p.grande ? (
@@ -381,7 +373,7 @@ export function Create() {
   useEffect(() => {
     dialogo.current?.showModal();
   }, []);
-  useEffect(() => watchCourseCards(appDb, setCorsi), []);
+  useEffect(() => watch(() => courseCards(appDb), setCorsi), []);
 
   const bozza = toDraft(f, oggi);
   const pronta = validateActivity(bozza).ok;
@@ -547,7 +539,9 @@ export function Create() {
                   </div>
                   {pronta && (
                     <span className={`${s.meta} ${s.num}`}>
-                      {t('ultimoGiorno', { data: fmtData.format(dataDi(recurrenceLastDay(f.dataInizio, f.termine))) })}
+                      {t('ultimoGiorno', {
+                        data: fmtData.format(localInstant(recurrenceLastDay(f.dataInizio, f.termine), '00:00')),
+                      })}
                     </span>
                   )}
                 </>
@@ -562,7 +556,7 @@ export function Create() {
               <Etichetta Icona={CalendarDays}>{t('orizzonte')}</Etichetta>
               <span className={`${s.meta} ${s.num}`}>
                 {t(f.orizzonte === 'giorno' ? 'soloIl' : 'rotolaFino', {
-                  data: fmtData.format(horizonLastDay(dataDi(oggi), f.orizzonte)),
+                  data: fmtData.format(horizonLastDay(localInstant(oggi, '00:00'), f.orizzonte)),
                 })}
               </span>
             </div>

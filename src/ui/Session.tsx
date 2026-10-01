@@ -24,15 +24,15 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
-import { appDb } from '../app/db';
+import { appDb, watch } from '../app/db';
 import {
   abandonSession,
   anticipateSession,
   editActiveSession,
   endSession,
   startSession,
-  watchSessionView,
-  watchSetupInputs,
+  readSessionView,
+  setupInputs,
   type CorsoSetup,
   type IngressiSetup,
   type UnitaSetup,
@@ -67,11 +67,10 @@ import {
 } from '../domain/timer';
 import type { Blocco, Esito } from '../domain/types';
 import { useMinuto, useSecondo } from './clock';
-import { durata as durataBreve, orologio, titolo as titoloBlocco } from './format';
+import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Session.module.css';
 
-const fuso = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 /** L'istante del clic (fuori dal render: `react-hooks/purity`). */
 const adesso = () => Date.now();
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
@@ -108,7 +107,7 @@ const inMinuti = (min: number) => (min < 60 ? `${min} ${t('minutiUnita')}` : dur
 
 function useIngressi(bloccoId: string | null): IngressiSetup | undefined {
   const [ingressi, setIngressi] = useState<IngressiSetup>();
-  useEffect(() => watchSetupInputs(appDb, bloccoId, setIngressi), [bloccoId]);
+  useEffect(() => watch(() => setupInputs(appDb, bloccoId), setIngressi), [bloccoId]);
   return ingressi;
 }
 
@@ -267,35 +266,17 @@ export function SessionSetup() {
                 {t('dellaRoutine')} · {anteprima.durata}
               </button>
             ) : (
-              <>
-                {DURATE.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`${s.chip} ${s.cifre}`}
-                    aria-pressed={durata === d}
-                    onClick={() => setDurata(d)}
-                  >
-                    {d}
-                  </button>
-                ))}
+              [...DURATE, 'personalizzata' as const, null].map((d) => (
                 <button
+                  key={String(d)}
                   type="button"
                   className={`${s.chip} ${s.cifre}`}
-                  aria-pressed={durata === 'personalizzata'}
-                  onClick={() => setDurata('personalizzata')}
+                  aria-pressed={durata === d}
+                  onClick={() => setDurata(d)}
                 >
-                  {t('personalizzata')}
+                  {d === null ? t('cronometro') : d === 'personalizzata' ? t('personalizzata') : d}
                 </button>
-                <button
-                  type="button"
-                  className={`${s.chip} ${s.cifre}`}
-                  aria-pressed={durata === null}
-                  onClick={() => setDurata(null)}
-                >
-                  {t('cronometro')}
-                </button>
-              </>
+              ))
             )}
           </div>
           {!routine && durata === 'personalizzata' && (
@@ -403,7 +384,7 @@ function SchedaNessuna(p: { premuta: boolean | undefined; onScegli: (id: null) =
 /** La sessione attiva con unità e orario; `undefined` fino alla prima lettura. */
 export function useSessionView(): VistaSessione | null | undefined {
   const [vista, setVista] = useState<VistaSessione | null>();
-  useEffect(() => watchSessionView(appDb, setVista), []);
+  useEffect(() => watch(() => readSessionView(appDb), setVista), []);
   return vista;
 }
 

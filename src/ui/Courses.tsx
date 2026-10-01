@@ -7,8 +7,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
 import { ErroreImportCorso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
-import { watchCourseCards, type SchedaCorso } from '../app/courses';
-import { appDb } from '../app/db';
+import { courseCards, type SchedaCorso } from '../app/courses';
+import { appDb, watch } from '../app/db';
 import { t } from './i18n';
 import { Section } from './Section';
 import s from './Courses.module.css';
@@ -30,7 +30,7 @@ export function Courses() {
   const [schede, setSchede] = useState<SchedaCorso[]>();
   const [esito, setEsito] = useState<Esito | null>(null);
   const scelta = useRef<HTMLInputElement>(null);
-  useEffect(() => watchCourseCards(appDb, setSchede), []);
+  useEffect(() => watch(() => courseCards(appDb), setSchede), []);
 
   const scegli = () => scelta.current?.click();
 

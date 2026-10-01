@@ -35,12 +35,12 @@ import {
   restoreBlock,
   skipBlock,
   toggleChecklist,
-  watchDetail,
+  readDetail,
   type DettaglioAttivita,
 } from '../app/completion';
-import { appDb } from '../app/db';
+import { appDb, watch } from '../app/db';
 import { registerOutcome } from '../app/outcome';
-import { watchActiveSession } from '../app/session';
+import { readActiveSession } from '../app/session';
 import { inheritedDay } from '../domain/checklist';
 import { canRegisterOutcome, plannedMinutes, type DatiEsito } from '../domain/outcome';
 import { studyActions, type AzioneStudio, type SessioneAttiva } from '../domain/session';
@@ -48,22 +48,14 @@ import { canCheckFromCalendar, canComplete, directCheckStep, shownState } from '
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
 import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
-import type { StatoBlocco, TipoBlocco } from '../domain/types';
+import type { StatoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
-import { durata, maiuscola } from './format';
+import { durata, fmtData, fuso as fusoCorrente, maiuscola, SETTIMANA, TIPO, titolo as titoloDi } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
 import { SchedaEsito, useStudyAction } from './Session';
 
-const TIPO: Record<TipoBlocco, Chiave> = {
-  todo: 'tipoTodo',
-  studio: 'tipoStudio',
-  routine: 'tipoRoutine',
-  evento: 'tipoEvento',
-};
 const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bassa: 'prioritaRigaBassa' } as const;
-/** Lunedì → domenica; 0 = domenica (`localWeekday`); il 20/09/2026 è una domenica. */
-const SETTIMANA = [1, 2, 3, 4, 5, 6, 0];
 /** Il toast con «Annulla» resta 5 s, come l'annulla del trascinamento (MECC §15). */
 const TOAST_MS = 5000;
 
@@ -75,7 +67,6 @@ const fmtGiornoOra = new Intl.DateTimeFormat(lingua, {
   minute: '2-digit',
 });
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'long', day: 'numeric', month: 'long' });
-const fmtData = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 const fmtSigla = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
 const quando = (ms: number, now: number) => (sameLocalDay(ms, now) ? fmtOra : fmtGiornoOra).format(ms);
 const sigle = (giorni: readonly number[]) =>
@@ -154,13 +145,13 @@ export function Detail() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [errore, setErrore] = useState(false);
   const [attiva, setAttiva] = useState<SessioneAttiva | null>(null);
-  useEffect(() => watchActiveSession(appDb, setAttiva), []);
+  useEffect(() => watch(() => readActiveSession(appDb), setAttiva), []);
   const avviaSessione = useStudyAction();
   // L'orologio batte al minuto e si riallinea al ritorno in primo piano (G4); le scritture usano l'istante del clic
   const now = useMinuto();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const sheet = useRef<HTMLDivElement>(null);
-  const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const fuso = fusoCorrente();
   const sheetAperta = vista !== 'dettaglio';
 
   useEffect(() => {
@@ -177,21 +168,24 @@ export function Detail() {
   // Dopo un'eliminazione il blocco sparisce: il pannello mostra l'ultimo valore finché il toast permette l'annulla
   useEffect(
     () =>
-      watchDetail(appDb, id, (x) => {
-        setSparito(!x);
-        if (!x) return;
-        setD(x);
-        const passo = passoDaOggi.current;
-        passoDaOggi.current = undefined;
-        if (
-          passo &&
-          canCheckFromCalendar(x.blocco, Date.now()) &&
-          directCheckStep(x.blocco, x.fasi.length > 0) === passo
-        ) {
-          setVista(passo);
-          setSubito(true);
-        }
-      }),
+      watch(
+        () => readDetail(appDb, id),
+        (x) => {
+          setSparito(!x);
+          if (!x) return;
+          setD(x);
+          const passo = passoDaOggi.current;
+          passoDaOggi.current = undefined;
+          if (
+            passo &&
+            canCheckFromCalendar(x.blocco, Date.now()) &&
+            directCheckStep(x.blocco, x.fasi.length > 0) === passo
+          ) {
+            setVista(passo);
+            setSubito(true);
+          }
+        },
+      ),
     [id],
   );
 
@@ -237,7 +231,7 @@ export function Detail() {
   const spuntabile = canComplete(b, now);
   const conFasi = template.length > 0;
   const fasiMostrate = shownPhases(template, log);
-  const titolo = b.titolo || t(TIPO[tipo]);
+  const titolo = titoloDi(b);
   const orari =
     b.fine === null
       ? `${b.orarioInizio} · ${t('senzaDurata')}`
@@ -415,17 +409,21 @@ export function Detail() {
     void act(() => deleteBlock(appDb, id, ora(), fuso));
   };
 
+  // «Riapri» del todo e della routine completati (per la routine è la scelta dell'utente, divergenza 23: vince il design)
+  const riapri = (
+    <button
+      type="button"
+      className={`${s.azione} ${s.secondaria} ${s.larga}`}
+      onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
+    >
+      {t('riapri')}
+    </button>
+  );
   let piede: ReactNode = null;
   if (tipo === 'todo')
     piede =
       b.stato === 'completato' ? (
-        <button
-          type="button"
-          className={`${s.azione} ${s.secondaria} ${s.larga}`}
-          onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
-        >
-          {t('riapri')}
-        </button>
+        riapri
       ) : (
         <button type="button" className={`${s.azione} ${s.primaria}`} onClick={fatta}>
           <Check size={16} />
@@ -433,17 +431,7 @@ export function Detail() {
         </button>
       );
   else if (tipo === 'routine') {
-    if (b.stato === 'completato')
-      piede = (
-        <button
-          type="button"
-          className={`${s.azione} ${s.secondaria} ${s.larga}`}
-          onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
-        >
-          {/* Il ritorno indietro è «Riapri» come per il todo (scelta dell'utente, divergenza 23: vince il design) */}
-          {t('riapri')}
-        </button>
-      );
+    if (b.stato === 'completato') piede = riapri;
     else if (b.stato !== 'saltato')
       piede = (
         <>

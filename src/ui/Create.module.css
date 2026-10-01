@@ -4,23 +4,7 @@
    più vicino. Restano misure del mock senza token (alone 360, interruttore 44×26 con pomello 22, badge 22, bordo
    1,5 della casella) e la CTA pronta usa `--shadow-primary-soft` perché `--shadow-primary-cat` ha il segnaposto
    `<fill>`: elenco in docs/03_HANDOFF_DESIGN_CODE.md §10. */
-.pannello[data-tipo='todo'] {
-  --fill: var(--color-cat-todo);
-  --ink: var(--color-cat-todo-ink);
-}
-.pannello[data-tipo='studio'] {
-  --fill: var(--color-cat-study);
-  --ink: var(--color-cat-study-ink);
-}
-.pannello[data-tipo='routine'] {
-  --fill: var(--color-cat-routine);
-  --ink: var(--color-cat-routine-ink);
-}
-.pannello[data-tipo='evento'] {
-  --fill: var(--color-cat-event);
-  --ink: var(--color-cat-event-ink);
-}
-
+/* I colori del tipo (--fill, --ink, …) arrivano da `data-tipo` sul pannello e sui bottoni del tipo (styles/global.css) */
 .pannello {
   position: fixed;
   inset: var(--size-nav-pill) 0 0;
@@ -209,19 +193,6 @@
   color: var(--color-text);
   text-align: center;
   cursor: text;
-}
-
-.tipo[data-tipo='todo'] {
-  --fill: var(--color-cat-todo);
-}
-.tipo[data-tipo='studio'] {
-  --fill: var(--color-cat-study);
-}
-.tipo[data-tipo='routine'] {
-  --fill: var(--color-cat-routine);
-}
-.tipo[data-tipo='evento'] {
-  --fill: var(--color-cat-event);
 }
 
 .tipo[aria-pressed='true'] .iconaTipo {

@@ -213,42 +213,13 @@
   gap: 6px;
 }
 
-/* Pill del mock: 32, bordo border su surface, testo text-2; scelta = bianca con testo scuro */
+/* Pill del mock come in Crea (32, bordo border su surface, testo text-2, scelta = bianca con testo scuro), con gap 6 e
+   larghezza minima per le cifre */
 .chip {
-  position: relative;
-  height: var(--size-chip);
+  composes: chip from './Create.module.css';
   min-width: var(--size-control);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  color: var(--color-text-2);
   font: 500 var(--text-sm) var(--font-ui);
-  cursor: pointer;
-  transition:
-    background var(--dur-feedback) var(--ease-out),
-    border-color var(--dur-feedback) var(--ease-out);
-}
-
-.chip::after {
-  content: '';
-  position: absolute;
-  inset: calc((100% - var(--size-touch)) / 2) 0;
-}
-
-.chip:hover {
-  border-color: var(--color-border-strong);
-}
-
-.chip[aria-pressed='true'] {
-  border-color: var(--color-selected);
-  background: var(--color-selected);
-  color: var(--color-selected-ink);
-  font-weight: 600;
 }
 
 /* Cifre delle durate e di «Inizia · 45 min» in font-num, col peso del contenitore (dopo `.chip`, che ha `font:`) */
@@ -274,19 +245,11 @@
   font: 500 var(--text-md) var(--font-num);
 }
 
+/* Interruttore e knob come in Crea; qui alto 44, acceso in primary (nessun tipo di attività) e disattivabile */
 .interruttore {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  composes: interruttore from './Create.module.css';
   min-height: var(--size-control);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-text);
   font: 500 var(--text-md) / 18px var(--font-ui);
-  text-align: left;
-  cursor: pointer;
 }
 
 .colonna {
@@ -296,27 +259,7 @@
 }
 
 .knob {
-  position: relative;
-  width: var(--size-control);
-  height: 26px;
-  flex: none;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-3);
-  transition: background var(--dur-feedback) var(--ease-out);
-}
-
-.knob::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-pill);
-  background: var(--color-text-2);
-  transition:
-    left var(--dur-feedback) var(--ease-out),
-    background var(--dur-feedback) var(--ease-out);
+  composes: knob from './Create.module.css';
 }
 
 .interruttore:disabled {
@@ -329,11 +272,6 @@
 
 .interruttore[aria-checked='true'] .knob {
   background: var(--color-primary);
-}
-
-.interruttore[aria-checked='true'] .knob::after {
-  left: 20px;
-  background: var(--color-selected-ink);
 }
 
 /* Footer fisso del pannello: solo hairline e fondo surface (DESIGN.md §2) */
@@ -396,16 +334,6 @@
 
 .abbandona:hover {
   background: var(--color-surface-3);
-}
-
-.inCorso {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-primary);
-  font: 600 var(--text-2xs) / 12px var(--font-ui);
-  letter-spacing: var(--tracking-eyebrow);
-  text-transform: uppercase;
 }
 
 /* ---- Timer (S15 `timer`, T-017). Restano misure del mock senza token: timer 44 (mobile) e 26 (desktop, --text-stat),

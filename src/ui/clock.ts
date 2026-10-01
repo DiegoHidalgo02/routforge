@@ -27,19 +27,18 @@ function aOgniMinuto(fn: () => void, ms = MINUTE): () => void {
   };
 }
 
-/** L'istante corrente, aggiornato al cambio di ogni minuto e al ritorno in primo piano. */
-export function useMinuto(): number {
+/** L'istante corrente, aggiornato a ogni scatto di `ms` e al ritorno in primo piano. */
+function useNow(ms: number): number {
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => aOgniMinuto(() => setNow(Date.now())), []);
+  useEffect(() => aOgniMinuto(() => setNow(Date.now()), ms), [ms]);
   return now;
 }
 
+/** L'istante corrente al cambio di ogni minuto. */
+export const useMinuto = (): number => useNow(MINUTE);
+
 /** L'istante corrente al secondo, per il timer della sessione (T-017): i valori li deriva `domain/timer.ts`. */
-export function useSecondo(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => aOgniMinuto(() => setNow(Date.now()), 1000), []);
-  return now;
-}
+export const useSecondo = (): number => useNow(1000);
 
 /** Il giorno locale "YYYY-MM-DD": la schermata si ridisegna solo quando cambia, non a ogni minuto. */
 export function useOggi(): string {

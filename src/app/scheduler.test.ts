@@ -2,13 +2,13 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb, type Tabelle } from '../data/db';
-import { get, list, listBy, save, saveBlock, saveCourse, type DatiBlocco } from '../data/repository';
+import { get, list, listBy, save, saveBlock, saveCourse, watch, type DatiBlocco } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import { parseCourse } from '../domain/course/parser';
 import { endOfLocalDay, local } from '../domain/time';
 import { CHIAVE_ULTIMA_APERTURA, readAbsenceNotice } from './absence';
 import { createActivity } from './activities';
-import { watchCalendar } from './calendar';
+import { calendarDays } from './calendar';
 import type { Clock } from './ports/clock';
 import { createScheduler, runCycle } from './scheduler';
 import { CHIAVE_SESSIONE_ATTIVA } from './session';
@@ -549,7 +549,10 @@ describe('Cambio giorno — SCENARI G4 (app aperta a mezzanotte fra martedì e m
       'programmato',
     ]);
     let mercoledi: string[] = [];
-    const smetti = watchCalendar(db, ['2026-09-23'], (p) => (mercoledi = (p.get('2026-09-23') ?? []).map((b) => b.id)));
+    const smetti = watch(
+      () => calendarDays(db, ['2026-09-23']),
+      (p) => (mercoledi = (p.get('2026-09-23') ?? []).map((b) => b.id)),
+    );
 
     o.avanza(60_000); // 00:00:30 di mercoledì
     await vi.waitFor(async () => {

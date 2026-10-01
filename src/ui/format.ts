@@ -3,6 +3,15 @@ import type { BloccoCalendario } from '../app/calendar';
 import type { Blocco, TipoBlocco } from '../domain/types';
 import { lingua, t, type Chiave } from './i18n';
 
+/** Fuso corrente del dispositivo per le scritture delle schermate (la porta `Clock` è dei servizi, D-SCHED-1 n. 9). */
+export const fuso = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/** «mar 22 set»: sigla del giorno, numero e mese breve (S4, S5, S15). */
+export const fmtData = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
+
+/** Lunedì → domenica come nei mock; 0 = domenica (`localWeekday`). */
+export const SETTIMANA = [1, 2, 3, 4, 5, 6, 0];
+
 /** Durata in minuti nella forma breve dei mock: «30m», «1h», «1h 30m». */
 export const durata = (min: number): string => {
   const h = Math.floor(min / 60);

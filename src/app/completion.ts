@@ -10,7 +10,7 @@
  * già iniziata. Decisione: D-DETT-1.
  */
 import type { RoutForgeDb, Tabelle } from '../data/db';
-import { get, inTransaction, remove, save, saveBlock, watch } from '../data/repository';
+import { get, inTransaction, remove, save, saveBlock } from '../data/repository';
 import { afterToggle, leftoverDraft, toggleItem } from '../domain/checklist';
 import {
   canCheckFromCalendar,
@@ -52,13 +52,6 @@ export async function readDetail(db: RoutForgeDb, id: string): Promise<Dettaglio
     ...(corso && { corso: { titolo: corso.titolo } }),
   };
 }
-
-/** Osserva il dettaglio: `onChange` riceve subito e a ogni scrittura; `undefined` se il blocco non c'è (più). */
-export const watchDetail = (
-  db: RoutForgeDb,
-  id: string,
-  onChange: (d: DettaglioAttivita | undefined) => void,
-): (() => void) => watch(() => readDetail(db, id), onChange);
 
 const TABELLE = ['blocchi', 'ricorrenze', 'corsi', 'logFasi'] as const;
 
