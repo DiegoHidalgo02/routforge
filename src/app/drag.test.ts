@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { blocksOfDay, get, listBy, remove, saveBlock } from '../data/repository';
+import { blocksBetween, get, listBy, remove, saveBlock } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import { endOfLocalDay, local } from '../domain/time';
 import { createActivity } from './activities';
@@ -99,7 +99,7 @@ describe('Trascinamento — SCENARI G3 (servizio)', () => {
     await runCycle(db, oggi(10, 31), FUSO);
     expect(await posto(persa!.id)).toEqual(['programmato', true, '2026-09-29', '08:30', '09:30']);
     // Lo slot di oggi resta suo: la generazione non lo ricrea
-    expect((await blocksOfDay(db, '2026-09-28')).map((b) => b.id)).toEqual([]);
+    expect((await blocksBetween(db, '2026-09-28', '2026-09-28')).map((b) => b.id)).toEqual([]);
   });
 
   it('«Annulla» ripristina giorno, orario e stato «perso»', async () => {

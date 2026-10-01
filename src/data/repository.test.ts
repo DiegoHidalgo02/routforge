@@ -7,7 +7,6 @@ import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
 import {
   blocksBetween,
-  blocksOfDay,
   get,
   inTransaction,
   list,
@@ -136,13 +135,13 @@ describe('Blocchi: giorno locale e ora di parete — MECC §1, D-TIME-2', () => 
     expect(b).toMatchObject({ giornoLocale: '2026-09-25', orarioInizio: '18:00', orarioFine: '19:00', fuso: ROMA });
   });
 
-  it("blocksOfDay: solo i blocchi vivi del giorno, in ordine d'inizio (indice [giornoLocale+inizio])", async () => {
+  it("blocksBetween su un giorno: solo i blocchi vivi, in ordine d'inizio (indice [giornoLocale+inizio])", async () => {
     const nove = await saveBlock(db, occorrenza(26, 9, { ricorrenzaId: null }), T0, ROMA);
     const sette = await saveBlock(db, occorrenza(26, 7, { ricorrenzaId: null }), T0, ROMA);
     const eliminato = await saveBlock(db, occorrenza(26, 8, { ricorrenzaId: null }), T0, ROMA);
     await saveBlock(db, occorrenza(27, 8, { ricorrenzaId: null }), T0, ROMA);
     await remove(db, 'blocchi', eliminato.id, T1);
-    expect((await blocksOfDay(db, '2026-09-26')).map((b) => b.id)).toEqual([sette.id, nove.id]);
+    expect((await blocksBetween(db, '2026-09-26', '2026-09-26')).map((b) => b.id)).toEqual([sette.id, nove.id]);
   });
 
   it('blocksBetween: i giorni dal primo all’ultimo inclusi, per giorno e poi per inizio', async () => {
@@ -171,7 +170,10 @@ describe('Occorrenze: id deterministico dello slot — MECC §7, D-DATA-2', () =
   it('slot diversi nello stesso giorno sono occorrenze diverse (B6: la routine passa da 07:00 a 18:00, quella di stamattina resta)', async () => {
     await saveBlock(db, occorrenza(24, 7, { stato: 'completato' }), T0, ROMA);
     await saveBlock(db, occorrenza(24, 18), T0, ROMA);
-    expect((await blocksOfDay(db, '2026-09-24')).map((b) => b.orarioInizio)).toEqual(['07:00', '18:00']);
+    expect((await blocksBetween(db, '2026-09-24', '2026-09-24')).map((b) => b.orarioInizio)).toEqual([
+      '07:00',
+      '18:00',
+    ]);
   });
 
   it("dopo l'eliminazione (tombstone) la rigenerazione con lo stesso id la rianima conservando createdAt", async () => {

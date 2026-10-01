@@ -20,13 +20,7 @@ export function orphanPlan<B extends Blocco>(
   bloccoSessioneAttiva: string | null,
   now: number,
 ): B[] {
-  return blocchi
-    .filter((b) => isOrphan(b, bloccoSessioneAttiva, now))
-    .map((b) => {
-      const orfano: B = { ...b };
-      orfano.stato = 'programmato';
-      return orfano;
-    });
+  return blocchi.filter((b) => isOrphan(b, bloccoSessioneAttiva, now)).map((b) => ({ ...b, stato: 'programmato' }));
 }
 
 export interface PianoPersi<B extends Blocco> {
@@ -51,10 +45,7 @@ export function lostPlan<B extends Blocco & { giornoLocale?: string }>(
   for (const b of blocchi) {
     if (!shouldMarkLost(b, now)) continue;
     const ritardo = lateNoticeDue(b);
-    const perso: B = { ...b, ...(ritardo && { ritardoIl: now }) };
-    perso.stato = 'perso';
-    perso.persoIl = now;
-    piano.persi.push(perso);
+    piano.persi.push({ ...b, stato: 'perso', persoIl: now, ...(ritardo && { ritardoIl: now }) });
     if (ritardo) piano.avvisiRitardo.push(b.id);
     if (lostNotificationDue(b, now)) piano.avvisiPerso.push(b.id);
   }

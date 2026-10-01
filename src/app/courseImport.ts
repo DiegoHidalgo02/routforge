@@ -22,9 +22,6 @@ import {
   type RisultatoImportCorso,
 } from '../domain/course/parser';
 
-export { ErroreImportCorso };
-export type { OpzioniImport, RisultatoImportCorso };
-
 function readZip(zip: Uint8Array): FileCorso[] {
   let entries: Record<string, Uint8Array>;
   try {

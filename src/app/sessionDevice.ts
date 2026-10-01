@@ -12,35 +12,26 @@ export function configureSessionDevice(porte: { schermo: ScreenAwake; nonDisturb
   ({ schermo, nonDisturbare } = porte);
 }
 
+/** Un errore della piattaforma resta qui (alla Diagnostica, T-032), mai alla UI (INV-16). */
+function safe<T>(fn: () => T, fallback: T): T {
+  try {
+    return fn();
+  } catch {
+    return fallback;
+  }
+}
+
 /** Schermo acceso finché non si chiama la funzione restituita. */
 export function keepScreenOn(): () => void {
-  try {
-    const rilascia = schermo.keep();
-    return () => {
-      try {
-        rilascia();
-      } catch {
-        // Errore della piattaforma: resta alla Diagnostica (T-032)
-      }
-    };
-  } catch {
-    return () => undefined;
-  }
+  const rilascia = safe(
+    () => schermo.keep(),
+    () => undefined,
+  );
+  return () => safe(rilascia, undefined);
 }
 
 /** Non Disturbare per l'iperfocus: `true` se è attivo; senza permesso l'iperfocus vale comunque (§10.4). */
-export async function enableDoNotDisturb(): Promise<boolean> {
-  try {
-    return await nonDisturbare.enable();
-  } catch {
-    return false;
-  }
-}
+export const enableDoNotDisturb = (): Promise<boolean> =>
+  safe(() => nonDisturbare.enable(), Promise.resolve(false)).catch(() => false);
 
-export function disableDoNotDisturb(): void {
-  try {
-    nonDisturbare.disable();
-  } catch {
-    // Errore della piattaforma: resta alla Diagnostica (T-032)
-  }
-}
+export const disableDoNotDisturb = (): void => safe(() => nonDisturbare.disable(), undefined);

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   applyOutcome,
   assignPointer,
-  courseProgress,
   criteriaMet,
   currentUnit,
   partialProgress,
@@ -55,7 +54,6 @@ describe('Esiti — SCENARI C3', () => {
     expect(r.statoBlocco).toBe('completato');
     expect(r.unita.find((u) => u.id === '1.1')?.stato).toBe('completata');
     expect(currentUnit(r.unita)?.id).toBe('1.2');
-    expect(courseProgress(r.unita)).toEqual({ completate: 1, totali: 3, rapporto: 1 / 3 });
   });
 
   it('poi Indietro su 1.2 → 1.1 torna da rivedere ed è di nuovo la prossima; 1.2 resta non iniziata', () => {

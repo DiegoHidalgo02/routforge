@@ -229,6 +229,29 @@ export function blockNotifications(
   }
 }
 
+/** Una voce senza blocco (tempo scaduto, digest, prova): senza anticipo, sveglia né azioni; il resto da `over`. */
+const voceSenzaBlocco = (
+  chiave: string,
+  istante: number,
+  trigger: TriggerNotifica,
+  tipo: TipoBlocco,
+  over: Partial<NotificaPianificata> = {},
+): NotificaPianificata => ({
+  chiave,
+  istante,
+  trigger,
+  anticipo: 0,
+  bloccoId: null,
+  tipo,
+  titolo: '',
+  inizioBlocco: null,
+  sveglia: false,
+  silenzioso: false,
+  azioni: [],
+  oneShot: false,
+  ...over,
+});
+
 /** «Tempo scaduto» (§10.4, §13.6): solo sessioni ancorate all'orologio; segue solo l'interruttore generale. */
 export function sessionNotification(
   s: Pick<SessioneAttiva, 'fine' | 'bloccoId'> | null,
@@ -236,20 +259,7 @@ export function sessionNotification(
   imp: ImpostazioniNotifiche,
 ): NotificaPianificata | null {
   if (!imp.generale || !s || s.fine === null) return null;
-  return {
-    chiave: CHIAVE_TEMPO_SCADUTO,
-    istante: s.fine,
-    trigger: 'tempo_scaduto',
-    anticipo: 0,
-    bloccoId: null,
-    tipo: 'studio',
-    titolo,
-    inizioBlocco: null,
-    sveglia: false,
-    silenzioso: false,
-    azioni: [],
-    oneShot: true,
-  };
+  return voceSenzaBlocco(CHIAVE_TEMPO_SCADUTO, s.fine, 'tempo_scaduto', 'studio', { titolo, oneShot: true });
 }
 
 /** Il digest (§13.5): la prossima occorrenza dell'orario con il contenuto calcolato adesso; segue il tipo todo. */
@@ -262,40 +272,13 @@ export function digestNotification(
   const istante = nextDigestInstant(now, imp.digest.orario);
   const digest = digestContent(blocchi, istante);
   if (!digest) return null;
-  return {
-    chiave: notificationKey('digest', 0, localDayKey(istante)),
-    istante,
-    trigger: 'digest',
-    anticipo: 0,
-    bloccoId: null,
-    tipo: 'todo',
-    titolo: '',
-    inizioBlocco: null,
-    sveglia: false,
-    silenzioso: imp.perTipo.todo.silenzioso,
-    azioni: [],
-    oneShot: false,
-    digest,
-  };
+  const chiave = notificationKey('digest', 0, localDayKey(istante));
+  return voceSenzaBlocco(chiave, istante, 'digest', 'todo', { silenzioso: imp.perTipo.todo.silenzioso, digest });
 }
 
 /** La notifica di prova (§13.6, FUNZ §7.6): a +6 s, fuori dal registro; la arma il servizio su richiesta (T-032). */
-export function testNotification(now: number): NotificaPianificata {
-  return {
-    chiave: CHIAVE_PROVA,
-    istante: now + RITARDO_PROVA_MS,
-    trigger: 'prova',
-    anticipo: 0,
-    bloccoId: null,
-    tipo: 'todo',
-    titolo: '',
-    inizioBlocco: null,
-    sveglia: false,
-    silenzioso: false,
-    azioni: [],
-    oneShot: true,
-  };
-}
+export const testNotification = (now: number): NotificaPianificata =>
+  voceSenzaBlocco(CHIAVE_PROVA, now + RITARDO_PROVA_MS, 'prova', 'todo', { oneShot: true });
 
 /**
  * L'insieme desiderato adesso (§13.3): voci dei blocchi, digest e tempo scaduto; poi i posticipi (§13.2: tocco + 10',

@@ -2,8 +2,8 @@
  * Dettaglio di un'attività (S5; FUNZ §4–§6, MECC §3–§5): spunta e annulla, «Saltata», «Completa evento», checklist,
  * revisione delle fasi con il log, follow-up, eliminazione con ripristino; la spunta diretta dal cerchio della card del
  * calendario (`checkFromCalendar`, MECC §24, D-DETT-3) usa le stesse regole. Ogni completamento passa da un'unica
- * operazione (§3): `writeCompleted` e `writeReopened` sono gli unici punti che scrivono lo stato, e lì T-019 cancella
- * o ri-arma le notifiche del blocco. Le regole stanno nel dominio (`completion.ts`, `checklist.ts`, `phases.ts`).
+ * operazione (§3): lo stato lo decidono `completed` e `reopened` del dominio e lo scrive `saveBlock`; le notifiche del
+ * blocco seguono da sole la scrittura (T-019). Le regole stanno nel dominio (`completion.ts`, `checklist.ts`, `phases.ts`).
  * Eliminare una singola occorrenza di routine = il giorno del suo slot in `dateSaltate` (D-OCC-1; il giorno dello slot,
  * non quello attuale: un'occorrenza spostata resta lo stesso slot, D-DATA-2): una tombstone da sola verrebbe rianimata
  * dalla generazione successiva; il blocco si elimina comunque, perché la modifica lascia in vita l'occorrenza di oggi
@@ -62,14 +62,6 @@ export const watchDetail = (
 
 const TABELLE = ['blocchi', 'ricorrenze', 'corsi', 'logFasi'] as const;
 
-/** L'unica scrittura del completamento (§3): stato e istante. T-019: qui si cancellano le notifiche del blocco. */
-const writeCompleted = (db: RoutForgeDb, b: RigaBlocco, now: number, fuso: string) =>
-  saveBlock(db, completed(b, now), now, fuso);
-
-/** L'unica scrittura dell'annulla spunta (§3): torna programmato. T-019: qui si ri-armano le notifiche del blocco. */
-const writeReopened = (db: RoutForgeDb, b: RigaBlocco, now: number, fuso: string) =>
-  saveBlock(db, reopened(b), now, fuso);
-
 /**
  * Spunta (§3): se non è consentita adesso non scrive nulla (false). Con fasi scrive il log con le `saltate` (§5,
  * sovrascrive il precedente). Nel todo segna fatte tutte le voci (S5, D-DETT-1).
@@ -85,7 +77,7 @@ export async function completeBlock(
     const d = await readDetail(db, id);
     if (!d || !canComplete(d.blocco, now)) return false;
     const checklist = d.blocco.checklist?.map((v) => ({ ...v, fatta: true }));
-    await writeCompleted(db, { ...d.blocco, ...(checklist && { checklist }) }, now, fuso);
+    await saveBlock(db, completed({ ...d.blocco, ...(checklist && { checklist }) }, now), now, fuso);
     if (d.fasi.length > 0)
       await save(
         db,
@@ -112,7 +104,7 @@ export async function checkFromCalendar(
     const d = await readDetail(db, id);
     if (!d || !canCheckFromCalendar(d.blocco, now)) return null;
     const passo = directCheckStep(d.blocco, d.fasi.length > 0);
-    if (passo === 'completa') await writeCompleted(db, d.blocco, now, fuso);
+    if (passo === 'completa') await saveBlock(db, completed(d.blocco, now), now, fuso);
     return passo;
   });
 }
@@ -123,7 +115,7 @@ export async function reopenBlock(db: RoutForgeDb, id: string, now: number, fuso
     const b = await get(db, 'blocchi', id);
     if (!b || b.stato !== 'completato') return;
     const checklist = b.checklist?.map((v) => ({ ...v, fatta: false }));
-    await writeReopened(db, { ...b, ...(checklist && { checklist }) }, now, fuso);
+    await saveBlock(db, reopened({ ...b, ...(checklist && { checklist }) }), now, fuso);
     await remove(db, 'logFasi', id, now);
   });
 }
@@ -153,9 +145,9 @@ export async function toggleChecklist(
     const aggiornato = { ...b, checklist };
     switch (afterToggle(checklist, indice, b.stato)) {
       case 'completa':
-        return writeCompleted(db, aggiornato, now, fuso);
+        return saveBlock(db, completed(aggiornato, now), now, fuso);
       case 'riapri':
-        return writeReopened(db, aggiornato, now, fuso);
+        return saveBlock(db, reopened(aggiornato), now, fuso);
       default:
         return saveBlock(db, aggiornato, now, fuso);
     }
@@ -196,7 +188,7 @@ export async function completeWithLeftover(
     if (!b || b.tipo !== 'todo' || b.stato === 'completato' || !canComplete(b, now)) return null;
     const bozza = leftoverDraft(b, now);
     if (!bozza) return null;
-    await writeCompleted(db, b, now, fuso);
+    await saveBlock(db, completed(b, now), now, fuso);
     const r = await createActivity(db, bozza, now, fuso);
     return r.ok ? r.id : null;
   });

@@ -132,17 +132,6 @@ export function pointerPlan(
   return piano;
 }
 
-/** Progresso del corso = completate / totali (§11). */
-export function courseProgress(units: readonly UnitaPercorso[]): {
-  completate: number;
-  totali: number;
-  rapporto: number;
-} {
-  const totali = units.length;
-  const completate = units.filter((u) => u.stato === 'completata').length;
-  return { completate, totali, rapporto: totali === 0 ? 0 : completate / totali };
-}
-
 /** Progresso "Continua": min(0,95; minuti totali / (ore stimate × 60, o 180 se non stimate)). */
 export function partialProgress(totalMinutes: number, estimatedHours?: number | null): number {
   const denominator = estimatedHours && estimatedHours > 0 ? estimatedHours * 60 : 180;

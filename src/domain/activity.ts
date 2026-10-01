@@ -9,7 +9,8 @@
  * (priorità di un todo con orario, promemoria di un todo senza orario, anticipi di un evento tutto il giorno); i valori
  * fuori dai limiti sono errori (D-CREA-1). Le occorrenze delle routine le genera T-011; gli id (anche delle fasi) li dà il servizio.
  */
-import { addLocalDays, endOfLocalDay, localDayKey, localInstant, minutes } from './time';
+import { isDayKey, shiftPeriod } from './calendar';
+import { endOfLocalDay, localInstant, minutes } from './time';
 import type { Blocco, Orizzonte, Priorita, Promemoria, Ricorrenza } from './types';
 
 /** Ancora dei todo senza orario: 12:00–23:59 del loro giorno (§1), anche quando rotolano (§6). */
@@ -103,25 +104,18 @@ export type Validazione =
   | { ok: true; fasi: string[]; ricorrenza: NuovaRicorrenza; blocco?: undefined };
 
 const ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const GIORNO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** Istante locale del giorno "YYYY-MM-DD" all'orario "HH:MM"; `null` se uno dei due non è valido. */
-function at(giorno: string, orario: string): number | null {
-  if (!GIORNO.test(giorno) || !ORARIO.test(orario)) return null;
-  const ms = localInstant(giorno, orario);
-  return localDayKey(ms) === giorno ? ms : null; // scarta 2026-02-31 e simili
-}
+/** Istante locale del giorno "YYYY-MM-DD" all'orario "HH:MM"; `null` se uno dei due non è valido (`2026-02-31` no). */
+const at = (giorno: string, orario: string): number | null =>
+  isDayKey(giorno) && ORARIO.test(orario) ? localInstant(giorno, orario) : null;
 
-/** Ultimo giorno incluso di una ricorrenza che parte il `dataInizio` e termina dopo N unità (D-CREA-1). */
+/**
+ * Ultimo giorno incluso di una ricorrenza che parte il `dataInizio` e termina dopo N unità (D-CREA-1): il giorno prima
+ * dello stesso giorno N periodi dopo (`shiftPeriod`: nei mesi al più l'ultimo del mese, 31 gen + 1 mese → 28/29 feb).
+ */
 export function recurrenceLastDay(dataInizio: string, termine: NonNullable<Termine>): string {
-  const [y, m, d] = dataInizio.split('-').map(Number) as [number, number, number];
-  const { n, unita } = termine;
-  // Mesi: stesso giorno N mesi dopo, al più l'ultimo del mese (31 gen + 1 mese → 28/29 feb)
-  const dopo =
-    unita === 'mesi'
-      ? new Date(y, m - 1 + n, Math.min(d, new Date(y, m + n, 0).getDate()))
-      : new Date(y, m - 1, d + n * (unita === 'settimane' ? 7 : 1));
-  return localDayKey(addLocalDays(dopo.getTime(), -1));
+  const vista = termine.unita === 'giorni' ? 'giorno' : termine.unita === 'settimane' ? 'settimana' : 'mese';
+  return shiftPeriod(shiftPeriod(dataInizio, vista, termine.n), 'giorno', -1);
 }
 
 /** Durata di parete fra due orari "HH:MM", in minuti: fine ≤ inizio = il giorno dopo (§2, §7); `null` se malformati. */

@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { blocksOfDay, get, list } from '../data/repository';
+import { blocksBetween, get, list } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import { sortDay } from '../domain/ordering';
 import type { Priorita } from '../domain/types';
@@ -128,6 +128,6 @@ describe('Priorità nella fascia senza orario — SCENARI A5', () => {
       ['N', 'normale'],
     ] as const)
       await createActivity(db, todo(titolo, p), NOW, FUSO);
-    expect(sortDay(await blocksOfDay(db, '2026-09-22')).map((b) => b.titolo)).toEqual(['A', 'N', 'B']);
+    expect(sortDay(await blocksBetween(db, '2026-09-22', '2026-09-22')).map((b) => b.titolo)).toEqual(['A', 'N', 'B']);
   });
 });

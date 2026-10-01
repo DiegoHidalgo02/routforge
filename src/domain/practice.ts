@@ -47,8 +47,6 @@ export function scoreDevSwipe(expected: readonly Verdetto[], firstPass: readonly
 
 // -------------------------------------------------------------- Bug Hunter
 
-export const BUG_HUNTER_MAX_ATTEMPTS = 2;
-
 export interface RisultatoEsercizioBugHunter {
   /** 2 al primo tentativo, 1 al secondo, altrimenti 0. */
   punti: 0 | 1 | 2;

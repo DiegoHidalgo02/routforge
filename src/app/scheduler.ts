@@ -16,7 +16,7 @@ import { inTransaction, list, listBy, saveBlock, watch } from '../data/repositor
 import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
 import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
-import { minutes } from '../domain/time';
+import { MINUTE } from '../domain/time';
 import { registerOpening } from './absence';
 import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
@@ -79,13 +79,6 @@ export function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<Av
   });
 }
 
-/**
- * Battito del ciclo con l'app aperta (§9 «controllo ogni 60 s»): il ciclo intero, non solo al cambio di data, perché
- * B7 vuole la routine persa alle 20:30 e le fini alle 23:59 diventano perse alle 00:29; senza cambiamenti il ciclo non
- * scrive (D-SCHED-1 n. 3).
- */
-export const BATTITO = minutes(1);
-
 /** Il servizio dello scheduler (docs/02_ARCHITETTURA.md §4): il ciclo con il tempo della porta `Clock` e i suoi inneschi. */
 export interface SchedulerService {
   /** Esegue il ciclo adesso (due insieme si serializzano); `undefined` se fallisce, senza eccezioni verso la UI (CONTESTO §3). */
@@ -126,9 +119,11 @@ export function createScheduler(
       apri();
       // Creazione, modifica ed eliminazione di routine scrivono `ricorrenze`; la prima emissione è l'avvio, già eseguito
       let avvio = true;
+      // Ogni minuto il ciclo intero, non solo al cambio di data (§9 «controllo ogni 60 s»): B7 vuole la routine persa
+      // alle 20:30 e le fini alle 23:59 diventano perse alle 00:29; senza cambiamenti il ciclo non scrive (D-SCHED-1 n. 3)
       const stop = [
         clock.onForeground(apri),
-        clock.every(BATTITO, () => void run()),
+        clock.every(MINUTE, () => void run()),
         watch(
           () => list(db, 'ricorrenze'),
           () => {

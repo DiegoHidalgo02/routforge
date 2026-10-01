@@ -5,7 +5,8 @@ import { strToU8, zipSync } from 'fflate';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { list, save } from '../data/repository';
 import { local } from '../domain/time';
-import { ErroreImportCorso, importCourseFromZip, importSampleCourse, importZip, zipNeedsTitle } from './courseImport';
+import { ErroreImportCorso } from '../domain/course/parser';
+import { importCourseFromZip, importSampleCourse, importZip, zipNeedsTitle } from './courseImport';
 import { courseCards } from './courses';
 
 /** Un modulo minimo conforme a FORMATO_CORSO §2 (basta per superare MODULE_HEADER + un'unità leggibile). */

@@ -16,10 +16,7 @@ export const minutes = (n: number): number => n * MINUTE;
 /** Chiave del giorno locale, es. "2026-09-22". Usata come identità del giorno. */
 export function localDayKey(ms: number): string {
   const d = new Date(ms);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /** Orario locale "HH:MM" che contiene `ms`: l'ora di parete di un'attività (D-TIME-2). */
@@ -28,34 +25,20 @@ export function localTimeKey(ms: number): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-/** 00:00:00.000 locale del giorno che contiene `ms`. */
-export function startOfLocalDay(ms: number): number {
-  const d = new Date(ms);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-}
+/** 00:00:00.000 locale del giorno che contiene `ms` (`setHours` restituisce già l'epoch). */
+export const startOfLocalDay = (ms: number): number => new Date(ms).setHours(0, 0, 0, 0);
 
 /**
  * 23:59:00.000 locale del giorno che contiene `ms`.
  * Nota: la spec usa "23:59" come fine dei blocchi senza fine (§1, §6, §8);
  * da qui derivano scadenze come "perso alle 00:29 del giorno dopo" (B4, A1).
  */
-export function endOfLocalDay(ms: number): number {
-  const d = new Date(ms);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 0, 0).getTime();
-}
+export const endOfLocalDay = (ms: number): number => new Date(ms).setHours(23, 59, 0, 0);
 
-/** Somma `n` giorni locali (n può essere negativo). */
+/** Somma `n` giorni locali (n può essere negativo), stessa ora di parete anche attraverso l'ora legale. */
 export function addLocalDays(ms: number, n: number): number {
   const d = new Date(ms);
-  return new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate() + n,
-    d.getHours(),
-    d.getMinutes(),
-    d.getSeconds(),
-    d.getMilliseconds(),
-  ).getTime();
+  return d.setDate(d.getDate() + n);
 }
 
 /**

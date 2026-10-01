@@ -5,7 +5,7 @@
  *
  * I giorni sono chiavi locali "YYYY-MM-DD" (time.ts); la settimana inizia di lunedì (D-CAL-1).
  */
-import { addLocalDays, local, localDayKey } from './time';
+import { addLocalDays, localDayKey, localInstant } from './time';
 import type { Blocco, TipoBlocco } from './types';
 
 export type Vista = 'giorno' | 'settimana' | 'mese';
@@ -16,10 +16,7 @@ export const ORDINE_TIPI: readonly TipoBlocco[] = ['studio', 'routine', 'todo', 
 export const CARICO_ALTO = 3;
 
 /** 00:00 locale del giorno "YYYY-MM-DD". */
-const dayStart = (giorno: string): number => {
-  const [y = 0, m = 1, d = 1] = giorno.split('-').map(Number);
-  return local(y, m, d);
-};
+const dayStart = (giorno: string): number => localInstant(giorno, '00:00');
 
 /** true se `x` è un giorno che esiste, scritto "YYYY-MM-DD" (es. da un indirizzo: `2026-02-31` no). */
 export const isDayKey = (x: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(x) && localDayKey(dayStart(x)) === x;

@@ -51,8 +51,7 @@ export function sessionMinutes(r: { focus: number; perUnita: Readonly<Record<str
   minuti: number;
   perUnita: Record<string, number>;
 } {
-  const perUnita: Record<string, number> = {};
-  for (const [id, ms] of Object.entries(r.perUnita)) perUnita[id] = Math.round(ms / MINUTE);
+  const perUnita = Object.fromEntries(Object.entries(r.perUnita).map(([id, ms]) => [id, Math.round(ms / MINUTE)]));
   return { minuti: Math.round(r.focus / MINUTE), perUnita };
 }
 

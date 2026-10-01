@@ -8,7 +8,7 @@
  *   passata da > 30 minuti. Un evento non è mai perso.
  * - Scadenza di recupero = fine − 50% della durata (senza durata: inizio + 30').
  */
-import { addLocalDays, endOfLocalDay, localDayKey, localInstant, minutes, sameLocalDay, startOfLocalDay } from './time';
+import { addLocalDays, endOfLocalDay, HOUR, localInstant, minutes, sameLocalDay, startOfLocalDay } from './time';
 import type { Blocco } from './types';
 
 export const LOST_GRACE_MS = minutes(30);
@@ -102,9 +102,7 @@ export function recoveryDeadline(block: Pick<Blocco, 'inizio' | 'fine'>): number
  * Mai prima, mai dopo.
  */
 export function canCheckRoutine(block: Pick<Blocco, 'inizio' | 'fine'>, now: number): boolean {
-  if (sameLocalDay(block.inizio, now)) return true;
-  if (block.fine !== null && now >= block.inizio && now <= block.fine) return true;
-  return false;
+  return sameLocalDay(block.inizio, now) || (block.fine !== null && now >= block.inizio && now <= block.fine);
 }
 
 /**
@@ -117,7 +115,7 @@ export function lostNotificationDue(block: Blocco & { createdAt?: number }, now:
   if (block.minutiRitardo != null) return false;
   const fine = effectiveEnd(block);
   if (block.createdAt !== undefined && block.createdAt > fine) return false;
-  return now - fine <= 2 * 60 * minutes(1);
+  return now - fine <= 2 * HOUR;
 }
 
 /**
@@ -135,9 +133,4 @@ export function pendingOutcomes(blocks: readonly Blocco[], now: number, max = 5)
     })
     .sort((a, b) => b.inizio - a.inizio)
     .slice(0, max);
-}
-
-/** Comodo per i log/diagnostica: giorno locale del blocco (§1). */
-export function blockDay(block: Pick<Blocco, 'inizio'>): string {
-  return localDayKey(block.inizio);
 }

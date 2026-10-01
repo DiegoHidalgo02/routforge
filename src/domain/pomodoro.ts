@@ -15,8 +15,6 @@ export type TipoSegmento = 'studio' | 'pausa';
 export interface Segmento {
   tipo: TipoSegmento;
   minuti: number;
-  /** Indice del ciclo (0-based) a cui appartiene il segmento. */
-  ciclo: number;
 }
 
 export const PRESETS: Record<PresetPomodoro, { studio: number; pausa: number }> = {
@@ -37,29 +35,22 @@ export function planSegments(preset: PresetPomodoro, totalMinutes: number | null
 
   if (totalMinutes === null) {
     for (let c = 0; c < CYCLES_WITHOUT_DURATION; c++) {
-      out.push({ tipo: 'studio', minuti: studio, ciclo: c });
-      out.push({ tipo: 'pausa', minuti: pausa, ciclo: c });
+      out.push({ tipo: 'studio', minuti: studio });
+      out.push({ tipo: 'pausa', minuti: pausa });
     }
     return out;
   }
 
   let remaining = Math.max(0, Math.floor(totalMinutes));
-  let ciclo = 0;
   while (remaining > 0) {
     const s = Math.min(studio, remaining);
-    out.push({ tipo: 'studio', minuti: s, ciclo });
+    out.push({ tipo: 'studio', minuti: s });
     remaining -= s;
     if (remaining <= 0) break;
     const p = Math.min(pausa, remaining);
-    out.push({ tipo: 'pausa', minuti: p, ciclo });
+    out.push({ tipo: 'pausa', minuti: p });
     remaining -= p;
-    ciclo++;
   }
   return out;
-}
-
-/** Somma dei minuti di tutti i segmenti (le pause contano nel totale, §10.3). */
-export function totalMinutes(segments: readonly Segmento[]): number {
-  return segments.reduce((acc, s) => acc + s.minuti, 0);
 }
 // Il tempo per unità si attribuisce sul tempo reale, non sui minuti pianificati: `summary` di `timer.ts` (D-TIMER-1).

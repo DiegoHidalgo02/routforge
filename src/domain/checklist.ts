@@ -28,12 +28,8 @@ export function afterToggle(
   return null;
 }
 
-/** Giorno di un todo derivato (D-DETT-2): quello dell'attività da cui nasce, mai prima di oggi. */
-export function inheritedDay(inizio: number, now: number): string {
-  const giorno = localDayKey(inizio);
-  const oggi = localDayKey(now);
-  return giorno < oggi ? oggi : giorno;
-}
+/** Giorno di un todo derivato (D-DETT-2): quello dell'attività da cui nasce, mai prima di oggi (il più tardo dei due). */
+export const inheritedDay = (inizio: number, now: number): string => localDayKey(Math.max(inizio, now));
 
 /**
  * Bozza del todo con le voci rimaste (D-DETT-2): stesso titolo, note, priorità, corso e orizzonte del todo da cui

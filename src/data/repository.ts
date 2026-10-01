@@ -61,11 +61,7 @@ export async function list<K extends NomeTabella>(db: RoutForgeDb, nome: K): Pro
  * parte (tutto o niente; scritture serializzate, MECC §7). Dexie resta confinato in `data`.
  */
 export const inTransaction = <T>(db: RoutForgeDb, tabelle: readonly NomeTabella[], fn: () => Promise<T>): Promise<T> =>
-  db.transaction(
-    'rw',
-    tabelle.map((t) => db.table(t)),
-    fn,
-  );
+  db.transaction('rw', [...tabelle], fn);
 
 /** I record vivi con `indice` uguale a `valore` (un indice secondario di `SCHEMA_V1`, es. `ricorrenzaId`, MECC §7). */
 export async function listBy<K extends NomeTabella>(
@@ -74,8 +70,7 @@ export async function listBy<K extends NomeTabella>(
   indice: keyof Tabelle[K] & string,
   valore: string,
 ): Promise<Tabelle[K][]> {
-  const righe = await tabella(db, nome).where(indice).equals(valore).toArray();
-  return righe.filter((r): r is Tabelle[K] => vivo(r));
+  return (await tabella(db, nome).where(indice).equals(valore).toArray()).filter((r): r is Tabelle[K] => vivo(r));
 }
 
 /**
@@ -89,8 +84,9 @@ export async function listKeyRange<K extends NomeTabella>(
   da: string,
   a: string,
 ): Promise<Tabelle[K][]> {
-  const righe = await tabella(db, nome).where(':id').between(da, a, true, true).toArray();
-  return righe.filter((r): r is Tabelle[K] => vivo(r));
+  return (await tabella(db, nome).where(':id').between(da, a, true, true).toArray()).filter((r): r is Tabelle[K] =>
+    vivo(r),
+  );
 }
 
 /** Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. */
@@ -200,11 +196,7 @@ export function watch<T>(query: () => Promise<T>, onChange: (v: T) => void): () 
   return () => s.unsubscribe();
 }
 
-/** Blocchi vivi di un giorno locale "YYYY-MM-DD", in ordine d'inizio (indice `[giornoLocale+inizio]`). */
-export const blocksOfDay = (db: RoutForgeDb, giornoLocale: string): Promise<RigaBlocco[]> =>
-  blocksBetween(db, giornoLocale, giornoLocale);
-
-/** Blocchi vivi dei giorni locali da `primo` a `ultimo` inclusi, per giorno e poi per inizio (stesso indice). */
+/** Blocchi vivi dei giorni locali "YYYY-MM-DD" da `primo` a `ultimo` inclusi, per giorno e poi per inizio (indice `[giornoLocale+inizio]`). */
 export async function blocksBetween(db: RoutForgeDb, primo: string, ultimo: string): Promise<RigaBlocco[]> {
   const righe = await db.blocchi
     .where('[giornoLocale+inizio]')

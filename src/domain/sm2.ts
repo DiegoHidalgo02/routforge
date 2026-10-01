@@ -66,16 +66,6 @@ export function review(card: StatoCarta, rating: Valutazione, now: number): Risu
   }
 }
 
-/** Anteprima "prossima scadenza" mostrata accanto a ogni bottone (FUNZIONALITÀ §15). */
-export function previewAll(card: StatoCarta, now: number): Record<Valutazione, number> {
-  return {
-    niente: review(card, 'niente', now).scadenza,
-    difficile: review(card, 'difficile', now).scadenza,
-    bene: review(card, 'bene', now).scadenza,
-    facile: review(card, 'facile', now).scadenza,
-  };
-}
-
 /** Ripasso trasversale: carte con scadenza ≤ adesso, dalle più scadute (§19). */
 export function dueCards<T extends { sm2: StatoCarta }>(cards: readonly T[], now: number): T[] {
   return cards.filter((c) => c.sm2.scadenza <= now).sort((a, b) => a.sm2.scadenza - b.sm2.scadenza);

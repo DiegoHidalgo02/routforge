@@ -4,7 +4,8 @@
 // puntatore arrivano con il loro task; l'avanzamento dell'import non si mostra: la lettura è sincrona.
 import { GraduationCap, TriangleAlert, Upload } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ErroreImportCorso, importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
+import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
+import { ErroreImportCorso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { watchCourseCards, type SchedaCorso } from '../app/courses';
 import { appDb } from '../app/db';
