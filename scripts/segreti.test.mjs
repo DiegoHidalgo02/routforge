@@ -7,11 +7,10 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, relative, sep } from 'node:path';
 
-const QUESTO = fileURLToPath(import.meta.url);
-const RADICE = join(dirname(QUESTO), '..');
+const QUESTO = import.meta.filename;
+const RADICE = join(import.meta.dirname, '..');
 
 export const PATTERN = [
   [/\bAIza[0-9A-Za-z_-]{35}\b/, 'chiave API Google (Gemini)'],

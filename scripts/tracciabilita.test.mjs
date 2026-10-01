@@ -11,12 +11,11 @@
 //    uno scenario, una decisione, un invariante o un documento di docs/.
 // =============================================================================
 import { describe, expect, it } from 'vitest';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 
-const QUESTO = fileURLToPath(import.meta.url);
-const RADICE = join(dirname(QUESTO), '..');
+const QUESTO = import.meta.filename;
+const RADICE = join(import.meta.dirname, '..');
 const leggi = (p) => readFileSync(join(RADICE, p), 'utf8');
 const posix = (p) => p.split(sep).join('/');
 
@@ -70,14 +69,12 @@ export const describeSenzaFonte = (codice) =>
     .map((m) => m[3])
     .filter((t) => !/§|SCENARI|MECC|FORMATO|CONTESTO|FUNZ|D-[A-Z]+-\d+|INV-\d+|docs\/|CLAUDE\.md/.test(t));
 
-function fileTest(dir, re) {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    if (statSync(p).isDirectory()) return fileTest(p, re);
-    return re.test(n) ? [p] : [];
-  });
-}
+const fileTest = (dir, re) =>
+  existsSync(dir)
+    ? readdirSync(dir, { recursive: true })
+        .filter((n) => re.test(n))
+        .map((n) => join(dir, n))
+    : [];
 
 const spec = scenariSpec(leggi('docs/spec/RoutForge_SCENARI.md'));
 const matrice = righeMatrice(leggi('docs/TRACCIABILITA.md'));

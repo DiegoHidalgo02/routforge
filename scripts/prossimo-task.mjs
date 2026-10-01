@@ -13,8 +13,7 @@
 //       node scripts/prossimo-task.mjs --formato sh → righe KEY='valore' per `eval` in bash
 // =============================================================================
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
 
 // Etichetta della colonna → nome del modello per `claude --model`
 // (stringhe dei modelli pubblicate da Anthropic, settembre 2026).
@@ -105,10 +104,9 @@ export function prossimoTask(testoTasks, pianoEsiste) {
 }
 
 // --- Riga di comando -----------------------------------------------------------
-const questoFile = fileURLToPath(import.meta.url);
 // Eseguito da riga di comando (non importato dai test)?
-if (process.argv[1] && resolve(process.argv[1]) === questoFile) {
-  const radice = join(dirname(questoFile), '..');
+if (process.argv[1] && resolve(process.argv[1]) === import.meta.filename) {
+  const radice = join(import.meta.dirname, '..');
   const testo = readFileSync(join(radice, 'docs', 'TASKS.md'), 'utf8');
   const r = prossimoTask(testo, (id) => existsSync(join(radice, 'docs', 'piani', `${id}.md`)));
   if (process.argv.includes('--formato') && process.argv[process.argv.indexOf('--formato') + 1] === 'sh') {

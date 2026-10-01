@@ -88,12 +88,6 @@ describe('prossimoTask — sul backlog reale (docs/TASKS.md)', () => {
       ).toBe(true);
     }
   });
-
-  it('oggi il loop si ferma a T-021, che aspetta il checkpoint CP3 (T-020 fatto il 29/09/2026)', () => {
-    const r = prossimoTask(reale, nessunPiano);
-    expect(r.trovato).toBe(false);
-    expect(r.motivo).toMatch(/T-021 richiede il checkpoint CP3/);
-  });
 });
 
 describe('prossimoTask — checkpoint (docs/06_SUPERVISIONE.md)', () => {

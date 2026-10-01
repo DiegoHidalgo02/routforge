@@ -35,13 +35,12 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 // --- Percorsi di base -------------------------------------------------------
 // AUDIT_HOME permette di provare lo script su una home finta (usato nei test).
 const HOME = process.env.AUDIT_HOME ?? homedir();
 const CLAUDE_UTENTE = join(HOME, '.claude');
-const PROGETTO = join(dirname(fileURLToPath(import.meta.url)), '..');
+const PROGETTO = join(import.meta.dirname, '..');
 
 // Skill integrate in Claude Code: un nome uguale le sostituisce o le confonde.
 // Elenco dalla documentazione ufficiale (settembre 2026), non esaustivo.

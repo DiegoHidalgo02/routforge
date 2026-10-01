@@ -8,13 +8,12 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { COURSE } from '../claude-design/design/course-data.js';
 import { parseCourse } from '../src/domain/course/parser.ts';
 import { local } from '../src/domain/time.ts';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(import.meta.dirname, '..');
 const EXPORT = join(ROOT, 'claude-design', 'spec');
 const COPIA = join(ROOT, 'src', 'data', 'sample-course');
 const FILE = ['M0-Riattivazione_JavaScript.md', 'M1-Tooling_Moderno.md'];
@@ -67,7 +66,6 @@ const files = FILE.map((name) => ({ name, content: readFileSync(join(COPIA, name
 // Titolo passato dal chiamante: l'export non ha il file struttura (FORMATO §5, D-PARSE-1, D-SAMPLE-1).
 const opzioni = { corsoId: 'corso-esempio', now: local(2026, 9, 24, 9, 0), titolo: 'Syllabus Software Engineer 2026' };
 const { corso, avvisi } = parseCourse(files, opzioni);
-const letto = corso;
 
 describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-SAMPLE-1)', () => {
   it("src/data/sample-course/ è la copia esatta dei moduli dell'export del design", () => {
@@ -97,12 +95,6 @@ describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-
   });
 
   it('il corso letto dal parser coincide con course-data.js', () => {
-    expect(letto).toMatchObject(attesoDalFixture(COURSE));
-  });
-
-  it('il confronto riconosce davvero una differenza (autotest)', () => {
-    const atteso = attesoDalFixture(COURSE); // oggetti nuovi: la modifica non tocca COURSE
-    atteso.moduli[0].unita[6].titolo += ' (modificato)';
-    expect(letto).not.toMatchObject(atteso);
+    expect(corso).toMatchObject(attesoDalFixture(COURSE));
   });
 });

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.dom.json",
+    "check": "tsc && tsc -p tsconfig.dom.json",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -18,7 +18,7 @@
     "audit:claude": "node scripts/audit-claude.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.11"
   },
   "overrides": {
     "eslint-plugin-jsx-a11y": {

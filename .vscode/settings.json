@@ -23,7 +23,7 @@
 
   // --- Estensione Vitest (pannello Testing): indica esplicitamente la configurazione dei test,
   //     così la ricerca automatica non dipende dalla cartella aperta
-  "vitest.rootConfig": "vitest.config.ts",
+  "vitest.rootConfig": "vite.config.ts",
 
   // --- Terminale: PowerShell 7 per scripts/loop.ps1 (se non installato, VS Code usa il default)
   "terminal.integrated.defaultProfile.windows": "PowerShell",

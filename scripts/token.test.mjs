@@ -7,10 +7,9 @@
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..');
+const RADICE = join(import.meta.dirname, '..');
 const leggi = (p) => readFileSync(join(RADICE, p), 'utf8');
 
 describe('Token del design — docs/03_HANDOFF_DESIGN_CODE.md §5 (INV-20, D-STACK-1)', () => {

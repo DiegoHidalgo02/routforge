@@ -14,11 +14,10 @@
 //    librerie della UI solo in ui: i servizi di app restano senza framework.
 // =============================================================================
 import { describe, expect, it } from 'vitest';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', 'src');
+const SRC = join(import.meta.dirname, '..', 'src');
 
 /** Strati raggiungibili da ciascuno strato (sé stesso incluso). */
 export const DIPENDENZE_AMMESSE = {
@@ -61,14 +60,12 @@ export const importDi = (codice) =>
 const isTest = (percorso) => /\.test\.tsx?$/.test(percorso);
 
 /** Tutti i file .ts/.tsx sotto `dir`, test inclusi. */
-function fileTs(dir) {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
-    if (statSync(p).isDirectory()) return fileTs(p);
-    return /\.(ts|tsx)$/.test(n) ? [p] : [];
-  });
-}
+const fileTs = (dir) =>
+  existsSync(dir)
+    ? readdirSync(dir, { recursive: true })
+        .filter((n) => /\.(ts|tsx)$/.test(n))
+        .map((n) => join(dir, n))
+    : [];
 const stratoDi = (percorso) => relative(SRC, percorso).split(sep)[0];
 const dentroSrc = (percorso) => !relative(SRC, percorso).startsWith('..');
 const isPorta = (percorso) => /[\\/]ports[\\/]/.test(percorso);
