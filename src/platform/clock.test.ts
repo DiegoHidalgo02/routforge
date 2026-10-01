@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { webClock } from './clock';
 
@@ -21,5 +22,31 @@ describe('Battito al cambio di minuto — MECC §9, SCENARI G4 (app aperta a mez
     stop();
     vi.advanceTimersByTime(180_000);
     expect(scatti).toHaveLength(2);
+  });
+});
+
+describe('Primo piano — MECC §10.4, D-TIMER-2 n. 1 (battiti solo con la scheda visibile)', () => {
+  const visibilita = (stato: DocumentVisibilityState) => {
+    Object.defineProperty(document, 'visibilityState', { value: stato, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
+  afterEach(() => {
+    // La proprietà definita sul documento nasconderebbe quella del prototipo agli altri test
+    delete (document as { visibilityState?: DocumentVisibilityState }).visibilityState;
+  });
+  it('`inForeground` segue `document.visibilityState`; `onForeground` scatta solo al ritorno visibile', () => {
+    const ritorni: number[] = [];
+    const stop = webClock.onForeground(() => ritorni.push(1));
+    expect(webClock.inForeground()).toBe(true);
+    visibilita('hidden');
+    expect(webClock.inForeground()).toBe(false);
+    expect(ritorni).toHaveLength(0);
+    visibilita('visible');
+    expect(webClock.inForeground()).toBe(true);
+    expect(ritorni).toHaveLength(1);
+    stop();
+    visibilita('hidden');
+    visibilita('visible');
+    expect(ritorni).toHaveLength(1);
   });
 });

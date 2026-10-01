@@ -79,10 +79,11 @@ background anche su iOS e web.
   riapertura la sessione non è in pausa (uscire dall'interfaccia non mette in pausa, n. 4).
 - L'avviso resta finché l'intervallo non è attribuito (non c'è «lascia fuori»: la spec non lo prevede) e compare anche
   nell'iperfocus, dove l'ora di sblocco di una sessione ancorata al focus dipende dall'attribuzione.
-- Sul web i battiti proseguono anche a scheda nascosta (Chrome li rallenta a uno al minuto): un'assenza con la scheda
-  aperta conta come focus; solo sospensione, chiusura o riavvio producono intervalli non verificati. Limite accettato:
-  la spec dice che sul web la continuità in background «non è garantita», non che è esclusa, e fermare i battiti a
-  scheda nascosta richiederebbe la visibilità nella porta `Clock`.
+- **Solo in primo piano** (n. 1, 01/10/2026): la porta `Clock` ha `inForeground()` (sul web `document.visibilityState`,
+  lo stesso criterio di `onForeground`) e `startHeartbeat` salta il battito quando l'app non è in primo piano; il
+  battito torna con `onForeground`. Una scheda nascosta per più di 30' produce quindi un intervallo non verificato al
+  ritorno, come su iOS; entro 30' il tempo conta come focus. L'adapter Android di T-021 risponde vero anche a WebView
+  nascosta finché il servizio in primo piano della sessione è attivo, e batte per conto suo.
 
 ## Verifica
 Fatta con T-047: `src/domain/timer.test.ts` («Persistenza e continuità — SCENARI D4»: intervallo registrato dal

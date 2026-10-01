@@ -113,7 +113,9 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
 - **SessionService** (`src/app/session.ts`, T-016, T-017, T-046, T-047) — una sola sessione attiva (§10); stato persistito in
   `preferenze.sessioneAttiva` per sopravvivere alla chiusura (D4): solo istanti (pause, interruzioni, cambi d'unità,
   salti, ultimo battito e intervalli non verificati), il timer li deriva con `domain/timer.ts` (D-TIMER-1, D-TIMER-2).
-  `startHeartbeat(db, clock)` scrive il battito subito, ogni minuto e al ritorno in primo piano con la porta `Clock`,
+  `startHeartbeat(db, clock)` scrive il battito subito, ogni minuto e al ritorno in primo piano con la porta `Clock`
+  (`now`, `every`, `onForeground`, `inForeground`: solo con l'app in primo piano, cioè la scheda visibile sul web;
+  su Android anche con il servizio della sessione attivo, T-021),
   fuori dal ciclo (INV-15); più di 30' dall'ultimo battito diventano un intervallo non verificato, fuori dal focus
   finché l'utente non lo conta (§10.4). «Abbandona» dal 65% della durata pianificata chiude con l'esito Continua
   (`abandonPlan`, D-SESS-2). `endSession` e `abandonSession` salvano la sessione

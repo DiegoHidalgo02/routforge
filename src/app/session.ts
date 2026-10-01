@@ -46,12 +46,14 @@ export async function readActiveSession(db: RoutForgeDb): Promise<SessioneAttiva
 
 /**
  * Battiti di continuità (§10.4, D-TIMER-2): l'istante corrente nella sessione attiva subito, a ogni minuto e al ritorno
- * in primo piano, finché l'app è aperta; più di 30' dall'ultimo battito restano registrati come intervallo non
- * verificato (`beat`). Fuori dalla transazione del ciclo (INV-15); senza sessione non scrive; un errore resta qui
- * (INV-16). Su Android il servizio in primo piano di T-021 terrà vivi i battiti anche con l'app chiusa. Restituisce lo stop.
+ * in primo piano, finché l'app è in primo piano (in secondo piano nessun battito: sul web una scheda nascosta); più di
+ * 30' dall'ultimo battito restano registrati come intervallo non verificato (`beat`). Fuori dalla transazione del ciclo
+ * (INV-15); senza sessione non scrive; un errore resta qui (INV-16). Su Android il servizio in primo piano di T-021
+ * terrà vivi i battiti anche con l'app chiusa. Restituisce lo stop.
  */
 export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
   const batti = () => {
+    if (!clock.inForeground()) return;
     const now = clock.now();
     void editActiveSession(db, (s) => beat(s, now), now).catch(() => null);
   };

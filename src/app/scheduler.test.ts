@@ -373,6 +373,7 @@ function orologioFinto(inizio: number) {
       inPrimoPiano.add(fn);
       return () => void inPrimoPiano.delete(fn);
     },
+    inForeground: () => true,
   };
   return {
     clock,

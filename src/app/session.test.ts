@@ -267,7 +267,7 @@ describe('Persistenza e continuità — SCENARI D4', () => {
     await startSession(db, null, scelta(), oggi(9, 1), FUSO);
     o.avanza(MINUTE);
     await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 2)));
-    // App in secondo piano per 45 minuti: al ritorno l'intervallo è non verificato
+    // App chiusa per 45 minuti: al ritorno l'intervallo è non verificato
     o.salta(45 * MINUTE);
     o.primoPiano();
     await vi.waitFor(async () =>
@@ -280,6 +280,51 @@ describe('Persistenza e continuità — SCENARI D4', () => {
     o.avanza(MINUTE);
     await Promise.resolve();
     expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 47));
+  });
+  it('in secondo piano (scheda nascosta) i battiti si fermano: 40 minuti nascosta diventano un intervallo non verificato al ritorno (D-TIMER-2 n. 1)', async () => {
+    await startSession(db, null, scelta(), oggi(9), FUSO);
+    const o = orologioFinto(oggi(9));
+    const stop = startHeartbeat(db, o.clock);
+    o.avanza(MINUTE);
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 1)));
+    o.nascondi();
+    for (let i = 0; i < 40; i++) o.avanza(MINUTE);
+    await Promise.resolve();
+    expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 1));
+    o.primoPiano();
+    await vi.waitFor(async () =>
+      expect((await readActiveSession(db))?.intervalliNonVerificati).toEqual([
+        { da: oggi(9, 1), a: oggi(9, 41), contato: false },
+      ]),
+    );
+    stop();
+  });
+  it('avviata a pagina nascosta non scrive; nascosta 10 o 30 minuti esatti il tempo resta focus (§10.4), 31 no', async () => {
+    await startSession(db, null, scelta(), oggi(9), FUSO);
+    const o = orologioFinto(oggi(9));
+    o.nascondi();
+    const stop = startHeartbeat(db, o.clock);
+    o.avanza(10 * MINUTE);
+    await Promise.resolve();
+    expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9));
+    o.primoPiano();
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 10)));
+    let s = await readActiveSession(db);
+    expect(s?.intervalliNonVerificati).toEqual([]);
+    expect(s && timerState(s, oggi(9, 10)).focus).toBe(10 * MINUTE);
+    o.nascondi();
+    o.salta(30 * MINUTE);
+    o.primoPiano();
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(9, 40)));
+    expect((await readActiveSession(db))?.intervalliNonVerificati).toEqual([]);
+    o.nascondi();
+    o.salta(31 * MINUTE);
+    o.primoPiano();
+    await vi.waitFor(async () => expect((await readActiveSession(db))?.ultimoBattito).toBe(oggi(10, 11)));
+    s = await readActiveSession(db);
+    expect(s?.intervalliNonVerificati).toEqual([{ da: oggi(9, 40), a: oggi(10, 11), contato: false }]);
+    expect(s && timerState(s, oggi(10, 11)).focus).toBe(40 * MINUTE);
+    stop();
   });
   it('riaperta 45 minuti dopo l’ultimo battito: la routine è ancora aperta, il focus è fermo, la fine resta quella del blocco', async () => {
     await studio('s1', { inizio: oggi(9), fine: oggi(10) });
@@ -299,10 +344,12 @@ describe('Persistenza e continuità — SCENARI D4', () => {
 
 /**
  * Orologio finto della porta `Clock` (come in `scheduler.test.ts`): `avanza` fa scattare i battiti il cui multiplo cade
- * nell'intervallo, `salta` sposta l'ora senza battiti (app in secondo piano), `primoPiano` simula il ritorno.
+ * nell'intervallo, `salta` sposta l'ora senza battiti (app chiusa), `nascondi` la manda in secondo piano (scheda
+ * nascosta: i battiti scattano ma l'app non è visibile), `primoPiano` la riporta visibile e simula il ritorno.
  */
 function orologioFinto(inizio: number) {
   let t = inizio;
+  let visibile = true;
   const battiti = new Set<{ ms: number; fn: () => void }>();
   const inPrimoPiano = new Set<() => void>();
   const clock: Clock = {
@@ -317,6 +364,7 @@ function orologioFinto(inizio: number) {
       inPrimoPiano.add(fn);
       return () => void inPrimoPiano.delete(fn);
     },
+    inForeground: () => visibile,
   };
   return {
     clock,
@@ -328,7 +376,11 @@ function orologioFinto(inizio: number) {
     salta(ms: number) {
       t += ms;
     },
+    nascondi() {
+      visibile = false;
+    },
     primoPiano() {
+      visibile = true;
       for (const fn of inPrimoPiano) fn();
     },
   };

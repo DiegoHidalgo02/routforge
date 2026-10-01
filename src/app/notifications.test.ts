@@ -70,7 +70,13 @@ function portaFinta() {
 }
 
 function orologio(t: number): Clock {
-  return { now: () => t, fuso: () => FUSO, every: () => () => {}, onForeground: () => () => {} };
+  return {
+    now: () => t,
+    fuso: () => FUSO,
+    every: () => () => {},
+    onForeground: () => () => {},
+    inForeground: () => true,
+  };
 }
 
 const blocco = (dati: Partial<DatiBlocco> & Pick<DatiBlocco, 'id' | 'inizio' | 'fine'>) =>

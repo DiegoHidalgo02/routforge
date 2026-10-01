@@ -12,4 +12,9 @@ export interface Clock {
   every(ms: number, fn: () => void): () => void;
   /** Chiama `fn` a ogni ritorno dell'app in primo piano (MECC §9). Restituisce lo stop. */
   onForeground(fn: () => void): () => void;
+  /**
+   * L'app è in primo piano adesso: sul web la scheda visibile; su Android (T-021) anche con la WebView nascosta se il
+   * servizio in primo piano della sessione è attivo. Altrimenti i battiti della sessione si fermano (§10.4, D-TIMER-2).
+   */
+  inForeground(): boolean;
 }
