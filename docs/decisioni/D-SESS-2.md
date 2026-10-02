@@ -1,7 +1,7 @@
 # D-SESS-2 — Abbandono oltre soglia: al 65% del pianificato l'abbandono diventa «Continua»
 
 **Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
-**applicata** con T-046 il 30/09/2026 (con la precisazione in fondo); **spec allineata il 30/09/2026** con il testo in
+**applicata** con T-046 il 30/09/2026 (con la precisazione in fondo, confermata dall'utente il 02/10/2026); **spec allineata il 30/09/2026** con il testo in
 fondo (scenario D7; `deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga
 nel registro: `docs/01_DECISIONI.md`.
 
@@ -62,7 +62,7 @@ statistiche e puntatore); soglia sul tempo a orologio (le pause darebbero credit
 - Riapre la domanda di D-TIMER-1 n. 8 per una sessione rimasta aperta dopo un crash: con D-TIMER-2 l'intervallo non
   verificato non conta nel focus, quindi la soglia si calcola sul focus confermato.
 
-## Precisazione di T-046 (30/09/2026, da confermare con l'utente)
+## Precisazione di T-046 (30/09/2026; confermata dall'utente il 02/10/2026)
 I n. 1 e 4 dicevano «durata pianificata del blocco». Il codice usa la **durata pianificata della sessione**, la stessa
 del tempo extra e dell'avanzamento del timer (§10.2, §10.4): fine − avvio per una sessione ancorata all'orologio (una
 routine 09:00–10:00 avviata alle 09:30 conta sui 30' residui: bastano 19,5' invece di 39'), la durata scelta per un
@@ -71,6 +71,13 @@ del 100% con il tempo extra e fa scattare la soglia anche nei recuperi (con la d
 60' non la raggiungerebbe mai). Il testo di spec («focus / durata pianificata») ammette entrambe le letture: il revisore
 `spec-reviewer` lo conferma. Se l'utente preferisce la durata del blocco basta leggerlo in `abandonSession` e passarne
 la durata a `focusPercent`.
+
+**Conferma dell'utente (02/10/2026)**: «se si inizia in ritardo vale sempre la regola del 65 %, ma viene registrato il
+ritardo per le statistiche e l'attività risulta conclusa, non con il tempo pieno». Letto così: la soglia si calcola sul
+tempo residuo della sessione; il ritardo d'avvio resta in `Blocco.minutiRitardo` (D-SESS-1 n. 2, letto da T-029); il
+blocco è `parziale` con i minuti effettivi (esito Continua, n. 2: non `completato`, che avanzerebbe il puntatore senza
+valutazione). L'utente chiede anche una **casistica completa delle chiusure** (ogni caso → che cosa si registra): da
+scrivere come tabella con un test per riga (`docs/STATO.md`, Prossimo task).
 
 ## Verifica
 Fatta con T-046: `src/domain/timer.test.ts` («Abbandono oltre soglia — SCENARI D7»: 65% e 58%, pause e tempo extra
