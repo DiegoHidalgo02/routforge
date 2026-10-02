@@ -84,6 +84,9 @@ background anche su iOS e web.
   battito torna con `onForeground`. Una scheda nascosta per più di 30' produce quindi un intervallo non verificato al
   ritorno, come su iOS; entro 30' il tempo conta come focus. L'adapter Android di T-021 risponde vero anche a WebView
   nascosta finché il servizio in primo piano della sessione è attivo, e batte per conto suo.
+- **Sessione rimasta aperta oltre la fine** (02/10/2026, punto aperto chiuso su delega dell'utente): nessuna proposta
+  automatica di abbandono alla riapertura; l'avviso dell'intervallo non verificato e lo sheet di chiusura bastano (D4:
+  nulla la chiude da sola). I casi stanno in `docs/SESSIONI.md` §3.
 
 ## Verifica
 Fatta con T-047: `src/domain/timer.test.ts` («Persistenza e continuità — SCENARI D4»: intervallo registrato dal

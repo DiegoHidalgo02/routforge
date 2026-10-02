@@ -80,12 +80,15 @@ riviste in Edge headless a 360 e 1280 (`coverage/cdp-t043.mjs`, `coverage/cdp-t0
 - `AvvisiCiclo.avvisiRitardo/avvisiPerso` e il ritorno di `rollTodos`: la Diagnostica (T-032) li legge (D-SCHED-1,
   D-NOTIF-2).
 - Le otto tabelle vuote di `SCHEMA_V1` (mazzi, carte, pratiche, …): «la versione 1 non si modifica»
-  (`.claude/rules/dati.md`); toglierle è un cambio di schema che decide l'utente.
+  (`.claude/rules/dati.md`); toglierle è un cambio di schema che decide l'utente. **Deciso il 02/10/2026: si tengono**
+  fino ai task che le riempiono (T-024–T-027, SM-2 e pratica).
 - Due `tsconfig`: D-TS-1 verifica il dominio senza la lib DOM; un solo file perderebbe la garanzia.
 - Strumenti dell'utente: archiviazione di `scripts/audit-claude.mjs` (~100 righe), la sezione «altri agenti»
   (Codex), `scripts/loop.ps1` accanto a `loop.sh` (PowerShell è la shell dell'utente), `--forza-modello`, gli hook di
   `.claude/hooks`, gli ignore di `coverage/` (contiene gli script CDP, da non lintare), `@vitejs/plugin-react` (Fast
-  Refresh), `scripts/token.test.mjs` come file a sé (citato da `.claude/rules/test.md`).
+  Refresh), `scripts/token.test.mjs` come file a sé (citato da `.claude/rules/test.md`). **Deciso il 02/10/2026: si
+  tengono tutti**; `loop.sh` serve sul Mac (T-036, D-NATIVO-1) e in Git Bash, l'archiviazione di `audit-claude` è
+  dell'utente.
 - Export usati solo internamente o dai test (15 costanti e tipi): togliere `export` non riduce righe; da fare quando si
   tocca il file. `SOGLIA_NON_VERIFICATO` resta separata da `LOST_GRACE_MS`: stesso valore, regole diverse (D-TIMER-2).
 - Fixture duplicate nei test (`orologioFinto` in scheduler e session, `modulo`/`unita` in outcome e session, ~70 righe):
