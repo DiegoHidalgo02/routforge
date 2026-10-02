@@ -18,6 +18,7 @@ Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e 
 `docs/01_DECISIONI.md` (registro; schede delle decisioni ad alto impatto in `docs/decisioni/`), `docs/02_ARCHITETTURA.md`,
 `docs/INVARIANTI.md` (proprietà da preservare e come sono verificate), `docs/TRACCIABILITA.md` (scenario → task → test),
 `docs/DIPENDENZE.md` (registro dei pacchetti), `docs/03_HANDOFF_DESIGN_CODE.md`, `docs/TASKS.md` (backlog ordinato),
+`docs/SESSIONI.md` (casistica delle chiusure di sessione: ogni caso → che cosa si registra, un test per riga),
 `docs/STATO.md` (dove siamo, problemi aperti). I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5; ultima: D-DETT-2).
 
 ## 2. Principi di lavoro

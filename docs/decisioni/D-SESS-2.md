@@ -33,7 +33,7 @@ streak +1, niente «perso». Il council proponeva in alternativa una domanda olt
    scatterebbe mai.)
 5. **UI**: il link «Abbandona · nessun esito» (S16, S15 banner) mostra sotto la soglia il testo attuale e sopra la
    soglia «Chiudi come Continua (65%)», così l'utente sa che cosa succede; la schermata finale dice che l'esito è stato
-   registrato. Aspetto da confermare con `design-checker` (divergenza 38).
+   registrato. Aspetto confermato da `design-checker` il 02/10/2026 (divergenza 38: non nel mock, coerente con i token).
 
 ## Testo per la spec (applicato il 30/09/2026)
 - MECC §10.5, dopo il riepilogo: «**Abbandono oltre soglia** (D-SESS-2, 30/09/2026): se la sessione è collegata a un
@@ -80,6 +80,10 @@ valutazione). L'utente chiede anche una **casistica completa delle chiusure** (o
 scrivere come tabella con un test per riga (`docs/STATO.md`, Prossimo task).
 
 ## Verifica
+Casistica completa delle chiusure (02/10/2026, chiesta dall'utente): `docs/SESSIONI.md`, un test per riga in
+`src/app/session.test.ts` («Casistica delle chiusure»: 21 casi fra avvio in orario e in ritardo, recupero, cronometro,
+continuità e sessione libera).
+
 Fatta con T-046: `src/domain/timer.test.ts` («Abbandono oltre soglia — SCENARI D7»: 65% e 58%, pause e tempo extra
 esclusi, recupero sulla durata scelta, libera e cronometro senza soglia), `src/app/session.test.ts` (D7 dal database:
 esito Continua scritto, blocco `parziale` con 39 minuti, unità `parziale`, streak; sotto soglia abbandono e perso),

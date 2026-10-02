@@ -4,10 +4,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list, save, saveBlock } from '../data/repository';
 import type { DatiEsito } from '../domain/outcome';
-import type { SceltaSessione } from '../domain/session';
+import type { SceltaSessione, SessioneAttiva } from '../domain/session';
 import { local, MINUTE } from '../domain/time';
-import { addInterruption, changeUnit, pauseSession, resumeSession, timerState } from '../domain/timer';
-import type { Blocco, StatoUnita } from '../domain/types';
+import {
+  addInterruption,
+  beat,
+  changeUnit,
+  countInterval,
+  pauseSession,
+  resumeSession,
+  timerState,
+  type TipoChiusura,
+} from '../domain/timer';
+import type { Blocco, Esito, StatoBlocco, StatoUnita } from '../domain/types';
 import { readStreak } from './outcome';
 import type { Clock } from './ports/clock';
 import { runCycle } from './scheduler';
@@ -21,6 +30,7 @@ import {
   setupInputs,
   startHeartbeat,
   startSession,
+  type SessioneRegistrata,
 } from './session';
 
 const FUSO = 'Europe/Rome';
@@ -385,6 +395,287 @@ function orologioFinto(inizio: number) {
     },
   };
 }
+
+describe('Casistica delle chiusure — docs/SESSIONI.md (D-SESS-2 confermata il 02/10/2026; MECC §10.5, §11, §12, §20)', () => {
+  // Routine di studio 09:00–10:00 sull'unità 1.1 (`stato` perso per il recupero); `azioni` fra l'avvio e la chiusura.
+  // I minuti del blocco sono il focus arrotondato: tempo extra compreso, pause e intervalli non contati esclusi
+  interface Caso {
+    caso: string;
+    stato?: StatoBlocco;
+    /** Durata scelta nel setup (conta solo nel recupero); `null` = cronometro. */
+    durata?: number | null;
+    avvio: number;
+    azioni?: () => Promise<unknown>;
+    chiudi: (now: number) => Promise<SessioneRegistrata | null>;
+    alle: number;
+    sessione: { chiusura: TipoChiusura; esito: Esito | null };
+    blocco: { stato: StatoBlocco; minuti?: number; minutiRitardo: number };
+    unita: StatoUnita;
+    streak: number;
+  }
+  const conEsito =
+    (esito: Esito, contaNelPiano = true) =>
+    (now: number) =>
+      endSession(db, now, FUSO, { ...ESITO, esito, contaNelPiano });
+  const abbandona = (now: number) => abandonSession(db, now, FUSO);
+  const modifica =
+    (...passi: [number, (s: SessioneAttiva) => SessioneAttiva][]) =>
+    async () => {
+      for (const [now, f] of passi) await editActiveSession(db, f, now);
+    };
+  const pausa = (da: number, a: number) => modifica([da, (s) => pauseSession(s, da)], [a, (s) => resumeSession(s, a)]);
+  const battiti = (...istanti: number[]) =>
+    istanti.map((t): [number, (s: SessioneAttiva) => SessioneAttiva] => [t, (s) => beat(s, t)]);
+  const CASI: Caso[] = [
+    // In orario (ritardo 0): la durata pianificata della sessione è l'ora intera
+    {
+      caso: '1. in orario, timer a fine, esito Completata: blocco completato con 60 minuti, unità completata, streak',
+      avvio: oggi(9),
+      chiudi: conEsito('completata'),
+      alle: oggi(10),
+      sessione: { chiusura: 'completata', esito: 'completata' },
+      blocco: { stato: 'completato', minuti: 60, minutiRitardo: 0 },
+      unita: 'completata',
+      streak: 1,
+    },
+    {
+      caso: '2. in orario, «Registra esito» alle 09:40 con Continua: terminata prima, parziale con 40 minuti',
+      avvio: oggi(9),
+      chiudi: conEsito('continua'),
+      alle: oggi(9, 40),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 40, minutiRitardo: 0 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    {
+      caso: '3. in orario, «Abbandona» alle 09:40 (66%): chiusa come Continua, parziale con 40 minuti (D7)',
+      avvio: oggi(9),
+      chiudi: abbandona,
+      alle: oggi(9, 40),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 40, minutiRitardo: 0 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    {
+      caso: '4. in orario, «Abbandona» alle 09:35 (58%): abbandonata, blocco programmato senza minuti, niente streak (D7)',
+      avvio: oggi(9),
+      chiudi: abbandona,
+      alle: oggi(9, 35),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 0 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '5. in orario, pausa 09:20–09:35 e «Abbandona» alle 09:50: 35 minuti di focus (58%), abbandonata',
+      avvio: oggi(9),
+      azioni: pausa(oggi(9, 20), oggi(9, 35)),
+      chiudi: abbandona,
+      alle: oggi(9, 50),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 0 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '6. in orario, esito Salta alle 09:40: terminata prima, blocco saltato con i minuti fatti, unità saltata, niente streak',
+      avvio: oggi(9),
+      chiudi: conEsito('salta'),
+      alle: oggi(9, 40),
+      sessione: { chiusura: 'terminata_prima', esito: 'salta' },
+      blocco: { stato: 'saltato', minuti: 40, minutiRitardo: 0 },
+      unita: 'saltata',
+      streak: 0,
+    },
+    {
+      caso: '7. in orario, esito Indietro a fine: blocco indietro, la 1.1 (prima del percorso) da rivedere, niente streak',
+      avvio: oggi(9),
+      chiudi: conEsito('indietro'),
+      alle: oggi(10),
+      sessione: { chiusura: 'completata', esito: 'indietro' },
+      blocco: { stato: 'indietro', minuti: 60, minutiRitardo: 0 },
+      unita: 'da_rivedere',
+      streak: 0,
+    },
+    {
+      caso: '8. in orario, Continua con «conta nel piano» spento: la sessione resta in `sessioni`, il blocco torna programmato, unità e streak intatte',
+      avvio: oggi(9),
+      chiudi: conEsito('continua', false),
+      alle: oggi(9, 40),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'programmato', minutiRitardo: 0 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    // In ritardo (avvio 09:30, ritardo 30): la sessione dura i 30 minuti residui e la soglia del 65% vale su quelli
+    {
+      caso: '9. in ritardo di 30, timer a fine con Completata: completato con 30 minuti, ritardo 30 per le statistiche',
+      avvio: oggi(9, 30),
+      chiudi: conEsito('completata'),
+      alle: oggi(10),
+      sessione: { chiusura: 'completata', esito: 'completata' },
+      blocco: { stato: 'completato', minuti: 30, minutiRitardo: 30 },
+      unita: 'completata',
+      streak: 1,
+    },
+    {
+      caso: '10. in ritardo di 30, «Abbandona» alle 09:50 (20 su 30 = 66%): chiusa come Continua, parziale con 20 minuti, ritardo 30',
+      avvio: oggi(9, 30),
+      chiudi: abbandona,
+      alle: oggi(9, 50),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 20, minutiRitardo: 30 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    {
+      caso: '11. in ritardo di 30, «Abbandona» alle 09:45 (50%): abbandonata, programmato, il ritardo resta',
+      avvio: oggi(9, 30),
+      chiudi: abbandona,
+      alle: oggi(9, 45),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 30 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '12. in ritardo di 30, oltre la fine fino alle 10:20 e Continua: completata (traguardo raggiunto), 50 minuti con il tempo extra',
+      avvio: oggi(9, 30),
+      chiudi: conEsito('continua'),
+      alle: oggi(10, 20),
+      sessione: { chiusura: 'completata', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 50, minutiRitardo: 30 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    // Recupero di un perso (avvio 10:20, ritardo 80): la durata pianificata è quella scelta
+    {
+      caso: '13. recupero da 25 minuti, timer a fine con Completata: completato con 25 minuti, ritardo 80',
+      stato: 'perso',
+      durata: 25,
+      avvio: oggi(10, 20),
+      chiudi: conEsito('completata'),
+      alle: oggi(10, 45),
+      sessione: { chiusura: 'completata', esito: 'completata' },
+      blocco: { stato: 'completato', minuti: 25, minutiRitardo: 80 },
+      unita: 'completata',
+      streak: 1,
+    },
+    {
+      caso: '14. recupero da 25 minuti, «Abbandona» dopo 17 (68%): chiusa come Continua, parziale con 17 minuti',
+      stato: 'perso',
+      durata: 25,
+      avvio: oggi(10, 20),
+      chiudi: abbandona,
+      alle: oggi(10, 37),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 17, minutiRitardo: 80 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    {
+      caso: '15. recupero da 25 minuti, «Abbandona» dopo 10 (40%): abbandonata, blocco programmato (il ciclo lo rimarca perso, C8)',
+      stato: 'perso',
+      durata: 25,
+      avvio: oggi(10, 20),
+      chiudi: abbandona,
+      alle: oggi(10, 30),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 80 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '16. recupero col cronometro, «Abbandona» dopo 40 minuti: nessuna soglia, abbandonata',
+      stato: 'perso',
+      durata: null,
+      avvio: oggi(10, 20),
+      chiudi: abbandona,
+      alle: oggi(11),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 80 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '17. recupero col cronometro, Continua dopo 40 minuti: completata (il cronometro non ha traguardo), parziale con 40',
+      stato: 'perso',
+      durata: null,
+      avvio: oggi(10, 20),
+      chiudi: conEsito('continua'),
+      alle: oggi(11),
+      sessione: { chiusura: 'completata', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 40, minutiRitardo: 80 },
+      unita: 'parziale',
+      streak: 1,
+    },
+    // Continuità (D4, D-TIMER-2): l'intervallo non verificato non conta finché non lo si attribuisce
+    {
+      caso: '18. in orario, battito alle 09:10 e riapertura alle 09:50 (40 minuti non verificati); «Abbandona» alle 09:55 con 15 di focus (25%): abbandonata',
+      avvio: oggi(9),
+      azioni: modifica(...battiti(oggi(9, 10), oggi(9, 50))),
+      chiudi: abbandona,
+      alle: oggi(9, 55),
+      sessione: { chiusura: 'abbandonata', esito: null },
+      blocco: { stato: 'programmato', minutiRitardo: 0 },
+      unita: 'non_iniziata',
+      streak: 0,
+    },
+    {
+      caso: '19. come il 18 ma con «Conta nel focus»: 55 minuti (91%), chiusa come Continua con 55 minuti',
+      avvio: oggi(9),
+      azioni: modifica(...battiti(oggi(9, 10), oggi(9, 50)), [oggi(9, 51), (s) => countInterval(s, oggi(9, 10))]),
+      chiudi: abbandona,
+      alle: oggi(9, 55),
+      sessione: { chiusura: 'terminata_prima', esito: 'continua' },
+      blocco: { stato: 'parziale', minuti: 55, minutiRitardo: 0 },
+      unita: 'parziale',
+      streak: 1,
+    },
+  ];
+  it.each(CASI)('$caso', async (c) => {
+    await save(db, 'unita', unita('u11', 1, 1, '1.1', 'non_iniziata'), 1);
+    await studio('s1', {
+      inizio: oggi(9),
+      fine: oggi(10),
+      unitaId: 'u11',
+      corsoId: 'c2',
+      stato: c.stato ?? 'programmato',
+    });
+    await startSession(db, 's1', scelta({ durata: c.durata === undefined ? 50 : c.durata }), c.avvio, FUSO);
+    await c.azioni?.();
+    expect(await c.chiudi(c.alle)).toMatchObject({
+      chiusura: c.sessione.chiusura,
+      esito: c.sessione.esito === null ? null : { esito: c.sessione.esito },
+    });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject(c.blocco);
+    expect((await get(db, 'unita', 'u11'))?.stato).toBe(c.unita);
+    expect(await readStreak(db, c.alle)).toBe(c.streak);
+    expect(await readActiveSession(db)).toBeNull();
+    expect(await list(db, 'sessioni')).toHaveLength(1);
+  });
+  it('20. libera sull’unità 1.1 con Continua dopo 50 minuti: blocco retroattivo parziale 09:00–09:50 con 50 minuti, unità parziale, streak', async () => {
+    await save(db, 'unita', unita('u11', 1, 1, '1.1', 'non_iniziata'), 1);
+    await startSession(db, null, scelta({ unitaId: 'u11', corsoId: 'c2' }), oggi(9), FUSO);
+    expect(await endSession(db, oggi(9, 50), FUSO, ESITO)).toMatchObject({
+      chiusura: 'completata',
+      esito: { esito: 'continua' },
+    });
+    expect(await list(db, 'blocchi')).toMatchObject([
+      { tipo: 'studio', stato: 'parziale', inizio: oggi(9), fine: oggi(9, 50), minuti: 50, unitaId: 'u11' },
+    ]);
+    expect((await get(db, 'unita', 'u11'))?.stato).toBe('parziale');
+    expect(await readStreak(db, oggi(9, 50))).toBe(1);
+  });
+  it('21. libera, «Abbandona» dopo 50 minuti: nessuna soglia senza blocco, abbandonata, nessun blocco scritto', async () => {
+    await startSession(db, null, scelta({ unitaId: 'u11', corsoId: 'c2' }), oggi(9), FUSO);
+    expect(await abandonSession(db, oggi(9, 50), FUSO)).toMatchObject({ chiusura: 'abbandonata', esito: null });
+    expect(await list(db, 'blocchi')).toEqual([]);
+    expect(await list(db, 'sessioni')).toMatchObject([{ chiusura: 'abbandonata', bloccoId: null }]);
+  });
+});
 
 describe('Pomodoro multi-materia — SCENARI D3', () => {
   it('cambiata l’unità, timer e banner mostrano la nuova; l’esito resta sulla pianificata', async () => {
