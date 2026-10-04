@@ -17,12 +17,6 @@
       "problemMatcher": []
     },
     {
-      "label": "design:check",
-      "type": "npm",
-      "script": "design:check",
-      "problemMatcher": []
-    },
-    {
       "label": "loop agentico (3 task)",
       "type": "shell",
       "command": "pwsh -File scripts/loop.ps1 -MaxTasks 3",

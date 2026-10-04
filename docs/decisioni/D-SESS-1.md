@@ -3,7 +3,7 @@
 **Stato**: applicata il 29/09/2026 (T-016): `src/domain/session.ts`, `src/app/session.ts`, `src/ui/Session.tsx`, campi
 `Blocco.minutiAnticipo` e `Blocco.minutiRitardo` in `src/domain/types.ts`; revisioni indipendenti `spec-reviewer`
 (conforme con rilievi) e `design-checker` (non fedele alla prima stesura): rilievi di comportamento e d'impaginazione
-applicati, gli altri in `docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 32. Riga nel registro: `docs/01_DECISIONI.md`.
+applicati, gli altri in `docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 32 (storia git, `3c60512`). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 MECC §10.1 dice come l'orologio sceglie il contesto (anticipo, routine, recupero, libera), che la sessione è una sola e
@@ -37,6 +37,9 @@ giorno locale; recupero limitato al giorno del blocco; parziale riscritto `in_co
 - T-019 riconcilia le notifiche dopo `anticipateSession` (orari nuovi) e `startSession` (niente verifica per un blocco
   in corso), come dopo `moveBlock`.
 - T-029 decide se il ritardo di un recupero di giorni passati entra nel ritardo medio.
+- Il vecchio mock cambiava l'unità anche nel recupero (divergenza 32 del vecchio handoff): chiusa il 02/10/2026 sulla
+  regola n. 6, su delega dell'utente, perché un'altra unità nel recupero disallineerebbe blocco e puntatore; chi vuole
+  studiare un'altra unità avvia una sessione libera da quella unità.
 
 ## Verifica
 `src/domain/session.test.ts` (contesti, soglia di 5', azioni, mezzanotte, parziale e orfano, materia),

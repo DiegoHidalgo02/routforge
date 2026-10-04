@@ -5,21 +5,31 @@ scheduler che ripianifica da solo, timer di studio con esiti che fanno avanzare 
 pratica generata dall'AI (Gemini), statistiche, sincronizzazione fra dispositivi. Piattaforme: Android,
 iOS, web installabile. Un solo utente, dati sul dispositivo, tutto offline tranne AI e sync.
 
-## 1. Fonti di verità (in quest'ordine, la più bassa vince in caso di contraddizione)
+## 1. Fonti di verità
+
+Prodotto, in quest'ordine (in caso di contraddizione vince la più bassa):
 
 1. `docs/spec/RoutForge_CONTESTO.md` — perimetro, vincoli, glossario, decisioni prese
 2. `docs/spec/RoutForge_FUNZIONALITA.md` — cosa fa l'app per l'utente
 3. `docs/spec/RoutForge_MECCANISMI.md` — regole esatte: stati, soglie, algoritmi
-4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile
+4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile; i file di riferimento M0/M1 e il risultato
+   atteso del parser (`course-data.js`) stanno in `src/data/sample-course/`
 5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (55 scenari): un task è finito solo se i suoi scenari passano
-6. `claude-design/` — export di Claude Design (`tokens.css`, `DESIGN.md`, `HANDOFF.md`, schermate `S*.dc.html`): fonte per **aspetto** e layout. Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1, `docs/decisioni/D-DESIGN-1.md`): si annota la divergenza e l'utente decide come allineare la spec.
+
+I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5).
+
+**Aspetto** → il design importato in `claude-design/`, riferimento solo dopo il suo **handoff** in
+`docs/03_HANDOFF_DESIGN_CODE.md`. **Oggi nessun design è attivo**: il vecchio export è stato rimosso il 04/10/2026
+(D-DESIGN-2) e il nuovo arriva via MCP; le schermate si implementano o si ritoccano dopo il suo handoff.
+Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1): si annota la
+divergenza nell'handoff e l'utente decide come allineare la spec.
 
 Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e regole in una pagina),
 `docs/01_DECISIONI.md` (registro; schede delle decisioni ad alto impatto in `docs/decisioni/`), `docs/02_ARCHITETTURA.md`,
 `docs/INVARIANTI.md` (proprietà da preservare e come sono verificate), `docs/TRACCIABILITA.md` (scenario → task → test),
-`docs/DIPENDENZE.md` (registro dei pacchetti), `docs/03_HANDOFF_DESIGN_CODE.md`, `docs/TASKS.md` (backlog ordinato),
-`docs/SESSIONI.md` (casistica delle chiusure di sessione: ogni caso → che cosa si registra, un test per riga),
-`docs/STATO.md` (dove siamo, problemi aperti). I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5; ultima: D-DETT-2).
+`docs/DIPENDENZE.md` (registro dei pacchetti), `docs/03_HANDOFF_DESIGN_CODE.md` (stato del design e handoff),
+`docs/TASKS.md` (backlog ordinato), `docs/SESSIONI.md` (casistica delle chiusure di sessione: ogni caso → che cosa si
+registra, un test per riga), `docs/STATO.md` (dove siamo, problemi aperti).
 
 ## 2. Principi di lavoro
 
@@ -38,18 +48,18 @@ Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e 
 
 ```
 src/domain/     meccanismi puri: nessun import da UI, DB, piattaforma. Testabili in isolamento (CONTESTO §3)
-src/data/       persistenza locale (scelta in T-000; candidato Dexie/IndexedDB); ogni record: id UUID, createdAt, updatedAt, deletedAt
+src/data/       persistenza locale Dexie/IndexedDB (D-DATA-1); ogni record: id UUID, createdAt, updatedAt, deletedAt
 src/app/        servizi che orchestrano dominio + dati: scheduler, sessione, notifiche, puntatore, sync
-src/ui/         schermate e componenti (framework scelto in T-000 dopo l'import del design); SOLO token di claude-design/design/tokens.css
-src/platform/   adapter nativi dietro interfacce (candidato Capacitor: notifiche, sveglie, Non Disturbare, widget, file system, TTS)
+src/ui/         schermate e componenti React 19 (D-STACK-1); SOLO i token di src/ui/styles/tokens.css
+src/platform/   adapter nativi dietro interfacce (Capacitor da T-021: notifiche, sveglie, Non Disturbare, widget, file system, TTS)
 ```
 Regola di dipendenza: `ui → app → data → domain`; `platform` è usato solo da `app` tramite interfacce.
-Lo **stack** (UI, persistenza, shell nativa) lo decide l'agente nel task T-000 **dopo** aver importato e letto tutto
-l'export di Claude Design, con la procedura di `docs/02_ARCHITETTURA.md` §0; finché T-000 è aperto non si scaffolda la UI.
+Stack deciso in T-000 (D-STACK-1): React 19 + Vite + CSS Modules, Dexie, Capacitor; i dettagli presi dal vecchio
+design (token, font, icone) restano finché l'handoff del nuovo design non li cambia.
 Tempo: ogni istante è epoch ms; il giorno è quello **locale** (`src/domain/time.ts`). Mai `Date.now()` dentro
 `domain`: il "now" arriva sempre come parametro (rende tutto testabile). Direzione delle dipendenze e purezza del
 dominio sono **verificate dal gate** (`scripts/architettura.test.mjs`). Le regole specifiche di ogni strato sono in
-`.claude/rules/` (caricate quando leggi o modifichi file corrispondenti: per uno strato ancora vuoto leggile prima di creare il primo file); gli invarianti e la loro verifica in `docs/INVARIANTI.md`.
+`.claude/rules/` (caricate quando leggi o modifichi file corrispondenti); gli invarianti e la loro verifica in `docs/INVARIANTI.md`.
 Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-TIME-2.md`): i blocchi futuri si riancorano, il passato resta.
 
 ## 4. Convenzioni
@@ -74,7 +84,6 @@ Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-T
 - `npm run dev` — l'app nel browser (Vite); `npm run build` — build web in `dist/`.
 - `npm test` / `npm run test:watch` — Vitest. `npm run check` — solo `tsc`. `npm run lint` — ESLint.
   `npm run format` — Prettier (nel gate: `format:check`).
-- `npm run design:check` — verifica che l'export del design sia presente in `claude-design/`.
 
 ## 6. Ciclo di un task (loop agentico, dettagli in `docs/05_LOOP_AGENTICO.md`)
 

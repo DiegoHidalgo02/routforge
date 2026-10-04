@@ -1,6 +1,6 @@
 # D-NOTIF-3 — Nessuna fascia silenziosa nell'app
 
-**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
+**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`, solo locale);
 applicata nel codice con T-045 (rimozione di `src/domain/notifications/quietHours.ts`, del campo `oreSilenziose` e
 degli spostamenti in `desiredSet`); **spec allineata il 30/09/2026** con il testo in fondo (`deny` su `docs/spec` tolto
 e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
@@ -50,7 +50,8 @@ un'eccezione); fascia attiva per default come nel mock.
 - T-045 (fatto): codice e test; F3 e F5 verificano ora l'assenza di rinvii.
 - T-032: nessuna card «Ore silenziose»; l'orario del digest va in una riga propria.
 - T-021: nessun trattamento speciale del Non disturbare per le notifiche ordinarie.
-- Da segnalare a Claude Design: S22 senza la card (divergenza 37 in `docs/03_HANDOFF_DESIGN_CODE.md` §10).
+- Da ritrovare nel nuovo design: Impostazioni senza la card (ex divergenza 37, nell'inventario di
+  `docs/03_HANDOFF_DESIGN_CODE.md` §1).
 
 ## Verifica
 `src/domain/notifications/desiredSet.test.ts` («Nessuna fascia silenziosa — SCENARI F3»: 06:00, 06:30, digest

@@ -2,33 +2,12 @@
 
 *Come è organizzato il codice e perché. Le regole di comportamento restano nelle spec; qui c'è solo la forma del software. Gli invarianti e la loro verifica sono in `docs/INVARIANTI.md`; le decisioni ad alto impatto hanno una scheda in `docs/decisioni/`.*
 
-## 0. Scelta dello stack (T-000, decide l'agente dopo l'import del design)
+## 0. Stack (T-000, D-STACK-1)
 
-Procedura: (1) `/design` → import completo; `npm run design:check` = 0 mancanti; (2) leggere `claude-design/HANDOFF.md`,
-`claude-design/design/DESIGN.md`, `claude-design/design/tokens.css`, `claude-design/support.js`, `claude-design/design/course-data.js` e almeno S1, S4, S15, S20
-mobile+desktop; (3) valutare i candidati con i criteri sotto; (4) scrivere la decisione in `docs/01_DECISIONI.md` e
-nella scheda `docs/decisioni/D-STACK-1.md` (scelta, motivi, alternative scartate) e in `docs/STATO.md`; (5) adattare §3, §6 e §7 di questo documento,
-`docs/DIPENDENZE.md` (righe «previste») e `.claude/rules/ui.md`, `.claude/rules/piattaforma.md`.
-
-| Criterio (in ordine di peso) | Domanda da porre al design |
-|---|---|
-| Riuso del design | Quanto di `tokens.css` / HTML / `support.js` si porta nell'app senza riscriverlo? (React/Vue/Svelte + CSS: quasi tutto; React Native/Flutter: quasi nulla) |
-| Tre piattaforme, un codice | Android, iOS e web installabile con le stesse funzioni (CONTESTO §3) |
-| Capacità native richieste | Notifiche in background, sveglie a schermo intero, Non Disturbare, widget Android, TTS, file system: disponibili come plugin? |
-| Testabilità | Il dominio resta puro TS (già fatto); i servizi si testano con adapter finti |
-| Semplicità e competenze | Curva di apprendimento per l'autore (front-end web) e per gli agenti; niente complessità prematura |
-| Reattività | Oggi pronto in < 0,5 s; scheduler in background senza bloccare la UI |
-
-| Candidato | Quando vince |
-|---|---|
-| **A. TypeScript + React + Vite (PWA) + Capacitor** | Se il design è HTML/CSS riutilizzabile e le capacità native sono coperte dai plugin (atteso) |
-| B. Vue/Svelte + Vite + Capacitor | Se `support.js`/gli HTML del design sono più vicini a template che a componenti React |
-| C. React Native / Expo | Solo se il design richiede widget nativi non realizzabili in WebView (improbabile) |
-| D. Flutter | Solo se A–C falliscono i criteri; costo: riscrivere l'aspetto |
-
-**Deciso in T-000 (24/09/2026): candidato A.** Motivi, alternative e dettagli che discendono dal design (CSS Modules su
-`tokens.css`, `lucide-react`, font locali, `react-router`) in `docs/decisioni/D-STACK-1.md`. Il resto del documento
-descrive lo stack scelto.
+**Deciso il 24/09/2026**: TypeScript + React 19 + Vite (PWA) + Capacitor, con Dexie per la persistenza (D-DATA-1).
+Criteri, candidati scartati e dettagli presi dal vecchio design (CSS Modules sui token, `lucide-react`, font locali,
+`react-router`) in `docs/decisioni/D-STACK-1.md`; i dettagli d'aspetto restano finché l'handoff del nuovo design non li
+cambia (`docs/03_HANDOFF_DESIGN_CODE.md`). Il resto del documento descrive lo stack scelto.
 
 ## 1. Strati e regola di dipendenza
 
@@ -36,11 +15,12 @@ descrive lo stack scelto.
 src/
 ├── domain/      Meccanismi puri (TS senza I/O). Già presenti: time, types, sm2, streak, pomodoro,
 │                practice, pointer, lost, nowBlock, course/parser, activity, ordering, calendar, language,
-│                scheduler/occurrences (T-011), scheduler/horizon (T-012), scheduler/cycle (T-013). In arrivo:
-│                notifications/ (desiredSet, digest), session/ (timer, outcome), stats, sync/ (merge).
+│                checklist, completion, phases, drag, session, timer, outcome, scheduler/ (occurrences, horizon,
+│                cycle, absence), notifications/ (desiredSet, digest). In arrivo: stats, sync/ (merge).
 │                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
 ├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.
-│                Già presente: sample-course/ (M0, M1 del corso di esempio, copia dell'export del design: D-SAMPLE-1).
+│                Già presente: sample-course/ (M0 e M1 del corso di esempio e il risultato atteso del parser
+│                `course-data.js`, FORMATO §0 e §5: D-SAMPLE-1, D-DESIGN-2).
 ├── app/         Servizi: SchedulerService (cicli §9), SessionService (timer §10), NotificationPlanner (§13),
 │                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
 │   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, DoNotDisturb, Widget, FileSystem,
@@ -50,11 +30,11 @@ src/
 │                (T-019, D-NOTIF-1: la sveglia è un attributo della voce, nessuna porta Alarms; adapter web
 │                `platform/notifications.ts`, testi da `ui/notificationTexts.ts` iniettati da `main.tsx`)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
-│                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css`.
+│                Impostazioni), componenti, hook. Solo token di `src/ui/styles/tokens.css`.
 └── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
                  Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView); device
-                 (Wake Lock e Non Disturbare assente sul web, T-017)
+                 (Wake Lock e Non Disturbare assente sul web, T-017); notifications (adapter web, T-019)
 ```
 
 **Regola**: `ui → app → data → domain`. `platform` è iniettato in `app` tramite le porte (`src/app/ports/*.ts`) così
@@ -149,17 +129,16 @@ resta fuori dal dominio.
 ## 5. UI
 
 - Router con le sezioni di FUNZ §1: Oggi (`/`), Crea (`/crea`), Statistiche, Profilo/Corsi, Notifiche, Diagnostica,
-  Impostazioni; dettaglio come pannello laterale su desktop (S5 Panel) e schermata su mobile (S5 Mobile).
+  Impostazioni; dettaglio come pannello laterale su desktop e schermata su mobile (D-UI-1).
 - Stato: nessuna libreria; `useSyncExternalStore` sulle query live di Dexie esposte da `app` (deciso in T-006, D-STACK-1).
 - Shell (T-006, D-UI-1): `src/ui/Shell.tsx` (BottomNav; da 1024 px sidebar 240), menu del logo utente `src/ui/ProfileMenu.tsx`,
   rotte in `src/ui/App.tsx`; testi con `t()` di `src/ui/i18n` (sei JSON, lingua da `pickLanguage`, MECC §23); punto di
   composizione `src/main.tsx` (font, token, lingua, archiviazione persistente), fuori dagli strati.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
-- Nessun colore/spaziatura fuori da `claude-design/design/tokens.css`.
 - Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `src/ui/styles/tokens.css`
-  (copia di `claude-design/design/tokens.css`), niente Tailwind né stili inline con valori; icone `lucide-react` (tratto
-  1.75); font Manrope e IBM Plex Mono locali (`@fontsource`); rotte con `react-router`. Le schermate dei mock si
-  ricreano come componenti: Panel + cornice mobile/desktop, come nell'export.
+  (copia non modificata dei token dell'export del design: oggi del vecchio, INV-20 sospeso fino al nuovo handoff),
+  niente Tailwind né stili inline con valori; icone `lucide-react` (tratto 1.75); font Manrope e IBM Plex Mono locali
+  (`@fontsource`); rotte con `react-router`.
 
 ## 6. Piattaforma (Capacitor, D-STACK-1)
 
@@ -180,7 +159,6 @@ resta fuori dal dominio.
 # T-006 (fatto): UI web
 npm i react react-dom react-router lucide-react @fontsource/manrope @fontsource/ibm-plex-mono
 npm i -D @types/react @types/react-dom vite@7 @vitejs/plugin-react@5 eslint-plugin-react-hooks eslint-plugin-jsx-a11y
-cp claude-design/design/tokens.css src/ui/styles/tokens.css   # senza modifiche (INV-20, scripts/token.test.mjs)
 # T-021 (prima capacità nativa, dopo CP3)
 npm i @capacitor/core @capacitor/android @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist

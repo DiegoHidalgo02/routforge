@@ -7,7 +7,7 @@ almeno un task esistente; un test che nomina uno scenario ("SCENARI B2") deve co
 `parziale` o `coperto` deve citare test esistenti che lo nominano.*
 
 **Colonne.** *Regole*: paragrafi di MECCANISMI (MECC) o FORMATO_CORSO. *Dove*: strato/modulo previsto da
-`docs/02_ARCHITETTURA.md`, esistente o da creare nel task indicato (nomi di file in inglese, D-NAMING-1; le schermate con il nome del design). *Stato*: `nessuno` (nessun test) ·
+`docs/02_ARCHITETTURA.md`, esistente o da creare nel task indicato (nomi di file in inglese, D-NAMING-1; le schermate con il nome del vecchio design, S1…S22, finché l'handoff del nuovo non dà i nomi nuovi). *Stato*: `nessuno` (nessun test) ·
 `parziale` (alcune affermazioni verificate, di norma solo a livello di dominio) · `coperto` (tutte le affermazioni
 dello scenario verificate, dichiarato alla chiusura del task che lo completa).
 

@@ -5,7 +5,7 @@
 `Blocco.minuti` in `src/domain/types.ts`, `sessioni.esito` in `src/data/db.ts`, sheet S16 e schermata finale in
 `src/ui/Session.tsx`, «Registra esito» in `src/ui/Detail.tsx`; revisioni indipendenti `spec-reviewer` (non conforme alla
 prima stesura) e `design-checker` (fedele, con rilievi): rilievi applicati, le differenze di resa in
-`docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 34. Riga nel registro: `docs/01_DECISIONI.md`.
+`docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 34 (storia git, `3c60512`). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 MECC §11 dà la tabella degli esiti (stato del blocco, stato e progresso dell'unità), il «Sempre» (minuti all'unità

@@ -8,7 +8,8 @@
 Fino a T-004 il parser produceva l'albero del corso (FORMATO_CORSO §4) e lo schema v1 aveva le tabelle `corsi`,
 `moduli`, `unita`, `sezioni`, `risorse`, ma nessun codice salvava un corso. MECC §16 dice che ogni import crea un corso
 nuovo e tace su un errore a metà import. Il parser dà un id a corso, moduli, unità e sezioni, ma non alle risorse. Il
-design (S10) mostra un badge «Esempio» sulla card del corso di esempio (03_HANDOFF §10.1, D-SAMPLE-1).
+design (S10) mostra un badge «Esempio» sulla card del corso di esempio (vecchio 03_HANDOFF §10 n. 1, storia git;
+D-SAMPLE-1).
 
 ## Decisione
 
@@ -29,7 +30,7 @@ design (S10) mostra un badge «Esempio» sulla card del corso di esempio (03_HAN
   dell'albero (D-DATA-2, punto 6), quindi lo stesso albero dà sempre gli stessi id. Non serve all'idempotenza: ogni
   import ha un id di corso nuovo, e `saveCourse` non riscrive un corso esistente né pota figli in eccesso.
 - Il badge va sul corso di esempio anche dopo il salvataggio: serve un dato, non un'euristica.
-- Con `?raw` l'app carica proprio la copia verificata dal gate (INV-19).
+- Con `?raw` l'app carica proprio i file verificati dal gate (INV-19).
 
 ## Alternative considerate
 

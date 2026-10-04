@@ -1,7 +1,8 @@
 # D-STACK-1 — Stack applicativo (UI, build, shell nativa)
 
 **Stato**: decisa il 24/09/2026 (T-000, dopo la lettura completa dell'export del design); applicata da T-006 (25/09/2026):
-CP1 chiuso senza veto (`docs/06_SUPERVISIONE.md`). Riga nel registro: `docs/01_DECISIONI.md`.
+CP1 chiuso senza veto (`docs/06_SUPERVISIONE.md`). Riga nel registro: `docs/01_DECISIONI.md`. L'export e il vecchio
+handoff letti in T-000 sono nella storia git (`3c60512`, D-DESIGN-2).
 
 ## Contesto
 
@@ -28,7 +29,7 @@ dipende dalla scelta.
 
 ## Decisione
 
-Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19 + Vite** (web installabile con
+Candidato **A** dei quattro valutati in T-000 (gli altri in «Alternative scartate»): **TypeScript strict + React 19 + Vite** (web installabile con
 `vite-plugin-pwa`) **+ Capacitor** per Android e iOS; persistenza **Dexie** (D-DATA-1 confermata); lettura ZIP con
 **fflate**. Dettagli che discendono dal design, fissati qui:
 
@@ -48,7 +49,7 @@ Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19
   `dexie-react-hooks` (un pacchetto per un hook di poche righe; la UI non importa da `data`, INV-1) e Zustand (un secondo
   archivio accanto a IndexedDB).
 
-## Motivazione (criteri di `docs/02_ARCHITETTURA.md` §0, in ordine di peso)
+## Motivazione (criteri della procedura di T-000, in ordine di peso)
 
 1. **Riuso del design**: ciò che si riusa è `tokens.css` (CSS puro), misure, colori e stati letti dai mock, e la logica
    delle classi `Component`, scritta con l'API di `React.Component`: la traduzione in componenti React è meccanica.
@@ -95,5 +96,6 @@ Candidato **A** di `docs/02_ARCHITETTURA.md` §0: **TypeScript strict + React 19
 
 ## Verifica
 
-`npm run design:check` verde (46 file presenti, 45 attesi, 0 mancanti). In T-006: `npm run dev` parte, `npm run verify`
+`npm run design:check` verde (46 file presenti, 45 attesi, 0 mancanti; comando tolto il 04/10/2026 con il vecchio
+export, D-DESIGN-2). In T-006: `npm run dev` parte, `npm run verify`
 verde con le regole React, `design-checker` su ogni schermata.

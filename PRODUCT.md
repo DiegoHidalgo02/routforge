@@ -3,22 +3,22 @@
 <!-- impeccable:product-schema 1 -->
 
 *Record di prodotto per il lavoro di design (impeccable). Deriva da `docs/spec/` e dalle risposte dell'utente del
-24/09/2026; in caso di differenza vincono le spec (ordine in `CLAUDE.md` §1). L'aspetto è in `claude-design/`.*
+24/09/2026; in caso di differenza vincono le spec (ordine in `CLAUDE.md` §1). L'aspetto viene dal design importato in
+`claude-design/`, valido dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`).*
 
 ## Platform
 
 web
 
-Un solo linguaggio visivo su Android, iOS e web installabile (confermato dall'utente): quello dell'export di Claude
-Design, mobile-first 390×844 con variante desktop a sidebar 240, dentro una shell nativa. Le eccezioni di piattaforma
-sono funzionali, non visive: widget Home (Android; iOS se disponibile), sveglie a schermo intero e Non Disturbare
-(mobile), notifiche in background (mobile; web solo a scheda aperta), backup nella cartella documenti (mobile).
+Un solo linguaggio visivo su Android, iOS e web installabile (confermato dall'utente): quello del design, mobile-first
+con variante desktop (da 1024 px, D-UI-1), dentro una shell nativa. Le eccezioni di piattaforma sono funzionali, non
+visive: widget Home (Android; iOS se disponibile), sveglie a schermo intero e Non Disturbare (mobile), notifiche in
+background (mobile; web solo a scheda aperta), backup nella cartella documenti (mobile).
 
 ## Stack
 
-Delegato all'agente nel task T-000 (D-STACK-1, `docs/decisioni/D-STACK-1.md`), dopo la lettura completa dell'export
-del design; candidato principale: TypeScript + React + Vite (PWA) + Capacitor. Il dominio è TypeScript puro e non
-dipende dalla scelta. Veto dell'utente al CP1, prima di T-006.
+Deciso in T-000 (D-STACK-1, `docs/decisioni/D-STACK-1.md`): TypeScript + React 19 + Vite (PWA) + Capacitor. Il
+dominio è TypeScript puro e non dipende dalla scelta.
 
 ## Users
 
@@ -64,7 +64,7 @@ marca i persi ed estende le routine; esiti di sessione che muovono il puntatore;
 
 ## Capabilities and Constraints
 
-- Regole esatte (stati, soglie, algoritmi) in `docs/spec/RoutForge_MECCANISMI.md`; criteri di accettazione (54
+- Regole esatte (stati, soglie, algoritmi) in `docs/spec/RoutForge_MECCANISMI.md`; criteri di accettazione (55
   scenari) in `docs/spec/RoutForge_SCENARI.md`; numeri in una pagina in `docs/00_SINTESI.md`.
 - Vocabolario del dominio in italiano come nelle spec (D-NAMING-1): blocco, occorrenza, perso ("non fatto" per i todo),
   recupero, esito, puntatore, unità pendente, fasi, checklist, iperfocus, tempo extra, digest.
@@ -74,25 +74,24 @@ marca i persi ed estende le routine; esiti di sessione che muovono il puntatore;
   notifiche incluse, passa da un dizionario.
 - Dati sul dispositivo; nulla esce se non verso il servizio di sync scelto e il fornitore AI (solo il contesto della
   richiesta).
-- Decisioni aperte che il design non deve anticipare: corso di esempio integrato (M0+M1 o file separato,
-  `claude-design/HANDOFF.md` «Blocco da risolvere»), D-QUIZ-1 (CP5), D-BACKUP-1 e D-SYNC-1 (CP4), D-PARSE-3, backend di
-  sync (CP4), identificatori app (default `com.routforge.app` / "RoutForge", D-APP-1).
+- Decisioni aperte che il design non deve anticipare: D-QUIZ-1 (CP5), D-BACKUP-1 e D-SYNC-1 con il backend di sync
+  (CP4), identificatori app (default `com.routforge.app` / "RoutForge", D-APP-1).
 
 ## Brand Commitments
 
 - Nome: **RoutForge**.
-- Voce (dall'export del design, `claude-design/design/DESIGN.md` §7): diretta e concreta, seconda persona, frasi brevi,
-  niente punto esclamativo, niente emoji. Esiti e stati al participio ("Completata", "Persa · era alle 14:30"), azioni
-  all'imperativo ("Inizia", "Registra esito"). Formati: `16:00`, `45m` / `3h 45m`, `ven 18 set`, `6 / 13`, `46 %`.
-- L'aspetto è già deciso e definitivo nell'export di Claude Design (`claude-design/`, "READY FOR CLAUDE CODE"): le
-  schermate `S*.dc.html` sono la fonte visiva di verità. Si cambia in Claude Design e si reimporta, non a mano.
+- Voce dei testi dell'app (presa dal vecchio design e applicata nelle sei lingue di `src/ui/i18n/`; da riconfermare
+  con il nuovo design): diretta e concreta, seconda persona, frasi brevi, niente punto esclamativo, niente emoji. Esiti
+  e stati al participio ("Completata", "Persa · era alle 14:30"), azioni all'imperativo ("Inizia", "Registra esito").
+  Formati: `16:00`, `45m` / `3h 45m`, `ven 18 set`, `6 / 13`, `46 %`.
+- L'aspetto si decide in Claude Design: il design importato in `claude-design/` diventa la fonte visiva dopo il suo
+  handoff (oggi nessuno è attivo, il nuovo arriva via MCP). Si cambia in Claude Design e si reimporta, non a mano.
 
 ## Evidence on Hand
 
-- Corso reale del mock: `claude-design/spec/M0-Riattivazione_JavaScript.md` (9 unità) e
-  `claude-design/spec/M1-Tooling_Moderno.md` (4 unità); già letto in `claude-design/design/course-data.js`. M2–M4
-  esistono solo come numero e titolo.
-- Scenario dei mock: corso importato il 16 set, unità 0.1–0.6 completate, puntatore 0.7, Go/No-Go di M0 3/7.
+- Corso di esempio: `src/data/sample-course/M0-Riattivazione_JavaScript.md` (9 unità) e `M1-Tooling_Moderno.md`
+  (4 unità), letti dal parser come in `course-data.js` della stessa cartella. M2–M4 esistono solo come numero e
+  titolo.
 - Assenti e da non inventare: testimonianze, utenti, metriche d'uso, titoli, conteggi, ore o carte non presenti nei
   file del corso.
 
@@ -112,5 +111,5 @@ marca i persi ed estende le routine; esiti di sessione che muovono il puntatore;
 
 - Rispetto della riduzione animazioni (`prefers-reduced-motion`: solo dissolvenze) e della scala del testo di sistema
   (CONTESTO §3).
-- Focus visibile su ogni controllo (i mock non lo mostrano; richiesto da `claude-design/HANDOFF.md`).
+- Focus visibile su ogni controllo.
 - Sei lingue: il layout deve reggere stringhe più lunghe dell'italiano (de, fr, pt).

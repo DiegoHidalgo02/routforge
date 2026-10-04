@@ -10,7 +10,7 @@
           "src/ui/Detail.module.css"
         ],
         "createdAt": "2026-09-25T19:10:35.704Z",
-        "reason": "design export: claude-design/S5 Dettaglio Panel.dc.html riga 159 ha l'accento 3 px a sinistra della riga di follow-up (D-DESIGN-1: vince il design)"
+        "reason": "vecchio design export (storia git 3c60512): claude-design/S5 Dettaglio Panel.dc.html riga 159 ha l'accento 3 px a sinistra della riga di follow-up (D-DESIGN-1: vince il design); da rivedere all'handoff del nuovo design"
       }
     ]
   }

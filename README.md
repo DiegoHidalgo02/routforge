@@ -5,14 +5,16 @@ sessioni di studio con esiti che fanno avanzare un corso, promemoria, pratica ge
 sincronizzazione fra dispositivi. Android · iOS · web installabile. Dati sul dispositivo, offline salvo AI e sync.
 
 ## Stato
-Passo 1 di 10 (CONTESTO §6). Foundation verificata e protetta dal gate (`docs/AUDIT_FOUNDATION.md`); dominio puro testato sugli scenari. Vedi `docs/STATO.md`.
+Passo 5 di 10 (CONTESTO §6): fatti dati e import del corso, calendario, scheduler, sessione ed esiti, modello delle
+notifiche; restano alcuni task dei passi precedenti (T-037, T-040–T-042, T-044) e le notifiche native (T-021). Il
+vecchio design è stato rimosso il 04/10/2026: il nuovo arriva in `claude-design/` (import via MCP) e si implementa
+dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`). Vedi `docs/STATO.md`.
 
 ## Avvio rapido
 ```bash
 npm ci
 npm run verify          # gate unico: typecheck + lint + formato + test (dominio e regole del repository)
 npm run dev             # l'app nel browser (Vite); npm run build per la build web in dist/
-npm run design:check    # verifica l'export di Claude Design in claude-design/
 claude                  # Claude Code: poi /task next
 ```
 In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B` esegue il gate.
@@ -20,15 +22,20 @@ In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B`
 ## Mappa del repository
 - `docs/spec/` — le cinque specifiche (fonte di verità, sola lettura)
 - `docs/00_SINTESI.md` … `06_SUPERVISIONE.md`, `TASKS.md`, `STATO.md` — base di progetto operativa
+- `docs/03_HANDOFF_DESIGN_CODE.md` — stato del design e handoff design → codice
 - `docs/INVARIANTI.md` — cosa deve restare vero e come lo verifica il gate
-- `docs/TRACCIABILITA.md` — i 54 scenari: regole, dove vivono, task, test, stato
+- `docs/TRACCIABILITA.md` — i 55 scenari: regole, dove vivono, task, test, stato
 - `docs/DIPENDENZE.md` — registro dei pacchetti con motivo e decisione
 - `docs/01_DECISIONI.md` + `docs/decisioni/` — registro delle decisioni e schede di quelle ad alto impatto
-- `docs/AUDIT_FOUNDATION.md` — audit della struttura portante e roadmap
-- `docs/GUIDA_OPERATIVA.md` — **i passi da fare tu**, dall'installazione al ciclo di sessione (copia della guida condivisa)
-- `claude-design/` — export di Claude Design (aspetto)
-- `src/domain/` — meccanismi puri testati in isolamento
+- `PRODUCT.md` — record di prodotto per il lavoro di design (plugin impeccable)
+- `claude-design/` — export del design (aspetto); oggi assente, il nuovo design arriva qui
+- `src/` — codice: `domain` (meccanismi puri), `data` (Dexie e corso di esempio), `app` (servizi), `ui` (React), `platform` (adapter)
 - `.claude/` — configurazione di Claude Code (permessi, hook, comandi, subagent, skill, regole per strato in `rules/`)
 - `.vscode/` — estensioni consigliate, impostazioni e attività (gate, loop, snapshot)
-- `scripts/` — gate (test di architettura, tracciabilità, dipendenze, segreti) e loop agentico (`loop.ps1` / `loop.sh`)
+- `scripts/` — gate (test di architettura, tracciabilità, dipendenze, segreti, corso di esempio) e loop agentico (`loop.ps1` / `loop.sh`)
 - `CLAUDE.md` / `AGENTS.md` — istruzioni per gli agenti
+
+## Storia
+Il vecchio export di Claude Design, la copia della guida operativa, l'audit della foundation del 24/09/2026 e i piani
+di T-013 e T-019 sono nella storia git: `git show 3c60512:<percorso>` (es. `claude-design/HANDOFF.md`). La guida
+operativa viva è il documento condiviso https://claude.ai/code/artifact/a0f36568-af5d-4acc-bfe7-90cd8bd8ac7a.

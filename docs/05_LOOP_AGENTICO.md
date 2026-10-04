@@ -64,7 +64,7 @@ Da verificare al primo giro (assunzioni non documentate da Claude Code): che `cl
 | Pannello **Testing** (Vitest Explorer) | — | Rieseguire e fare debug di un singolo test o scenario |
 | **Simple Browser** (`Ctrl+Shift+P` → *Simple Browser: Show* → `http://localhost:5173`) o il browser con DevTools in modalità dispositivo | — | Preview della UI da T-006; breakpoint mobile/desktop |
 
-Scorciatoie utili: `Ctrl+Shift+B` = gate `npm run verify`; `Ctrl+Shift+5` = divide il terminale; *Terminale → Esegui attività…* = `design:check`, loop, snapshot.
+Scorciatoie utili: `Ctrl+Shift+B` = gate `npm run verify`; `Ctrl+Shift+5` = divide il terminale; *Terminale → Esegui attività…* = loop, snapshot.
 
 Regole di convivenza: un solo agente scrive sul branch `main`; gli altri lavorano su branch `agent/<nome>/<task>` e si integrano con PR (`gh pr create`). **Snapshot** prima dei task **rischiosi** (marcati **R**: migrazioni, plugin nativi, sync): attività *snapshot* (tag git `snapshot-<data>`); per tornare indietro `git switch -c recupero snapshot-<data>`.
 

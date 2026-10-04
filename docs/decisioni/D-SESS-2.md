@@ -1,6 +1,6 @@
 # D-SESS-2 — Abbandono oltre soglia: al 65% del pianificato l'abbandono diventa «Continua»
 
-**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
+**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`, solo locale);
 **applicata** con T-046 il 30/09/2026 (con la precisazione in fondo, confermata dall'utente il 02/10/2026); **spec allineata il 30/09/2026** con il testo in
 fondo (scenario D7; `deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita dell'utente, INV-5). Riga
 nel registro: `docs/01_DECISIONI.md`.

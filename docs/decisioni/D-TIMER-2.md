@@ -1,6 +1,6 @@
 # D-TIMER-2 — Continuità della sessione: battiti, intervallo non verificato, timer con app chiusa
 
-**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`);
+**Stato**: decisa dall'utente il 30/09/2026 (council con Codex e Claude, `.claude/council-cache/council-1790757466.md`, solo locale);
 **applicata** con T-047 il 30/09/2026 (battiti, intervallo non verificato, avviso alla riapertura); **da applicare** con
 T-021 (servizio Android in primo piano con la notifica-cronometro) e T-036 (Live Activity iOS); **spec allineata il
 30/09/2026** con il testo in fondo (`deny` su `docs/spec` tolto e rimesso dall'agente su richiesta esplicita
@@ -63,7 +63,8 @@ cambio d'app sarebbe una pausa); chiudere da soli la sessione dopo N ore (soglia
 background anche su iOS e web.
 
 ## Conseguenze
-- T-047: battiti, intervallo non verificato e avviso in S15 (divergenza 37 bis: il mock non lo disegna); D4 esteso.
+- T-047: battiti, intervallo non verificato e avviso in S15 (divergenza 38 del vecchio handoff: il mock non lo
+  disegna); D4 esteso.
 - T-021: servizio in primo piano Android, notifica-cronometro, Doze; T-036: Live Activity.
 - T-029: il focus esclude gli intervalli non contati; «uscite» e interruzioni restano come in D-TIMER-1.
 - D-SESS-2: la soglia del 65% si calcola sul focus confermato.

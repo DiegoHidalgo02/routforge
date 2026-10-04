@@ -2,8 +2,8 @@
 
 **Stato**: applicata il 29/09/2026 (T-019): `src/domain/notifications/desiredSet.ts`, `src/app/notifications.ts`,
 `src/app/ports/notifications.ts`, `src/app/scheduler.ts`, `src/data/db.ts`, `src/data/repository.ts` (`purge`),
-`src/platform/notifications.ts`, `src/ui/notificationTexts.ts`, `src/ui/Create.tsx`, `src/main.tsx`; piano in
-`docs/piani/T-019.md`; revisione indipendente `spec-reviewer`. Riga nel registro: `docs/01_DECISIONI.md`.
+`src/platform/notifications.ts`, `src/ui/notificationTexts.ts`, `src/ui/Create.tsx`, `src/main.tsx`; piano nella
+storia git (`git show 3c60512:docs/piani/T-019.md`); revisione indipendente `spec-reviewer`. Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 MECC §13.1–§13.3 dà livelli, trigger per tipo, finestra di 14 giorni, id deterministico e riconciliazione, ma non dice

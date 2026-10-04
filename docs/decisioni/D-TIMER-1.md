@@ -5,7 +5,8 @@
 `sessioni` con `SessioneChiusa` (`src/data/db.ts`, nessun indice nuovo), porte `ScreenAwake` e `DoNotDisturb`
 (`src/app/ports/device.ts`, adapter web in `src/platform/device.ts`, `src/app/sessionDevice.ts`), timer S15, banner e
 card nella sidebar. Revisioni indipendenti `spec-reviewer` (conforme con rilievi) e `design-checker` (fedele con
-rilievi): rilievi applicati, gli altri qui sotto e in `docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 33. Riga nel registro:
+rilievi): rilievi applicati, gli altri qui sotto e in `docs/03_HANDOFF_DESIGN_CODE.md` §10 n. 33 (storia git,
+`3c60512`). Riga nel registro:
 `docs/01_DECISIONI.md`.
 
 ## Contesto

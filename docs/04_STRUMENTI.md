@@ -7,7 +7,7 @@
 | Strumento | Funzione | Motivo per RoutForge | Quando | Installazione (Claude Code, dentro il repo) |
 |---|---|---|---|---|
 | **Claude Code** (piano MAX) | Esecutore del loop: legge `CLAUDE.md`, esegue `/task`, hook `Stop` con gate `npm run verify` | Unico agente con hook, subagent, skill di progetto e `/design` per importare Claude Design | Sempre | `npm install -g @anthropic-ai/claude-code@latest`; poi `claude` nella cartella del repo |
-| **Claude Design → `/design`** (ufficiale) | Import del progetto di design nel repo; `/design-sync` per riallineare | È il canale ufficiale di handoff (Help Center "Get started with Claude Design", aggiornato sett. 2026) | Fase 3 (una volta) e a ogni modifica del design | `/design` in Claude Code, oppure Export → "Handoff to Claude Code" |
+| **Claude Design** (server MCP `claude-design`, `/design`) | Import del progetto di design in `claude-design/`; riallineamento a ogni modifica | Canale di handoff del design; il nuovo design si importa via MCP (indicazione dell'utente del 04/10/2026) | A ogni nuovo design o modifica | Server `claude-design` già configurato (D-TOOLS-3); in alternativa `/design` o Export → "Handoff to Claude Code" |
 | **VS Code** (+ `.vscode/` del repo) | Ambiente unico: estensione Claude Code (pannello + terminale), estensione Codex, terminali divisi per più agenti, Test Explorer di Vitest, task `Ctrl+Shift+B` = gate, Git/GitLens, Simple Browser per la preview | Scelta dell'utente (23/09/2026) al posto di Ship Studio: nessuno strumento in più da imparare, estensioni ufficiali di Anthropic e OpenAI, configurazione versionata nel repo | Sempre | Apri la cartella → accetta le estensioni consigliate (`.vscode/extensions.json`); Claude Code: `anthropic.claude-code`; Codex: `openai.chatgpt` |
 | **Superpowers** (obra) | Brainstorm → piano → esecuzione per subagent, TDD, debugging sistematico, verifica prima di dichiarare finito | Copre esattamente il ciclo Task → Analisi → Implementazione → Test → Verifica | Task medi/grandi (scheduler, sessione, notifiche): `/superpowers:brainstorm` poi `/superpowers:write-plan` | Dichiarato in `.claude/settings.json` (`enabledPlugins`): Claude Code lo propone alla prima apertura del progetto |
 | **Ponytail** (DietrichGebert) | "Il miglior codice è quello non scritto": preferisce stdlib/piattaforma, taglia astrazioni; `/ponytail-review` | Contiene il costo in token e la complessità (obiettivo esplicito: niente complessità prematura) | Sempre attivo; `/ponytail-review` prima del commit di task grandi | Dichiarato in `.claude/settings.json` (marketplace `DietrichGebert/ponytail` in `extraKnownMarketplaces`) |
@@ -29,7 +29,7 @@ Linee guida **Karpathy** (Think first · Simplicity · Surgical changes · Goal-
 |---|---|
 | Impeccable, Ponytail, Claude Council (hex), Superpowers, Graphify, Handoff (Pocock), Ship Studio (verificato ma **non adottato**: sostituito da VS Code), karpathy-skills, Framer Motion (→ Motion) | **Esistono e sono aggiornati** (fonti: repo GitHub ufficiali, impeccable.style, opencode.ai/docs/zen) |
 | "Strumenti cybersecurity" (generico) | Coperto da `/security-review` integrato + `npm audit` + guardrails git; nessuno strumento terzo necessario |
-| Claude Design "MCP" | Non serve un MCP terzo: il canale ufficiale è `/design` in Claude Code. Esistono MCP non ufficiali (pilotano Chrome): **scartati** (fragili, sessione sensibile) |
+| Claude Design "MCP" | Si usa il server `claude-design` (D-TOOLS-3). Gli MCP non ufficiali che pilotano Chrome restano **scartati** (fragili, sessione sensibile) |
 
 ## 3. Modelli: chi fa cosa
 
@@ -52,7 +52,7 @@ In Claude Code: `/model` per cambiare modello a metà sessione; `/compact` per c
 1. VS Code → apri la cartella del repo → "Installa" sulle estensioni consigliate; da terminale verifica `node -v` (≥ 20), `git --version`, `gh --version`; installa PowerShell 7 (`winget install Microsoft.PowerShell`) per `scripts/loop.ps1`; **Git for Windows è necessario**: gli hook del progetto usano Git Bash.
 2. `claude` nel repo: i plugin di RoutForge (superpowers, ponytail, claude-council, mattpocock-skills, impeccable) sono dichiarati in `.claude/settings.json`; alla prima apertura Claude Code propone di installare quelli mancanti: conferma. Verifica con `/plugin`.
 3. `npm i -g @openai/codex` → `codex login` → `/claude-council:status`.
-4. `/design` → import del progetto RoutForge in `claude-design/` → `npm run design:check` → `/impeccable init`.
+4. Design: import in `claude-design/` e handoff con la procedura di `docs/03_HANDOFF_DESIGN_CODE.md` §0.
 5. Graphify: CLI `graphify` sul PC; la skill è già nel repo (`.claude/skills/graphify/`, D-TOOLS-3).
 
 ## 5. Solo ciò che serve a RoutForge (ambiti e pulizia)

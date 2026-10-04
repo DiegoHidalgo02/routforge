@@ -14,7 +14,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run check && npm run lint && npm run format:check && npm run test",
-    "design:check": "node scripts/check-design.mjs",
     "audit:claude": "node scripts/audit-claude.mjs"
   },
   "engines": {

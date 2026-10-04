@@ -92,7 +92,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 8 | MECC §25 | La chiave Gemini viene sincronizzata sul servizio remoto | Raccomandazione (non requisito): cifrarla lato client prima dell'invio — decisione al Checkpoint 4 |
 | 9 | CONTESTO §1 | Lo Studio deve poter generalizzare Corso→Modulo→Unità | Il dominio usa `moduloNumero`/`ordine` generici sull'unità; la gerarchia a tre livelli resta il caso di riferimento (D-STUDIO-1) |
 | 10 | CONTESTO §3 vs MECC §1 | "Fuso orario non deve spostare i blocchi di giorno" vs "ogni istante è assoluto": in viaggio le due regole divergono | D-TIME-2: **ora locale di parete**, decisa dall'utente al CP0 il 24/09 (`docs/decisioni/D-TIME-2.md`) |
-| 11 | `CLAUDE.md`, `AUDIT_FOUNDATION.md` §12 | Dichiaravano «45 scenari»; SCENARI ne contiene 54 | Corretto (24/09; 55 dal 30/09/2026 con D7); `docs/TRACCIABILITA.md` li elenca tutti e il gate verifica la corrispondenza (D-TRACC-1) |
+| 11 | `CLAUDE.md`, `AUDIT_FOUNDATION.md` §12 (nella storia git) | Dichiaravano «45 scenari»; SCENARI ne contiene 54 | Corretto (24/09; 55 dal 30/09/2026 con D7); `docs/TRACCIABILITA.md` li elenca tutti e il gate verifica la corrispondenza (D-TRACC-1) |
 | 12 | `STATO.md` vs `TASKS.md`, `06_SUPERVISIONE.md` | T-011 e T-012 «possono partire subito», ma T-011 è marcato CP0 | Corretto: attendono il CP0 |
 | 13 | `02_ARCHITETTURA.md` §1, §3 | Parser «in arrivo» sebbene esista; carte con `ease`/`intervalDays`/`dueAt` contro D-NAMING-1 | Corretto: nomi italiani (`facilita`, `intervalloGiorni`, `scadenza`) |
 | 14 | `02_ARCHITETTURA.md` §2 vs `ci.yml` | Quattro fusi con Kolkata nel documento, tre nella CI | CI con Kolkata (fuso a mezz'ora); INV-11 |
@@ -112,6 +112,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 28 | MECC §8 vs D-ESITO-1 (e SCENARI C8) | §8: la notifica «blocco perso» parte per ogni routine o studio perso con la fine entro le ultime 2 ore, «una volta per blocco», senza condizioni sulla sessione; D-ESITO-1 (T-018) chiede che con «conta nel piano» spento il blocco tornato `programmato` e rimarcato perso **non** riceva l'avviso, e C8 riporta a `programmato` (poi perso) uno studio la cui sessione è stata abbandonata o interrotta da un crash | D-NOTIF-2 n. 2 (T-020, 29/09/2026): nessun avviso «perso» per un blocco su cui era partita una sessione (`minutiRitardo`), perché l'utente lo ha già gestito e lo ritrova negli esiti pendenti; nemmeno per un blocco nato dopo la propria fine (D-OCC-1); avviso di nuovo per un perso riprogrammato e perso di nuovo. **Confermato dall'utente il 30/09/2026** (council); l'alternativa letterale di §8 è scartata |
 | 29 | MECC §13.4, FUNZ §7.4, SCENARI F3 vs scelta dell'utente (30/09/2026) | La spec prevede le ore silenziose dell'app; l'utente le ha giudicate inutili (il Non disturbare del sistema basta) | D-NOTIF-3: rimosse da codice e impostazioni (T-045); spec allineata il 30/09/2026 su richiesta esplicita dell'utente (INV-5) |
 | 30 | MECC §10.5 e SCENARI D4 vs scelte dell'utente (30/09/2026) | La spec abbandona senza esito qualunque sessione e conta come focus tutto il tempo ad app chiusa (D4); l'utente vuole l'esito Continua oltre il 65% e un intervallo non verificato oltre 30 minuti | D-SESS-2 e D-TIMER-2: task T-046 e T-047; spec allineata il 30/09/2026 su richiesta esplicita dell'utente (nuovo scenario D7, D4 esteso: 55 scenari) |
+| 31 | FORMATO intro e §5 vs repository | M0/M1 «in questa cartella» e `course-data.js` «alla radice del progetto»: posizioni del progetto di design, mai valide alla lettera nel repository | D-SAMPLE-1 e D-DESIGN-2 (04/10/2026): i tre file stanno in `src/data/sample-course/`; spec invariata (INV-5) |
 
 ## 7. Informazioni mancanti (non deducibili dalle spec)
 
@@ -119,7 +120,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 |---|---|---|
 | Stack tecnologico | Architettura | **Deciso** in T-000 (D-STACK-1, 24/09/2026): React 19 + Vite PWA + Capacitor; CP1 chiuso senza veto (25/09/2026), applicato da T-006 |
 | Servizio di sincronizzazione (backend) | Passo 10 | **Checkpoint 4** — candidata: Supabase (auth email OTP) |
-| Export del progetto Claude Design | Aspetto UI, corso di esempio (M0/M1) | **Importato e versionato** in `claude-design/` (24/09/2026): `npm run design:check` verde; divergenze design↔spec in `docs/03_HANDOFF_DESIGN_CODE.md` §10 |
+| Design (export di Claude Design) | Aspetto UI | Vecchio export (24/09/2026) **rimosso** il 04/10/2026 (D-DESIGN-2; storia git `3c60512`); il corso di esempio con `course-data.js` è in `src/data/sample-course/`. Il **nuovo design** arriva via MCP in `claude-design/` e vale dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`) |
 | Identificatori app (bundle id, nome, icona) | Capacitor | Default `com.routforge.app` / "RoutForge" (D-APP-1), modificabile |
 | Modello Gemini "più economico" di default | Impostazioni AI | Letto dalla lista modelli dell'API; ripiego al nome noto più economico |
 | Sorgente dell'istante di `updatedAt` per «ultimo vince» (orologio del dispositivo o del servizio) | Passo 10 | **Checkpoint 4** — D-SYNC-1 |

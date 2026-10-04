@@ -88,7 +88,7 @@ riviste in Edge headless a 360 e 1280 (`coverage/cdp-t043.mjs`, `coverage/cdp-t0
   `.claude/hooks`, gli ignore di `coverage/` (contiene gli script CDP, da non lintare), `@vitejs/plugin-react` (Fast
   Refresh), `scripts/token.test.mjs` come file a sé (citato da `.claude/rules/test.md`). **Deciso il 02/10/2026: si
   tengono tutti**; `loop.sh` serve sul Mac (T-036, D-NATIVO-1) e in Git Bash, l'archiviazione di `audit-claude` è
-  dell'utente.
+  dell'utente. `scripts/token.test.mjs` è poi uscito il 04/10/2026 con il vecchio export che confrontava (D-DESIGN-2).
 - Export usati solo internamente o dai test (15 costanti e tipi): togliere `export` non riduce righe; da fare quando si
   tocca il file. `SOGLIA_NON_VERIFICATO` resta separata da `LOST_GRACE_MS`: stesso valore, regole diverse (D-TIMER-2).
 - Fixture duplicate nei test (`orologioFinto` in scheduler e session, `modulo`/`unita` in outcome e session, ~70 righe):

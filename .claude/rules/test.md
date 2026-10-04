@@ -17,5 +17,5 @@ paths:
 - Non si modificano test o implementazione per far passare il gate senza aver capito la causa; niente snapshot senza
   valore; niente `it.skip` lasciati nel repository.
 - I test in `scripts/*.test.mjs` verificano regole del repository (architettura, tracciabilità, dipendenze, segreti):
-  ognuno ha un autotest che dimostra di riconoscere una violazione. Fa eccezione il confronto byte a byte di una copia
-  (`scripts/token.test.mjs`): non ha logica che possa passare per sbaglio.
+  ognuno ha un autotest che dimostra di riconoscere una violazione. Fa eccezione `scripts/corso-esempio.test.mjs`, che
+  confronta il parser con il fixture del corso di esempio: non ha logica propria da autotestare.

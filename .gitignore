@@ -9,8 +9,10 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
-# Export del design: i file dell'export (tokens.css, .dc.html, spec/) SI VERSIONANO (D-DESIGN-1);
+# Export del design in claude-design/: i file dell'export SI VERSIONANO (D-DESIGN-1);
 # restano fuori solo gli ZIP scaricati da Claude Design
 claude-design/export/*.zip
 # Cache del hook di design del plugin impeccable (la configurazione delle eccezioni, config.json, si versiona)
 .impeccable/hook.cache.json
+# Resoconti del plugin claude-council: locali, mai versionati (scelta dell'utente del 04/10/2026)
+.claude/council-cache/

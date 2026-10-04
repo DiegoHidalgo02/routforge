@@ -4,10 +4,18 @@
 scritto, nei documenti operativi e in `docs/spec/`, allineata al design lo stesso giorno con il permesso esplicito
 dell'utente (INV-5). Riga nel registro: `docs/01_DECISIONI.md`.
 
+**Dal 04/10/2026** (D-DESIGN-2): il vecchio export a cui si riferiscono le divergenze n. 1–25 e le note interne in
+fondo è stato rimosso dal repository (storia git, `3c60512`); le regole della tabella stanno nelle spec e nel backlog
+come dice la loro riga (la n. 25 resta una differenza di testo con FUNZ §4.4). La decisione (punti 1–3) vale per il
+nuovo design dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`): le schermate e il testo normativo del punto 1
+sono quelli che l'handoff indica, e un `course-data.js` del nuovo export sostituisce quello di
+`src/data/sample-course/`. Vale anche la regola del 24/09/2026: l'export si versiona in `claude-design/` così com'è,
+ignorati solo gli ZIP.
+
 ## Contesto
 
 In T-000, T-007, T-008 e T-038 sono emerse 22 divergenze fra l'export di Claude Design e le spec
-(`docs/03_HANDOFF_DESIGN_CODE.md` §10), più le differenze fra `course-data.js` e FORMATO §2–§3. Fino ad oggi vinceva la
+(vecchio `docs/03_HANDOFF_DESIGN_CODE.md` §10, nella storia git), più le differenze fra `course-data.js` e FORMATO §2–§3. Fino ad oggi vinceva la
 spec. L'utente ha scelto il contrario: il design è la fonte definitiva e le spec vanno allineate al design.
 
 ## Decisione
@@ -19,7 +27,7 @@ spec. L'utente ha scelto il contrario: il design è la fonte definitiva e le spe
 3. Dove il design mostra un elemento senza dirne il comportamento, l'agente sceglie l'interpretazione minima coerente e
    la scrive qui (colonna «Regola»).
 
-## Esito per divergenza (numeri di `docs/03_HANDOFF_DESIGN_CODE.md` §10)
+## Esito per divergenza (numeri del vecchio `docs/03_HANDOFF_DESIGN_CODE.md` §10, nella storia git)
 
 | n. | Regola da oggi | Paragrafi di spec allineati | Codice |
 |---|---|---|---|

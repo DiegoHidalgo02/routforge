@@ -3,7 +3,7 @@
 **Stato**: applicata il 28/09/2026 (T-013): `src/domain/scheduler/cycle.ts`, `src/domain/lost.ts` (`isOrphan`),
 `src/domain/pointer.ts` (`pointerPlan`, `criteriaMet`), `src/domain/scheduler/occurrences.ts` (`horizonSlotRange`),
 `src/data/repository.ts` (`listKeyRange`), `src/app/scheduler.ts`, `src/app/pointer.ts`, `src/app/ports/clock.ts`,
-`src/platform/clock.ts`, `src/ui/clock.ts`, `src/main.tsx`. Piano in `docs/piani/T-013.md`. Riga nel registro:
+`src/platform/clock.ts`, `src/ui/clock.ts`, `src/main.tsx`. Piano nella storia git (`git show 3c60512:docs/piani/T-013.md`). Riga nel registro:
 `docs/01_DECISIONI.md`.
 
 ## Contesto
