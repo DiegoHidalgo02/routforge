@@ -65,7 +65,7 @@ Un'app personale (un utente, i suoi dispositivi) di **organizzazione e studio**:
 | Mappa di calore | 84 giorni; minimo scala 60' | §20 |
 | Import corso | avvisi mostrati max 5; ogni import = corso nuovo | §16 |
 | Durate todo | gradini 5,10,15,20,25,30,40,45,50,60,75,90,105,120,150,180,210,240 | §2 |
-| Widget | agenda max 6 + "+N"; 3 todo alta priorità; aperture duplicate entro 1,5 s ignorate | §21 |
+| Widget | mini mese, agenda di oggi (le righe che entrano nel 4×2), «Prossima», «+»; aperture duplicate entro 1,5 s ignorate | §21 |
 | Ritorno dopo assenza | ≥ 2 giorni e almeno un corso → messaggio una tantum | §9 |
 | Crea | giorno di partenza = giorno selezionato in Oggi se entro oggi + **6**, altrimenti oggi; da Crea solo i prossimi **7 giorni** (D-DESIGN-3) | §2 |
 | Riordino | solo todo senza orario, solo nella stessa priorità; niente orari, giorni, aggancio o «Annulla» (D-DESIGN-3) | §15 |
@@ -99,7 +99,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 13 | `02_ARCHITETTURA.md` §1, §3 | Parser «in arrivo» sebbene esista; carte con `ease`/`intervalDays`/`dueAt` contro D-NAMING-1 | Corretto: nomi italiani (`facilita`, `intervalloGiorni`, `scadenza`) |
 | 14 | `02_ARCHITETTURA.md` §2 vs `ci.yml` | Quattro fusi con Kolkata nel documento, tre nella CI | CI con Kolkata (fuso a mezz'ora); INV-11 |
 | 15 | `.gitignore` vs guida Fase 4 / T-000 | Versionare o no l'export del design: mai deciso | D-DESIGN-1: si versiona; ignorati solo gli ZIP |
-| 16 | `.claude/settings.json` vs guida Fase 5, `06_SUPERVISIONE.md` | `npm install` auto-approvato, ma la supervisione ferma l'agente sulle dipendenze non previste | D-DEP-1: registro `docs/DIPENDENZE.md` verificato dal gate; senza riga il gate è rosso |
+| 16 | `.claude/settings.json` vs guida Fase 5, `06_SUPERVISIONE.md` | `npm install` auto-approvato, ma la supervisione ferma l'agente sulle dipendenze non previste | D-DEP-1: registro `docs/DIPENDENZE.md` verificato dal gate; senza riga il gate è rosso. Dal 05/10/2026 `npm install` chiede anche conferma (D-DESIGN-4) |
 | 17 | `04_STRUMENTI.md` §5 vs ambiente reale | Plugin previsti con ambito progetto, abilitati a livello utente | Azione dell'utente (`STATO.md`, problemi aperti) |
 | 18 | `parser.ts`, `sm2.ts` | Campi `module`/`course`/`warnings`/`schedule` rimasti in inglese dopo D-NAMING-1 | Corretto (`modulo`, `corso`, `avvisi`, `sm2`) |
 | 19 | MECC §22 con §1 | Il file di backup (“tutto tranne il registro notifiche”) conterrebbe la chiave Gemini in chiaro | D-BACKUP-1 **aperta**: decisione al CP4 |

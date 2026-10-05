@@ -6,7 +6,6 @@
       "Bash(npm run:*)",
       "Bash(npm test:*)",
       "Bash(npm ci)",
-      "Bash(npm install:*)",
       "Bash(npm audit)",
       "Bash(npx vitest:*)",
       "Bash(npx tsc:*)",
@@ -24,7 +23,6 @@
       "Read(./**)",
       "Edit(./src/**)",
       "Edit(./docs/**)",
-      "Edit(./claude-design/**)",
       "Edit(./scripts/**)",
       "Edit(./.claude/**)",
       "Write(./src/**)",
@@ -35,7 +33,12 @@
       "Edit(./.claude/settings.json)",
       "Write(./.claude/settings.json)",
       "Edit(./.claude/hooks/**)",
-      "Write(./.claude/hooks/**)"
+      "Write(./.claude/hooks/**)",
+      "Edit(./claude-design/**)",
+      "Write(./claude-design/**)",
+      "Edit(./CLAUDE.md)",
+      "Bash(npm install:*)",
+      "Bash(git push:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",

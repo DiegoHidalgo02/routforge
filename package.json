@@ -13,8 +13,11 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "preview": "vite preview",
     "verify": "npm run check && npm run lint && npm run format:check && npm run test",
-    "audit:claude": "node scripts/audit-claude.mjs"
+    "audit:claude": "node scripts/audit-claude.mjs",
+    "mock": "node scripts/mock.mjs",
+    "confronto": "node scripts/confronto.mjs"
   },
   "engines": {
     "node": ">=20.11"

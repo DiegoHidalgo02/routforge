@@ -26,6 +26,17 @@ export default defineConfig([
   {
     // Script Node (ESM) e hook di Claude Code: globali di Node che ESLint non conosce da solo.
     files: ['scripts/**/*.mjs', '.claude/hooks/**/*.mjs'],
-    languageOptions: { globals: { process: 'readonly', console: 'readonly', URL: 'readonly' } },
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+        WebSocket: 'readonly',
+        Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
+    },
   },
 ]);

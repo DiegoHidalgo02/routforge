@@ -7,6 +7,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
+  // Vite esplora ogni .html della radice in cerca di dipendenze: i mock di claude-design/ restano fuori (D-DESIGN-4)
+  optimizeDeps: { entries: ['index.html'] },
   test: {
     include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
     environment: 'node',

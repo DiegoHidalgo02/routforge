@@ -1,0 +1,202 @@
+// Confronto visivo con le tavole del design (claude-design/docs/IMPLEMENTAZIONE.md §6, D-DESIGN-4): fotografa uno stato
+// di una tavola, trovato dalla sua didascalia, e la stessa schermata dell'app alla misura della tavola (390×844 o
+// 1280×800). Edge headless pilotato via CDP, nessuna dipendenza; il mock è servito da `scripts/mock.mjs`, l'app dal dev
+// server di Vite (avviato qui sulla porta 5391 se non è già vivo). Le immagini si confrontano guardandole: la cornice del
+// telefono della tavola è scenografia.
+// Uso: npm run confronto -- --tavola "01 Oggi" --stato "archivio completate aperto" [--app /] [--out coverage/confronto]
+//   --stato: un pezzo del testo della didascalia, maiuscole indifferenti; senza --app si fotografa solo il mock.
+// Windows: EDGE può indicare un altro eseguibile di Edge/Chrome.
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { serveMock } from './mock.mjs';
+
+const RADICE = resolve(import.meta.dirname, '..');
+const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+const PORTA_MOCK = 5394;
+const PORTA_APP = 5391;
+const PORTA_CDP = 9345;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const arg = (nome, predefinito = '') => {
+  const i = process.argv.indexOf(nome);
+  return i > 0 ? (process.argv[i + 1] ?? '') : predefinito;
+};
+const tavola = arg('--tavola');
+const stato = arg('--stato').toLowerCase();
+const rotta = arg('--app');
+const out = resolve(RADICE, arg('--out', 'coverage/confronto'));
+if (!tavola || !stato) {
+  console.error(
+    'uso: npm run confronto -- --tavola "01 Oggi" --stato "<pezzo della didascalia>" [--app /] [--out dir]',
+  );
+  process.exit(2);
+}
+const fileTavola = `${tavola}.dc.html`;
+if (!existsSync(join(RADICE, 'claude-design', fileTavola))) {
+  console.error(`tavola non trovata: claude-design/${fileTavola}`);
+  process.exit(2);
+}
+mkdirSync(out, { recursive: true });
+
+const vivo = async (url) => {
+  try {
+    await fetch(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+if (await vivo(`http://127.0.0.1:${PORTA_CDP}/json/version`)) {
+  console.error(`un Edge è già in ascolto sulla porta ${PORTA_CDP}: chiudilo prima (falserebbe il confronto)`);
+  process.exit(2);
+}
+
+const mock = await serveMock(PORTA_MOCK);
+let vite = null;
+if (rotta && !(await vivo(`http://localhost:${PORTA_APP}`))) {
+  vite = spawn('cmd.exe', ['/c', `npx vite --port ${PORTA_APP} --strictPort`], { cwd: RADICE, stdio: 'ignore' });
+  for (let i = 0; i < 60 && !(await vivo(`http://localhost:${PORTA_APP}`)); i++) await sleep(500);
+}
+const profilo = mkdtempSync(join(tmpdir(), 'rf-confronto-'));
+const edge = spawn(EDGE, [
+  '--headless=new',
+  `--remote-debugging-port=${PORTA_CDP}`,
+  `--user-data-dir=${profilo}`,
+  '--accept-lang=it-IT',
+  '--window-size=1400,1000',
+  'about:blank',
+]);
+const chiudi = () => {
+  try {
+    ws?.close();
+  } catch {
+    /* già chiuso */
+  }
+  try {
+    edge.kill();
+  } catch {
+    /* già chiuso */
+  }
+  // Edge rilancia sé stesso: si chiudono i processi col profilo di questa esecuzione; il vite avviato qui, il suo albero.
+  const cartella = profilo.split(/[\\/]/).pop();
+  spawnSync('powershell.exe', [
+    '-NoProfile',
+    '-Command',
+    `Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'msedge.exe' -and $_.CommandLine -match '${cartella}' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+  ]);
+  if (vite) {
+    spawnSync('taskkill', ['/PID', String(vite.pid), '/T', '/F'], { stdio: 'ignore' });
+    spawnSync('powershell.exe', [
+      '-NoProfile',
+      '-Command',
+      `Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and $_.CommandLine -match 'vite' -and $_.CommandLine -match '${PORTA_APP}' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`,
+    ]);
+  }
+  mock.close();
+};
+const timeout = setTimeout(() => {
+  console.error('tempo scaduto');
+  chiudi();
+  process.exit(2);
+}, 120_000);
+
+let ws;
+const console_ = [];
+try {
+  for (let i = 0; i < 40 && !(await vivo(`http://127.0.0.1:${PORTA_CDP}/json/version`)); i++) await sleep(250);
+  const tab = await (await fetch(`http://127.0.0.1:${PORTA_CDP}/json/new?about:blank`, { method: 'PUT' })).json();
+  ws = new WebSocket(tab.webSocketDebuggerUrl);
+  await new Promise((r) => (ws.onopen = r));
+  let id = 0;
+  const attese = new Map();
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.id && attese.has(m.id)) attese.get(m.id)(m.result ?? m.error);
+    if (m.method === 'Runtime.consoleAPICalled' && (m.params.type === 'error' || m.params.type === 'warning'))
+      console_.push(`${m.params.type}: ${m.params.args.map((a) => a.value ?? a.description ?? '').join(' ')}`);
+    if (m.method === 'Runtime.exceptionThrown')
+      console_.push(`eccezione: ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`);
+  };
+  const cdp = (method, params = {}) =>
+    new Promise((r) => {
+      attese.set(++id, r);
+      ws.send(JSON.stringify({ id, method, params }));
+    });
+  const js = async (expression) =>
+    (await cdp('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result?.value;
+  const foto = async (nome, clip) => {
+    const { data } = await cdp('Page.captureScreenshot', { captureBeyondViewport: true, ...(clip && { clip }) });
+    const percorso = join(out, nome);
+    writeFileSync(percorso, Buffer.from(data, 'base64'));
+    return percorso;
+  };
+  await cdp('Runtime.enable');
+  await cdp('Page.enable');
+
+  // 1. La tavola: la figura con la didascalia cercata, attesa finché il componente importato non è disegnato
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await cdp('Page.navigate', { url: `http://127.0.0.1:${PORTA_MOCK}/${encodeURIComponent(fileTavola)}` });
+  const cerca = `(() => {
+    const figure = [...document.querySelectorAll('figure')];
+    const f = figure.find((x) => (x.querySelector('figcaption')?.textContent ?? '').toLowerCase().includes(${JSON.stringify(stato)}));
+    if (!f) return { didascalie: figure.map((x) => x.querySelector('figcaption')?.textContent ?? '') };
+    const imp = f.querySelector('dc-import');
+    const r = f.getBoundingClientRect();
+    const [w, h] = (imp?.getAttribute('hint-size') ?? '390px,844px').split(',').map((v) => parseInt(v, 10));
+    return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height, w, h, didascalia: f.querySelector('figcaption')?.textContent ?? '' };
+  })()`;
+  // La pagina si carica e il motore di anteprima disegna le figure dopo: si aspetta la didascalia, poi l'altezza
+  let fig = await js(cerca);
+  for (let i = 0; i < 80 && (!fig || fig.didascalie || fig.height < fig.h * 0.8); i++) {
+    await sleep(500);
+    fig = await js(cerca);
+  }
+  if (!fig || fig.didascalie) {
+    console.error(
+      `nessuna didascalia contiene «${stato}». Didascalie di ${fileTavola}:\n- ${(fig?.didascalie ?? []).join('\n- ')}`,
+    );
+    chiudi();
+    process.exit(1);
+  }
+  await cdp('Emulation.setDeviceMetricsOverride', {
+    width: 1400,
+    height: Math.ceil(fig.y + fig.height + 40),
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await sleep(1500);
+  fig = await js(cerca);
+  const nome = `${tavola} ${stato}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const fotoMock = await foto(`${nome}-mock.png`, {
+    x: fig.x,
+    y: fig.y,
+    width: fig.width,
+    height: fig.height,
+    scale: 1,
+  });
+  console.log(`tavola: ${fotoMock}\n  didascalia: ${fig.didascalia.trim()}\n  misura: ${fig.w}×${fig.h}`);
+
+  // 2. L'app alla stessa misura
+  if (rotta) {
+    const mobile = fig.w < 1024;
+    await cdp('Emulation.setDeviceMetricsOverride', { width: fig.w, height: fig.h, deviceScaleFactor: 1, mobile });
+    await cdp('Emulation.setTouchEmulationEnabled', { enabled: mobile, maxTouchPoints: 5 });
+    await cdp('Page.navigate', { url: `http://localhost:${PORTA_APP}${rotta}` });
+    await sleep(3500);
+    const fotoApp = await foto(`${nome}-app.png`);
+    console.log(`app:    ${fotoApp}  (${rotta})`);
+  }
+  if (console_.length) console.log(`console (${console_.length}):\n- ${console_.slice(0, 10).join('\n- ')}`);
+  else console.log('console: nessun errore né avviso');
+} catch (e) {
+  console.error('errore:', e?.stack ?? e);
+  process.exitCode = 1;
+} finally {
+  clearTimeout(timeout);
+  chiudi();
+}

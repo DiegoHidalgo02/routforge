@@ -12,6 +12,8 @@ Procedura obbligatoria:
 1. Leggi `docs/STATO.md`, la riga del task in `docs/TASKS.md`, i paragrafi di spec e gli scenari che cita, le righe
    di quegli scenari in `docs/TRACCIABILITA.md` e le regole di strato in `.claude/rules/` per i file che toccherai
    (leggile anche se lo strato è ancora vuoto: si caricano da sole solo quando tocchi file esistenti).
+   Se il task tocca una schermata: anche la sua riga in `docs/03_HANDOFF_DESIGN_CODE.md` §4 e
+   `claude-design/CLAUDE.md`; i `.dc.html` li legge il subagent `lettore-mock`, non il contesto principale.
    Se la riga del task ha un marcatore **CPn** ancora presente, scrivi `CHECKPOINT: CPn — <cosa serve>` in
    `docs/STATO.md` e fermati, anche se il task è stato chiesto esplicitamente.
    Se la colonna **Modello** indica un modello diverso da quello di questa sessione (e non sei in modalità `loop`), dillo in una riga
@@ -31,6 +33,7 @@ Procedura obbligatoria:
 6. Auto-revisione: conformità alla spec, diff limitato al task, niente dipendenze non registrate. Se la modifica è ad
    alto impatto (`docs/05_LOOP_AGENTICO.md` §7: confini, `types.ts`, schema, porte, notifiche, sync, sicurezza) chiedi
    una revisione indipendente (subagent `spec-reviewer`, o l'altro modello) e applica i rilievi prima del commit.
+   Se hai toccato una schermata: subagent `design-checker` sugli stati toccati (`npm run confronto` sulla tavola).
 7. Aggiorna `docs/TASKS.md` (stato `fatto`), `docs/TRACCIABILITA.md` (test e stato degli scenari del task),
    `docs/DIPENDENZE.md` se hai aggiunto pacchetti, `docs/STATO.md` (fatto / problemi aperti / prossimo) e,
    se hai preso decisioni, `docs/01_DECISIONI.md` (scheda in `docs/decisioni/` se ad alto impatto).

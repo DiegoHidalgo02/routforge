@@ -42,11 +42,9 @@ card nella sidebar) · shell con BottomNav sotto 1024 px e sidebar da 1024 (D-UI
 intestazione: Statistiche, Notifiche, Impostazioni, Account, Diagnostica. «+ Crea» e Dettaglio si aprono anche sopra la
 schermata di partenza.
 
-**Schermate senza task nel backlog**: dettaglio del corso, modulo (criteri Go/No-Go manuali) e unità (concetto core,
-sezioni, video, «Inizia sessione» dall'unità): FUNZ §4.2, §9.2, §11.1; FORMATO §4. Le schede Materiale · AI · Note del
-timer (FUNZ §11.2): Materiale e AI dipendono da T-024 e T-026, Note non ha un task. Rotte previste dal vecchio handoff
-e non ancora nel codice: `/corsi/:id`, `/moduli/:id`, `/unita/:id`, `/ai`, `/pratica/:id` (servono anche ai
-collegamenti diretti di MECC §21). I task nascono con l'handoff.
+**Schermate che non avevano un task** (FUNZ §4.2, §9.2, §11.1, §11.2; FORMATO §4): corso, modulo e unità ora sono
+T-053, la scheda Note del timer è in T-055 (Materiale e AI restano a T-024 e T-026). Rotte del nuovo design in
+`claude-design/docs/NAVIGAZIONE.md` §4 (servono anche ai collegamenti diretti di MECC §21).
 
 **Regole adottate dal vecchio design** (D-DESIGN-1 n. 1–25): per ciascuna la regola e i paragrafi di spec allineati
 nella tabella di `docs/decisioni/D-DESIGN-1.md`; la n. 25 resta una differenza di testo con FUNZ §4.4 («Chiudi evento»
@@ -116,3 +114,120 @@ vecchio design nelle sei lingue (T-031).
 **Test del vecchio design che restano verdi ma descrivono il comportamento superato** (da riscrivere col loro task):
 `src/domain/drag.test.ts`, `src/app/drag.test.ts`, `src/ui/Today.test.tsx` (vecchio G3 → T-044);
 `src/domain/nowBlock.test.ts`, `src/app/nowBlock.test.ts` (chiusura del vecchio G2 → T-048).
+
+## 3. Verifica del design (05/10/2026, D-DESIGN-4)
+
+Fatta con subagenti per gruppo di schermate (S1; S4 e S5; S10–S13; S15, S8, S9 e S21; S19, S20 e S22) e due script
+una tantum (valori dei mock contro i token; token vecchi contro nuovi). Tornano: i 33 `@keyframes` dei mock e di
+`tokens.css` (stessi nomi); `docs/COPERTURA.md` copre i 60 scenari (alcuni ◐: una parte è solo logica); i colori dei
+mock sono tutti token, salvo le varianti alfa che vengono dai token a segnaposto (n. 1). Qui solo ciò che cambia che
+cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarchia (`claude-design/CLAUDE.md` >
+`.dc.html` > docs del pacchetto > spec), oppure **bloccante** (la gerarchia non decide: la domanda è nel report).
+
+**Globali**
+1. Token a segnaposto (`tokens.css`: `--shadow-primary-cat`, `--shadow-hero`, `--glow-dot-live` con `<fill>`, `<ink>`)
+   non sono CSS valido: usati come sono, l'ombra sparisce. Decisione: si risolvono per tipo in `global.css` con
+   `color-mix()` sui token del tipo; stesso meccanismo per le tinte alfa del success (Giornata chiusa). T-052.
+2. Riduzione animazioni: la coda di `tokens.css` azzera ogni durata (`animation-duration` e `transition-duration` a
+   `.01ms` su `*`), mentre DESIGN §4, §11 e HANDOFF dicono «solo dissolvenze». Stesso livello: **bloccante** (domanda);
+   provvisorio, la coda così com'è (nessuna animazione).
+3. Chiave Gemini: S19 dice «resta solo su questo dispositivo: va inserita su ognuno», CONTESTO §5 e MECC §25 la
+   sincronizzano come impostazione e BLOCCO 4 ne tiene aperta la cifratura. Il design vincerebbe (CONTESTO §2), ma
+   cambia l'ambito della sync (CP4): **bloccante** (domanda). T-026, T-033.
+4. «Inizia sessione» (S12, DESIGN, SCENARI C4) e «Avvia sessione» (S5) per la stessa azione: due file S, TESTI §1
+   vuole un nome solo. **Bloccante** (domanda); provvisorio «Inizia sessione».
+5. Opzione «sveglia» nel foglio Crea anche nella cornice desktop; le sveglie esistono solo su mobile (CONTESTO §3).
+   Decisione: dipende dalla piattaforma (Android, iOS), non dalla larghezza. T-050.
+6. Studio nel foglio Crea in blu primary (S4), viola nei token, in DESIGN e negli altri file. Decisione: viola. T-050.
+7. Scenario dei mock: le attività del giorno sono costanti dei componenti S1, non un file di dati. Decisione: fixture
+   del confronto scritta in T-052 sui valori di S1, con il corso di `src/data/sample-course/course-data.js`.
+8. Icone: i tre pulsanti di vista e la maniglia dei mock non coincidono con un'icona Lucide. Decisione: l'icona Lucide
+   più vicina (ASSET «Icone»), controllata nel confronto. Icone dell'app, delle notifiche e splash non sono nel
+   pacchetto: mancanza registrata per T-035 (CP6).
+
+**S1 Oggi** (tavola 01)
+9. Card persa o saltata e todo «Non fatto» non disegnate (DESIGN §5 «defilata (opacità)» senza valore): **bloccante**
+   (aspetto). T-048, T-049.
+10. «Categoria» nel sub di routine e todo («Workout · 3 fasi», «Deep Work · 30 min») e luogo dello studio («Aula B2»):
+    nessun campo in MECC §2 né nel foglio Crea. **Bloccante** (domanda: togliere dal sub o aggiungere il campo). T-048.
+11. Barre del Focus nella terna di progresso: significato e scala non definiti (DATI-UI). **Bloccante**. T-040.
+12. Giornata chiusa: riga «Domani» senza attività domani, fascia con soli todo senza orario non disegnate
+    (**bloccante**); i segmenti contano anche i todo senza orario, contro MECC §24: vince il file, spec da allineare. T-040.
+13. Archivio delle completate: si apre solo trascinando; rotella e tastiera non disegnate, mentre
+    `claude-design/CLAUDE.md` lo vuole raggiungibile dalla rotella. **Bloccante** (direzione e soglia). T-040.
+14. Scatto della card Adesso quando l'ora arriva con l'app aperta: non disegnato. Decisione: la stessa entrata
+    `rf-hero-in` di DESIGN §5. T-048.
+15. Desktop: nessuna variante «Tra poco», «Da recuperare», Giornata chiusa o archivio. Decisione: la stessa card
+    (DESIGN §5, MECC §14); Giornata chiusa e archivio solo mobile (DESIGN §5). Banner del ritorno dopo un'assenza su
+    desktop: **bloccante** (posizione). T-048, T-040.
+16. Frecce di riordino 28 × 26 contigue (target 44 impossibile) e visibili solo con puntatore o fuoco: su un tablet
+    touch da 1024 px non c'è modo di mostrarle. **Bloccante**. T-044.
+17. Pallino di sincronizzazione dell'avatar disegnato solo «in pari» (offline, conflitto, senza account mancano):
+    **bloccante**. T-033.
+18. Bottone del periodo su desktop (chevron) senza comportamento; scorrimento laterale fra i giorni (FUNZ §2) non
+    disegnato: **bloccante**. T-048.
+19. Saluto → data all'apertura (file) contro «con lo scroll» (DESIGN §6); menu account a quattro voci. Decisione: il
+    file (e NAVIGAZIONE §2). T-052.
+20. Mese vuoto: su desktop diverso da DESIGN §6, su mobile non disegnato. Decisione: il file su desktop, DESIGN §6 e
+    TESTI §8 su mobile. T-040.
+
+**S4 Crea e S5 Dettaglio** (tavole 02, 03)
+21. Anticipo libero fino a 31 giorni (MECC §13.1, FUNZ §7.2) assente: solo i sette anticipi fissi. Decisione: il design;
+    la riga «Altro anticipo» del codice (T-019) esce con T-050; spec da allineare (proposta).
+22. Selettore dell'inizio della ricorrenza e della «Corso», orari iniziali del form a vuoto: non disegnati né regolati.
+    **Bloccante**. T-050.
+23. Todo senza orario: l'etichetta «Promemoria» resta senza contenuto (la spec dice «solo digest»). **Bloccante**
+    (domanda: residuo del mock?). T-050.
+24. Data di un evento in Modifica fuori da oggi … oggi + 6: non definita. **Bloccante**. T-042.
+25. Dettaglio: routine persa oggi (Fatta o Saltata fino alle 23:59), fasi «nulle» e «saltate» a blocco chiuso, meta
+    per gli altri orizzonti e priorità, motivo della CTA spenta: non disegnati. **Bloccante** (aspetto e testi). T-054.
+26. Routine completata senza «Riapri» (ce l'ha solo il todo). Decisione: il design; D-DETT-1 da riconfermare (§2). T-054.
+27. Dopo «Elimina» il pannello resta aperto col toast. **Bloccante** (comportamento). T-054.
+28. «Salva» della Modifica torna a Oggi con «Modifiche salvate». Decisione: il design. T-042.
+29. BLOCCHI 1 (creazione su desktop) e 2 («Registra esito» dal cerchio su desktop): il provvisorio scritto in
+    `claude-design/docs/BLOCCHI.md`. T-050, T-049.
+
+**S10–S13 Corsi, PDF, widget** (tavole 04, 10)
+30. Titolo del corso quando manca `00_struttura` (FORMATO §1, D-PARSE-1): nessun passo in S10. **Bloccante**; il codice
+    attuale lo chiede e resta finché il design non lo disegna. T-053.
+31. Materiali e file di codice a livello di corso (MECC §16, §18): nessuna schermata. **Bloccante**. T-024, T-025.
+32. Stato «in corso» della sezione dell'unità non derivabile da «fatta quando tutte le risorse sono aperte»; righe
+    delle unità senza resa per saltata, da rivedere e parziale; «Verifica del modulo» (domande, esercizi) senza
+    schermata. **Bloccante**. T-053.
+33. VideoCard offline o in errore; PDF da «scaricare» in S13 `pdf-scan` (la spec non ha PDF remoti); evidenziazione
+    della citazione senza token. **Bloccante**. T-024.
+34. Eliminazione del corso: nessun toast, «corso corrente → successivo» senza resa, «log fasi» assente dall'elenco
+    (MECC §16 lo include: si aggiunge). **Bloccante** minore. T-037.
+35. Widget: «max 6 + N» e «3 todo alta priorità» non sono più in MECC §21 (allineato `docs/00_SINTESI.md`). T-023.
+
+**S19, S20, S22** (tavole 06, 07, 09)
+36. Chat: nessun ingresso alle Conversazioni, menu dell'ambito, bolla in streaming e dopo l'interruzione, citazioni
+    LINK e PDF e il loro tocco, markdown delle risposte. **Bloccante**. T-026.
+37. Statistiche: tasso dei persi, costanza settimanale, % per fascia, soglie della heatmap, formato del delta, periodo
+    «tutto», tessere che seguono il periodo; il Focus di Studio non coincide con la Panoramica (cifra del mock).
+    **Bloccante**. T-029.
+38. Impostazioni: orario del digest, scelte di Animazioni, Celebrazioni, Aptico, Inizio settimana e Lingua delle
+    risposte, vista Informazioni, nome dell'account, errori di accesso e di sincronizzazione. **Bloccante**. T-032, T-033.
+39. Tavola 06 «Bug Hunter · soluzione» monta il secondo tentativo, non lo stato risolto: da correggere nel design;
+    vale il codice del Panel e SCENARI I3. T-028.
+
+**S15, S8, S9, S21** (tavole 05, 08): voci 40 e seguenti, sotto.
+
+## 4. Mappa schermata → design → task
+
+Ordine di `/incremento` (prima riga = primo incremento); CP2 si rifà su S1 dopo T-050.
+
+| Schermata | File del design (`claude-design/`) | Tavola | Task |
+|---|---|---|---|
+| Cornici, menu account, banner sessione | `S1 Oggi Mobile`, `S1 Oggi Desktop`, `S20 Shell Mobile`, `S20 Shell Desktop` | 01, 07 | T-052 |
+| S1 Oggi | `S1 Oggi Mobile`, `S1 Oggi Desktop` | 01 | T-048, T-049, T-044, T-040, T-050 |
+| S4 Crea · Modifica | `S4 Crea Panel`, `Mobile`, `Desktop` | 02 | T-050, T-042 |
+| S5 Dettaglio | `S5 Dettaglio Panel`, `Mobile`, `Desktop` | 03 | T-054, T-042 |
+| S15 Sessione | `S15 Sessione Panel`, `Mobile`, `Desktop` | 05 | T-055 |
+| S10 · S11 · S12 Corsi | `S10 Corsi Mobile`, `Desktop`, `S11 Corso Panel`, `S11 Modulo Panel`, `S12 Unità Panel` | 04 | T-053, T-037, T-024, T-025, T-027 |
+| S21 Notifiche | `S21 Notifiche Panel` (in `S20 Shell`) | 08 | T-022 |
+| S8 Sveglia · S9 notifiche di sistema | `S8 Sveglia Mobile`, `S9 Notifiche di sistema Mobile` | 08 | T-021, T-051 |
+| S19 AI e pratica | `S19 AI Panel`, `Mobile`, `Desktop` | 06 | T-026, T-027, T-028 |
+| S20 Statistiche | `S20 Statistiche Panel` (in `S20 Shell`) | 07 | T-029 |
+| S22 Impostazioni | `S22 Impostazioni Panel` (in `S20 Shell`) | 09 | T-032, T-030, T-033 |
+| S13 PDF · widget | `S13 Extra Panel`, `S13 Extra Mobile` | 10 | T-024, T-023 |
