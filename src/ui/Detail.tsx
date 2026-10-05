@@ -129,7 +129,8 @@ export function Detail() {
   const rotta = location.state as { sfondo?: Location; vista?: Vista } | null;
   const sfondo = rotta?.sfondo;
   const vistaDaOggi = rotta?.vista;
-  // Dal cerchio della card di Oggi (spunta diretta, D-DETT-3) si arriva sulla revisione delle fasi o sulle voci rimaste:
+  // Dal cerchio della card di Oggi (spunta diretta, D-DETT-3) si arriva sulla revisione delle fasi, sulle voci rimaste o
+  // sull'esito dello studio (C10):
   // la sheet si apre al primo caricamento solo se il blocco è ancora a quel passo, e lo stato della rotta si consuma
   // subito, così ricaricare o tornare avanti non la riapre su un blocco già chiuso
   const passoDaOggi = useRef(vistaDaOggi);

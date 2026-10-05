@@ -91,7 +91,7 @@ D-DESIGN-3. Ogni voce è un task nuovo o ritocca un task esistente; l'handoff pe
 |---|---|---|---|
 | Adesso (MECC §14, FUNZ §2; G1, G2) | blocco separato `NowBlock` con ×, `preferenze.adessoChiuso`, variante compressa (T-010, D-NOW-2) | la card dell'attività in corso o imminente cresce a hero nella lista, al suo orario, per ogni tipo; nessuna chiusura | T-048 (fatto, 05/10/2026) |
 | Trascinamento (MECC §15, FUNZ §2; G3) | todo senza orario → orario o giorno, persi riprogrammati, aggancio a 5', «Annulla» (T-015, D-DRAG-1) | solo riordino dei todo senza orario nella stessa priorità; frecce su desktop, tasti su mobile; ordine persistito e sincronizzato | T-044 (riscritto); il trascinamento di T-015 si toglie |
-| Cerchio della card (MECC §3, §4, §24; A3, A7, C10) | todo e routine (D-DETT-3), sheet «Voci non spuntate» (D-DETT-2) | tutti i tipi: evento, studio con «Registra esito» (minuti = durata pianificata); «Voci rimaste»; archivio col trascinamento senza «Raccogli», «Completate», toast con «Annulla» 5 s | T-049 |
+| Cerchio della card (MECC §3, §4, §24; A3, A7, C10) | todo e routine (D-DETT-3), sheet «Voci non spuntate» (D-DETT-2) | tutti i tipi: evento, studio con «Registra esito» (minuti = durata pianificata); «Voci rimaste»; archivio col trascinamento senza «Raccogli», «Completate», toast con «Annulla» 5 s | T-049 (fatto), T-056, T-040 |
 | Crea (MECC §2, FUNZ §3; G5) | data libera, × nel foglio (T-007, D-CREA-1) | giorno di partenza = selezionato entro oggi + 6; attività solo nei prossimi 7 giorni; nessuna ×; animazione di conferma e toast con «Annulla» | T-050 |
 | «Segna fatto» da notifica (MECC §4, §13.2; A6) | azione nativa non ancora collegata (T-021) | con voci aperte apre il Dettaglio su «Voci rimaste»; senza, completa in background | T-051 (dopo T-021) |
 | Sveglie (MECC §13.1 n. 4, FUNZ §7.3; F7) | `sveglia` è un attributo della voce (D-NOTIF-1): verificare che verifica, esito e one-shot non la ereditino | verifica, esito e avvisi una tantum non sono mai sveglie; tasto principale della sveglia nel fill del tipo | T-019 (test F7), T-021 |
@@ -251,6 +251,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     disegnato); lo scatto di 900 ms avviene una volta per apertura dell'app, subito con la riduzione delle animazioni;
     su desktop nessuna entrata né anello, come S1 Desktop, anche quando l'ora arriva con l'app aperta (n. 14 vale per
     il mobile). Il cerchio della hero segue `canCheckFromCalendar`: l'evento lo riceve con T-049.
+56. Cerchio (T-049): spento anche per lo studio di oggi non ancora finito o in corso (il design disegna solo «un altro
+    giorno»), con il titolo «Si segna nel giorno previsto» solo per gli altri giorni; esiti di studio (parziale,
+    indietro) senza cerchio finché T-040 non li mette nell'archivio. I fogli aperti dal cerchio stanno ancora nel
+    Dettaglio (T-056); la spunta disegnata e la chiusura della riga arrivano con l'archivio (T-040).
 
 ## 4. Mappa schermata → design → task
 

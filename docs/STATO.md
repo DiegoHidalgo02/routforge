@@ -2,10 +2,10 @@
 
 *Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart). Contesto tecnico, non un diario: il dettaglio dei task fatti sta nelle loro righe di `docs/TASKS.md`, nelle decisioni e nei commit.*
 
-**Data**: 2026-10-05 · **Passo corrente** (CONTESTO §6): 5 — Notifiche: modello, digest, posticipi e one-shot fatti (T-019, T-020, T-045), adapter nativi in T-021 · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` verde (707 test, 54 file: typecheck su due tsconfig + lint + formato + test, cinque file di test in jsdom)
+**Data**: 2026-10-05 · **Passo corrente** (CONTESTO §6): 5 — Notifiche: modello, digest, posticipi e one-shot fatti (T-019, T-020, T-045), adapter nativi in T-021 · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` verde (714 test, 54 file: typecheck su due tsconfig + lint + formato + test, cinque file di test in jsdom)
 
 ## Fatto
-- **T-048 (05/10/2026)** card Adesso nella lista: `heroBlock` (nessuna chiusura; todo ed eventi passati senza hero), `HeroCard` al posto di `NowBlock` (scatto di 900 ms su mobile, già hero su desktop), G2 coperto anche in UI; `npm run confronto -- --ora HH:MM --adesso <tipo>` con la giornata di S1.
+- **S1, 05/10/2026**: T-048 card Adesso nella lista (`heroBlock`, `HeroCard`; scatto di 900 ms su mobile, nessuna chiusura); T-049 cerchio per tutti i tipi (`checkCircle`: attivo · spento · assente · fatto; evento e studio dal cerchio, toast «Fatto · …» con «Annulla»); `npm run confronto -- --ora HH:MM --adesso <tipo>` con la giornata di S1.
 - **T-052 (05/10/2026)** primo incremento del nuovo design: token del pacchetto importati senza copia, segnaposto per tipo, banner della sessione sotto l'intestazione, carta della sidebar con «Riprendi», «Oggi» della barra; `npm run confronto -- --scenario | --sessione`.
 - **Preparazione al nuovo design (05/10/2026, D-DESIGN-4)**: verifica del design e mappa schermata → task (`docs/03_HANDOFF_DESIGN_CODE.md` §3–§4); T-052–T-055; `npm run mock`, `npm run confronto`, `npm run preview`; `lettore-mock`, `design-checker`, `/incremento`; regole in `.claude/rules/ui.md` e `CLAUDE.md` §9; con conferma `claude-design/`, `CLAUDE.md`, `npm install`, `git push`.
 - **Nuovo design (05/10/2026, D-DESIGN-3)**: 59 file del progetto Claude Design importati via MCP in `claude-design/` (byte verificati sulle dimensioni di `list_files`; `.thumbnail`, binario, escluso); `docs/spec/` sostituita dalla `spec/` del pacchetto (60 scenari: A6, A7, C10, F7, G5 nuovi; G2 e G3 riscritti; FORMATO_CORSO invariato); backlog con T-048–T-051, T-044 riscritto, T-039 annullato; confronto codice ↔ design in `docs/03_HANDOFF_DESIGN_CODE.md` §2; `course-data.js` del pacchetto identico a quello del repository (INV-19).
@@ -45,7 +45,7 @@
 - Nuovo design importato il 05/10/2026 (D-DESIGN-3): le differenze fra le spec del 30/09 e quelle del pacchetto sono assorbite dalla spec (richiesta dell'utente); le divergenze fra il codice attuale e il design sono in `docs/03_HANDOFF_DESIGN_CODE.md` §2 (undici voci, con i task). Le 38 del vecchio export restano nella storia git (`3c60512`). Le prossime, per schermata, si annotano nell'handoff.
 
 ## Prossimo task
-- **S1 sul nuovo design**: T-049 (cerchio per tutti i tipi), poi T-044, T-040, T-050 e CP2 su S1 (`/incremento`).
+- **S1 sul nuovo design**: T-044 (riordino), poi T-040, T-056, T-050 e CP2 su S1 (`/incremento`).
 - Domande per l'utente aperte dalla verifica: le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 (le principali nel report del 05/10: riduzione animazioni, chiave Gemini solo sul dispositivo, «Inizia» o «Avvia sessione», categoria nel sub delle card); ognuna ferma solo il task che la tocca.
 - Backlog fuori dal design: **T-021** (adapter nativi, Opus 5.5; CP3 deciso) resta il primo `aperto` in ordine di file per `/task next`.
 

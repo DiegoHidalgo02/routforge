@@ -120,7 +120,7 @@ describe('Spunta diretta e riapertura del todo — MECCANISMI §3, §4 (servizio
   });
 });
 
-describe('Spunta diretta dal cerchio della card — MECCANISMI §3, §24, SCENARI A3, B2, B5 (servizio, D-DETT-3)', () => {
+describe('Spunta diretta dal cerchio della card — MECCANISMI §3, §24, SCENARI A3, B2, B5, C10 (servizio, D-DETT-3)', () => {
   it('todo senza voci e routine senza fasi nel loro giorno: completati subito, con la stessa scrittura del dettaglio', async () => {
     const todo = await crea(todoValigia([]));
     expect(await checkFromCalendar(db, todo, NOW, FUSO)).toBe('completa');
@@ -144,15 +144,37 @@ describe('Spunta diretta dal cerchio della card — MECCANISMI §3, §24, SCENAR
     expect(await blocco(todo)).toEqual(primaTodo);
     expect(await log(routine)).toBeUndefined();
   });
-  it('routine fuori dal giorno previsto (B2), evento, id sconosciuto: nessuna spunta diretta e nessuna scrittura', async () => {
+  it('routine fuori dal giorno previsto (B2), id sconosciuto: nessuna spunta diretta e nessuna scrittura', async () => {
     const routine = oggi(await crea(routineMattina([])));
-    const evento = await crea(eventoDentista([]));
     const giovedi = local(2026, 9, 24, 9, 0);
     expect(await checkFromCalendar(db, routine, giovedi, FUSO)).toBeNull();
-    expect(await checkFromCalendar(db, evento, giovedi, FUSO)).toBeNull();
     expect(await checkFromCalendar(db, 'nessuno', giovedi, FUSO)).toBeNull();
     expect((await blocco(routine)).stato).toBe('programmato');
-    expect((await blocco(evento)).stato).toBe('programmato');
+  });
+  it('evento senza fasi: «Completa evento» dal cerchio, da qualsiasi giorno; con le fasi la revisione (§3)', async () => {
+    const evento = await crea(eventoDentista([]));
+    expect(await checkFromCalendar(db, evento, NOW, FUSO)).toBe('completa');
+    expect(await blocco(evento)).toMatchObject({ stato: 'completato', chiusoIl: NOW });
+    const conFasi = await crea(eventoDentista());
+    expect(await checkFromCalendar(db, conFasi, NOW, FUSO)).toBe('revisione');
+    expect((await blocco(conFasi)).stato).toBe('programmato');
+  });
+  it('studio di oggi 09:00–10:00 alle 10:20, senza sessione: si apre «Registra esito», nessuna scrittura (C10)', async () => {
+    const { id } = await saveBlock(
+      db,
+      {
+        tipo: 'studio',
+        stato: 'programmato',
+        conOrario: true,
+        inizio: local(2026, 9, 23, 9, 0),
+        fine: local(2026, 9, 23, 10, 0),
+      },
+      NOW,
+      FUSO,
+    );
+    const prima = await blocco(id);
+    expect(await checkFromCalendar(db, id, local(2026, 9, 23, 10, 20), FUSO)).toBe('esito');
+    expect(await blocco(id)).toEqual(prima);
   });
   it('routine persa nel suo giorno (§24 contro B2, 00_SINTESI §6 n. 26): niente dal cerchio, «Fatta» dal dettaglio', async () => {
     const id = oggi(await crea(routineMattina([])));

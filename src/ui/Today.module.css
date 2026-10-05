@@ -549,9 +549,10 @@
   animation: global(rf-bar) var(--dur-bar) ease-in-out infinite;
 }
 
+/* Cerchio di completamento (S1): 22 su mobile, 20 su desktop, bordo text-3 */
 .spunta {
-  width: var(--space-5);
-  height: var(--space-5);
+  width: var(--size-check-activity);
+  height: var(--size-check-activity);
   flex: none;
   box-sizing: border-box;
   display: grid;
@@ -586,8 +587,14 @@ button.spunta {
 button.spunta::after {
   content: '';
   position: absolute;
-  inset: calc((var(--space-5) - var(--size-touch)) / 2);
+  inset: calc((100% - var(--size-touch)) / 2);
   border-radius: inherit;
+}
+
+/* Spento (S1 «Si segna nel giorno previsto»): routine e studio fuori dal loro giorno, studio non ancora da registrare */
+button.spunta[aria-disabled] {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
 }
 
 /* Todo «non fatto» nella card in secondo piano (.7): il bordo text-2 tiene il cerchio sopra 3:1 */
@@ -595,7 +602,7 @@ button.spunta::after {
   border-color: var(--color-text-2);
 }
 
-button.spunta:not([data-fatta]):hover {
+button.spunta:not([data-fatta], [aria-disabled]):hover {
   border-color: var(--color-success);
   background: var(--color-success-soft);
 }
@@ -1298,6 +1305,11 @@ button.spunta:not([data-fatta]):hover {
   .card {
     min-height: 56px;
     padding: 9px var(--space-3) 9px var(--space-card-inner);
+  }
+
+  .spunta {
+    width: var(--space-5);
+    height: var(--space-5);
   }
 
   /* Su desktop la card con la maniglia, e la sua copia sollevata, tengono il margine destro delle altre (S1 Desktop) */

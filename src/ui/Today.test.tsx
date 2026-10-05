@@ -326,3 +326,45 @@ describe('Card Adesso — SCENARI G2 (UI di Oggi)', () => {
     },
   );
 });
+
+describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
+  const cerchio = (titolo: string) =>
+    box.querySelector<HTMLButtonElement>(`button[aria-label="${t('segnaFattoTitolo', { titolo })}"]`);
+  const stato = async (id: string) => (await readDetail(appDb, id))!.blocco.stato;
+
+  it('«Chiama Marco» senza voci: il cerchio lo completa senza aprire il dettaglio; «Annulla» del toast lo riapre', async () => {
+    const id = await crea(todo('Chiama Marco', null));
+    mostra();
+    await vi.waitFor(() => expect(cerchio('Chiama Marco')).not.toBeNull());
+    cerchio('Chiama Marco')!.click();
+    await vi.waitFor(() => expect(toast()?.textContent).toContain(t('toastFatto', { titolo: 'Chiama Marco' })));
+    expect(await stato(id)).toBe('completato');
+
+    toast()!.querySelector('button')!.click();
+    await vi.waitFor(async () => expect(await stato(id)).toBe('programmato'));
+  });
+
+  it('un’occorrenza di studio di domani ha il cerchio spento: il tocco non scrive nulla (C10)', async () => {
+    const ricorrenza = await crea({
+      ...comune,
+      tipo: 'studio',
+      titolo: 'Ripasso',
+      corsoId: null,
+      giorni: [2],
+      inizio: '09:00',
+      fine: '10:00',
+      dataInizio: '2026-09-29',
+      termine: null,
+    });
+    await runCycle(appDb, ADESSO, FUSO);
+    mostra('/?giorno=2026-09-29');
+    await vi.waitFor(() => expect(cerchio('Ripasso')?.getAttribute('aria-disabled')).toBe('true'));
+    expect(cerchio('Ripasso')!.title).toBe(t('siSegnaNelGiornoPrevisto'));
+    cerchio('Ripasso')!.click();
+    const stati = (await appDb.blocchi.toArray())
+      .filter((b) => 'ricorrenzaId' in b && b.ricorrenzaId === ricorrenza)
+      .map((b) => ('stato' in b ? b.stato : null));
+    expect(stati.length).toBeGreaterThan(0);
+    expect(new Set(stati)).toEqual(new Set(['programmato']));
+  });
+});

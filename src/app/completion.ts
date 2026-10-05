@@ -84,8 +84,9 @@ export async function completeBlock(
 
 /**
  * Spunta diretta dal cerchio della card del calendario (§3, §24, D-DETT-3): se non c'è restituisce `null` senza
- * scrivere; con le fasi o con voci non spuntate non scrive e dice quale sheet del dettaglio aprire (`revisione`,
- * `residuo`); altrimenti completa subito con la stessa scrittura di «Segna come fatto» (`completa`).
+ * scrivere; con le fasi, con voci non spuntate o per lo studio non scrive e dice quale sheet del dettaglio aprire
+ * (`revisione`, `residuo`, `esito`, C10); altrimenti completa subito con la stessa scrittura di «Segna come fatto»
+ * (`completa`, anche «Completa evento», T-049).
  */
 export async function checkFromCalendar(
   db: RoutForgeDb,

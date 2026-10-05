@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canCheckFromCalendar,
   canComplete,
+  checkCircle,
   completed,
   directCheckStep,
   reopened,
@@ -94,9 +95,40 @@ describe('Spunta diretta dalla card del calendario — MECCANISMI §3 (D-DETT-3)
     expect(canCheckFromCalendar(notte, local(2026, 9, 27, 0, 30))).toBe(true);
     expect(canCheckFromCalendar(notte, local(2026, 9, 27, 1, 1))).toBe(false);
   });
-  it('studio ed evento non hanno la spunta diretta: esito (§10–§11) e «Completa evento» dal dettaglio', () => {
-    expect(canCheckFromCalendar(block({ tipo: 'studio' }), mercoledi)).toBe(false);
-    expect(canCheckFromCalendar(block({ tipo: 'evento' }), mercoledi)).toBe(false);
+  it('evento: «Completa evento» dal cerchio, senza vincolo di giorno; già completato no (§3)', () => {
+    expect(canCheckFromCalendar(block({ tipo: 'evento' }), mercoledi)).toBe(true);
+    expect(canCheckFromCalendar(block({ tipo: 'evento' }), local(2026, 9, 30, 9, 0))).toBe(true);
+    expect(canCheckFromCalendar(block({ tipo: 'evento', stato: 'completato' }), mercoledi)).toBe(false);
+  });
+});
+
+describe('Esito dal cerchio — SCENARI C10', () => {
+  const studio = block({ tipo: 'studio', inizio: local(2026, 9, 23, 9, 0), fine: local(2026, 9, 23, 10, 0) });
+  const alle1020 = local(2026, 9, 23, 10, 20);
+  it('occorrenza di oggi 09:00–10:00, nessuna sessione, alle 10:20: il cerchio apre «Registra esito» (§3, §11)', () => {
+    expect(canCheckFromCalendar(studio, alle1020)).toBe(true);
+    expect(checkCircle(studio, alle1020)).toBe('attivo');
+    expect(directCheckStep(studio, false)).toBe('esito');
+  });
+  it('un’occorrenza di domani ha il cerchio spento; prima della fine e in corso pure; persa niente cerchio (§24)', () => {
+    const domani = block({ tipo: 'studio', inizio: local(2026, 9, 24, 9, 0), fine: local(2026, 9, 24, 10, 0) });
+    expect(checkCircle(domani, alle1020)).toBe('spento');
+    expect(checkCircle(studio, local(2026, 9, 23, 9, 30))).toBe('spento');
+    expect(checkCircle({ ...studio, stato: 'in_corso' }, alle1020)).toBe('spento');
+    expect(checkCircle({ ...studio, stato: 'perso' }, local(2026, 9, 23, 11, 0))).toBe('assente');
+  });
+});
+
+describe('Cerchio della card di Oggi — MECCANISMI §3, §24 (S1 «cerchio spento»)', () => {
+  const mercoledi = local(2026, 9, 23, 9, 0);
+  it('fatto se completato; routine di un altro giorno spenta; persi e saltati senza cerchio, salvo il todo', () => {
+    expect(checkCircle(block({ stato: 'completato' }), mercoledi)).toBe('fatto');
+    expect(checkCircle(block({}), mercoledi)).toBe('attivo');
+    expect(checkCircle(block({}), local(2026, 9, 24, 9, 0))).toBe('spento');
+    expect(checkCircle(block({ stato: 'perso' }), mercoledi)).toBe('assente');
+    expect(checkCircle(block({ stato: 'saltato' }), mercoledi)).toBe('assente');
+    expect(checkCircle(block({ tipo: 'todo', stato: 'perso' }), mercoledi)).toBe('attivo');
+    expect(checkCircle(block({ tipo: 'evento' }), local(2026, 9, 30, 9, 0))).toBe('attivo');
   });
 });
 

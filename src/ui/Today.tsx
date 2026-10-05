@@ -29,12 +29,12 @@ import {
 import { Link, useLocation, useNavigate, useSearchParams, type Location } from 'react-router';
 import { dismissAbsenceNotice, readAbsenceNotice } from '../app/absence';
 import { calendarDays, type BloccoCalendario } from '../app/calendar';
-import { checkFromCalendar } from '../app/completion';
+import { checkFromCalendar, reopenBlock } from '../app/completion';
 import { appDb, watch } from '../app/db';
 import { moveBlock } from '../app/drag';
 import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
-import { canCheckFromCalendar, type PassoSpunta } from '../domain/completion';
+import { checkCircle, type PassoSpunta } from '../domain/completion';
 import {
   canDrag,
   dropDays,
@@ -51,7 +51,7 @@ import type { AvvisoAssenza } from '../domain/scheduler/absence';
 import { localDayKey, localDaysBetween, localInstant, localTimeKey, MINUTE } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
-import { maiuscola, sottotitolo, TIPO, titolo } from './format';
+import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
@@ -71,6 +71,13 @@ const VISTE = ['giorno', 'settimana', 'mese'] as const satisfies readonly Vista[
 const SALUTO_MS = 2600;
 /** Scatto dell'ora (S1 `strikeDelay`): su mobile la card Adesso cresce a hero 900 ms dopo l'apertura dell'app. */
 const SCATTO_MS = 900;
+/** Toast della spunta dalla lista per tipo (TESTI: «Fatto · …», «Fatta · …», «Evento completato · …»). */
+const FATTO: Record<BloccoCalendario['tipo'], Chiave> = {
+  todo: 'toastFatto',
+  routine: 'toastFatta',
+  evento: 'toastEventoCompletato',
+  studio: 'toastFatto',
+};
 /** Spostamento orizzontale che fa passare di periodo. */
 const SOGLIA_SWIPE = 60;
 let salutato = false;
@@ -221,15 +228,16 @@ export function Today() {
   const [presa, setPresa] = useState<Presa | null>(null);
   const istruzioni = useId();
   const giorniStriscia = presa ? dropDays(settimana, oggi) : settimana;
-  const [spostato, setSpostato] = useState<{ id: string; testo: string; tastiera: boolean; annulla: () => void }>();
+  // Toast con «Annulla» per 5 s: dopo un rilascio (§15) e dopo la spunta dalla lista (§3, A7)
+  const [avviso, setAvviso] = useState<{ id: string; testo: string; tastiera: boolean; annulla: () => void }>();
   const timerToast = useRef<ReturnType<typeof setTimeout>>(undefined);
   const annullaToast = useRef<HTMLButtonElement>(null);
   useEffect(() => () => clearTimeout(timerToast.current), []);
   // Dopo un rilascio da tastiera il fuoco va ad «Annulla», perché la maniglia sparisce con il blocco spostato; quando il
   // toast si chiude torna sulla card spostata, se è ancora nella giornata, altrimenti sulla prima card
   useEffect(() => {
-    if (spostato?.tastiera) annullaToast.current?.focus();
-  }, [spostato]);
+    if (avviso?.tastiera) annullaToast.current?.focus();
+  }, [avviso]);
   const chiudiToast = (id: string) => {
     clearTimeout(timerToast.current);
     if (document.activeElement === annullaToast.current)
@@ -237,26 +245,32 @@ export function Today() {
         document.querySelector<HTMLElement>(`li[data-id="${id}"] a`) ??
         document.querySelector<HTMLElement>('li[data-id] a')
       )?.focus();
-    setSpostato(undefined);
+    setAvviso(undefined);
   };
+  const avvisa = (id: string, testo: string, annulla: () => Promise<unknown>, tastiera = false) => {
+    clearTimeout(timerToast.current);
+    timerToast.current = setTimeout(() => chiudiToast(id), ANNULLA_MS);
+    setAvviso({
+      id,
+      testo,
+      tastiera,
+      annulla: () => {
+        chiudiToast(id);
+        void annulla().catch(() => undefined);
+      },
+    });
+  };
+  // Spunta dalla lista completata subito (§3, A7): «Fatto · …», «Fatta · …», «Evento completato · …»; «Annulla» riapre
+  const completato = (b: BloccoCalendario) =>
+    avvisa(b.id, t(FATTO[b.tipo], { titolo: titolo(b) }), () => reopenBlock(appDb, b.id, Date.now(), fuso()));
   const rilascia = (b: BloccoCalendario, x: Bersaglio, tastiera: boolean) => {
     const r: Rilascio = 'giorno' in x ? { giorno: x.giorno } : { inizio: x.inizio };
     const dove = 'giorno' in x ? quando(x.giorno, timeOnDay(b), oggi) : quando(giorno, localTimeKey(x.inizio), oggi);
     // `null`: il rilascio non vale più (il blocco è cambiato nel frattempo): non c'è nulla da annullare
     void moveBlock(appDb, b.id, r, Date.now(), Intl.DateTimeFormat().resolvedOptions().timeZone).then(
       (annulla) => {
-        if (!annulla) return;
-        clearTimeout(timerToast.current);
-        timerToast.current = setTimeout(() => chiudiToast(b.id), ANNULLA_MS);
-        setSpostato({
-          id: b.id,
-          testo: t('spostatoA', { titolo: titolo(b), quando: dove }),
-          tastiera,
-          annulla: () => {
-            chiudiToast(b.id);
-            void annulla(Date.now()).catch(() => undefined);
-          },
-        });
+        if (annulla)
+          avvisa(b.id, t('spostatoA', { titolo: titolo(b), quando: dove }), () => annulla(Date.now()), tastiera);
       },
       () => undefined,
     );
@@ -405,6 +419,7 @@ export function Today() {
                 istruzioni={istruzioni}
                 onPresa={setPresa}
                 onRilascio={rilascia}
+                onCompletato={completato}
               />
             )}
           </>
@@ -532,10 +547,10 @@ export function Today() {
         {t('istruzioniSposta')}
       </span>
       <div className={s.regioneToast} role="status">
-        {spostato && (
+        {avviso && (
           <div className={s.toast}>
-            <span className={s.testoToast}>{spostato.testo}</span>
-            <button ref={annullaToast} type="button" className={s.annullaToast} onClick={spostato.annulla}>
+            <span className={s.testoToast}>{avviso.testo}</span>
+            <button ref={annullaToast} type="button" className={s.annullaToast} onClick={avviso.annulla}>
               {t('annullaAzione')}
             </button>
           </div>
@@ -651,6 +666,7 @@ function Giornata({
   istruzioni,
   onPresa,
   onRilascio,
+  onCompletato,
 }: {
   blocchi: BloccoCalendario[];
   giorno: string;
@@ -664,6 +680,8 @@ function Giornata({
   istruzioni: string;
   onPresa: (p: Presa | null) => void;
   onRilascio: (b: BloccoCalendario, x: Bersaglio, tastiera: boolean) => void;
+  /** Spunta dalla lista scritta subito: il toast con «Annulla» (A7). */
+  onCompletato: (b: BloccoCalendario) => void;
 }) {
   const now = useMinuto();
   const navigate = useNavigate();
@@ -692,7 +710,8 @@ function Giornata({
   const spunta = (b: BloccoCalendario, istante: number) =>
     void checkFromCalendar(appDb, b.id, istante, Intl.DateTimeFormat().resolvedOptions().timeZone).then(
       (passo) => {
-        if (passo !== 'completa') void apri(b, passo ?? undefined);
+        if (passo === 'completa') onCompletato(b);
+        else void apri(b, passo ?? undefined);
       },
       () => void apri(b),
     );
@@ -908,9 +927,10 @@ function Giornata({
   return (
     <ol ref={lista} className={s.giornata} data-verso={verso}>
       {righe.map((b, i) => {
-        const fatta = b.stato === 'completato';
-        // Persi e saltati non si spuntano, salvo i todo (MECC §24): niente cerchio, ma il suo posto resta (titoli allineati)
-        const assente = b.tipo !== 'todo' && (b.stato === 'perso' || b.stato === 'saltato');
+        // Il cerchio (MECC §3, §24, S1): attivo, spento (routine e studio fuori dal loro giorno, studio non ancora da
+        // registrare) o assente per persi, saltati ed esiti di studio, con il posto che resta (titoli allineati)
+        const cerchio = checkCircle(b, now);
+        const fatta = cerchio === 'fatto';
         const sub = sottotitolo(b);
         const presaQui = presa?.b.id === b.id;
         return [
@@ -937,7 +957,7 @@ function Giornata({
                 now={now}
                 attiva={ingressi?.attiva ?? null}
                 sfondo={sfondo}
-                onSpunta={canCheckFromCalendar(b, now) ? () => spunta(b, Date.now()) : undefined}
+                onSpunta={cerchio === 'attivo' ? () => spunta(b, Date.now()) : undefined}
               />
             ) : (
               <div
@@ -951,19 +971,21 @@ function Giornata({
                 <span className={s.accento} />
                 {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
                   completato apre il Dettaglio, dove c'è «Riapri» (§3) */}
-                {fatta || canCheckFromCalendar(b, now) ? (
+                {cerchio === 'assente' ? (
+                  <span className={s.spunta} data-assente aria-hidden />
+                ) : (
                   <button
                     type="button"
                     className={s.spunta}
                     data-fatta={fatta || undefined}
+                    aria-disabled={cerchio === 'spento' || undefined}
+                    title={cerchio === 'spento' && b.giornoLocale !== oggi ? t('siSegnaNelGiornoPrevisto') : undefined}
                     tabIndex={fatta ? -1 : undefined}
                     aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
-                    onClick={() => (fatta ? void apri(b) : spunta(b, Date.now()))}
+                    onClick={() => (fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now()))}
                   >
                     {fatta && <Check size={12} strokeWidth={2.75} />}
                   </button>
-                ) : (
-                  <span className={s.spunta} data-assente={assente || undefined} aria-hidden />
                 )}
                 {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
                 <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
