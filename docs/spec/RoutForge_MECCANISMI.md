@@ -27,7 +27,7 @@
 
 **Stati di un'unità**: `non iniziata` · `parziale` · `da rivedere` · `completata` · `saltata`. Le prime tre sono "pendenti" e alimentano il puntatore (§11).
 
-**Tempo**: ogni istante è assoluto; il *giorno* di un blocco è il giorno **locale** dell'inizio. I blocchi senza orario hanno ancore fisse — todo 12:00–23:59, evento 00:00–23:59 — che non valgono come tempo pianificato. Ogni record ha un istante di ultima modifica (usato dalla sincronizzazione, §25).
+**Tempo**: gli orari dei blocchi sono **ora locale di parete** (D-TIME-2): valgono nel fuso in cui si trova il dispositivo e il *giorno* di un blocco è il giorno **locale** dell'inizio; in viaggio un blocco delle 09:00 resta alle 09:00 locali e non cambia giorno. Le durate della sessione si misurano su istanti assoluti (§10.2). I blocchi senza orario hanno ancore fisse — todo 12:00–23:59, evento 00:00–23:59 — che non valgono come tempo pianificato. Ogni record ha un istante di ultima modifica (usato dalla sincronizzazione, §25).
 
 ---
 
@@ -38,12 +38,12 @@
 | Obbligatorio | titolo | titolo | titolo + ≥1 giorno | ≥1 giorno (titolo default "Studio") |
 | Orario | opzionale (default: senza orario) | opzionale (tutto il giorno) | inizio + fine, o senza durata | inizio + fine |
 | Durata | gradini 5,10,15,20,25,30,40,45,50,60,75,90,105,120,150,180,210,240 min | fine ≤ inizio ⇒ errore «La fine deve venire dopo l'inizio», l'evento non si crea | fine ≤ inizio ⇒ giorno dopo | idem |
-| Data | nessuna: il todo parte da oggi | sì | — | — |
+| Data | giorno di partenza: oggi, o il giorno selezionato in Oggi se entro oggi + 6 | sì: in creazione entro oggi + 6 (default il giorno di partenza) | — | — |
 | Orizzonte | giorno / settimana / mese (default giorno) | — | — | — |
 | Priorità | solo senza orario: alta / normale (default) / bassa | — | — | — |
 | Fasi | — | sì | sì | no |
 | Checklist | sì | — | — | — |
-| Date ricorrenza | — | — | inizio (default oggi); fine: mai, o dopo N giorni/settimane/mesi | idem |
+| Date ricorrenza | — | — | inizio (default: giorno di partenza = il giorno selezionato in Oggi se entro oggi + 6, altrimenti oggi); fine: mai, o dopo N giorni/settimane/mesi | idem |
 | Promemoria | override per istanza; **senza orario: nessun override** (solo digest) | override | override sulla definizione, ereditato dalle istanze | idem |
 | Luogo | — | sì | — | — |
 | Corso | — | — | — | opzionale (consigliato) |
@@ -58,10 +58,10 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 |---|---|---|
 | Todo | sì | sempre: qualsiasi giorno, anche se `perso` |
 | Routine | sì | solo se il giorno locale dell'inizio è oggi, **oppure** (routine a cavallo di mezzanotte) l'istante corrente è dentro [inizio, fine]. Mai prima, mai dopo |
-| Routine di studio | no | solo tramite esito (§10–11) |
-| Evento | no | "Completa evento" dal dettaglio, senza vincolo di giorno |
+| Routine di studio | no | solo tramite esito (§10–11); dal cerchio della card si apre la registrazione dell'esito |
+| Evento | no | "Completa evento" dal dettaglio o dal cerchio della card, senza vincolo di giorno |
 
-**Flusso todo/routine**: non consentita → nessuna scrittura; routine con fasi nella definizione → si apre la revisione fasi e si scrive solo al Conferma; altrimenti completamento immediato. **Annulla spunta** («Riapri» nel dettaglio, per todo e routine): elimina l'eventuale log fasi dell'occorrenza, torna `programmato`, ri-arma le notifiche; nel todo azzera le spunte della checklist.
+**Flusso todo/routine**: non consentita → nessuna scrittura; routine con fasi nella definizione → si apre la revisione fasi e si scrive solo al Conferma; altrimenti completamento immediato. **Annulla spunta** («Riapri» nel dettaglio, oppure «Annulla» nel toast che segue la spunta dalla lista, per todo e routine): elimina l'eventuale log fasi dell'occorrenza, torna `programmato`, ri-arma le notifiche; nel todo azzera le spunte della checklist.
 
 **Evento**: con fasi → revisione; senza → completamento immediato. Stato mostrato: `completato` se scritto; altrimenti `concluso` se la fine è passata; altrimenti `programmato`. Mai `perso`.
 
@@ -74,6 +74,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 - **Spunta diretta** (§3): tutte le voci risultano fatte. Con voci non spuntate si può, a scelta, creare **un solo todo con le voci rimaste**: stesso titolo, note, priorità, corso e orizzonte, senza orario, nel giorno del todo ma mai prima di oggi (stessa scadenza); in quel caso il todo d'origine si completa lasciando le voci com'erano.
 - Modificare la lista (aggiungi/rinomina/elimina) non tocca lo stato del todo.
 - Lo spostamento di giorno del todo conserva le spunte.
+- **«Segna fatto» da notifica o sveglia**: su un todo con voci non spuntate non completa in background; apre l'app sul Dettaglio con «Voci rimaste» (tutte fatte, oppure un todo con le voci rimaste come sopra). Senza voci aperte completa subito con l'operazione di §3.
 
 ---
 
@@ -102,7 +103,7 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 
 **Notifica "todo in ritardo"**: una volta per todo, ~10 s dopo lo spostamento o la marcatura, canale silenzioso, azioni Segna fatto / Posticipa.
 
-**Ordine nella fascia senza orario**: alta → normale → bassa, poi inizio. La fascia senza orario precede sempre i blocchi con orario.
+**Ordine nella fascia senza orario**: alta → normale → bassa; dentro la stessa priorità vale l'ordine scelto dall'utente (§15), altrimenti l'inizio. Un todo che entra in un gruppo di priorità (nuovo, spostato a oggi, priorità cambiata da Modifica) va in fondo al gruppo. Su mobile la fascia precede i blocchi con orario, su desktop li segue (§24).
 
 ---
 
@@ -123,9 +124,9 @@ Ogni completamento passa da **un'unica operazione**: scrive lo stato (`completat
 
 **Marcatura `perso`** (a ogni ciclo): blocco `programmato`, non evento, non todo entro orizzonte, con fine effettiva (fine reale, o 23:59 del giorno se senza durata) passata da **> 30 minuti** → `perso` + istante. Per i corsi coinvolti si ricalcola il puntatore.
 
-**Notifica "blocco perso"**: solo routine/studio, solo se la fine è entro le ultime **2 ore**, una volta per blocco, canale silenzioso, ~10 s dopo; per lo studio con azione Registra esito.
+**Notifica "blocco perso"**: solo routine/studio, solo se la fine è entro le ultime **2 ore**, una volta per blocco, canale silenzioso, ~10 s dopo; per lo studio con azione Registra esito. Nessun avviso se sul blocco era partita una sessione (l'utente lo ritrova negli esiti pendenti) né per un blocco nato dopo la propria fine (D-NOTIF-2 n. 2, D-OCC-1; confermato).
 
-**Scadenza di recupero** = fine − 50% della durata (senza durata: inizio + 30'). A quell'istante scatta la notifica di **verifica** se il blocco non è stato avviato né chiuso. Il blocco resta avviabile in **recupero** finché non è `perso`, e anche dopo: un esito registrato lo riabilita e azzera la marcatura.
+**Scadenza di recupero** = fine − 50 % della durata (senza durata: inizio + 30'). A quell'istante scatta la notifica di **verifica** se il blocco non è stato avviato né chiuso. Il blocco resta avviabile in **recupero** finché non è `perso`, e anche dopo: un esito registrato lo riabilita e azzera la marcatura.
 
 **Esiti pendenti** (schermata Notifiche + badge): blocchi di studio `persi` negli ultimi **3 giorni** o `programmati` con fine reale passata; dal più recente; massimo 5. Sotto, **Ieri · gestite**: le notifiche consegnate o gestite il giorno prima (dal registro). **Segna tutte lette** toglie il segno di novità dalle voci; gli esiti pendenti restano finché non si registrano.
 
@@ -163,17 +164,17 @@ Durate sempre derivate da istanti assoluti. Focus = tempo trascorso − pause.
 - **Cronometro**: mai finita.
 
 ### 10.3 Pomodoro
-Preset 25/5, 50/10, 90/20. Segmenti studio/pausa tassellano la durata (ultimo troncato; senza durata: 4 cicli). Segmento scaduto → avanza da solo (non l'ultimo); "salta" congela il focus reale del segmento. Le pause contano nel totale. Ogni segmento di studio può avere un'unità diversa; il tempo si attribuisce per unità, l'esito resta sull'unità pianificata.
+Preset 25/5, 50/10, 90/20. Segmenti studio/pausa tassellano la durata (ultimo troncato; senza durata: 4 cicli, cioè 8 segmenti studio + pausa, D-POMO-1). Segmento scaduto → avanza da solo (non l'ultimo); "salta" congela il focus reale del segmento. Le pause contano nel totale. Ogni segmento di studio può avere un'unità diversa; il tempo si attribuisce per unità, l'esito resta sull'unità pianificata.
 
 ### 10.4 Durante
 Schermo acceso; interruzioni annotabili; notifica "tempo scaduto" alla fine per le sessioni ancorate all'orologio. **Tempo extra**: oltre la durata pianificata il timer prosegue in positivo senza allarme; i minuti extra contano nel focus reale e vengono riportati a parte nel riepilogo e nelle statistiche. **Iperfocus** (solo la modalità a uscita bloccata): schermo intero, uscita bloccata fino alla fine con l'ora di sblocco visibile, Non Disturbare di sistema se il permesso è concesso (altrimenti l'iperfocus vale comunque); un tentativo di uscita chiede conferma; uscita confermata = uscita forzata = interruzione etichettata "iperfocus".
 
-**Continuità** (D-TIMER-2, 30/09/2026): la sessione attiva registra un **battito** (istante di continuità) ogni minuto finché l'app è in primo piano e, su Android, finché il servizio in primo piano della sessione è attivo, con una notifica persistente che mostra il cronometro; su iOS e sul web nessuna continuità in background è garantita. Uscire dall'interfaccia non mette in pausa. Alla riapertura, se dall'ultimo battito sono passati più di **30 minuti**, l'intervallo è **non verificato**: non conta nel focus né come pausa volontaria, la sessione resta aperta e l'app mostra quando si è fermata, per quanto e il tempo residuo; l'utente può attribuire a mano l'intervallo al focus. Entro 30 minuti il tempo conta come focus. Per le sessioni ancorate all'orologio la fine non si sposta; per quelle ancorate al focus la ripresa usa il focus confermato e il tempo residuo. Riavvio del dispositivo, arresto forzato e assenza del servizio sono intervalli non verificati, senza attribuzione di causa.
+**Continuità** (D-TIMER-2): la sessione attiva registra un **battito** (istante di continuità) ogni minuto finché l'app è in primo piano e, su Android, finché il servizio in primo piano della sessione è attivo, con una notifica persistente che mostra il cronometro; su iOS e sul web nessuna continuità in background è garantita. Uscire dall'interfaccia non mette in pausa. Alla riapertura, se dall'ultimo battito sono passati più di **30 minuti**, l'intervallo è **non verificato**: non conta nel focus né come pausa volontaria, la sessione resta aperta e l'app mostra quando si è fermata, per quanto e il tempo residuo; l'utente può attribuire a mano l'intervallo al focus. Entro 30 minuti il tempo conta come focus. Per le sessioni ancorate all'orologio la fine non si sposta; per quelle ancorate al focus la ripresa usa il focus confermato e il tempo residuo. Riavvio del dispositivo, arresto forzato e assenza del servizio sono intervalli non verificati, senza attribuzione di causa.
 
 ### 10.5 Chiusura
 Tipo: `completata` (traguardo raggiunto) · `terminata prima` · `abbandonata` (nessun esito; blocco → `programmato`). Riepilogo: focus, tempo extra, minuti di pausa-segmento, numero e minuti di pause, interruzioni, minuti per unità, segmenti completati.
 
-**Abbandono oltre soglia** (D-SESS-2, 30/09/2026): se la sessione è collegata a un blocco con durata pianificata e al momento dell'abbandono focus / durata pianificata ≥ **65%** (pause e tempo extra esclusi), la sessione non si abbandona: si chiude come `terminata prima` con l'esito **Continua** registrato (§11, §12; «conta nel piano» sì), correggibile dal Dettaglio. Sotto la soglia: abbandono (nessun esito, blocco → `programmato`). Non vale per le sessioni senza blocco né per le routine generiche, che non hanno un timer.
+**Abbandono oltre soglia** (D-SESS-2): se la sessione è collegata a un blocco con durata pianificata e al momento dell'abbandono focus / durata pianificata ≥ **65 %** (pause e tempo extra esclusi), la sessione non si abbandona: si chiude come `terminata prima` con l'esito **Continua** registrato (§11, §12; «conta nel piano» sì), correggibile dal Dettaglio. Sotto la soglia: abbandono (nessun esito, blocco → `programmato`). Non vale per le sessioni senza blocco né per le routine generiche, che non hanno un timer.
 
 ---
 
@@ -190,7 +191,7 @@ Tipo: `completata` (traguardo raggiunto) · `terminata prima` · `abbandonata` (
 
 Sempre: minuti accreditati all'unità principale (ripartizione per unità se presente), confidenza 1–5 sull'unità, nota sul blocco, marcatura "perso" azzerata, altre unità toccate ricevono solo minuti. **Blocco di studio senza unità** (routine senza corso e nessuna unità scelta nel setup): l'esito scrive solo stato, nota e confidenza del blocco; nessuna unità e nessun puntatore; la streak conta.
 
-**Puntatore** (dopo ogni esito, ogni marcatura persa di studio, ogni generazione): unità in ordine modulo → unità; pendenti = `non iniziata`/`parziale`/`da rivedere`; i blocchi di studio futuri `programmati` del corso, in ordine cronologico, ricevono la i-esima pendente (oltre le pendenti: nessuna unità); unità corrente = prima pendente; unità fatte = `completate`. Progresso corso = completate / totali.
+**Puntatore** (dopo ogni esito, ogni marcatura persa di studio, ogni generazione): unità in ordine modulo → unità, solo nei moduli aperti (D-PTR-1: un modulo bloccato dai criteri Go/No-Go del precedente non entra nel puntatore; senza criteri tutti i moduli sono aperti; il primo è sempre aperto); pendenti = `non iniziata`/`parziale`/`da rivedere`; i blocchi di studio futuri `programmati` del corso, in ordine cronologico, ricevono la i-esima pendente (oltre le pendenti: nessuna unità); unità corrente = prima pendente; unità fatte = `completate`. Progresso corso = completate / totali.
 
 ---
 
@@ -206,7 +207,7 @@ Sempre: minuti accreditati all'unità principale (ripartizione per unità se pre
 1. **Generale**: spento → tutte cancellate.
 2. **Per tipo**: attivo/spento, anticipi, canale silenzioso. Default: todo 30', studio 5', routine 10', evento 15'.
 3. **Per istanza**: Auto / Off / Personalizzato (anticipi multipli fra 1 g, 1 h, 30/15/10/5', all'inizio; libero fino a 31 giorni). Le istanze di routine ereditano l'override della definizione.
-4. **Sveglie a schermo intero**: solo per istanza, solo anticipi ≤ 7 h, solo blocchi con orario; un anticipo è o notifica o sveglia; se "all'inizio" è sveglia, la notifica puntuale è soppressa.
+4. **Sveglie a schermo intero**: solo per istanza, solo anticipi ≤ 7 h, solo blocchi con orario; un anticipo è o notifica o sveglia; se "all'inizio" è sveglia, la notifica puntuale è soppressa. «Verifica», «esito» e gli avvisi una tantum non sono anticipi: restano sempre notifiche (nessuna sveglia per l'esito).
 
 Nessun anticipo né sveglia dopo la fusione → nessun promemoria.
 
@@ -221,7 +222,7 @@ Nessun anticipo né sveglia dopo la fusione → nessun promemoria.
 | Todo con orario | "pre" · "scadenza" all'orario |
 | Todo senza orario | nessuno (digest) |
 
-Azioni: studio → Inizia, Posticipa; todo → Segna fatto, Posticipa; esito → Registra esito; altro → Posticipa. La sveglia a schermo intero mostra ora, titolo, orario e tipo del blocco con le stesse azioni del trigger e, per i tipi senza azione specifica, "Apri il blocco" (= tocco). **Posticipa** = +10' con la stessa chiave, solo se lo stato è coerente (`programmato`; `in corso` solo per "esito"; `perso` solo per "in ritardo"). Tocco: si registra l'istante di risposta per quel trigger; "esito"/"perso" → registrazione esito; studio → unità; altro → dettaglio.
+Azioni: studio → Inizia, Posticipa; todo → Segna fatto (con voci della checklist non spuntate apre il Dettaglio su «Voci rimaste», §4), Posticipa; esito → Registra esito; altro → Posticipa. La sveglia a schermo intero mostra ora, titolo, orario e tipo del blocco con le stesse azioni del trigger e, per i tipi senza azione specifica, "Apri il blocco" (= tocco). **Posticipa** = +10' con la stessa chiave, solo se lo stato è coerente (`programmato`; `in corso` solo per "esito"; `perso` solo per "in ritardo"). Tocco: si registra l'istante di risposta per quel trigger; "esito"/"perso" → registrazione esito; studio → unità; altro → dettaglio.
 
 ### 13.3 Finestra e riconciliazione
 - Si armano solo le notifiche che **scattano** entro **14 giorni**; si considerano i blocchi che iniziano entro 14 + 31 giorni. Niente entro 5 s o nel passato.
@@ -231,7 +232,7 @@ Azioni: studio → Inizia, Posticipa; todo → Segna fatto, Posticipa; esito →
 - Sul web: solo con la scheda aperta.
 
 ### 13.4 Ore silenziose
-Non previste (D-NOTIF-3, 30/09/2026): RoutForge non ha una fascia silenziosa propria. Ogni trigger pianificato, il digest e i posticipi si armano all'orario calcolato, senza rinvii da parte dell'app; le sveglie a schermo intero si richiedono all'orario del trigger. Il silenzio lo governano le impostazioni di notifica e il Non disturbare del sistema operativo, che l'app non modifica né aggira.
+Non previste (D-NOTIF-3): RoutForge non ha una fascia silenziosa propria. Ogni trigger pianificato, il digest e i posticipi si armano all'orario calcolato, senza rinvii da parte dell'app; le sveglie a schermo intero si richiedono all'orario del trigger. Il silenzio lo governano le impostazioni di notifica e il Non disturbare del sistema operativo, che l'app non modifica né aggira.
 
 ### 13.5 Digest
 Alla prossima occorrenza dell'orario (default 08:00): todo senza orario di quel giorno + arretrati che si sposteranno a quel giorno. Corpo: conteggio (+ arretrati) e fino a 3 titoli. Vuoto → nessun digest.
@@ -241,23 +242,26 @@ Alla prossima occorrenza dell'orario (default 08:00): todo senza orario di quel 
 
 ---
 
-## 14. Blocco "Adesso"
+## 14. Card "Adesso"
 
 - **Candidati**: non completati/saltati/persi, con orario, adesso ∈ [inizio − 30', fine + 30'].
 - **In corso** = `in corso`, oppure adesso ∈ [inizio, fine) (fine esclusa: al confine vince il blocco che inizia). Se nessuno, il primo candidato cronologico.
-- **Stato**: minuti mancanti; "adesso"; fine passata → "recupera" (routine/studio) o "orario passato" (todo/evento).
-- **Chiusura**: memorizzata per giorno e per blocco; riappare il giorno dopo o con un blocco in corso diverso.
+- **Stato**: minuti mancanti («Tra poco»); "adesso"; fine passata → "recupera" («Da recuperare», routine/studio) o "orario passato" (todo/evento: nessuna card diventa hero, l'attività resta una card normale).
+- **Fine effettiva** delle routine senza durata: 23:59 (D-NOW-1).
+- **Resa**: la card dell'attività scelta cresce a hero nella lista, al suo orario: su mobile dopo lo scatto dell'ora, su desktop già all'apertura. Nessun blocco separato.
+- **Nessuna chiusura**: la card Adesso non si chiude né si nasconde; cambia solo quando cambiano i candidati.
 
 ---
 
-## 15. Riprogrammazione per trascinamento (vista Giorno)
+## 15. Riordino dei todo senza orario (vista Giorno)
 
-- Si trascinano **i todo senza orario e i blocchi `persi` di qualsiasi tipo**, su mobile e su desktop (maniglia a sei punti; su desktop il cursore di presa compare solo su quelle card). Le altre attività non si trascinano.
-- I todo senza orario possono essere riordinati nell'elenco attività con drag and drop.
-- Rilascio su un orario: il todo diventa `con orario`, inizio agganciato agli spazi liberi fra gli altri blocchi a passi di 5', durata = quella dichiarata o 30' (default del form Crea); durante il trascinamento si mostra la riga di aggancio con orario e durata.
-- Rilascio su un altro giorno della striscia settimanale: cambia il giorno, resta senza orario.
-- Un blocco `perso` rilasciato su un giorno o un orario futuro torna `programmato` (un blocco con orario lo mantiene se rilasciato su un giorno, lo cambia se rilasciato su un orario); le notifiche dell'istanza vengono ri-armate sul nuovo giorno/orario.
-- Annullamento entro 5 s dal toast: ripristina giorno, orario e stato precedenti.
+- Si riordinano **solo i todo senza orario**, e **solo fra todo con la stessa priorità**: un todo non passa mai in un altro gruppo di priorità; per cambiargli gruppo si cambia la priorità da Modifica. Nessun'altra attività si sposta, persi compresi.
+- Riordinare **cambia solo l'ordine** nel gruppo: non assegna un orario, non cambia giorno, non tocca stato, orizzonte né notifiche. Orario e orizzonte si cambiano solo da Modifica.
+- **Trascinamento**, su mobile e su desktop (maniglia a sei punti; su desktop il cursore di presa compare solo su quelle card). Un solo stato visivo, la card sollevata (`drag=lift`): su mobile sopra uno slot tratteggiato nella posizione d'arrivo, su desktop sopra la riga originale, che resta visibile. La posizione d'arrivo resta dentro il gruppo: rilasciato fuori, il todo torna al suo posto.
+- **Frecce su e giù** (solo desktop, alternativa al trascinamento per WCAG 2.5.7): con il puntatore sopra la riga o con il fuoco da tastiera sulla card o sulle frecce compaiono a destra del todo «Sposta su» e «Sposta giù». Ogni attivazione scambia il todo con il vicino del gruppo; sul primo del gruppo «Sposta su» è disattivata, sull'ultimo «Sposta giù». Il fuoco segue il todo spostato (sulla freccia usata, o sull'altra se quella si disattiva) e una regione live annuncia la nuova posizione.
+- **Tasti su mobile** (alternativa al trascinamento per WCAG 2.5.7): un tocco sulla maniglia senza trascinare seleziona il todo e apre «Sposta su», «Sposta giù» e «Fine»; ogni tasto scambia il todo con il vicino del gruppo, con le stesse disattivazioni ai bordi e la stessa regione live; un secondo tocco sulla maniglia o «Fine» chiude.
+- Nessuna riga di aggancio, nessuno snap agli orari, nessun toast «Annulla».
+- L'ordine si conserva sul blocco (posizione nel gruppo) e viaggia con il blocco nella sincronizzazione (§25).
 
 ---
 
@@ -266,11 +270,12 @@ Alla prossima occorrenza dell'orario (default 08:00): todo senza orario di quel 
 Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 - Solo file `.md`; percorsi appiattiti al nome file; serve ≥ 1 file modulo `M<n>-…`; ordine per numero.
 - File struttura `00_struttura…` opzionale: titolo = primo H1, sottotitolo = primo H2; senza: primo H1 dei moduli o titolo neutro.
-- Modulo senza intestazione valida → saltato con avviso. Unità con intestazione non leggibile → saltata con avviso.
+- Modulo senza intestazione valida → saltato con avviso. Unità con intestazione non leggibile → saltata con avviso. Numeri di modulo o di unità duplicati: vince il primo, il duplicato è saltato con avviso (D-PARSE-3).
 - Ore stimate: euristica `~N h/ore` o intervallo `N–M ore` (media). Difficoltà: alta/media/bassa se dichiarata.
 - Sezioni per emoji (📖 teoria · 📺 studio · 🛠 pratica · 🏗 mini progetto) o per bullet in grassetto; "Corso online che sostituisce il modulo" = studio. Risorse = link markdown con descrizione (riga "Descrizione:" o primo paragrafo) e meta (segmento fra "·"). Video YouTube incorporati.
 - **Ogni import crea un corso nuovo.** Avvisi mostrati (max 5). Se esiste già un corso con lo stesso titolo, i materiali e i file di codice dell'utente passano al corso nuovo: sulle unità con lo stesso numero, altrimenti a livello di corso.
 - **Eliminazione**: cascata completa (moduli, unità, sezioni, risorse, blocchi e ricorrenze del corso, mazzi e carte, quiz e pratiche, conversazioni, materiali e PDF, log fasi, notifiche); se era il corso corrente passa al successivo.
+- **Criterio Go/No-Go automatico** («Domande socratiche»): si spunta quando un quiz sulle unità del modulo, o ad ambito modulo, raggiunge la soglia scritta nel criterio (D-QUIZ-1: vedi `docs/BLOCCHI.md`).
 
 ---
 
@@ -321,7 +326,7 @@ Formato in `RoutForge_FORMATO_CORSO.md`. Regole di lettura:
 | Bene | 0 | max(1 g, intervallo × facilità) |
 | Facile | +0,15 | max(1 g, intervallo × facilità × 1,3) |
 
-Facilità iniziale 2,5, mai sotto 1,3; intervallo iniziale 0 (carta dovuta subito); prima valutazione parte da 1 g. Scadenza = adesso + intervallo. Ripasso trasversale = tutte le carte con scadenza ≤ adesso, dalle più scadute. I quattro bottoni mostrano solo l'etichetta del grado, non l'intervallo calcolato.
+Facilità iniziale 2,5, mai sotto 1,3; intervallo iniziale 0 (carta dovuta subito); prima valutazione parte da 1 g. «Facile» moltiplica per la facilità già aggiornata (D-SM2-1); «Niente» azzera l'intervallo (D-SM2-2). Scadenza = adesso + intervallo. Ripasso trasversale = tutte le carte con scadenza ≤ adesso, dalle più scadute. I quattro bottoni mostrano solo l'etichetta del grado, non l'intervallo calcolato.
 
 ---
 
@@ -358,6 +363,7 @@ Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creaz
 - **Export**: tutto tranne il registro notifiche; PDF codificati nel file.
 - **Import**: conferma → cancellazione notifiche pendenti → azzeramento → scrittura (la sessione attiva del giorno del backup non viene ripristinata) → ricarica. Backup senza PDF importabili.
 - Eliminazione di tutti i dati: azzeramento completo (i dati remoti restano finché non si cancellano dall'account).
+- **Aperto (Checkpoint 4, D-BACKUP-1)**: la chiave Gemini finisce in chiaro nel file di backup.
 
 ---
 
@@ -371,9 +377,9 @@ Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creaz
 
 ## 24. Ordinamento e visibilità nel calendario
 
-- Giorno: su mobile fascia senza orario (per priorità) → blocchi con orario (cronologici); su desktop blocchi con orario → fascia senza orario in coda. Su mobile i completati si impilano in testa al giorno (archivio compatto apribile).
+- Giorno: su mobile fascia senza orario (per priorità, poi nell'ordine scelto dall'utente) → blocchi con orario (cronologici); su desktop blocchi con orario → fascia senza orario in coda. Su entrambi la card Adesso cresce nella lista (§14). Su mobile i completati si impilano in testa al giorno (archivio compatto apribile).
 - Settimana: inizia dal giorno scelto in Impostazioni (lunedì default, o domenica).
-- Blocchi terminali (completato, saltato, perso) restano nel giorno, in secondo piano; i persi/saltati non sono spuntabili salvo i todo.
+- Blocchi terminali (completato, saltato, perso) restano nel giorno, in secondo piano; i persi/saltati non sono spuntabili dal cerchio della card salvo i todo; dal Dettaglio una routine persa oggi resta segnabile Fatta o Saltata fino alle 23:59 (D-DETT-1, D-DETT-3).
 - Settimana/Mese: per ogni giorno, conteggio e tipo dei blocchi; il mese mostra i giorni con carico.
 - I blocchi senza orario non occupano "Adesso" e non contano nei totalizzatori di minuti.
 
@@ -387,7 +393,7 @@ Collegamenti: sessione (timer se attivo, altrimenti setup); ripasso; oggi; creaz
 
 **Identità**: ogni record ha un identificatore univoco globale e un istante di ultima modifica; le eliminazioni sono registrate come record cancellati (non sparizioni) e propagate.
 
-**Conflitti**: vince la modifica più recente, per record. Un blocco completato su un dispositivo e modificato su un altro nello stesso momento → prevale l'istante più recente; la spunta e le notifiche seguono lo stato risultante.
+**Conflitti**: vince la modifica più recente, per record. Sorgente dell'istante di ultima modifica (orologio del dispositivo o del servizio): aperta al Checkpoint 4 (D-SYNC-1). Chiave Gemini: cifratura lato client raccomandata, decisione al Checkpoint 4. Un blocco completato su un dispositivo e modificato su un altro nello stesso momento → prevale l'istante più recente; la spunta e le notifiche seguono lo stato risultante.
 
 **Corsi e routine di studio**: la ricorrenza porta un'impronta del corso (titolo + contenuto). Sull'altro dispositivo il collegamento si risolve se esiste un corso con la stessa impronta; altrimenti le occorrenze compaiono come blocchi di studio senza unità e "Inizia sessione" apre il setup in modalità libera. Al primo import del corso corrispondente, il collegamento si ristabilisce e il puntatore si ricalcola.
 

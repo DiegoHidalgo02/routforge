@@ -6,9 +6,9 @@ paths:
 
 - Importa da `app` e `domain`; mai da `data` o `platform` (INV-1).
 - Nessuna regola di business nei componenti: stati, soglie e transizioni arrivano dai servizi o dal dominio. Il
-  comportamento viene dalle spec, l'aspetto dal design dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`; oggi
-  nessun design attivo: le schermate si implementano o si ritoccano dopo l'handoff del nuovo). Se design e spec
-  divergono vince il design (D-DESIGN-1) e la divergenza va nell'handoff.
+  comportamento viene dalle spec, l'aspetto dal design importato in `claude-design/` (05/10/2026, D-DESIGN-3) dopo il
+  suo handoff per schermata (`docs/03_HANDOFF_DESIGN_CODE.md`; `claude-design/CLAUDE.md` sono le decisioni
+  vincolanti del design). Se design e spec divergono vince il design (D-DESIGN-1) e la divergenza va nell'handoff.
 - Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata dei
   token dell'export del design: oggi del vecchio, finché il nuovo handoff non la sostituisce); nessun valore hardcoded.
 - Stack (D-STACK-1): React 19 + Vite; componenti `.tsx` con CSS Modules che usano solo `var(--…)`; niente Tailwind né

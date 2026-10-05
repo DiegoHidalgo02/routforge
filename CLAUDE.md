@@ -14,14 +14,14 @@ Prodotto, in quest'ordine (in caso di contraddizione vince la più bassa):
 3. `docs/spec/RoutForge_MECCANISMI.md` — regole esatte: stati, soglie, algoritmi
 4. `docs/spec/RoutForge_FORMATO_CORSO.md` — formato del corso importabile; i file di riferimento M0/M1 e il risultato
    atteso del parser (`course-data.js`) stanno in `src/data/sample-course/`
-5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (55 scenari): un task è finito solo se i suoi scenari passano
+5. `docs/spec/RoutForge_SCENARI.md` — **criteri di accettazione** (60 scenari): un task è finito solo se i suoi scenari passano
 
-I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5).
+I file in `docs/spec/` **non si modificano** se non su richiesta esplicita dell'utente (INV-5; ultima: D-DESIGN-3, 05/10/2026, la `spec/` del nuovo design).
 
-**Aspetto** → il design importato in `claude-design/`, riferimento solo dopo il suo **handoff** in
-`docs/03_HANDOFF_DESIGN_CODE.md`. **Oggi nessun design è attivo**: il vecchio export è stato rimosso il 04/10/2026
-(D-DESIGN-2) e il nuovo arriva via MCP; le schermate si implementano o si ritoccano dopo il suo handoff.
-Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1): si annota la
+**Aspetto** → il pacchetto di Claude Design importato in `claude-design/` (05/10/2026, D-DESIGN-3: `HANDOFF.md`
+d'ingresso, `CLAUDE.md` con le decisioni vincolanti del design, `docs/`, `design/`, schermate `S*.dc.html` e tavole),
+riferimento per una schermata solo dopo il suo **handoff** in `docs/03_HANDOFF_DESIGN_CODE.md`: le schermate si
+implementano o si ritoccano dopo l'handoff. Comportamento → spec; aspetto → design. **Se design e spec divergono vince il design** (D-DESIGN-1): si annota la
 divergenza nell'handoff e l'utente decide come allineare la spec.
 
 Documenti operativi (leggili prima di lavorare): `docs/00_SINTESI.md` (numeri e regole in una pagina),

@@ -7,7 +7,7 @@ sincronizzazione fra dispositivi. Android · iOS · web installabile. Dati sul d
 ## Stato
 Passo 5 di 10 (CONTESTO §6): fatti dati e import del corso, calendario, scheduler, sessione ed esiti, modello delle
 notifiche; restano alcuni task dei passi precedenti (T-037, T-040–T-042, T-044) e le notifiche native (T-021). Il
-vecchio design è stato rimosso il 04/10/2026: il nuovo arriva in `claude-design/` (import via MCP) e si implementa
+nuovo design è in `claude-design/` dal 05/10/2026 (D-DESIGN-3) con la spec allineata; le schermate si implementano
 dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`). Vedi `docs/STATO.md`.
 
 ## Avvio rapido
@@ -24,11 +24,11 @@ In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B`
 - `docs/00_SINTESI.md` … `06_SUPERVISIONE.md`, `TASKS.md`, `STATO.md` — base di progetto operativa
 - `docs/03_HANDOFF_DESIGN_CODE.md` — stato del design e handoff design → codice
 - `docs/INVARIANTI.md` — cosa deve restare vero e come lo verifica il gate
-- `docs/TRACCIABILITA.md` — i 55 scenari: regole, dove vivono, task, test, stato
+- `docs/TRACCIABILITA.md` — i 60 scenari: regole, dove vivono, task, test, stato
 - `docs/DIPENDENZE.md` — registro dei pacchetti con motivo e decisione
 - `docs/01_DECISIONI.md` + `docs/decisioni/` — registro delle decisioni e schede di quelle ad alto impatto
 - `PRODUCT.md` — record di prodotto per il lavoro di design (plugin impeccable)
-- `claude-design/` — export del design (aspetto); oggi assente, il nuovo design arriva qui
+- `claude-design/` — il pacchetto di Claude Design (aspetto): `HANDOFF.md`, `CLAUDE.md` vincolante, `docs/`, `design/`, `spec/`, schermate e tavole `.dc.html`
 - `src/` — codice: `domain` (meccanismi puri), `data` (Dexie e corso di esempio), `app` (servizi), `ui` (React), `platform` (adapter)
 - `.claude/` — configurazione di Claude Code (permessi, hook, comandi, subagent, skill, regole per strato in `rules/`)
 - `.vscode/` — estensioni consigliate, impostazioni e attività (gate, loop, snapshot)

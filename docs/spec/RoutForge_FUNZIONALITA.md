@@ -6,20 +6,20 @@
 
 ## 1. Primo avvio e navigazione
 
-Nessuna schermata di benvenuto: l'app si apre sulla schermata principale. Se non c'è alcun corso, la sezione **Profilo** offre due scelte: caricare il **corso di esempio** incluso, oppure **importare un corso** da un file ZIP di markdown (§10).
+Nessuna schermata di benvenuto: l'app si apre sulla schermata principale. Se non c'è alcun corso, la sezione **Profilo** offre due scelte: caricare il **corso di esempio** incluso, oppure **importare un corso** da un file ZIP di markdown (§9).
 
 Sezioni principali, sempre raggiungibili:
 
 | Sezione | Contenuto |
 |---|---|
-| **Oggi** | Calendario giorno/settimana/mese; il blocco "adesso / prossimo"; tutte le attività |
+| **Oggi** | Calendario giorno/settimana/mese; la card Adesso; tutte le attività |
 | **+ Crea** | Punto unico di creazione di qualsiasi attività |
 | **Statistiche** | Analisi del comportamento di studio e delle pratiche |
 | **Profilo** | Corsi importati (moduli, unità, materiali), account e stato della sincronizzazione, accesso alle Impostazioni |
 
 Dal logo utente in alto a sinistra si apre un menu con **Corsi**, **Esiti da registrare** (la schermata Notifiche, con badge), **Account e sincronizzazione** e **Impostazioni**; in testa al menu nome (se c'è), email e stato della sincronizzazione. La **Diagnostica** si apre da Impostazioni (§24).
 
-Su desktop la barra laterale ha anche **Cerca** (⌘K / Ctrl+K): un campo che cerca per titolo fra attività, corsi e unità e apre il risultato scelto.
+Su mobile la barra in basso porta a **Oggi** e **Statistiche**, con **+ Crea** al centro; «Oggi» riporta anche al giorno di oggi da qualsiasi giorno selezionato. Su desktop la barra laterale ha Oggi, Statistiche, il pulsante Crea e, in fondo, l'account che apre lo stesso menu. Non esiste una ricerca: nessuna voce «Cerca», né su mobile né su desktop. Sotto i 1024 px di larghezza vale la struttura mobile; da 1024 px quella desktop, con la barra laterale e il pannello di dettaglio (nessuna struttura dedicata al tablet).
 
 Non esiste una lista separata delle attività: tutte le attività si consultano dal calendario di Oggi.
 
@@ -34,16 +34,19 @@ Su mobile, in testa alla vista Giorno, un saluto («Ciao, <nome>», o solo «Cia
 Sotto la giornata la vista Giorno mostra anche:
 - **Il tuo progresso oggi**: completate su totali di oggi con la percentuale; focus di oggi con il confronto «vs ieri»; attività completate nella settimana.
 - **Prossime attività**: i prossimi due giorni con attività, con orario, titolo e tipo; «Vedi tutte» apre la Settimana; senza nulla in programma: «Niente in programma nei prossimi giorni.».
-- Su mobile le attività già completate si **impilano** in testa al giorno come un archivio compatto: scorrendo in giù si aprono tutte con il loro orario, «Raccogli» le richiude.
+- Su mobile le attività già completate si **impilano** in testa al giorno come un archivio compatto: scorrendo in giù si aprono tutte con il loro orario; un trascinamento verso l'alto le richiude (non c'è un tasto «Raccogli»).
 
-### Il blocco "Adesso / prossimo"
-Mostra cosa è in corso o cosa viene dopo, con uno stato che cambia da solo: minuti mancanti all'inizio; "adesso" durante; "recupera" se una routine o una sessione di studio è passata senza essere gestita; "orario passato" per todo ed eventi. Da qui si avvia direttamente la sessione di studio o si apre l'attività. Può essere chiuso per la giornata: riappare il giorno dopo o se cambia l'attività in corso.
+### La card "Adesso"
+La card dell'attività in corso o imminente si ingrandisce nella lista, al suo orario, su mobile e su desktop: non è un blocco separato e non si chiude. Su mobile cresce poco dopo l'apertura della schermata; su desktop è già ingrandita. Lo stato cambia da solo: minuti mancanti all'inizio («Tra poco»); «Adesso» durante; «Da recuperare» se una routine o una sessione di studio è passata senza essere gestita. Un todo o un evento con l'orario passato non si ingrandisce: resta una card normale (l'evento si legge «concluso»). Dalla card si avvia direttamente la sessione di studio o si segna fatta l'attività; toccandola si apre il dettaglio.
+
+### Spuntare dalla lista
+Il cerchio di ogni card segna fatta l'attività senza aprirla: todo e routine (con le fasi si passa dalla revisione, §5); l'evento si completa; lo studio apre la registrazione dell'esito. Routine e studio di un altro giorno hanno il cerchio spento. La card spuntata entra nell'archivio delle completate, «Il tuo progresso oggi» si aggiorna e per qualche secondo «Annulla» la riporta com'era. Un todo con voci non spuntate apre «Voci rimaste» (§6) sopra Oggi. Quando l'ultima attività del giorno è chiusa compare «Giornata chiusa».
 
 ### Ritorno dopo un'assenza
 Se l'app viene riaperta dopo almeno due giorni, un messaggio una tantum avvisa che il piano si è già riallineato (nessun conteggio di attività perse).
 
-### Riprogrammare trascinando
-Nella vista Giorno, su mobile come su desktop, si trascinano **i todo senza orario e i blocchi persi** di qualsiasi tipo (maniglia a sei punti sulla card; le altre attività non si spostano). Tenuto premuto e trascinato su un orario, il todo si aggancia agli spazi liberi fra le altre attività a passi di 5 minuti e diventa un todo con orario, con la durata già dichiarata o, se manca, quella predefinita del form Crea (30 minuti); trascinato su un altro giorno della striscia settimanale cambia giorno e resta senza orario. L'operazione si può annullare subito dopo. Le notifiche seguono il nuovo orario. Un blocco "perso" trascinato su un altro giorno o orario torna programmato e le sue notifiche vengono ri-armate.
+### Riordinare i todo senza orario
+Nella vista Giorno, su mobile come su desktop, i **todo senza orario** si riordinano trascinandoli per la maniglia a sei punti, e **solo fra todo con la stessa priorità**: un todo ad alta priorità resta fra quelli ad alta priorità; per portarlo in un altro gruppo se ne cambia la priorità da Modifica. Su desktop, passando con il mouse sopra un todo senza orario o raggiungendolo con il tasto Tab, compaiono alla sua destra due frecce, su e giù, che lo spostano di un posto. Su mobile, un tocco sulla maniglia senza trascinare apre in basso «Sposta su», «Sposta giù» e «Fine», con le stesse regole. Riordinare non assegna un orario, non cambia giorno e non tocca stato e notifiche; orario e orizzonte si cambiano da Modifica. Le altre attività, persi compresi, non si spostano. Non c'è un aggancio agli orari né un «Annulla».
 
 ---
 
@@ -59,39 +62,43 @@ Quattro tipi, stessa schermata, campi diversi:
 | **Evento** | Appuntamento puntuale, anche di un giorno intero |
 
 ### 3.1 Todo
-- Titolo. Nessuna data e nessun corso: il todo parte da oggi.
+- Titolo. Nessun corso. Il todo parte da oggi, oppure dal giorno selezionato nel calendario se è entro i prossimi sei giorni (vale per tutti i tipi: data dell'evento, data d'inizio delle routine).
 - **Senza orario** (default) oppure con orario d'inizio e durata (scelta tra gradini da 5 a 240 minuti).
 - **Orizzonte**: *giorno* (fisso), *settimana*, *mese*. Con orizzonte diverso da "giorno", il todo non fatto si sposta da solo a oggi, ogni giorno, fino alla fine dell'orizzonte.
-- **Priorità** (solo senza orario): alta, normale, bassa. Decide l'ordine nella fascia senza orario.
-- **Checklist** opzionale (§7).
-- **Promemoria** (§8): solo per i todo con orario; quelli senza orario entrano nel digest mattutino.
+- **Priorità** (solo senza orario): alta, normale, bassa. Decide l'ordine nella fascia senza orario; dentro la stessa priorità l'ordine si sceglie riordinando (§2).
+- **Checklist** opzionale (§6).
+- **Promemoria** (§7): solo per i todo con orario; quelli senza orario entrano nel digest mattutino.
 
 ### 3.2 Routine di studio
 - Corso a cui è agganciata (opzionabile ma consigliato); titolo opzionale.
 - Giorni della settimana, orario d'inizio e di fine.
-- Data d'inizio (default oggi) e fine: per sempre, oppure a termine dopo N giorni/settimane/mesi.
+- Data d'inizio (default: il giorno selezionato in Oggi se è fra oggi e i sei giorni successivi, altrimenti oggi) e fine: per sempre, oppure a termine dopo N giorni/settimane/mesi.
 - Promemoria personalizzabili.
-- L'app genera le occorrenze sul calendario per le quattro settimane successive e allunga l'orizzonte da sola. **Non si sceglie l'unità da studiare**: la propone il puntatore dell'unità (§13).
+- L'app genera le occorrenze sul calendario per le quattro settimane successive e allunga l'orizzonte da sola. **Non si sceglie l'unità da studiare**: la propone il puntatore dell'unità (§12).
 
 ### 3.3 Routine
 - Titolo, giorni della settimana, orario d'inizio.
 - Orario di fine oppure **senza durata**: la routine resta aperta per tutto il giorno previsto.
-- **Fasi** opzionali (§6).
+- **Fasi** opzionali (§5).
 - Data inizio/fine e promemoria come sopra.
 - Non produce esiti di studio: si segna Fatta o Saltata.
 
 ### 3.4 Evento
-- Titolo, data, orario d'inizio e fine (la fine deve venire dopo l'inizio, altrimenti il form lo segnala e non crea l'evento), oppure **tutto il giorno**.
+- Titolo, data (in creazione fra oggi e i sei giorni successivi; di default il giorno selezionato in Oggi), orario d'inizio e fine (la fine deve venire dopo l'inizio, altrimenti il form lo segnala e non crea l'evento), oppure **tutto il giorno**.
 - Luogo opzionale.
-- **Fasi** opzionali (§6).
+- **Fasi** opzionali (§5).
 - Promemoria.
 - Non si ripete.
 
 ---
 
+Il foglio di creazione non ha un tasto di chiusura: su mobile si chiude senza salvare trascinandolo verso il basso dal bordo alto, oppure con «Annulla». Creata l'attività, il foglio si rimpicciolisce fino a diventare la sua card e si posa nel calendario: nella lista del giorno mostrato; se l'attività è per un altro giorno, la card scivola verso destra e il calendario scorre fino a quel giorno; nella Settimana si posa direttamente nella riga del giorno; nel Mese la selezione passa al giorno, la card diventa un puntino nella sua casella e un secondo dopo compare nell'elenco del giorno (il calendario non scorre da solo fra i mesi). Da «+ Crea» si creano attività per i prossimi sette giorni. Un messaggio conferma la creazione con «Annulla».
+
+---
+
 ## 4. Dopo la creazione: come vive ogni attività
 
-Toccando un'attività (dal calendario, dal blocco Adesso o da una notifica) si apre il suo dettaglio, da cui si modifica, si elimina, si completa. Le routine si modificano a livello di definizione: le modifiche valgono per le occorrenze future, il passato resta com'è.
+Toccando un'attività (dal calendario, dalla card Adesso o da una notifica) si apre il suo dettaglio, da cui si modifica, si elimina, si completa. Le routine si modificano a livello di definizione: le modifiche valgono per le occorrenze future, il passato resta com'è.
 
 ### 4.1 Todo
 - Si spunta in qualsiasi momento, da qualsiasi giorno, anche se risulta "non fatto".
@@ -100,18 +107,18 @@ Toccando un'attività (dal calendario, dal blocco Adesso o da una notifica) si a
 - Con checklist, le voci si spuntano dal dettaglio; nelle liste compare "fatte/totali".
 
 ### 4.2 Routine di studio
-- Toccando un'occorrenza si apre l'**unità** proposta (materiale, risorse, AI) con "Inizia sessione" (§12). Disponibile solo per l'occorrenza di oggi. Se l'occorrenza è già completata si offre un **ripasso** (sessione libera che non tocca l'esito); se è parziale o in corso si **riprende**.
+- Toccando un'occorrenza si apre l'**unità** proposta (materiale, risorse, AI) con "Inizia sessione" (§11). Disponibile solo per l'occorrenza di oggi. Se l'occorrenza è già completata si offre un **ripasso** (sessione libera che non tocca l'esito); se è parziale o in corso si **riprende**.
 - Prima dell'orario previsto la sessione non parte come routine: c'è l'azione esplicita **Anticipa sessione**, che sposta l'occorrenza ad adesso.
-- Si può anche **registrare l'esito senza sessione** ("Registra esito"), ad esempio da una notifica.
+- Si può anche **registrare l'esito senza sessione** ("Registra esito"), da una notifica o dal cerchio della card su Oggi; i minuti accreditati sono la durata pianificata.
 - Una sessione libera si avvia anche da qualsiasi unità di un corso.
 
 ### 4.3 Routine
-- Ogni occorrenza si segna **Fatta** o **Saltata**, solo nel giorno previsto (né prima né dopo).
+- Ogni occorrenza si segna **Fatta** o **Saltata**, solo nel giorno previsto (né prima né dopo): su Oggi il cerchio delle occorrenze di altri giorni è spento.
 - Con fasi, prima di segnarla Fatta si passa dalla revisione delle fasi.
-- Si può annullare la spunta con «Riapri».
+- Si può annullare la spunta con «Riapri», o con «Annulla» nel messaggio che segue la spunta dalla lista.
 
 ### 4.4 Evento
-- Senza fasi: si chiude con "Completa evento". Con fasi: "Completa evento" apre la revisione delle fasi e l'evento risulta completato dopo la conferma.
+- Senza fasi: si chiude con "Completa evento", anche dal cerchio della card su Oggi. Con fasi: "Completa evento" apre la revisione delle fasi e l'evento risulta completato dopo la conferma.
 - Un evento non viene mai marcato "perso": passato l'orario risulta semplicemente "concluso".
 
 ### 4.5 Blocchi persi e recupero
@@ -129,7 +136,7 @@ Una routine o un evento può essere scomposto in **fasi** (es. "Mattina": svegli
 - Al completamento **tutte le fasi risultano fatte**: si toccano solo quelle **non** fatte, poi un unico **Conferma**. Giornata normale = zero tocchi sulle fasi.
 - Per un **evento**, ogni fase saltata può generare un **todo di follow-up** (con il nome della fase, senza orario, per il giorno dell'evento e mai prima di oggi).
 - Le fasi si creano, rinominano, riordinano ed eliminano nella schermata di creazione/modifica. Nel dettaglio di un'occorrenza già chiusa si vede cosa è stato fatto e cosa saltato.
-- Le fasi non sono la checklist (§7): le fasi si segnano in negativo (ciò che non è stato fatto), la checklist in positivo (ciò che è stato fatto).
+- Le fasi non sono la checklist (§6): le fasi si segnano in negativo (ciò che non è stato fatto), la checklist in positivo (ciò che è stato fatto).
 
 ---
 
@@ -138,7 +145,8 @@ Una routine o un evento può essere scomposto in **fasi** (es. "Mattina": svegli
 - Solo i todo. Voci create una alla volta (massimo 60).
 - Ogni voce nasce non spuntata; si spunta man mano.
 - **Spuntare l'ultima voce completa il todo**; togliere una spunta a un todo completato lo **riapre**.
-- Segnando fatto un todo con voci ancora da spuntare si può creare un todo con le voci rimaste, con la stessa priorità e la stessa scadenza.
+- Segnando fatto un todo con voci ancora da spuntare si apre «Voci rimaste»: si possono segnare tutte fatte oppure passarle a un nuovo todo, con la stessa priorità e la stessa scadenza; il todo d'origine si completa comunque.
+- «Segna fatto» da una notifica o da una sveglia su un todo con voci non spuntate apre l'app sul dettaglio con «Voci rimaste»; senza voci aperte il todo si completa subito, senza aprire l'app.
 - Nelle liste: indicatore "fatte/totali".
 - Se il todo si sposta di giorno, le spunte restano.
 
@@ -154,16 +162,16 @@ Una routine o un evento può essere scomposto in **fasi** (es. "Mattina": svegli
 - **Todo senza orario**: nessun avviso puntuale; entra nel digest mattutino.
 
 ### 7.2 Per ogni attività: Auto / Off / Personalizzato
-Personalizzato = più anticipi insieme fra 1 giorno, 1 ora, 30/15/10/5 minuti, all'inizio; oppure un anticipo libero fino a circa un mese. Ogni anticipo fino a 7 ore può essere consegnato come **sveglia a schermo intero** invece che come notifica. La sveglia occupa lo schermo con l'ora, il titolo, l'orario e il tipo del blocco e offre le stesse azioni della notifica corrispondente (Inizia, Segna fatto o Registra esito secondo il tipo; Apri il blocco per gli altri) più Posticipa di 10 minuti.
+Personalizzato = più anticipi insieme fra 1 giorno, 1 ora, 30/15/10/5 minuti, all'inizio; oppure un anticipo libero fino a circa un mese. Ogni anticipo fino a 7 ore può essere consegnato come **sveglia a schermo intero** invece che come notifica. La sveglia occupa lo schermo con l'ora, il titolo, l'orario e il tipo del blocco e offre le stesse azioni della notifica corrispondente (Inizia per lo studio, Segna fatto per i todo, Apri il blocco per routine ed eventi) più Posticipa di 10 minuti; il tasto principale è nel colore del tipo. Solo gli anticipi diventano sveglie: l'invito a registrare l'esito e la verifica restano sempre notifiche.
 
 ### 7.3 Digest mattutino
 Un unico messaggio al mattino (orario configurabile, default 08:00) che elenca i todo senza orario di oggi, arretrati inclusi.
 
 ### 7.4 Ore silenziose
-Non previste: RoutForge non rinvia le notifiche in una fascia propria; il silenzio notturno è quello del Non disturbare del sistema (D-NOTIF-3, 30/09/2026).
+Non previste: RoutForge non rinvia le notifiche in una fascia propria; il silenzio notturno è quello del Non disturbare del sistema (D-NOTIF-3).
 
 ### 7.5 Azioni rapide dalla notifica
-**Inizia** (setup sessione), **Posticipa** (10 minuti), **Segna fatto** (todo), **Registra esito** (routine di studio). Toccando la notifica si apre l'attività corrispondente.
+**Inizia** (setup sessione), **Posticipa** (10 minuti), **Segna fatto** (todo; con voci della checklist non spuntate apre il dettaglio su «Voci rimaste»), **Registra esito** (routine di studio). Toccando la notifica si apre l'attività corrispondente (lo studio apre l'unità; esito e blocco perso aprono la registrazione dell'esito).
 
 ### 7.6 Notifiche una tantum
 "Blocco perso" (routine/studio appena persa), "Todo in ritardo", "Tempo scaduto" a fine sessione di routine, notifica di prova dalle Impostazioni.
@@ -227,7 +235,7 @@ Nelle Impostazioni si vede lo spazio occupato dai materiali e si possono elimina
 Da un'occorrenza di routine di studio, da un'unità (sessione libera), da un recupero, dall'azione "Inizia" di una notifica. Prima si passa da un **setup**: cosa studiare (unità proposta, corso, o libero), quanto (durata della routine, preset 25/50/90, durata personalizzata, cronometro), modalità (**continua** o **pomodoro** 25/5, 50/10, 90/20), **iperfocus** on/off (la modalità a uscita bloccata, §11.2). Una sola sessione attiva alla volta.
 
 ### 11.2 Durante
-- Timer persistente: si può navigare altrove e rientrare da un banner; sopravvive alla chiusura dell'app. Su Android continua anche con l'app chiusa, con una notifica persistente che mostra il cronometro; su iOS e sul web no. Un'assenza di più di 30 minuti diventa un intervallo non verificato, mostrato al rientro con l'ora in cui ci si è fermati, la durata e il tempo residuo: non conta come studio finché non lo si attribuisce (MECC §10.4).
+- Timer persistente: si può navigare altrove e rientrare dal banner «Sessione in corso» (su mobile sotto l'intestazione di ogni schermata, su desktop nella barra laterale sotto Crea); sopravvive alla chiusura dell'app. Su Android continua anche con l'app chiusa, con una notifica persistente che mostra il cronometro; su iOS e sul web no. Un'assenza di più di 30 minuti diventa un intervallo non verificato, mostrato al rientro con l'ora in cui ci si è fermati, la durata e il tempo residuo: non conta come studio finché non lo si attribuisce (MECC §10.4).
 - Pausa/ripresa; annotazione di interruzioni; nel pomodoro i segmenti avanzano da soli e si possono saltare; si può cambiare unità a metà (multi-materia).
 - Schermo tenuto acceso.
 - **Tempo extra**: superata la durata pianificata il timer prosegue e conta in positivo (badge «Tempo extra» e conteggio «+04:12»), senza allarme; il riepilogo lo riporta a parte («49 min · tempo extra +4 min»). Non è l'iperfocus.
@@ -243,7 +251,7 @@ Da un'occorrenza di routine di studio, da un'unità (sessione libera), da un rec
 | **Indietro** | l'unità precedente torna da rivedere |
 | **Salta** | l'unità esce dal percorso senza essere completata |
 
-Più **confidenza** 1–5 e **nota** libera. Si sceglie se la sessione **conta nel piano** (default sì se nasce da una routine). Si può caricare il codice prodotto. Un abbandono (avvio sbagliato) non registra esito; se però si è già studiato almeno il 65% della durata pianificata, la sessione si chiude con l'esito Continua (MECC §10.5).
+Più **confidenza** 1–5 e **nota** libera. Si sceglie se la sessione **conta nel piano** (default sì se nasce da una routine). Si può caricare il codice prodotto. Un abbandono (avvio sbagliato) non registra esito; se però si è già studiato almeno il 65 % della durata pianificata, la sessione si chiude con l'esito Continua (MECC §10.5).
 
 ---
 
@@ -255,7 +263,7 @@ Ogni corso sa a che punto è. Le occorrenze future delle routine di studio ricev
 
 ## 13. Streak
 
-Giorni consecutivi con almeno una sessione di studio che conta nel piano con esito Completata o Continua. Si spezza se passa un giorno intero senza.
+Giorni consecutivi con almeno una sessione di studio che conta nel piano con esito Completata o Continua. Si spezza se passa un giorno intero senza. La fine della sessione mostra i giorni di fila e, quando l'esito li fa salire, il «+1».
 
 ---
 
@@ -267,7 +275,7 @@ Da un'unità si genera, scegliendo quantità (5–25) e, dove previsto, difficol
 Domande a scelta multipla (4 opzioni, 1 corretta) con citazione della fonte. A fine quiz: punteggio e percentuale.
 
 ### 14.2 Flashcard
-Carte domanda/risposta con citazione, che entrano nella ripetizione dilazionata (§16).
+Carte domanda/risposta con citazione, che entrano nella ripetizione dilazionata (§15).
 
 ### 14.3 DevSwipe
 Carte con un frammento di codice, un'architettura o un'affermazione. **Swipe a destra** = codice pulito / architettura corretta / best practice; **swipe a sinistra** = code smell / vulnerabilità / pattern errato. Si usa con una mano. Errore → breve vibrazione e spiegazione di due righe. A fine sessione: punteggio; gli errori vengono riproposti una volta.
@@ -354,7 +362,7 @@ Nessun selettore: l'interfaccia segue la lingua del dispositivo fra italiano, in
 
 ## 23. Impostazioni
 
-Notifiche (§7.7); **inizio settimana** (lunedì o domenica: decide la settimana del calendario e la fine dell'orizzonte «settimana»); modello AI, chiave e **lingua delle risposte** (Automatica o una delle sei lingue); backup; account e sincronizzazione; spazio occupato dai materiali; animazioni (auto/sempre/mai), celebrazioni scelte per nome (piena / sobria / off), feedback aptico; in **Avanzate** la diagnostica e **Informazioni**, che mostra la versione dell'app; eliminazione di tutti i dati.
+Notifiche (§7.7); **inizio settimana** (lunedì o domenica: decide la settimana del calendario e la fine dell'orizzonte «settimana»); modello AI, chiave e **lingua delle risposte** (Automatica o una delle sei lingue); backup; account e sincronizzazione; spazio occupato dai materiali; animazioni (auto/sempre/mai), celebrazioni scelte per nome (sobria, il default: spunta animata e aptico; piena: anche i coriandoli intorno al cerchio; off: solo il cambio di stato), feedback aptico; in **Avanzate** la diagnostica e **Informazioni**, che mostra la versione dell'app; eliminazione di tutti i dati.
 
 ---
 

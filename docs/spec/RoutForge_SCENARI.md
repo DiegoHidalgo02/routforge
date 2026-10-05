@@ -21,6 +21,12 @@ Dati due todo senza orario per oggi e uno senza orario di ieri con orizzonte mes
 **A5 — Priorità nella fascia senza orario**
 Tre todo senza orario oggi: bassa, alta, normale. Nella vista Giorno appaiono nell'ordine alta, normale, bassa: su mobile in cima, prima di qualsiasi blocco con orario; su desktop in coda, dopo i blocchi con orario.
 
+**A6 — «Segna fatto» dalla notifica con voci aperte**
+Todo «Leggere 20 pagine» alle 19:00 con checklist 2/5. Dalla notifica (o dalla sveglia) delle 18:30 si tocca «Segna fatto»: l'app si apre sul Dettaglio del todo con «Voci rimaste» e le tre voci non spuntate. «Tutte fatte» completa il todo con 5/5; «Crea todo con le voci rimaste» completa il todo d'origine e crea un todo senza orario con le tre voci, stessa priorità e stessa scadenza. Con tutte le voci spuntate, «Segna fatto» completa il todo senza aprire l'app.
+
+**A7 — Spunta dalla lista**
+Todo «Chiama Marco», senza voci. Un tocco sul cerchio della card lo completa senza aprire il dettaglio: la card entra nell'archivio delle completate, «Completate» passa da 3 / 8 a 4 / 8 · 50 %, il toast «Fatto · Chiama Marco» offre «Annulla» per 5 s. «Annulla» lo riporta da fare al suo posto nel gruppo. Lo stesso tocco su «Prepara la valigia» (3 / 7) apre «Voci rimaste» sopra Oggi; «Crea todo con le voci rimaste» completa il todo e ne mette uno nuovo, con le 4 voci, in fondo al gruppo alta.
+
 ## B. Routine
 
 **B1 — Generazione e orizzonte**
@@ -73,6 +79,9 @@ Sessione avviata su un'occorrenza (blocco `in corso`), poi abbandonata: il blocc
 **C9 — Routine di studio senza corso**
 Routine di studio creata senza corso, 20:00–21:00. Le occorrenze non hanno unità. Dal setup si sceglie l'unità 1.2 di un corso: l'esito "Completata" chiude il blocco e completa 1.2 (il puntatore di quel corso si ricalcola). Se nel setup non si sceglie nulla, l'esito chiude solo il blocco, la streak aumenta, nessuna unità cambia.
 
+**C10 — Esito dal cerchio**
+Occorrenza di studio di oggi 09:00–10:00, nessuna sessione avviata, alle 10:20. Su Oggi il tocco sul cerchio della card apre «Registra esito» con Completata, Continua, Indietro e Salta; «Registra esito» resta spento finché non se ne sceglie uno. Scelto «Continua»: il blocco è `parziale` con 60 minuti accreditati (la durata pianificata), la card entra nell'archivio delle completate, «Completate» sale di uno e il messaggio «Esito registrato · … · Continua» offre «Annulla» per 5 s. Un'occorrenza di studio di domani ha il cerchio spento.
+
 ## D. Sessione e timer
 
 **D1 — Ancorata all'orologio**
@@ -94,7 +103,7 @@ Sessione iperfocus 50': schermo intero, tasto indietro inattivo fino alla fine, 
 Con una sessione attiva, aprire il setup da un'altra unità porta al timer in corso, non a un nuovo avvio.
 
 **D7 — Abbandono oltre soglia**
-Sessione in modalità routine sul blocco 09:00–10:00 (unità 1.1), avviata alle 09:00. «Abbandona» alle 09:40 con 39' di focus (65%): la sessione si chiude come terminata prima con esito Continua, il blocco è `parziale` con 39 minuti, l'unità 1.1 è `parziale`, la streak aumenta. «Abbandona» alle 09:35 con 35' di focus (58%): abbandono, il blocco torna `programmato` e alle 10:30 è perso.
+Sessione in modalità routine sul blocco 09:00–10:00 (unità 1.1), avviata alle 09:00. «Abbandona» alle 09:40 con 39' di focus (65 %): la sessione si chiude come terminata prima con esito Continua, il blocco è `parziale` con 39 minuti, l'unità 1.1 è `parziale`, la streak aumenta. «Abbandona» alle 09:35 con 35' di focus (58 %): abbandono, il blocco torna `programmato` e alle 10:30 è perso.
 
 ## E. Eventi
 
@@ -127,19 +136,25 @@ Notifica "inizio" di una routine, "Posticipa": nuova notifica dopo 10'. Se nel f
 **F6 — Cambio di stato**
 Completare, eliminare, spostare o perdere un blocco cancella le sue notifiche pendenti; riaprirlo le ri-arma; spegnere il tipo "todo" nelle Impostazioni cancella tutte le notifiche dei todo alla prossima riconciliazione.
 
+**F7 — L'esito non è mai una sveglia**
+Routine di studio 16:00–16:45 con gli anticipi personalizzati «5 min prima» e «all'inizio» consegnati come sveglia, nessuna sessione avviata. Alle 15:55 e alle 16:00 scattano le sveglie; la verifica a metà durata e l'invito a registrare l'esito alle 16:55 arrivano come notifiche normali, e l'esito resta nella schermata Notifiche finché non si registra.
+
 ## G. Calendario e "Adesso"
 
 **G1 — Blocchi contigui**
 Routine A 09:00–10:00 e B 10:00–11:00. Alle 10:00 in punto "Adesso" è B (A resta raggiungibile fino alle 10:30 ma non è "adesso").
 
-**G2 — Chiusura di Adesso**
-L'utente chiude il blocco Adesso su A. Quando B diventa in corso, il blocco riappare. Il giorno dopo riappare comunque.
+**G2 — Adesso non si chiude**
+La card Adesso su A non ha un comando di chiusura, su mobile e su desktop. Quando B diventa in corso la card Adesso passa a B, e A torna una card normale della lista.
 
-**G3 — Trascinamento**
-Nella vista Giorno il todo senza orario "Leggere 20 pagine" (durata 30') viene trascinato fra due blocchi 15:00–15:40 e 16:00–17:00: la riga di aggancio mostra "15:40 · 30 min", il todo atterra alle 15:40 (snap a 5') e diventa un todo con orario 15:40–16:10. Un todo senza orario perso trascinato a domani nella striscia settimanale torna programmato e riceve le notifiche di domani; allo stesso modo la routine persa "Palestra" trascinata a domani 08:30 torna programmata con le notifiche ri-armate. "Annulla" entro 5 s ripristina giorno, orario e stato "perso". Un evento, una routine o un todo con orario non persi non si trascinano, né su mobile né su desktop.
+**G3 — Riordino: solo nella stessa priorità**
+Nella vista Giorno tre todo senza orario: «Prepara la valigia» e «Prenota il treno» con priorità alta, «Chiama Marco» con priorità normale. Trascinando «Prepara la valigia» sotto «Prenota il treno» la fascia mostra la nuova sequenza; il todo resta senza orario, nello stesso giorno, con lo stesso stato e nessun promemoria nuovo (resta nel digest). «Prepara la valigia» non scende sotto «Chiama Marco»: rilasciata fuori dal gruppo alta torna al suo posto. Su desktop, con il mouse sopra «Prenota il treno» o arrivandoci con Tab, compaiono a destra le frecce su e giù: «Sposta su» la porta sopra «Prepara la valigia»; «Sposta giù» è disattivata perché sotto c'è solo un todo di priorità normale. Su mobile un tocco sulla maniglia di «Prenota il treno» apre gli stessi due tasti, con le stesse regole, e «Fine». Non compaiono riga di aggancio né «Annulla». Un evento, una routine, un todo con orario e qualsiasi blocco perso non hanno maniglia né frecce e non si spostano, né su mobile né su desktop.
 
 **G4 — Cambio giorno a app aperta**
 App aperta a mezzanotte: entro un minuto i todo rotolanti si spostano, i blocchi di ieri non gestiti diventano persi, il calendario si aggiorna senza riavvio.
+
+**G5 — Crea dal giorno selezionato**
+Oggi è mercoledì 23. Nella vista Settimana si tocca venerdì 25, poi «+»: il foglio Crea parte da venerdì (orizzonte del todo «solo ven 25 set», data dell'evento ven 25, inizio della ricorrenza ven 25). «Crea todo» mette il todo nella riga di venerdì e il messaggio «Todo creato · …» offre «Annulla», che lo toglie. Nel Mese, con lunedì 28 selezionato, l'evento creato diventa il puntino della casella 28 e un secondo dopo compare nell'elenco del giorno. Con selezionato un giorno già passato o oltre il 29, il foglio parte da oggi; la data dell'evento si sceglie solo fra il 23 e il 29.
 
 ## H. Corsi, materiali, AI
 

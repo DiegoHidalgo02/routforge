@@ -41,19 +41,23 @@ Le regole operative dello Studio, compresi stati, transizioni, progresso, puntat
 | 1 | `RoutForge_CONTESTO.md` (questo) | Perimetro, piattaforme, vincoli, glossario, decisioni prese |
 | 2 | `RoutForge_FUNZIONALITA.md` | **Cosa** fa l'app dal punto di vista dell'utente |
 | 3 | `RoutForge_MECCANISMI.md` | **Regole** esatte: stati, soglie, transizioni, algoritmi |
-| 4 | `RoutForge_FORMATO_CORSO.md` | Formato del corso importabile e corso di esempio |
+| 4 | `RoutForge_FORMATO_CORSO.md` | Formato del corso importabile e corso di esempio (non nel pacchetto: `docs/BLOCCHI.md` blocco 3) |
 | 5 | `RoutForge_SCENARI.md` | Criteri di accettazione end-to-end |
 
 In caso di contraddizione prevale il file più in basso nella tabella (uno scenario vince su un meccanismo, un meccanismo su una funzionalità). Se l'export di Claude Design (schermate, `course-data.js`) diverge da questi file vince il design, e questi file vanno allineati.
+
+**Pacchetto di design**, da leggere dopo questi file: `HANDOFF.md` (punto d'ingresso), `CLAUDE.md` (decisioni vincolanti: vincono su tutto), `docs/BLOCCHI.md` (gli unici punti non definiti), `docs/IMPLEMENTAZIONE.md`, `design/DESIGN.md` e `design/tokens.css` (aspetto), `design/ASSET.md` (font, icone, immagini), `docs/COMPONENTI.md`, `docs/NAVIGAZIONE.md`, `docs/STATI.md`, `docs/CONTROLLI.md`, `docs/DATI-UI.md`, `docs/TESTI.md`, `docs/COPERTURA.md` (scenario → schermate).
 
 ---
 
 ## 3. Piattaforme e requisiti non funzionali
 
 - **Piattaforme**: Android, iOS, web installabile. Stesse funzioni ovunque, con queste eccezioni: widget della schermata Home (Android; iOS se disponibile), sveglie a schermo intero e Non Disturbare (mobile), notifiche in background (mobile; sul web solo con la scheda aperta), salvataggio backup nella cartella documenti (mobile).
+- **Layout** (D-UI-1): sotto i 1024 px di larghezza la struttura mobile (barra in basso, schermate piene, fogli dal basso); da 1024 px barra laterale 240 e pannello di dettaglio 440. Nessuna struttura dedicata al tablet.
+- **Stack** (D-STACK-1): React 19 + Vite PWA + Capacitor.
 - **Dati sul dispositivo**: tutto funziona offline salvo AI e sincronizzazione (un messaggio di chat scritto offline resta in attesa e parte al ritorno della rete; quiz e flashcard già generati funzionano offline). Nessun dato lascia il dispositivo se non verso il servizio di sincronizzazione (scelto dall'utente con l'account) e il fornitore del modello AI (solo il contenuto del contesto della richiesta).
 - **Tempo**: tutte le regole usano il giorno e l'ora **locali** del dispositivo; fuso orario e ora legale non devono spostare i blocchi di giorno.
-- **Reattività**: apertura sulla schermata Oggi con il blocco "Adesso" pronto entro mezzo secondo su dati esistenti; scheduler e notifiche in background senza bloccare l'uso.
+- **Reattività**: apertura sulla schermata Oggi con la card Adesso pronta entro mezzo secondo su dati esistenti; scheduler e notifiche in background senza bloccare l'uso.
 - **Robustezza**: nessuna operazione di notifica, widget o sincronizzazione può bloccare o far fallire l'app; ogni ciclo dello scheduler è idempotente (rieseguirlo non cambia il risultato).
 - **Lingue dell'interfaccia**: italiano, inglese, spagnolo, portoghese, francese, tedesco; ripiego inglese; presa dal dispositivo; ogni testo visibile, notifiche incluse, tradotto in tutte e sei.
 - **Accessibilità**: rispetto della riduzione animazioni e della scala del testo di sistema.
@@ -86,12 +90,15 @@ In caso di contraddizione prevale il file più in basso nella tabella (uno scena
 | **Digest** | Notifica mattutina unica con i todo senza orario del giorno |
 | **Riconciliazione** | Ricalcolo delle notifiche armate rispetto allo stato corrente |
 | **Ripasso trasversale** | Tutte le flashcard scadute di tutti i mazzi |
+| **Card Adesso** | La card dell'attività in corso o imminente, ingrandita nella lista al suo orario; non si chiude (MECCANISMI §14) |
+| **Esiti da registrare** | Le sessioni di studio senza esito degli ultimi giorni, raccolte nella schermata Notifiche con badge (MECCANISMI §8) |
+| **Voci rimaste** | Le voci non spuntate di un todo segnato fatto: si segnano tutte fatte o passano a un nuovo todo (MECCANISMI §4) |
 
 ---
 
 ## 5. Decisioni prese (valide salvo diversa indicazione)
 
-**Cose che l'app non fa**: non legge ad alta voce il contenuto dei corsi (la voce è usata solo dall'Audio Flash-Trivia per domande e spiegazioni generate); non integra servizi musicali; non cerca risorse su internet per arricchire i corsi; non ha lista attività separata dal calendario; non ha una schermata di benvenuto; non ha selettore di lingua.
+**Cose che l'app non fa**: non legge ad alta voce il contenuto dei corsi (la voce è usata solo dall'Audio Flash-Trivia per domande e spiegazioni generate); non integra servizi musicali; non cerca risorse su internet per arricchire i corsi; non ha lista attività separata dal calendario; non ha una schermata di benvenuto; non ha selettore di lingua; non ha una ricerca («Cerca»); non trascina attività su orari o giorni (il trascinamento riordina solo i todo senza orario, dentro la stessa priorità); non ha un blocco Adesso separato né un modo per chiuderlo; non consegna l'esito come sveglia.
 
 **AI**: fornitore Gemini; modello scelto dall'utente fra quelli disponibili (default il più economico); chiave inserita dall'utente nelle Impostazioni, conservata sul dispositivo e sincronizzata come impostazione; senza chiave le funzioni AI mostrano un errore leggibile e tutto il resto funziona.
 
@@ -112,7 +119,7 @@ In caso di contraddizione prevale il file più in basso nella tabella (uno scena
 3. Scheduler: generazione occorrenze, orizzonte todo, persi, recupero, orfani, cicli.
 4. Sessione di studio: setup, timer, pomodoro, iperfocus, esiti, puntatore, streak.
 5. Notifiche: default, override, trigger, finestra, riconciliazione, digest, azioni, sveglie.
-6. Blocco Adesso, trascinamento, schermata Notifiche, widget e collegamenti diretti.
+6. Card Adesso, riordino per trascinamento, schermata Notifiche, widget e collegamenti diretti.
 7. Materiali, file di codice, AI (chat, quiz, flashcard + SM-2, DevSwipe, Bug Hunter, Audio Flash-Trivia).
 8. Statistiche.
 9. Backup, lingua, impostazioni, diagnostica.

@@ -169,7 +169,7 @@ npm i -D vite-plugin-pwa
 Vite resta alla 7 finché Vitest è alla 3 (`docs/DIPENDENZE.md`). Ogni pacchetto è «previsto» in `docs/DIPENDENZE.md`:
 all'installazione la riga passa a `dev`/`runtime`. Il gate resta `npm run verify`: `check` esegue i due tsconfig (radice senza
 DOM; `tsconfig.dom.json` per `ui`, `platform` e `main.tsx`, D-TS-1), il lint include hook di React e accessibilità e ferma
-anche gli avvisi (D-LINT-1). Per la UI, Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 trascinamento).
+anche gli avvisi (D-LINT-1). Per la UI, Vitest + Testing Library solo dove uno scenario lo richiede (es. G3 riordino).
 
 ## 8. Rischi architetturali noti (audit del 24/09/2026)
 
