@@ -43,9 +43,19 @@ import { appDb, watch } from '../app/db';
 import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { progressInputs, type IngressiProgresso } from '../app/progress';
 import { reorderTodo } from '../app/reorder';
-import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
+import {
+  dayLoad,
+  isDayKey,
+  monthGrid,
+  monthLegend,
+  shiftPeriod,
+  swipeDay,
+  weekOf,
+  type Vista,
+} from '../domain/calendar';
 import { checkCircle, type PassoSpunta } from '../domain/completion';
 import { heroBlock, isLiveBlock } from '../domain/nowBlock';
+import { dayClosed, isDone } from '../domain/progress';
 import { canReorder, reorderGroup, sortDayDesktop } from '../domain/ordering';
 import type { AvvisoAssenza } from '../domain/scheduler/absence';
 import { localDayKey, localInstant } from '../domain/time';
@@ -56,6 +66,7 @@ import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
+import { Archivio, GiornataChiusa } from './Archive';
 import { SessionBannerSlot } from './Session';
 import s from './Today.module.css';
 
@@ -341,6 +352,8 @@ export function Today() {
               <Giornata
                 key={chiavePeriodo}
                 blocchi={blocchi(giorno)}
+                domani={primaDiDomani(progresso, oggi)}
+                onDomani={() => vai({ giorno: shiftPeriod(oggi, 'giorno', 1) })}
                 sfondo={sfondo}
                 verso={verso}
                 onCompletato={completato}
@@ -577,12 +590,17 @@ function RitornoAssenza({ oggi }: { oggi: string }) {
  */
 function Giornata({
   blocchi,
+  domani,
+  onDomani,
   sfondo,
   verso,
   onCompletato,
   onRiordino,
 }: {
   blocchi: BloccoCalendario[];
+  /** La prima attività di domani, per la riga «Domani» della Giornata chiusa. */
+  domani: BloccoCalendario | undefined;
+  onDomani: () => void;
   sfondo: Sfondo;
   verso?: Verso;
   /** Spunta dalla lista scritta subito: il toast con «Annulla» (A7). */
@@ -623,7 +641,11 @@ function Giornata({
       () => void apri(b),
     );
 
-  const righe = desktop ? sortDayDesktop(blocchi) : blocchi;
+  // Su mobile le completate lasciano la lista per l'archivio in testa, in ordine di completamento (S1, DATI-UI); su desktop
+  // restano al loro posto in secondo piano. Con tutte le attività di oggi chiuse arriva la Giornata chiusa
+  const fatte = desktop ? [] : blocchi.filter(isDone).sort((a, b) => (a.chiusoIl ?? 0) - (b.chiusoIl ?? 0));
+  const righe = desktop ? sortDayDesktop(blocchi) : blocchi.filter((b) => !isDone(b));
+  const chiusa = !desktop && blocchi[0]?.giornoLocale === oggi && dayClosed(blocchi);
   const lista = useRef<HTMLOListElement>(null);
   const barra = useRef<HTMLDivElement>(null);
   // Riordino (MECC §15): il todo con la barra aperta (mobile), l'annuncio della regione live, il fuoco da ridare
@@ -766,6 +788,8 @@ function Giornata({
   return (
     <>
       <ol ref={lista} className={s.giornata} data-verso={verso}>
+        {fatte.length > 0 && <Archivio fatte={fatte} />}
+        {chiusa && <GiornataChiusa blocchi={blocchi} domani={domani} onDomani={onDomani} />}
         {mostrate.map((b) => {
           // Il cerchio (MECC §3, §24, S1): attivo, spento (routine e studio fuori dal loro giorno, studio non ancora da
           // registrare) o assente per persi, saltati ed esiti di studio, con il posto che resta (titoli allineati)
@@ -948,6 +972,13 @@ function Giornata({
       </p>
     </>
   );
+}
+
+/** La prima attività di domani (S1 Giornata chiusa, «Domani · ora · titolo»), se domani ne ha. */
+function primaDiDomani(progresso: IngressiProgresso | undefined, oggi: string): BloccoCalendario | undefined {
+  const [giorno, blocchi] = progresso?.prossimi[0] ?? [];
+  if (giorno !== shiftPeriod(oggi, 'giorno', 1) || !blocchi) return undefined;
+  return blocchi.find((b) => b.conOrario) ?? blocchi[0];
 }
 
 /**

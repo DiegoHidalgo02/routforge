@@ -261,6 +261,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     fissi), la curva della settimana viene dai dati, le barre del Focus aspettano il n. 11; «Prossime attività» guarda i
     28 giorni seguenti. Le classi delle frecce del riordino si chiamano `frecceRiordino`: con `frecce` coprivano le
     frecce del periodo della testata (difetto di T-044, corretto).
+59. Archivio e Giornata chiusa (T-040, D-PROG-1 n. 8–9): senza i pallini proiettati e i raccordi del mazzo, senza
+    `rf-land` e `rf-collapse` alla spunta (la card passa al mazzo al ridisegno) e con i segmenti senza scaglionamento;
+    le card dell'archivio aperto restano a `--opacity-archive` (il .32 del mock non regge il contrasto); Invio e Spazio
+    sul mazzo in attesa del n. 13.
 
 ## 4. Mappa schermata → design → task
 

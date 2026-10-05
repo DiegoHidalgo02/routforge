@@ -243,6 +243,7 @@ describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
   const cerchio = (titolo: string) =>
     box.querySelector<HTMLButtonElement>(`button[aria-label="${t('segnaFattoTitolo', { titolo })}"]`);
   const stato = async (id: string) => (await readDetail(appDb, id))!.blocco.stato;
+  const archivio = () => box.querySelector(`[role="button"][aria-label="${t('archivioCompletate', { n: 1 })}"]`);
   /** «Completate» di «Il tuo progresso oggi»: «fatte / totali». */
   const completate = () =>
     [...(box.querySelector('[aria-labelledby="progresso-titolo"]')?.querySelectorAll('span') ?? [])]
@@ -261,10 +262,14 @@ describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
     expect(await stato(id)).toBe('completato');
     // «Il tuo progresso oggi» si aggiorna con la spunta e con «Annulla» (DATI-UI)
     await vi.waitFor(() => expect(completate()).toBe('1 / 1'), { timeout: 5000 });
+    // La card entra nell'archivio delle completate; con tutto fatto oggi arriva la Giornata chiusa (S1)
+    await vi.waitFor(() => expect(archivio()?.textContent).toContain('Chiama Marco'), { timeout: 5000 });
+    expect(box.textContent).toContain(t('giornataChiusa'));
 
     toast()!.querySelector('button')!.click();
     await vi.waitFor(async () => expect(await stato(id)).toBe('programmato'), { timeout: 5000 });
     await vi.waitFor(() => expect(completate()).toBe('0 / 1'), { timeout: 5000 });
+    await vi.waitFor(() => expect(archivio()).toBeNull(), { timeout: 5000 });
   });
 
   it('un’occorrenza di studio di domani ha il cerchio spento: il tocco non scrive nulla (C10)', async () => {

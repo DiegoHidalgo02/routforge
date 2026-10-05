@@ -1,0 +1,353 @@
+/* Archivio delle completate e «Giornata chiusa» (S1 Mobile). Restano letterali le misure del mock fuori dalla scala dei
+   token: banda della penultima 27 (--size-peek-band) con il rientro 10, opacità .42 della penultima, interlinee,
+   padding 10 e min-height 60 della riga «Domani», gap 3 della barra, ritardo 250 ms dei segmenti. */
+.archivio {
+  position: relative;
+  list-style: none;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  transition: transform var(--dur-reveal) var(--ease-out);
+}
+
+.archivio:focus-visible {
+  border-radius: var(--radius-card);
+}
+
+/* Mazzo raccolto: la colonna dell'orario resta vuota, il pallino della completata davanti sull'asse; la penultima
+   sporge sopra di 27, rientrata di 10 per lato e smorzata */
+.mazzo {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--size-time-column) minmax(0, 1fr);
+}
+
+.mazzo[data-livelli='1'] {
+  padding-top: var(--size-peek-band);
+}
+
+.mazzo > .card {
+  grid-column: 2;
+  box-shadow: var(--shadow-card), var(--shadow-archive-front);
+}
+
+.puntoMazzo,
+.punto {
+  position: absolute;
+  left: 40px;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+}
+
+.puntoMazzo {
+  bottom: 28px;
+  background: var(--color-archive-dot);
+  box-shadow: var(--glow-dot-archive);
+}
+
+.sporge {
+  position: absolute;
+  top: 0;
+  left: calc(var(--size-time-column) + var(--offset-archive-inset));
+  right: var(--offset-archive-inset);
+  height: calc(var(--size-peek-band) + var(--space-3));
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--color-surface);
+  opacity: 0.42;
+}
+
+.sporge::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-accent-bar);
+  background: var(--fill);
+}
+
+/* La card completata: surface r14, disco success 22 con la spunta, titolo text-dim, in secondo piano */
+.card {
+  position: relative;
+  min-height: var(--size-card-activity);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-card-inner);
+  overflow: hidden;
+  padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-4) + var(--size-accent-bar) - 1px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  opacity: var(--opacity-archive);
+}
+
+.accento {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-accent-bar);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: linear-gradient(180deg, var(--light), var(--fill) 50%, var(--light));
+}
+
+.disco {
+  width: var(--size-check-activity);
+  height: var(--size-check-activity);
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  color: var(--color-bg);
+}
+
+.testi {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titolo,
+.sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titolo {
+  color: var(--color-text-dim);
+  font: 600 var(--text-lg-2) / 20px var(--font-ui);
+}
+
+.sub {
+  color: var(--color-text-2);
+  font: var(--text-base) / 16px var(--font-ui);
+}
+
+.ora {
+  margin-right: var(--space-1);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.badge {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--soft);
+  color: var(--ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+/* Mazzo aperto: le completate in ordine di completamento, entrano a ventaglio (`rf-deal`), in secondo piano */
+.aperto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-activity-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.riga {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--size-time-column) minmax(0, 1fr);
+  animation: global(rf-deal-a) var(--dur-deal) var(--ease-deal) both;
+  transform-origin: 50% 0;
+}
+
+.riga:nth-child(even) {
+  animation-name: global(rf-deal-b);
+}
+
+.oraRiga {
+  padding-top: 14px;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 18px var(--font-num);
+  opacity: var(--opacity-disabled);
+}
+
+.punto {
+  top: 19px;
+  background: var(--color-archive-dot-open);
+}
+
+/* Giornata chiusa: card di pagina in tinta success con la costruzione della hero, fuori dalla griglia della timeline */
+.chiusa {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  list-style: none;
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+  border-radius: var(--radius-card-hero);
+  background: var(--color-surface-hero);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px color-mix(in srgb, var(--color-success) 10%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--color-success) 40%, transparent),
+    0 4px 12px -6px rgba(0, 0, 0, 0.5);
+  animation: global(rf-hero-in) var(--dur-hero) var(--ease-out-soft) both;
+}
+
+.testa {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.discoChiusa {
+  width: var(--space-10);
+  height: var(--space-10);
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.titoli {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eyebrow {
+  color: var(--color-success);
+  font: 600 var(--text-xs) / 14px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.titoloChiusa {
+  font: 600 var(--text-xl) / 24px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-5) var(--space-4) 0;
+}
+
+.fascia {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 16px var(--font-ui);
+}
+
+.fasciaOre {
+  color: var(--color-text-dim);
+  font-family: var(--font-num);
+}
+
+.barra {
+  height: var(--space-2);
+  display: flex;
+  gap: 3px;
+}
+
+.segmento {
+  min-width: var(--space-1);
+  flex-basis: 0;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  transform-origin: 0 50%;
+  animation: global(rf-seg) var(--dur-seg) var(--ease-out-soft) 250ms both;
+}
+
+.legenda {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-6);
+  padding-top: 6px;
+}
+
+.voce {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pallino {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.tipo {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-dim);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.durata {
+  font: 500 var(--text-base) / 18px var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.domani {
+  min-height: 60px;
+  margin-top: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-3) 10px var(--space-4);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.domani:hover {
+  background: var(--color-surface-2);
+}
+
+.testiDomani {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.quando {
+  font: 500 var(--text-sm) / 16px var(--font-ui);
+}
+
+.cifre {
+  font-family: var(--font-num);
+}
+
+.titoloDomani {
+  overflow: hidden;
+  color: var(--color-text);
+  font: 600 var(--text-md) / 18px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
