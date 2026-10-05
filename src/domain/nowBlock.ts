@@ -1,5 +1,5 @@
 /**
- * Il blocco "Adesso / prossimo".
+ * La card "Adesso".
  * Fonte: RoutForge_MECCANISMI.md §14 — criteri: SCENARI G1, G2, E3. Decisioni: D-NOW-1, D-NOW-2.
  *
  * - Candidati: non terminali (§1: completato, parziale, indietro, saltato, perso — parziale e indietro sono esiti di
@@ -8,11 +8,11 @@
  *   il blocco che inizia). Se nessuno è in corso, il primo candidato cronologico.
  * - Stato: minuti mancanti; "adesso" con i minuti alla fine; fine passata → "recupera" (routine/studio) con
  *   l'ultimo istante utile per avviare il recupero (fine + 30', §8) o "orario passato" (todo/evento).
- * - Chiusura: memorizzata per giorno e per blocco; riappare il giorno dopo o con un blocco
- *   in corso diverso.
+ * - Hero: la card dell'attività scelta, salvo l'orario passato (nessuna card diventa hero). Nessuna chiusura: cambia
+ *   solo con i candidati.
  */
 import { effectiveEnd, lostAtInstant } from './lost';
-import { localDayKey, minutes } from './time';
+import { minutes } from './time';
 import { STATI_TERMINALI, type Blocco } from './types';
 
 export type StatoAdesso =
@@ -64,27 +64,22 @@ export function statusOf(block: Blocco, now: number): StatoAdesso {
     : { tipo: 'orario_passato' };
 }
 
-/**
- * Seleziona il blocco da mostrare. `dismissed` = chiusure memorizzate per giorno+blocco
- * (chiave `${giorno}|${blockId}`); la chiusura vale solo per quel blocco e quel giorno.
- */
-export function selectNowBlock<B extends Blocco>(
-  blocks: readonly B[],
-  now: number,
-  dismissed: ReadonlySet<string> = new Set(),
-): SelezioneAdesso<B> | null {
+/** L'attività scelta fra i candidati (§14), con il suo stato. */
+export function selectNowBlock<B extends Blocco>(blocks: readonly B[], now: number): SelezioneAdesso<B> | null {
   const candidates = blocks.filter((b) => isNowCandidate(b, now)).sort((a, b) => a.inizio - b.inizio);
   if (candidates.length === 0) return null;
 
   // Tra più blocchi in corso vince quello iniziato più di recente (al confine vince chi inizia).
   const inProgress = candidates.filter((b) => isInProgress(b, now)).sort((a, b) => b.inizio - a.inizio);
   const chosen = inProgress[0] ?? candidates[0]!;
-
-  if (dismissed.has(dismissKey(chosen, now))) return null;
   return { blocco: chosen, stato: statusOf(chosen, now) };
 }
 
-/** Chiave di chiusura del blocco Adesso: per giorno e per blocco (§14). */
-export function dismissKey(block: Pick<Blocco, 'id'>, now: number): string {
-  return `${localDayKey(now)}|${block.id}`;
+/** Gli stati della card hero: «orario passato» non ne ha (§14). */
+export type StatoHero = Exclude<StatoAdesso, { tipo: 'orario_passato' }>;
+
+/** La card che cresce a hero (§14 «Resa»): la scelta, salvo un todo o un evento con l'orario passato. */
+export function heroBlock<B extends Blocco>(blocks: readonly B[], now: number): { blocco: B; stato: StatoHero } | null {
+  const sel = selectNowBlock(blocks, now);
+  return sel && sel.stato.tipo !== 'orario_passato' ? { blocco: sel.blocco, stato: sel.stato } : null;
 }

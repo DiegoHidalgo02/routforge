@@ -2,11 +2,11 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { get, save, saveBlock } from '../data/repository';
-import { dismissKey, isNowCandidate, selectNowBlock } from '../domain/nowBlock';
+import { save, saveBlock } from '../data/repository';
+import { isNowCandidate, selectNowBlock } from '../domain/nowBlock';
 import { local, localDayKey } from '../domain/time';
 import type { Blocco } from '../domain/types';
-import { CHIAVE_ADESSO_CHIUSO, dismissNowBlock, nowInputs } from './nowBlock';
+import { nowInputs } from './nowBlock';
 
 const FUSO = 'Europe/Rome';
 let db: RoutForgeDb;
@@ -27,7 +27,7 @@ const blocco = (titolo: string, inizio: number, fine: number | null, extra: Part
 /** Ciò che la schermata mostra: gli ingressi letti dal database, la scelta fatta dal dominio con l'orologio corrente. */
 const scelto = async (now: number) => {
   const i = await nowInputs(db, localDayKey(now));
-  return selectNowBlock(i.blocchi, now, i.chiusi);
+  return selectNowBlock(i.blocchi, now);
 };
 
 describe('Adesso — SCENARI G1 (blocchi contigui letti dal database)', () => {
@@ -63,37 +63,14 @@ describe('Adesso — SCENARI G1 (blocchi contigui letti dal database)', () => {
   });
 });
 
-describe('Adesso — SCENARI G2 (chiusura per giorno e per blocco, memorizzata)', () => {
-  const D = 23;
-  let A: Blocco;
-  beforeEach(async () => {
-    A = await blocco('A', local(2026, 9, D, 9, 0), local(2026, 9, D, 10, 0));
+describe('Card Adesso — SCENARI G2 (nessuna chiusura: cambia con i candidati)', () => {
+  it('alle 09:35 è A, alle 10:05 è B; gli ingressi non portano più chiusure', async () => {
+    const D = 23;
+    await blocco('A', local(2026, 9, D, 9, 0), local(2026, 9, D, 10, 0));
     await blocco('B', local(2026, 9, D, 10, 0), local(2026, 9, D, 11, 0));
-  });
-
-  it('chiuso su A alle 09:30 sparisce; quando B è in corso riappare', async () => {
-    await dismissNowBlock(db, A, local(2026, 9, D, 9, 30));
-    expect(await scelto(local(2026, 9, D, 9, 35))).toBeNull();
+    expect((await scelto(local(2026, 9, D, 9, 35)))?.blocco.titolo).toBe('A');
     expect((await scelto(local(2026, 9, D, 10, 5)))?.blocco.titolo).toBe('B');
-  });
-
-  it('la chiusura è una riga di preferenze con la chiave giorno|blocco; una chiusura del giorno dopo pota quelle vecchie', async () => {
-    await dismissNowBlock(db, A, local(2026, 9, D, 9, 30));
-    expect((await get(db, 'preferenze', CHIAVE_ADESSO_CHIUSO))?.valore).toEqual([
-      dismissKey(A, local(2026, 9, D, 9, 30)),
-    ]);
-    const C = await blocco('C', local(2026, 9, D + 1, 9, 0), local(2026, 9, D + 1, 10, 0));
-    await dismissNowBlock(db, C, local(2026, 9, D + 1, 9, 30));
-    expect((await get(db, 'preferenze', CHIAVE_ADESSO_CHIUSO))?.valore).toEqual([
-      dismissKey(C, local(2026, 9, D + 1, 9, 30)),
-    ]);
-    expect(await scelto(local(2026, 9, D + 1, 9, 35))).toBeNull();
-  });
-
-  it('chiudere due volte lo stesso blocco non duplica la chiave', async () => {
-    await dismissNowBlock(db, A, local(2026, 9, D, 9, 30));
-    await dismissNowBlock(db, A, local(2026, 9, D, 9, 40));
-    expect((await get(db, 'preferenze', CHIAVE_ADESSO_CHIUSO))?.valore).toHaveLength(1);
+    expect(Object.keys(await nowInputs(db, `2026-09-${D}`)).sort()).toEqual(['attiva', 'blocchi']);
   });
 });
 

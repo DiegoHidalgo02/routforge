@@ -1065,7 +1065,7 @@
   padding: 0 var(--space-6);
 }
 
-/* Banner «Sessione in corso» (S1 SessionShell): sticky in testa, sopra il blocco Adesso (z 5), ombra float */
+/* Banner «Sessione in corso» (S1 SessionShell): sticky in testa (z 5), ombra float */
 .banner {
   position: sticky;
   z-index: 5;

@@ -343,17 +343,6 @@
   background: linear-gradient(90deg, transparent, var(--color-border) 20%, var(--color-border) 80%, transparent);
 }
 
-/* Colonna laterale della vista Giorno (T-010): su mobile ospita solo il blocco Adesso, fra striscia e giornata, che sta
-   appiccicato in testa; su desktop è la colonna di 360 di S1 Desktop (con T-040 anche progresso e prossime attività) */
-.lato {
-  display: contents;
-}
-
-/* Il blocco Adesso porta già il suo respiro sotto (S1 Mobile: separatore subito dopo) */
-.lato:has(> *) + .separatore {
-  margin-top: 0;
-}
-
 /* Ritorno dopo un'assenza (S1 Mobile `absence`, DESIGN.md AbsenceBanner): 48 surface-2 r12 con hairline, icona 16
    text-2, testo 13/18 con i giorni in font-num, chiudi ghost 32 con area di tocco 44 (DESIGN.md §4); nessuna
    animazione d'entrata, come nel mock. Gap 10 → 8, rientro destro 6 → 4 e respiro del testo a capo 6 → 4 (a parità
@@ -1447,14 +1436,5 @@ button.spunta:not([data-fatta]):hover {
   .oggi:has(> .corpo[data-vista='giorno']) > .testa,
   .corpo[data-vista='giorno'] > * {
     grid-column: 1;
-  }
-
-  /* Le righe della colonna di sinistra: testata, striscia, data del giorno, messaggio del ritorno (se c'è), giornata */
-  .corpo[data-vista='giorno'] > .lato {
-    grid-column: 2;
-    grid-row: 1 / span 5;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
   }
 }

@@ -7,8 +7,9 @@
 // «Ciao» lascia il posto alla data, in forma breve se la lunga non entra nella testata (360 px, D-CAL-2).
 // Toccando una card della vista Giorno si apre il Dettaglio (T-009, `/attivita/:id`); il cerchio della card spunta
 // (MECC §3 «spunta diretta», D-DETT-3). Pallini con l'alone del tipo e card in corso come S1 Mobile (D-CAL-2).
-// Il blocco Adesso (T-010, `NowBlock.tsx`) sta fra la striscia e la giornata su mobile e nella colonna laterale su
-// desktop. In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Nella vista Giorno si
+// La card Adesso (T-048, `HeroCard.tsx`) è la card dell'attività scelta (`heroBlock`), cresciuta a hero al suo posto
+// nella giornata: su mobile allo scatto dell'ora, 900 ms dopo l'apertura; su desktop subito (MECC §14).
+// In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Nella vista Giorno si
 // trascinano i todo senza orario e i persi dalla maniglia a sei punti (MECC §15, D-DRAG-1): la card sollevata segue il
 // puntatore, la riga di aggancio mostra orario e durata nel punto d'inserimento, il giorno della striscia sotto il dito
 // si accende; al rilascio il toast offre «Annulla» per 5 s. Da tastiera: Invio, frecce, Invio o Esc. Arrivano con il
@@ -31,6 +32,7 @@ import { calendarDays, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar } from '../app/completion';
 import { appDb, watch } from '../app/db';
 import { moveBlock } from '../app/drag';
+import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
 import { canCheckFromCalendar, type PassoSpunta } from '../domain/completion';
 import {
@@ -43,15 +45,15 @@ import {
   timeOnDay,
   type Rilascio,
 } from '../domain/drag';
-import { isLiveBlock } from '../domain/nowBlock';
+import { heroBlock, isLiveBlock } from '../domain/nowBlock';
 import { sortDayDesktop } from '../domain/ordering';
 import type { AvvisoAssenza } from '../domain/scheduler/absence';
-import { localDaysBetween, localInstant, localTimeKey, MINUTE } from '../domain/time';
+import { localDayKey, localDaysBetween, localInstant, localTimeKey, MINUTE } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
 import { maiuscola, sottotitolo, TIPO, titolo } from './format';
+import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
-import { NowBlock } from './NowBlock';
 import { ProfileMenu } from './ProfileMenu';
 import { SessionBannerSlot } from './Session';
 import s from './Today.module.css';
@@ -67,9 +69,12 @@ const FRECCE: Record<Vista, [Chiave, Chiave]> = {
 const VISTE = ['giorno', 'settimana', 'mese'] as const satisfies readonly Vista[];
 /** Durata del saluto prima della data (S1: 2,6 s, poi 0,4 s di uscita). */
 const SALUTO_MS = 2600;
+/** Scatto dell'ora (S1 `strikeDelay`): su mobile la card Adesso cresce a hero 900 ms dopo l'apertura dell'app. */
+const SCATTO_MS = 900;
 /** Spostamento orizzontale che fa passare di periodo. */
 const SOGLIA_SWIPE = 60;
 let salutato = false;
+let scattato = false;
 
 /** Lato da cui entra il periodo nuovo dopo uno scorrimento o una freccia (D-CAL-2). */
 type Verso = 'avanti' | 'indietro';
@@ -363,10 +368,6 @@ export function Today() {
         )}
         {vista === 'giorno' && (
           <>
-            {/* Colonna laterale di S1 Desktop (360); su mobile il blocco Adesso sta qui, fra striscia e giornata */}
-            <div className={s.lato}>
-              <NowBlock sfondo={sfondo} />
-            </div>
             <hr className={`${s.separatore} ${s.soloMobile}`} />
             {/* S1 Desktop: la data del giorno con la nota del trascinamento a destra, in text-2 a riposo e nel primary con
                 il suggerimento durante la presa */}
@@ -668,6 +669,23 @@ function Giornata({
   const navigate = useNavigate();
   // Su desktop la fascia senza orario va in coda anche nell'ordine del fuoco (MECC §24, D-DESIGN-1 n. 3)
   const desktop = useSyncExternalStore(seguiDesktop, eDesktop);
+  // Card Adesso (MECC §14): la scelta fra i blocchi di ieri, oggi e domani, ricalcolata a ogni minuto; cresce a hero
+  // dopo lo scatto dell'ora, una volta per apertura, subito su desktop o con la riduzione delle animazioni
+  const oggi = localDayKey(now);
+  const [ingressi, setIngressi] = useState<IngressiAdesso>();
+  useEffect(() => watch(() => nowInputs(appDb, oggi), setIngressi), [oggi]);
+  const [scatto, setScatto] = useState(
+    () => scattato || eDesktop() || window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    if (scatto) return;
+    const timer = setTimeout(() => {
+      scattato = true;
+      setScatto(true);
+    }, SCATTO_MS);
+    return () => clearTimeout(timer);
+  }, [scatto]);
+  const hero = scatto && ingressi ? heroBlock(ingressi.blocchi, now) : null;
   const apri = (b: BloccoCalendario, passo?: PassoSpunta) =>
     navigate(`/attivita/${b.id}`, { state: { ...sfondo, ...(passo && { vista: passo }) } });
   // `null`: la finestra si è chiusa fra il ridisegno al minuto e il tocco; il Dettaglio dice perché
@@ -912,58 +930,69 @@ function Giornata({
               {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
             </span>
             <span className={s.punto} />
-            <div
-              className={s.card}
-              onPointerDown={giu}
-              onPointerMove={muovi}
-              onPointerUp={su}
-              onPointerCancel={lascia}
-              onClickCapture={clic}
-            >
-              <span className={s.accento} />
-              {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
+            {hero?.blocco.id === b.id ? (
+              <HeroCard
+                b={hero.blocco}
+                stato={hero.stato}
+                now={now}
+                attiva={ingressi?.attiva ?? null}
+                sfondo={sfondo}
+                onSpunta={canCheckFromCalendar(b, now) ? () => spunta(b, Date.now()) : undefined}
+              />
+            ) : (
+              <div
+                className={s.card}
+                onPointerDown={giu}
+                onPointerMove={muovi}
+                onPointerUp={su}
+                onPointerCancel={lascia}
+                onClickCapture={clic}
+              >
+                <span className={s.accento} />
+                {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
                   completato apre il Dettaglio, dove c'è «Riapri» (§3) */}
-              {fatta || canCheckFromCalendar(b, now) ? (
-                <button
-                  type="button"
-                  className={s.spunta}
-                  data-fatta={fatta || undefined}
-                  tabIndex={fatta ? -1 : undefined}
-                  aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
-                  onClick={() => (fatta ? void apri(b) : spunta(b, Date.now()))}
-                >
-                  {fatta && <Check size={12} strokeWidth={2.75} />}
-                </button>
-              ) : (
-                <span className={s.spunta} data-assente={assente || undefined} aria-hidden />
-              )}
-              {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
-              <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
-                <span className={s.titoloCard}>{titolo(b)}</span>
-                {sub && <span className={s.sub}>{sub}</span>}
-              </Link>
-              {b.conOrario && b.orarioFine && (
-                <span className={`${s.fascia} ${s.soloDesktop}`}>
-                  {b.orarioInizio} – {b.orarioFine}
-                </span>
-              )}
-              <span className={s.badge}>{t(TIPO[b.tipo])}</span>
-              {/* Maniglia a sei punti solo sulle card che si trascinano (MECC §15); sopra il collegamento della card */}
-              {canDrag(b) && (
-                <button
-                  type="button"
-                  className={s.maniglia}
-                  data-maniglia
-                  aria-label={t('spostaTitolo', { titolo: titolo(b) })}
-                  aria-describedby={istruzioni}
-                  aria-pressed={daTastiera(b)}
-                  onKeyDown={(e) => tasto(e, b)}
-                  onBlur={() => daTastiera(b) && onPresa(null)}
-                >
-                  <IconaManiglia />
-                </button>
-              )}
-            </div>
+                {fatta || canCheckFromCalendar(b, now) ? (
+                  <button
+                    type="button"
+                    className={s.spunta}
+                    data-fatta={fatta || undefined}
+                    tabIndex={fatta ? -1 : undefined}
+                    aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
+                    onClick={() => (fatta ? void apri(b) : spunta(b, Date.now()))}
+                  >
+                    {fatta && <Check size={12} strokeWidth={2.75} />}
+                  </button>
+                ) : (
+                  <span className={s.spunta} data-assente={assente || undefined} aria-hidden />
+                )}
+                {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
+                <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
+                  <span className={s.titoloCard}>{titolo(b)}</span>
+                  {sub && <span className={s.sub}>{sub}</span>}
+                </Link>
+                {b.conOrario && b.orarioFine && (
+                  <span className={`${s.fascia} ${s.soloDesktop}`}>
+                    {b.orarioInizio} – {b.orarioFine}
+                  </span>
+                )}
+                <span className={s.badge}>{t(TIPO[b.tipo])}</span>
+                {/* Maniglia a sei punti solo sulle card che si trascinano (MECC §15); sopra il collegamento della card */}
+                {canDrag(b) && (
+                  <button
+                    type="button"
+                    className={s.maniglia}
+                    data-maniglia
+                    aria-label={t('spostaTitolo', { titolo: titolo(b) })}
+                    aria-describedby={istruzioni}
+                    aria-pressed={daTastiera(b)}
+                    onKeyDown={(e) => tasto(e, b)}
+                    onBlur={() => daTastiera(b) && onPresa(null)}
+                  >
+                    <IconaManiglia />
+                  </button>
+                )}
+              </div>
+            )}
           </li>,
         ];
       })}

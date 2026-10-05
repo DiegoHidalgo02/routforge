@@ -4,14 +4,9 @@
   min-height: 100dvh;
 }
 
-/* Con il banner della sessione (T-017) il blocco Adesso appiccicato scende sotto di lui: 44 + 8 (S1 Mobile) */
-.shell[data-sessione] {
-  --offset-sessione: calc(var(--size-control) + var(--space-2));
-}
-
 /* Padding di pagina: sotto, 56 della BottomNav + 25 + safe area (DESIGN.md §6) più l'aria sopra la barra. `clip` taglia
    ciò che sborda di lato (il periodo di Oggi che entra scorrendo, D-CAL-2) senza creare un contenitore di scorrimento:
-   il blocco Adesso resta appiccicato */
+   il banner della sessione resta appiccicato */
 .main {
   overflow-x: clip;
   padding: calc(env(safe-area-inset-top) + var(--space-5)) max(var(--space-page), env(safe-area-inset-right))
@@ -29,7 +24,7 @@
 }
 
 /* BottomNav: pill 56 × 264 centrata, FAB al centro (surface con ombra nav, come il catalogo); z-index 4 come nei mock:
-   sopra il NowBlock sticky (3), sotto banner della sessione (5) e toast (6) */
+   sotto banner della sessione (5) e toast (6) */
 .bottomNav {
   position: fixed;
   z-index: 4;

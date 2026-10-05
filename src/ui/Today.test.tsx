@@ -14,6 +14,7 @@ import { appDb } from '../app/db';
 import { runCycle } from '../app/scheduler';
 import type { BozzaAttivita } from '../domain/activity';
 import { local } from '../domain/time';
+import { t } from './i18n';
 import { Today } from './Today';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -288,4 +289,40 @@ describe('Trascinamento — SCENARI G3 (UI di Oggi)', () => {
       expect(box.querySelector('[data-sollevata="puntatore"]')?.textContent).toContain('Leggere 20 pagine'),
     );
   });
+});
+
+describe('Card Adesso — SCENARI G2 (UI di Oggi)', () => {
+  const riga = (titolo: string) =>
+    [...box.querySelectorAll<HTMLLIElement>('li[data-id]')].find((li) => li.textContent?.includes(titolo));
+  const comandi = (titolo: string) =>
+    [...(riga(titolo)?.querySelectorAll('button') ?? [])].map((b) => b.getAttribute('aria-label'));
+  /** Rimonta Oggi a un altro istante: l'orologio della schermata scatta coi timer veri, qui fermi al minuto. */
+  const alle = (ora: number, minuti: number) => {
+    root.unmount();
+    root = createRoot(box);
+    vi.setSystemTime(local(2026, 9, 28, ora, minuti));
+    mostra();
+  };
+
+  it.each([false, true])(
+    'la card Adesso su A non ha un comando di chiusura; con B in corso passa a B e A torna card normale (desktop: %s)',
+    async (suDesktop) => {
+      desktop = suDesktop;
+      await crea(routine('Colazione', '09:00', '10:00'));
+      await crea(routine('Palestra', '10:00', '11:00'));
+      await runCycle(appDb, ADESSO, FUSO);
+
+      // Su mobile la card cresce allo scatto dell'ora, 900 ms dopo l'apertura
+      alle(9, 30);
+      await vi.waitFor(() => expect(riga('Colazione')?.textContent).toContain(t('adesso')), { timeout: 3000 });
+      expect(comandi('Colazione')).toEqual([t('segnaFatta')]);
+      expect(riga('Palestra')?.textContent).not.toContain(t('adesso'));
+
+      alle(10, 5);
+      await vi.waitFor(() => expect(riga('Palestra')?.textContent).toContain(t('adesso')), { timeout: 3000 });
+      expect(comandi('Palestra')).toEqual([t('segnaFatta')]);
+      expect(riga('Colazione')?.textContent).not.toContain(t('adesso'));
+      expect(riga('Colazione')?.textContent).not.toContain(t('daRecuperare'));
+    },
+  );
 });

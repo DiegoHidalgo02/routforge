@@ -1,0 +1,210 @@
+/* Card Adesso (S1 «Card Adesso (hero)», COMPONENTI HeroCard): surface-hero r18, bordo e ombra nel fill del tipo
+   (`--shadow-hero` risolto in global.css), accento pieno 3 senza alone; colori del tipo da `data-tipo` della riga.
+   Restano letterali le misure del mock fuori dalla scala dei token: interlinee 14 · 24 · 17 · 20, margini 9 · 3 · −3,
+   gap 5, bordo 1.5, ritardo dell'anello 100 ms, hover del play brightness(1.12). */
+.hero {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-card-inner);
+  overflow: hidden;
+  padding: var(--space-card-inner) var(--space-card-inner) var(--space-card-inner)
+    calc(var(--space-4) + var(--size-accent-bar));
+  border: 1px solid color-mix(in srgb, var(--fill) 50%, transparent);
+  border-radius: var(--radius-card-hero);
+  background: var(--color-surface-hero);
+  box-shadow: var(--shadow-hero);
+  cursor: pointer;
+  /* Su mobile la card cresce allo scatto dell'ora (S1 `rf-hero-in`), anche quando l'ora arriva con l'app aperta
+     (handoff §3 n. 14); su desktop è già hero, senza entrata */
+  animation: global(rf-hero-in) var(--dur-hero) var(--ease-out-soft) both;
+  transform-origin: 50% 0;
+}
+
+/* Anello nel fill del tipo che si accende e si spegne una volta (S1 `rf-hero-ring`) */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--fill);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: global(rf-hero-ring) var(--dur-hero-ring) var(--ease-out) 100ms both;
+}
+
+.accento {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-accent-bar);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: var(--fill);
+}
+
+.eyebrow {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  color: var(--ink);
+  font: 600 var(--text-xs) / 14px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.badge {
+  composes: badge from './Today.module.css';
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  margin-top: -3px;
+}
+
+/* Titolo su due righe al massimo; il suo collegamento copre la card (FUNZ §4) */
+.titolo {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  margin-top: 9px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font: 600 var(--text-xl-2) / 24px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+  text-wrap: pretty;
+}
+
+.titolo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* L'anello del fuoco va sulla card intera, come sulla card della giornata */
+@supports selector(:has(*)) {
+  .hero:has(.titolo:focus-visible) {
+    box-shadow: var(--ring-focus);
+  }
+
+  .hero .titolo:focus-visible {
+    box-shadow: none;
+  }
+}
+
+.sub {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: var(--color-text-2);
+  font: var(--text-base) / 17px var(--font-ui);
+  white-space: nowrap;
+}
+
+.sub svg {
+  flex: none;
+}
+
+.testoSub,
+.testoDato {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dato {
+  grid-column: 1;
+  grid-row: 4;
+  min-width: 0;
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.numero {
+  flex: none;
+  color: var(--ink);
+  font: 600 var(--text-lg-2) / 20px var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.unita {
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 20px var(--font-num);
+}
+
+.testoDato {
+  color: var(--color-text-2);
+  font: var(--text-base) / 20px var(--font-ui);
+}
+
+/* Play 48 nel fill del tipo (studio) e cerchio 28 nell'ink su un bersaglio 48 (gli altri tipi), sopra il collegamento */
+.play,
+.cerchio {
+  position: relative;
+  z-index: 1;
+  grid-column: 2;
+  grid-row: 3 / span 2;
+  justify-self: end;
+  align-self: end;
+  width: var(--size-action-hero);
+  height: var(--size-action-hero);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.play {
+  background: var(--fill);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-cat);
+}
+
+.play:hover {
+  filter: brightness(1.12);
+}
+
+.play svg {
+  margin-left: calc(var(--space-1) / 2);
+}
+
+.cerchio {
+  background: transparent;
+}
+
+.anello {
+  width: var(--size-chip-sm);
+  height: var(--size-chip-sm);
+  box-sizing: border-box;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+}
+
+/* Desktop da 1024 px (D-UI-1): già hero all'apertura, senza entrata né anello; la fascia in font-num come S1 Desktop */
+@media (min-width: 1024px) {
+  .hero,
+  .hero::after {
+    animation: none;
+  }
+
+  .hero::after {
+    display: none;
+  }
+
+  .testoDato {
+    font: 500 var(--text-sm) / 20px var(--font-num);
+  }
+}

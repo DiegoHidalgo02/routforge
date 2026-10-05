@@ -76,7 +76,7 @@ const adesso = () => Date.now();
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
 /**
- * Esegue un'azione di sessione di un blocco di studio (S1 blocco Adesso, S5 footer): la ripresa porta al timer,
+ * Esegue un'azione di sessione di un blocco di studio (S1 card Adesso, S5 footer): la ripresa porta al timer,
  * «Anticipa» sposta il blocco e poi apre il setup (§10.1), libera e ripasso aprono il setup sull'unità del blocco.
  */
 export function useStudyAction(): (azione: AzioneStudio, b: Pick<Blocco, 'id' | 'unitaId'>) => void {

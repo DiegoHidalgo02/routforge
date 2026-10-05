@@ -6,7 +6,9 @@
 // Uso: npm run confronto -- --tavola "01 Oggi" --stato "archivio completate aperto" [--app /] [--out coverage/confronto]
 //   --stato: un pezzo del testo della didascalia, maiuscole indifferenti; senza --app si fotografa solo il mock.
 //   --scenario: l'app gira nello scenario dei mock (mercoledì 23 settembre 2026, 16:08, Date iniettato nella pagina) con
-//   il corso di esempio salvato; --sessione aggiunge una sessione libera avviata 12 minuti prima (banner e carta).
+//   il corso di esempio salvato e la giornata di S1; --sessione aggiunge una sessione libera avviata 12 minuti prima
+//   (banner e carta). --ora HH:MM sposta l'orologio (15:48 «Tra poco», 16:50 «Da recuperare»); --adesso studio | todo |
+//   routine | evento sceglie l'attività delle 16:00 (prop `nowKind` di S1).
 // Windows: EDGE può indicare un altro eseguibile di Edge/Chrome.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,7 +32,34 @@ const stato = arg('--stato').toLowerCase();
 const rotta = arg('--app');
 const out = resolve(RADICE, arg('--out', 'coverage/confronto'));
 const sessione = process.argv.includes('--sessione');
-const scenario = sessione || process.argv.includes('--scenario');
+const [ore, minuti] = arg('--ora', '16:08').split(':').map(Number);
+const adesso = arg('--adesso', 'studio');
+const scenario = sessione || process.argv.includes('--scenario') || process.argv.includes('--ora');
+// La giornata di S1 (scenario dei mock): [ore, minuti] di inizio e fine; `unita` = lo studio sul puntatore 0.7
+const voci = (fatte, totali) =>
+  Array.from({ length: totali }, (_, i) => ({ testo: `Voce ${i + 1}`, fatta: i < fatte }));
+const ADESSO = {
+  studio: { tipo: 'studio', titolo: 'Ripasso Modulo 0', da: [16, 0], a: [16, 45], unita: '0.7' },
+  todo: { tipo: 'todo', titolo: 'Inviare la relazione', da: [16, 0], a: [16, 30], checklist: voci(2, 4) },
+  routine: { tipo: 'routine', titolo: 'Corsa', da: [16, 0], a: [16, 45] },
+  evento: {
+    tipo: 'evento',
+    titolo: 'Riunione con il relatore',
+    da: [16, 0],
+    a: [17, 0],
+    luogo: 'Aula 2.4 · Edificio B',
+  },
+};
+const GIORNATA = [
+  { tipo: 'studio', stato: 'completato', titolo: 'Lezione di UI/UX', da: [9, 0], a: [10, 0] },
+  { tipo: 'evento', stato: 'completato', titolo: 'Riunione progetto', da: [11, 0], a: [12, 0], luogo: 'Meet' },
+  { tipo: 'routine', stato: 'completato', titolo: 'Palestra', da: [14, 30], a: [15, 30] },
+  ADESSO[adesso] ?? ADESSO.studio,
+  { tipo: 'todo', titolo: 'Leggere 20 pagine', da: [19, 0], a: [19, 30], checklist: voci(2, 5) },
+  { tipo: 'todo', titolo: 'Prepara la valigia', da: [12, 0], conOrario: false, priorita: 'alta' },
+  { tipo: 'todo', titolo: 'Prenota il treno', da: [12, 0], conOrario: false, priorita: 'alta' },
+  { tipo: 'todo', titolo: 'Chiama Marco', da: [12, 0], conOrario: false, priorita: 'normale' },
+];
 if (!tavola || !stato) {
   console.error(
     'uso: npm run confronto -- --tavola "01 Oggi" --stato "<pezzo della didascalia>" [--app /] [--out dir]',
@@ -197,7 +226,7 @@ try {
     if (scenario) {
       // Orologio dello scenario dei mock: Date sposta l'istante, i timer restano veri (ora locale di parete)
       await cdp('Page.addScriptToEvaluateOnNewDocument', {
-        source: `(() => { const D = Date; const scarto = new D(2026, 8, 23, 16, 8).getTime() - D.now();
+        source: `(() => { const D = Date; const scarto = new D(2026, 8, 23, ${ore}, ${minuti}).getTime() - D.now();
           class F extends D { constructor(...a) { if (a.length) super(...a); else super(D.now() + scarto); }
             static now() { return D.now() + scarto; } }
           globalThis.Date = F; })();`,
@@ -209,10 +238,19 @@ try {
         try {
           const { appDb } = await import('/src/app/db.ts');
           const { importSampleCourse } = await import('/src/app/courseImport.ts');
+          const { saveBlock } = await import('/src/data/repository.ts');
+          const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
           await importSampleCourse(appDb, Date.now());
+          const corso = (await appDb.corsi.toArray())[0];
+          const unita = (await appDb.unita.toArray()).find((u) => u.numero === '0.7');
+          const alle = ([h, m]) => new Date(2026, 8, 23, h, m).getTime();
+          for (const { da, a, unita: n, ...b } of ${JSON.stringify(GIORNATA)}) {
+            const studio = n ? { corsoId: corso.id, unitaId: unita.id } : {};
+            const dati = { stato: 'programmato', conOrario: true, ...b, ...studio, inizio: alle(da), fine: a ? alle(a) : null };
+            await saveBlock(appDb, dati, Date.now(), fuso);
+          }
           if (${sessione}) {
             const { startSession } = await import('/src/app/session.ts');
-            const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const scelta = { unitaId: null, corsoId: null, durata: 50, modalita: 'continua', iperfocus: false };
             await startSession(appDb, null, scelta, Date.now() - 12 * 60000, fuso);
           }

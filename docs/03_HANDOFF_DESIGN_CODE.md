@@ -89,7 +89,7 @@ D-DESIGN-3. Ogni voce è un task nuovo o ritocca un task esistente; l'handoff pe
 
 | Dove | Oggi nel codice | Nuovo design | Task |
 |---|---|---|---|
-| Adesso (MECC §14, FUNZ §2; G1, G2) | blocco separato `NowBlock` con ×, `preferenze.adessoChiuso`, variante compressa (T-010, D-NOW-2) | la card dell'attività in corso o imminente cresce a hero nella lista, al suo orario, per ogni tipo; nessuna chiusura; «Giornata chiusa» | T-048 |
+| Adesso (MECC §14, FUNZ §2; G1, G2) | blocco separato `NowBlock` con ×, `preferenze.adessoChiuso`, variante compressa (T-010, D-NOW-2) | la card dell'attività in corso o imminente cresce a hero nella lista, al suo orario, per ogni tipo; nessuna chiusura | T-048 (fatto, 05/10/2026) |
 | Trascinamento (MECC §15, FUNZ §2; G3) | todo senza orario → orario o giorno, persi riprogrammati, aggancio a 5', «Annulla» (T-015, D-DRAG-1) | solo riordino dei todo senza orario nella stessa priorità; frecce su desktop, tasti su mobile; ordine persistito e sincronizzato | T-044 (riscritto); il trascinamento di T-015 si toglie |
 | Cerchio della card (MECC §3, §4, §24; A3, A7, C10) | todo e routine (D-DETT-3), sheet «Voci non spuntate» (D-DETT-2) | tutti i tipi: evento, studio con «Registra esito» (minuti = durata pianificata); «Voci rimaste»; archivio col trascinamento senza «Raccogli», «Completate», toast con «Annulla» 5 s | T-049 |
 | Crea (MECC §2, FUNZ §3; G5) | data libera, × nel foglio (T-007, D-CREA-1) | giorno di partenza = selezionato entro oggi + 6; attività solo nei prossimi 7 giorni; nessuna ×; animazione di conferma e toast con «Annulla» | T-050 |
@@ -111,8 +111,7 @@ il design ha la card per tipo), D-CAL-2 (aloni, card in corso, Mese vuoto), D-DE
 vecchio design nelle sei lingue (T-031).
 
 **Test del vecchio design che restano verdi ma descrivono il comportamento superato** (da riscrivere col loro task):
-`src/domain/drag.test.ts`, `src/app/drag.test.ts`, `src/ui/Today.test.tsx` (vecchio G3 → T-044);
-`src/domain/nowBlock.test.ts`, `src/app/nowBlock.test.ts` (chiusura del vecchio G2 → T-048).
+`src/domain/drag.test.ts`, `src/app/drag.test.ts`, `src/ui/Today.test.tsx` (vecchio G3 → T-044).
 
 ## 3. Verifica del design (05/10/2026, D-DESIGN-4)
 
@@ -155,7 +154,7 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 13. Archivio delle completate: si apre solo trascinando; rotella e tastiera non disegnate, mentre
     `claude-design/CLAUDE.md` lo vuole raggiungibile dalla rotella. **Bloccante** (direzione e soglia). T-040.
 14. Scatto della card Adesso quando l'ora arriva con l'app aperta: non disegnato. Decisione: la stessa entrata
-    `rf-hero-in` di DESIGN §5. T-048.
+    `rf-hero-in` di DESIGN §5. T-048 (applicata, n. 55).
 15. Desktop: nessuna variante «Tra poco», «Da recuperare», Giornata chiusa o archivio. Decisione: la stessa card
     (DESIGN §5, MECC §14); Giornata chiusa e archivio solo mobile (DESIGN §5). Banner del ritorno dopo un'assenza su
     desktop: **bloccante** (posizione). T-048, T-040.
@@ -245,6 +244,13 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     recupero di un perso resta nel Dettaglio. «Ieri · gestite»: motivi verbatim dai mock, sezione omessa se vuota. T-022.
 54. S21 «Segna tutte lette» sta nell'intestazione della shell senza comportamento; il contatore conta le pendenti; il
     «segno di novità» di MECC §8 non è disegnato. **Bloccante**. T-022.
+
+**Implementazione** (scelte prese nel codice, verificate con `npm run confronto`)
+55. Card Adesso (T-048): sub dello studio «corso · Unità n.n» come DATI-UI e S8 (S1 scrive il nome breve del modulo,
+    «Riattivazione JavaScript»); in corso senza durata il dato è l'orario d'inizio e «senza durata» (stato non
+    disegnato); lo scatto di 900 ms avviene una volta per apertura dell'app, subito con la riduzione delle animazioni;
+    su desktop nessuna entrata né anello, come S1 Desktop, anche quando l'ora arriva con l'app aperta (n. 14 vale per
+    il mobile). Il cerchio della hero segue `canCheckFromCalendar`: l'evento lo riceve con T-049.
 
 ## 4. Mappa schermata → design → task
 

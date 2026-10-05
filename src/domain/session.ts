@@ -79,7 +79,7 @@ export const TIMER_VUOTO: Pick<
   intervalliNonVerificati: [],
 };
 
-/** Le azioni di sessione di un blocco di studio (S1 blocco Adesso, S5 footer): la prima è la primaria. */
+/** Le azioni di sessione di un blocco di studio (S1 card Adesso, S5 footer): la prima è la primaria. */
 export type AzioneStudio = 'inizia' | 'anticipa' | 'libera' | 'recupera' | 'riprendi' | 'ripasso';
 
 /** Stati da cui una sessione parte sul blocco; gli altri esiti chiusi danno il ripasso (§10.1). */

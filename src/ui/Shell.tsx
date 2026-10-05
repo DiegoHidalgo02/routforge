@@ -26,7 +26,7 @@ export function Shell() {
   const sfondo = { sfondo: location };
   const vistaOggi = location.pathname === '/' ? new URLSearchParams(location.search).get('vista') : null;
   return (
-    <div className={s.shell} data-sessione={banner ? '' : undefined}>
+    <div className={s.shell}>
       <aside className={s.sidebar}>
         <div className={s.marchio}>
           <span className={s.logo}>

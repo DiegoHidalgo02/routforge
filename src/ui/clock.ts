@@ -1,5 +1,5 @@
 // Orologio delle schermate: l'istante al minuto e il giorno locale, riallineati al ritorno in primo piano. Oggi cambia
-// giorno a mezzanotte senza riavvio (SCENARI G4) e il blocco Adesso non aspetta il minuto dopo il ritorno (MECC §9,
+// giorno a mezzanotte senza riavvio (SCENARI G4) e la card Adesso non aspetta il minuto dopo il ritorno (MECC §9,
 // §14). Le schermate leggono ancora `Date.now()`: la porta Clock resta ai servizi di `app` (D-SCHED-1 n. 9).
 import { useEffect, useState } from 'react';
 import { localDayKey, MINUTE } from '../domain/time';

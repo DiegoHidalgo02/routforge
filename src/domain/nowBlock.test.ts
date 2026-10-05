@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dismissKey, isLiveBlock, selectNowBlock, statusOf } from './nowBlock';
+import { heroBlock, isLiveBlock, selectNowBlock, statusOf } from './nowBlock';
 import { local } from './time';
 import type { Blocco } from './types';
 
@@ -55,28 +55,20 @@ describe('Adesso — SCENARI G1 (blocchi contigui A 09–10, B 10–11)', () => 
   });
 });
 
-describe('Adesso — SCENARI G2 (chiusura)', () => {
+describe('Card Adesso — SCENARI G2 (non si chiude)', () => {
   const A = mk('A', 'routine', 9, 10);
   const B = mk('B', 'routine', 10, 11);
 
-  it('chiuso su A: sparisce; quando B è in corso riappare; il giorno dopo riappare comunque', () => {
-    const dismissed = new Set([dismissKey(A, local(2026, 9, 23, 9, 30))]);
-    expect(selectNowBlock([A, B], local(2026, 9, 23, 9, 30), dismissed)).toBeNull();
-    expect(selectNowBlock([A, B], local(2026, 9, 23, 10, 5), dismissed)?.blocco.id).toBe('B');
-    const tomorrowA: Blocco = { ...A, id: 'A', inizio: local(2026, 9, 24, 9, 0), fine: local(2026, 9, 24, 10, 0) };
-    expect(selectNowBlock([tomorrowA], local(2026, 9, 24, 9, 30), dismissed)?.blocco.id).toBe('A');
+  it('la card Adesso è A finché B non è in corso, poi passa a B: cambia solo con i candidati (§14)', () => {
+    expect(heroBlock([A, B], local(2026, 9, 23, 9, 30))?.blocco.id).toBe('A');
+    expect(heroBlock([A, B], local(2026, 9, 23, 10, 5))?.blocco.id).toBe('B');
   });
 
-  it('la chiusura vale per il blocco scelto: il candidato successivo non affiora finché la scelta non cambia (D-NOW-2)', () => {
-    const C = mk('C', 'routine', 10, 11, { inizio: local(2026, 9, 23, 10, 45), fine: local(2026, 9, 23, 11, 15) });
-    const dismissed = new Set([dismissKey(A, local(2026, 9, 23, 9, 30))]);
-    expect(selectNowBlock([A, C], local(2026, 9, 23, 10, 20), dismissed)).toBeNull();
-    expect(selectNowBlock([A, C], local(2026, 9, 23, 10, 31), dismissed)?.blocco.id).toBe('C');
-  });
-
-  it('chiuso mentre è "tra poco" resta chiuso anche quando diventa in corso: stessa chiave giorno|blocco', () => {
-    const dismissed = new Set([dismissKey(A, local(2026, 9, 23, 8, 40))]);
-    expect(selectNowBlock([A], local(2026, 9, 23, 9, 30), dismissed)).toBeNull();
+  it('todo ed eventi con l’orario passato non diventano hero, la routine da recuperare sì (§14 «Stato»)', () => {
+    const passato = local(2026, 9, 23, 15, 10);
+    expect(heroBlock([mk('T', 'todo', 14, 15)], passato)).toBeNull();
+    expect(heroBlock([mk('E', 'evento', 14, 15)], passato)).toBeNull();
+    expect(heroBlock([mk('R', 'routine', 14, 15)], passato)?.stato.tipo).toBe('recupera');
   });
 });
 
@@ -84,6 +76,7 @@ describe('Adesso — SCENARI E3 (evento tutto il giorno)', () => {
   it('non compare nel blocco Adesso', () => {
     const allDay = mk('E', 'evento', 0, 23, { conOrario: false, fine: local(2026, 9, 23, 23, 59) });
     expect(selectNowBlock([allDay], local(2026, 9, 23, 12, 0))).toBeNull();
+    expect(heroBlock([allDay], local(2026, 9, 23, 12, 0))).toBeNull();
   });
 });
 
