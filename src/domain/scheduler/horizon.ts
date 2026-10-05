@@ -10,6 +10,7 @@
  */
 import { ANCORA_TODO } from '../activity';
 import { isRollingTodo } from '../lost';
+import { enterGroup } from '../ordering';
 import { endOfLocalDay, localDayKey, localInstant, minutes } from '../time';
 import type { Blocco, BloccoAncorato } from '../types';
 
@@ -102,7 +103,8 @@ export function rollPlan<B extends BloccoAncorato>(blocchi: readonly B[], now: n
       spostato.inizio = localInstant(oggi, ANCORA_TODO);
       spostato.fine = t.fine === null ? null : endOfLocalDay(spostato.inizio);
     }
-    piano.spostati.push(spostato);
+    // Senza orario entra nel gruppo di priorità di oggi, in fondo (§6)
+    piano.spostati.push(t.conOrario ? spostato : enterGroup(spostato, now));
     if (avviso) piano.avvisi.push(t.id);
   }
   return piano;

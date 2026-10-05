@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// Trascinamento nella vista Giorno di Oggi (MECC §15, SCENARI G3), la parte che vive nella UI: quali card hanno la
-// maniglia, la riga di aggancio, il rilascio e «Annulla». Si guida da tastiera, l'alternativa al trascinamento, perché
-// jsdom non impagina: il puntatore (card sollevata, bersaglio sotto il dito) si verifica nel browser (D-DRAG-1).
+// Oggi nella UI: riordino dei todo senza orario (MECC §15, SCENARI G3) con le frecce su desktop e la barra su mobile,
+// le alternative al trascinamento (jsdom non impagina: il puntatore si verifica nel browser), card Adesso (G2) e spunta
+// dalla lista (A7, C10).
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
 import { createElement } from 'react';
@@ -53,6 +53,7 @@ const todo = (
   titolo: string,
   orario: { inizio: string; durata: number } | null,
   giorno = '2026-09-28',
+  priorita: 'alta' | 'normale' | 'bassa' = 'normale',
 ): BozzaAttivita => ({
   ...comune,
   tipo: 'todo',
@@ -60,7 +61,7 @@ const todo = (
   giorno,
   orario,
   orizzonte: 'giorno',
-  priorita: 'normale',
+  priorita,
   checklist: [],
   corsoId: null,
 });
@@ -78,21 +79,21 @@ const routine = (titolo: string, inizio: string, fine: string): BozzaAttivita =>
 });
 
 /**
- * La giornata di G3: «Leggere 20 pagine» senza orario, i due blocchi 15:00–15:40 e 16:00–17:00; intorno ciò che non si
- * trascina (todo con orario, routine programmata, evento tutto il giorno) e la routine «Palestra» 07:00–08:00, persa
- * alle 08:58 dal ciclo.
+ * La giornata di G3: «Prepara la valigia» e «Prenota il treno» con priorità alta, «Chiama Marco» normale, creati in
+ * quest'ordine; intorno ciò che non si riordina: evento, routine, todo con orario, evento tutto il giorno e la routine
+ * «Palestra» 07:00–08:00, persa alle 08:58 dal ciclo.
  */
-async function giornata(): Promise<{ leggere: string; palestra: string }> {
+async function giornata(): Promise<{ treno: string }> {
+  await crea(todo('Prepara la valigia', null, '2026-09-28', 'alta'), local(2026, 9, 28, 6, 0));
+  const treno = await crea(todo('Prenota il treno', null, '2026-09-28', 'alta'), local(2026, 9, 28, 6, 1));
+  await crea(todo('Chiama Marco', null), local(2026, 9, 28, 6, 2));
   await crea(evento('Lezione', { inizio: '15:00', fine: '15:40' }));
-  await crea(evento('Ripasso', { inizio: '16:00', fine: '17:00' }));
   await crea(evento('Compleanno', null));
   await crea(todo('Spesa', { inizio: '18:00', durata: 30 }));
   await crea(routine('Corsa', '19:00', '20:00'));
-  const leggere = await crea(todo('Leggere 20 pagine', null));
   await crea(routine('Palestra', '07:00', '08:00'));
   await runCycle(appDb, ADESSO, FUSO);
-  const palestra = (await appDb.blocchi.toArray()).find((b) => 'titolo' in b && b.titolo === 'Palestra')!.id;
-  return { leggere, palestra };
+  return { treno };
 }
 
 let box: HTMLDivElement;
@@ -113,181 +114,85 @@ afterEach(() => {
 
 const mostra = (percorso = '/') =>
   root.render(createElement(MemoryRouter, { initialEntries: [percorso] }, createElement(Today)));
-const maniglie = () => [...box.querySelectorAll<HTMLButtonElement>('button[aria-label^="Move: "]')];
-const maniglia = (titolo: string) => maniglie().find((m) => m.getAttribute('aria-label') === `Move: ${titolo}`)!;
-const tasto = (el: HTMLElement, key: string) =>
-  el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
-/** Invio sulla maniglia e attesa della presa: due tasti sono sempre due eventi, con il ridisegno in mezzo. */
-const prendi = async (m: HTMLButtonElement) => {
-  m.focus();
-  tasto(m, 'Enter');
-  await vi.waitFor(() => expect(m.getAttribute('aria-pressed')).toBe('true'));
-};
-const aggancio = () => box.querySelector('[data-aggancio]')?.textContent ?? null;
-const bersaglio = () => box.querySelector('[data-bersaglio]')?.getAttribute('data-giorno-striscia') ?? null;
-const primoDellaStriscia = () => box.querySelector('[data-giorno-striscia]')?.getAttribute('data-giorno-striscia');
+const maniglie = () =>
+  [...box.querySelectorAll<HTMLButtonElement>('button[data-maniglia]')].map((m) => m.getAttribute('aria-label'));
+const riga = (titolo: string) =>
+  [...box.querySelectorAll<HTMLLIElement>('li[data-id]')].find((li) => li.textContent?.includes(titolo));
+/** I titoli della fascia senza orario, nell'ordine mostrato: anche l'evento tutto il giorno, che non si sposta. */
+const fascia = () =>
+  [...box.querySelectorAll<HTMLLIElement>('li[data-senza-orario]')].map((li) => li.querySelector('a')?.textContent);
+const tasto = (dove: Element | null | undefined, freccia: 'su' | 'giu') =>
+  dove?.querySelector<HTMLButtonElement>(`button[data-freccia="${freccia}"]`) ?? null;
+const annuncio = () => box.querySelector('[aria-live="polite"]')?.textContent ?? '';
 const toast = () => [...box.querySelectorAll('[role="status"]')].find((r) => r.querySelector('button'));
-const posto = async (id: string) => {
-  const b = (await readDetail(appDb, id))!.blocco;
-  return [b.stato, b.conOrario, b.giornoLocale, b.orarioInizio, b.orarioFine];
-};
 
-describe('Trascinamento — SCENARI G3 (UI di Oggi)', () => {
+describe('Riordino — SCENARI G3 (UI di Oggi)', () => {
   it.each([false, true])(
-    'la maniglia c’è solo sul todo senza orario e sul perso, né su evento, routine o todo con orario (desktop: %s)',
+    'maniglia e frecce solo sui todo senza orario aperti, né su eventi, routine, todo con orario o persi (desktop: %s)',
     async (suDesktop) => {
       desktop = suDesktop;
       await giornata();
       mostra();
-      await vi.waitFor(() => expect(box.textContent).toContain('Compleanno'));
-      expect(maniglie().map((m) => m.getAttribute('aria-label'))).toEqual(
-        suDesktop ? ['Move: Palestra', 'Move: Leggere 20 pagine'] : ['Move: Leggere 20 pagine', 'Move: Palestra'],
-      );
+      await vi.waitFor(() => expect(box.textContent).toContain('Compleanno'), { timeout: 5000 });
+      const titoli = ['Prepara la valigia', 'Prenota il treno', 'Chiama Marco'];
+      expect(maniglie()).toEqual(titoli.map((titolo) => t('riordinaTitolo', { titolo })));
+      expect(box.querySelectorAll('button[data-freccia]')).toHaveLength(6);
+      for (const titolo of ['Lezione', 'Spesa', 'Corsa', 'Palestra', 'Compleanno'])
+        expect(riga(titolo)?.querySelector('button[data-maniglia], button[data-freccia]')).toBeNull();
     },
   );
 
-  it('la riga di aggancio mostra «15:40 · 30 min», il todo atterra alle 15:40–16:10 e «Annulla» lo riporta indietro', async () => {
-    const { leggere } = await giornata();
-    mostra();
-    await vi.waitFor(() => expect(maniglie()).toHaveLength(2));
-    const m = maniglia('Leggere 20 pagine');
-    await prendi(m);
-    // Prima della Palestra persa (07:00–08:00) lo spazio è passato: il primo aggancio è dopo, dalle 09:00 di adesso
-    for (const atteso of ['09:00', '15:40']) {
-      tasto(m, 'ArrowDown');
-      await vi.waitFor(() => expect(aggancio()).toContain(atteso));
-    }
-    expect(aggancio()).toContain('30 min');
-    expect(box.textContent).toContain('Between Lezione 15:00–15:40 and Ripasso 16:00–17:00');
-
-    tasto(m, 'Enter');
-    await vi.waitFor(async () =>
-      expect(await posto(leggere)).toEqual(['programmato', true, '2026-09-28', '15:40', '16:10']),
-    );
-    await vi.waitFor(() => expect(toast()?.textContent).toContain('Leggere 20 pagine moved to today 15:40'));
-    expect(aggancio()).toBeNull();
-    // La maniglia è sparita con il todo che ha preso un orario: il fuoco va ad «Annulla», poi torna sulla card
-    await vi.waitFor(() => expect(document.activeElement?.textContent).toBe('Undo'));
-
-    toast()!.querySelector('button')!.click();
-    expect(document.activeElement?.closest('li')?.getAttribute('data-id')).toBe(leggere);
-    await vi.waitFor(async () =>
-      expect(await posto(leggere)).toEqual(['programmato', false, '2026-09-28', '12:00', '23:59']),
-    );
-    await vi.waitFor(() => expect(toast()).toBeUndefined());
-  });
-
-  it('di lunedì il todo senza orario perso di domenica va a domani: durante la presa la striscia parte da oggi', async () => {
-    const marco = await crea(todo('Chiama Marco', null, '2026-09-27'), local(2026, 9, 27, 9, 0));
-    await runCycle(appDb, ADESSO, FUSO);
-    expect((await posto(marco))[0]).toBe('perso');
-    mostra('/?giorno=2026-09-27');
-    await vi.waitFor(() => expect(maniglie()).toHaveLength(1));
-    expect(primoDellaStriscia()).toBe('2026-09-21');
-
-    const m = maniglia('Chiama Marco');
-    await prendi(m);
-    await vi.waitFor(() => expect(primoDellaStriscia()).toBe('2026-09-28'));
-    for (const atteso of ['2026-09-28', '2026-09-29']) {
-      tasto(m, 'ArrowRight');
-      await vi.waitFor(() => expect(bersaglio()).toBe(atteso));
-    }
-    expect(aggancio()).toContain('tomorrow');
-    expect(aggancio()).toContain('missed → scheduled');
-
-    tasto(m, 'Enter');
-    await vi.waitFor(async () =>
-      expect(await posto(marco)).toEqual(['programmato', false, '2026-09-29', '12:00', '23:59']),
-    );
-    await vi.waitFor(() => expect(primoDellaStriscia()).toBe('2026-09-21'));
-  });
-
-  it('la routine persa «Palestra» va a domani nella striscia, orario invariato; «Annulla» la rimette persa', async () => {
-    const { palestra } = await giornata();
-    mostra();
-    await vi.waitFor(() => expect(maniglie()).toHaveLength(2));
-    const m = maniglia('Palestra');
-    await prendi(m);
-    tasto(m, 'ArrowRight');
-    await vi.waitFor(() => expect(bersaglio()).toBe('2026-09-29'));
-    expect(aggancio()).toContain('tomorrow 07:00');
-    expect(aggancio()).toContain('missed → scheduled');
-
-    tasto(m, 'Enter');
-    await vi.waitFor(async () =>
-      expect(await posto(palestra)).toEqual(['programmato', true, '2026-09-29', '07:00', '08:00']),
-    );
-    await vi.waitFor(() => expect(toast()?.textContent).toContain('Palestra moved to tomorrow 07:00'));
-    toast()!.querySelector('button')!.click();
-    await vi.waitFor(async () =>
-      expect(await posto(palestra)).toEqual(['perso', true, '2026-09-28', '07:00', '08:00']),
-    );
-  });
-
-  it('«Annulla» resta 5 secondi (MECCANISMI §15)', async () => {
-    // Anche i timer finti, che però scorrono col tempo reale: IndexedDB finto continua a rispondere
-    vi.useRealTimers();
-    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
-    vi.setSystemTime(ADESSO);
-    await giornata();
-    mostra();
-    await vi.waitFor(() => expect(maniglie()).toHaveLength(2));
-    const m = maniglia('Palestra');
-    await prendi(m);
-    tasto(m, 'ArrowRight');
-    await vi.waitFor(() => expect(bersaglio()).toBe('2026-09-29'));
-    tasto(m, 'Enter');
-    await vi.waitFor(() => expect(toast()).toBeDefined());
-    vi.advanceTimersByTime(4000);
-    // Un giro perché React ridisegni: se il toast si fosse chiuso, qui non ci sarebbe più
-    await new Promise((fatto) => setTimeout(fatto, 50));
-    expect(toast()).toBeDefined();
-    vi.advanceTimersByTime(1000);
-    await vi.waitFor(() => expect(toast()).toBeUndefined());
-  });
-
-  it('Esc lascia il blocco dov’era, senza scrivere', async () => {
-    const { leggere } = await giornata();
-    mostra();
-    await vi.waitFor(() => expect(maniglie()).toHaveLength(2));
-    const m = maniglia('Leggere 20 pagine');
-    await prendi(m);
-    tasto(m, 'ArrowDown');
-    await vi.waitFor(() => expect(aggancio()).toContain('09:00'));
-    tasto(m, 'Escape');
-    await vi.waitFor(() => expect(aggancio()).toBeNull());
-    expect(m.getAttribute('aria-pressed')).toBe('false');
-    expect(await posto(leggere)).toEqual(['programmato', false, '2026-09-28', '12:00', '23:59']);
-  });
-
-  it('su desktop col mouse si solleva dal titolo il todo senza orario, non un evento né una routine', async () => {
+  it('desktop: su «Prenota il treno» «Sposta giù» è spenta; «Sposta su» la porta sopra «Prepara la valigia», il fuoco la segue', async () => {
     desktop = true;
-    // jsdom non impagina: niente cattura del puntatore né elementi sotto il puntatore
-    Element.prototype.setPointerCapture = () => undefined;
-    document.elementFromPoint = () => null;
+    const { treno } = await giornata();
+    mostra();
+    await vi.waitFor(
+      () => expect(fascia()).toEqual(['Prepara la valigia', 'Prenota il treno', 'Compleanno', 'Chiama Marco']),
+      {
+        timeout: 5000,
+      },
+    );
+    expect(tasto(riga('Prenota il treno'), 'giu')?.disabled).toBe(true);
+    expect(tasto(riga('Prepara la valigia'), 'su')?.disabled).toBe(true);
+
+    tasto(riga('Prenota il treno'), 'su')!.click();
+    await vi.waitFor(() =>
+      expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
+    );
+    // «Sposta su» ora è spenta: il fuoco passa all'altra freccia; la regione live dice la posizione nel gruppo
+    await vi.waitFor(() => expect(document.activeElement).toBe(tasto(riga('Prenota il treno'), 'giu')));
+    expect(annuncio()).toBe(
+      t('annuncioRiordino', { titolo: 'Prenota il treno', n: 1, totale: 2, livello: t('livelloAlta') }),
+    );
+    // Solo l'ordine: resta senza orario, nello stesso giorno, con lo stesso stato; nessun «Annulla»
+    const b = (await readDetail(appDb, treno))!.blocco;
+    expect([b.conOrario, b.giornoLocale, b.stato]).toEqual([false, '2026-09-28', 'programmato']);
+    expect(toast()).toBeUndefined();
+  });
+
+  it('mobile: un tocco sulla maniglia apre «Sposta su», «Sposta giù» e «Fine» con le stesse regole; «Fine» chiude', async () => {
     await giornata();
     mostra();
-    await vi.waitFor(() => expect(box.textContent).toContain('Lezione'));
-    const titolo = (t: string) => [...box.querySelectorAll('li[data-id] a')].find((a) => a.textContent?.includes(t))!;
-    const trascina = (el: Element) => {
-      const evento = (tipo: string, y: number) =>
-        new PointerEvent(tipo, {
-          bubbles: true,
-          cancelable: true,
-          button: 0,
-          pointerType: 'mouse',
-          clientX: 10,
-          clientY: y,
-        });
-      el.dispatchEvent(evento('pointerdown', 10));
-      el.dispatchEvent(evento('pointermove', 80));
-    };
-    for (const t of ['Lezione', 'Corsa', 'Spesa']) trascina(titolo(t));
-    expect(box.querySelector('[data-sollevata]')).toBeNull();
-    trascina(titolo('Leggere 20 pagine'));
+    await vi.waitFor(() => expect(maniglie()).toHaveLength(3), { timeout: 5000 });
+    const maniglia = riga('Prenota il treno')!.querySelector<HTMLButtonElement>('button[data-maniglia]')!;
+    maniglia.click();
+    const barra = () => box.querySelector(`[role="toolbar"][aria-label="${t('riordina')}"]`);
+    await vi.waitFor(() => expect(barra()?.textContent).toContain('Prenota il treno'));
+    expect(maniglia.getAttribute('aria-pressed')).toBe('true');
+    expect(tasto(barra(), 'giu')?.disabled).toBe(true);
+
+    tasto(barra(), 'su')!.click();
     await vi.waitFor(() =>
-      expect(box.querySelector('[data-sollevata="puntatore"]')?.textContent).toContain('Leggere 20 pagine'),
+      expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
     );
+    await vi.waitFor(() => expect(tasto(barra(), 'su')?.disabled).toBe(true));
+    expect(tasto(barra(), 'giu')?.disabled).toBe(false);
+    expect(barra()?.textContent).toContain('1');
+    expect(annuncio()).toContain('Prenota il treno');
+
+    [...barra()!.querySelectorAll('button')].find((x) => x.textContent === t('fineRiordino'))!.click();
+    await vi.waitFor(() => expect(barra()).toBeNull());
+    expect(annuncio()).toBe('');
   });
 });
 
@@ -335,13 +240,15 @@ describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
   it('«Chiama Marco» senza voci: il cerchio lo completa senza aprire il dettaglio; «Annulla» del toast lo riapre', async () => {
     const id = await crea(todo('Chiama Marco', null));
     mostra();
-    await vi.waitFor(() => expect(cerchio('Chiama Marco')).not.toBeNull());
+    await vi.waitFor(() => expect(cerchio('Chiama Marco')).not.toBeNull(), { timeout: 5000 });
     cerchio('Chiama Marco')!.click();
-    await vi.waitFor(() => expect(toast()?.textContent).toContain(t('toastFatto', { titolo: 'Chiama Marco' })));
+    await vi.waitFor(() => expect(toast()?.textContent).toContain(t('toastFatto', { titolo: 'Chiama Marco' })), {
+      timeout: 5000,
+    });
     expect(await stato(id)).toBe('completato');
 
     toast()!.querySelector('button')!.click();
-    await vi.waitFor(async () => expect(await stato(id)).toBe('programmato'));
+    await vi.waitFor(async () => expect(await stato(id)).toBe('programmato'), { timeout: 5000 });
   });
 
   it('un’occorrenza di studio di domani ha il cerchio spento: il tocco non scrive nulla (C10)', async () => {
@@ -358,7 +265,7 @@ describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
     });
     await runCycle(appDb, ADESSO, FUSO);
     mostra('/?giorno=2026-09-29');
-    await vi.waitFor(() => expect(cerchio('Ripasso')?.getAttribute('aria-disabled')).toBe('true'));
+    await vi.waitFor(() => expect(cerchio('Ripasso')?.getAttribute('aria-disabled')).toBe('true'), { timeout: 5000 });
     expect(cerchio('Ripasso')!.title).toBe(t('siSegnaNelGiornoPrevisto'));
     cerchio('Ripasso')!.click();
     const stati = (await appDb.blocchi.toArray())

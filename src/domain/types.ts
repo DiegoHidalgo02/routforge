@@ -92,6 +92,12 @@ export interface Blocco {
   note?: string;
   /** Solo todo senza orario (§2). */
   priorita?: Priorita;
+  /**
+   * Solo todo senza orario: chiave d'ordine nel gruppo di priorità (§6, §15), viaggia con il blocco (§25). Un todo che
+   * entra nel gruppo prende l'istante d'ingresso, così va in fondo; il riordino riscrive le chiavi del gruppo. Assente
+   * nei dati di prima di T-044: vale l'inizio.
+   */
+  ordine?: number | null;
   /** Solo todo (§2, §4). */
   checklist?: VoceChecklist[];
   /** Solo eventi (§2). */

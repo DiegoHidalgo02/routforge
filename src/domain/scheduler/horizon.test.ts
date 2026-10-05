@@ -95,6 +95,11 @@ describe('Spostamento a oggi — MECCANISMI §6 (chi rotola)', () => {
     expect(istanti(rollPlan([t], oggi(7)).spostati[0])).toEqual([oggi(12), endOfLocalDay(oggi(12))]);
   });
 
+  it('senza orario entra nel gruppo di oggi in fondo: la chiave d’ordine è l’istante dello spostamento', () => {
+    const t = mk('t', { conOrario: false, orizzonte: 'mese', inizio: local(2026, 9, 10, 12, 0), ordine: 5 });
+    expect(rollPlan([t], oggi(7)).spostati[0]?.ordine).toBe(oggi(7));
+  });
+
   it("orizzonte mese: rotola fino all'ultimo giorno del mese, poi resta com'è", () => {
     const t = mk('t', { orizzonte: 'mese', inizio: local(2026, 9, 1, 9, 0), fine: local(2026, 9, 1, 9, 30) });
     expect(rollPlan([t], local(2026, 9, 30, 7, 0)).spostati).toHaveLength(1);

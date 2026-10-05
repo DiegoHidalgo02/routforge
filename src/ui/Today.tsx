@@ -9,20 +9,28 @@
 // (MECC §3 «spunta diretta», D-DETT-3). Pallini con l'alone del tipo e card in corso come S1 Mobile (D-CAL-2).
 // La card Adesso (T-048, `HeroCard.tsx`) è la card dell'attività scelta (`heroBlock`), cresciuta a hero al suo posto
 // nella giornata: su mobile allo scatto dell'ora, 900 ms dopo l'apertura; su desktop subito (MECC §14).
-// In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Nella vista Giorno si
-// trascinano i todo senza orario e i persi dalla maniglia a sei punti (MECC §15, D-DRAG-1): la card sollevata segue il
-// puntatore, la riga di aggancio mostra orario e durata nel punto d'inserimento, il giorno della striscia sotto il dito
-// si accende; al rilascio il toast offre «Annulla» per 5 s. Da tastiera: Invio, frecce, Invio o Esc. Arrivano con il
-// loro task l'archivio impilato delle completate, «Il tuo progresso oggi» e «Prossime attività» dei mock (T-040).
-import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Check, RefreshCcw, X } from 'lucide-react';
+// In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Nella vista Giorno i todo senza
+// orario si riordinano nel loro gruppo di priorità (MECC §15, T-044): maniglia a sei punti, frecce su desktop, barra
+// «Riordina» su mobile; nessun orario, giorno o «Annulla». Arrivano con il loro task l'archivio impilato delle
+// completate, «Il tuo progresso oggi» e «Prossime attività» dei mock (T-040).
+import {
+  CalendarCheck,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  RefreshCcw,
+  X,
+} from 'lucide-react';
 import {
   useEffect,
-  useId,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
-  type KeyboardEvent,
+  type CSSProperties,
   type MouseEvent,
   type PointerEvent,
 } from 'react';
@@ -31,24 +39,14 @@ import { dismissAbsenceNotice, readAbsenceNotice } from '../app/absence';
 import { calendarDays, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar, reopenBlock } from '../app/completion';
 import { appDb, watch } from '../app/db';
-import { moveBlock } from '../app/drag';
 import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
+import { reorderTodo } from '../app/reorder';
 import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
 import { checkCircle, type PassoSpunta } from '../domain/completion';
-import {
-  canDrag,
-  dropDays,
-  dropDuration,
-  dropReferences,
-  dropStart,
-  movedBlock,
-  timeOnDay,
-  type Rilascio,
-} from '../domain/drag';
 import { heroBlock, isLiveBlock } from '../domain/nowBlock';
-import { sortDayDesktop } from '../domain/ordering';
+import { canReorder, reorderGroup, sortDayDesktop } from '../domain/ordering';
 import type { AvvisoAssenza } from '../domain/scheduler/absence';
-import { localDayKey, localDaysBetween, localInstant, localTimeKey, MINUTE } from '../domain/time';
+import { localDayKey, localInstant } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
@@ -110,61 +108,16 @@ const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
 const periodoDi = (vista: Vista, giorno: string) =>
   vista === 'mese' ? giorno.slice(0, 7) : vista === 'settimana' ? (weekOf(giorno)[0] ?? giorno) : giorno;
 
-/** «Annulla» dopo un rilascio resta 5 s (MECC §15), come il toast del Dettaglio. */
+/** «Annulla» del toast della spunta resta 5 s (A7), come il toast del Dettaglio. */
 const ANNULLA_MS = 5000;
-/** Movimento del puntatore sulla maniglia oltre il quale la pressione diventa trascinamento. */
+/** Movimento del puntatore oltre il quale la pressione diventa trascinamento. */
 const SOGLIA_PRESA = 4;
-/** La zona degli orari va oltre la giornata di tanto: lì si rilascia prima del primo blocco o dopo l'ultimo. */
-const MARGINE_ZONA = 48;
-/**
- * Dove si rilascerebbe (MECC §15, D-DRAG-1): il punto d'inserimento fra i blocchi con orario della giornata con
- * l'inizio agganciato, oppure un giorno della striscia.
- */
-type Bersaglio = { indice: number; inizio: number } | { giorno: string };
-/** Il blocco preso, da tastiera o dal puntatore; `punto` è dove disegnare la card sollevata che segue il puntatore. */
-interface Presa {
-  b: BloccoCalendario;
-  bersaglio: Bersaglio | null;
-  punto?: { x: number; y: number; w: number };
-}
-const etichetta = (b: BloccoCalendario) => `${titolo(b)} ${b.orarioInizio}${b.orarioFine ? `–${b.orarioFine}` : ''}`;
-/** «oggi», «domani» o «giovedì 1», con l'orario se c'è: dove finisce il blocco rilasciato. */
-function quando(g: string, ora: string | null, oggi: string): string {
-  const d = localDaysBetween(localInstant(oggi, '12:00'), localInstant(g, '12:00'));
-  const giorno =
-    d === 0 || d === 1
-      ? new Intl.RelativeTimeFormat(lingua, { numeric: 'auto' }).format(d, 'day')
-      : fmt(g, { weekday: 'long', day: 'numeric' });
-  return ora ? `${giorno} ${ora}` : giorno;
-}
-/** Nota della riga di aggancio (S1 `drag`): la durata e il passo di 5', o il perso che torna programmato. */
-function notaAggancio(b: BloccoCalendario): string {
-  const d = dropDuration(b);
-  const nota = t(b.stato === 'perso' ? 'persoProgrammato' : 'aggancioCinque');
-  return d === null ? nota : `${t('minutiDurata', { m: Math.round(d / MINUTE) })} · ${nota}`;
-}
-/**
- * Il suggerimento del trascinamento (S1 `drag`): fra quali blocchi si aggancia, o il giorno della striscia con l'orario
- * invariato; per un perso sulla striscia lo dice la riga di aggancio.
- */
-function suggerimento({ b, bersaglio: x }: Presa, blocchi: BloccoCalendario[], oggi: string): string {
-  if (!x) return '';
-  if ('giorno' in x)
-    return b.stato === 'perso' ? '' : t('giornoOrarioInvariato', { quando: quando(x.giorno, timeOnDay(b), oggi) });
-  const orari = dropReferences(blocchi, b.id);
-  const [a, c] = [orari[x.indice - 1], orari[x.indice]];
-  if (a && c) return t('fraBlocchi', { a: etichetta(a), b: etichetta(c) });
-  return a ? t('dopoBlocco', { a: etichetta(a) }) : c ? t('primaDiBlocco', { b: etichetta(c) }) : '';
-}
-/**
- * La riga di aggancio (S1 `drag`): su un orario l'orario e la nota; un perso sulla striscia giorno e orario con «perso →
- * programmato» (`drag=perso`); un todo senza orario sulla striscia non ce l'ha.
- */
-function rigaAggancio({ b, bersaglio: x }: Presa, oggi: string): { pill: string; nota: string } | null {
-  if (!x) return null;
-  if ('indice' in x) return { pill: localTimeKey(x.inizio), nota: notaAggancio(b) };
-  return b.stato === 'perso' ? { pill: quando(x.giorno, timeOnDay(b), oggi), nota: t('persoProgrammato') } : null;
-}
+/** L'istante delle scritture, fuori dal render (lo stesso accorgimento di Session.tsx per `react-hooks/purity`). */
+const istante = () => Date.now();
+/** Le frecce del riordino (MECC §15). */
+type Freccia = 'su' | 'giu';
+/** La priorità del gruppo nel testo della barra e della regione live («Priorità alta · 2 di 2»). */
+const LIVELLO = { alta: 'livelloAlta', normale: 'livelloNormale', bassa: 'livelloBassa' } as const;
 
 export function Today() {
   const [parametri, setParametri] = useSearchParams();
@@ -223,21 +176,13 @@ export function Today() {
     if (Math.abs(dx) > SOGLIA_SWIPE && Math.abs(dx) > Math.abs(e.clientY - p.y)) scorri(dx < 0 ? 1 : -1);
   };
 
-  // Trascinamento (MECC §15): il blocco preso e il toast con «Annulla» dopo il rilascio (5 s). Durante la presa la
-  // striscia offre i giorni dove il rilascio può valere: la settimana mostrata o, se ha giorni passati, i sette da oggi
-  const [presa, setPresa] = useState<Presa | null>(null);
-  const istruzioni = useId();
-  const giorniStriscia = presa ? dropDays(settimana, oggi) : settimana;
-  // Toast con «Annulla» per 5 s: dopo un rilascio (§15) e dopo la spunta dalla lista (§3, A7)
-  const [avviso, setAvviso] = useState<{ id: string; testo: string; tastiera: boolean; annulla: () => void }>();
+  // Toast con «Annulla» per 5 s dopo la spunta dalla lista (§3, A7)
+  const [avviso, setAvviso] = useState<{ id: string; testo: string; annulla: () => void }>();
   const timerToast = useRef<ReturnType<typeof setTimeout>>(undefined);
   const annullaToast = useRef<HTMLButtonElement>(null);
   useEffect(() => () => clearTimeout(timerToast.current), []);
-  // Dopo un rilascio da tastiera il fuoco va ad «Annulla», perché la maniglia sparisce con il blocco spostato; quando il
-  // toast si chiude torna sulla card spostata, se è ancora nella giornata, altrimenti sulla prima card
-  useEffect(() => {
-    if (avviso?.tastiera) annullaToast.current?.focus();
-  }, [avviso]);
+  // Se il fuoco è su «Annulla» quando il toast si chiude torna sulla card, se è ancora nella giornata, altrimenti sulla
+  // prima card
   const chiudiToast = (id: string) => {
     clearTimeout(timerToast.current);
     if (document.activeElement === annullaToast.current)
@@ -247,13 +192,12 @@ export function Today() {
       )?.focus();
     setAvviso(undefined);
   };
-  const avvisa = (id: string, testo: string, annulla: () => Promise<unknown>, tastiera = false) => {
+  const avvisa = (id: string, testo: string, annulla: () => Promise<unknown>) => {
     clearTimeout(timerToast.current);
     timerToast.current = setTimeout(() => chiudiToast(id), ANNULLA_MS);
     setAvviso({
       id,
       testo,
-      tastiera,
       annulla: () => {
         chiudiToast(id);
         void annulla().catch(() => undefined);
@@ -263,22 +207,7 @@ export function Today() {
   // Spunta dalla lista completata subito (§3, A7): «Fatto · …», «Fatta · …», «Evento completato · …»; «Annulla» riapre
   const completato = (b: BloccoCalendario) =>
     avvisa(b.id, t(FATTO[b.tipo], { titolo: titolo(b) }), () => reopenBlock(appDb, b.id, Date.now(), fuso()));
-  const rilascia = (b: BloccoCalendario, x: Bersaglio, tastiera: boolean) => {
-    const r: Rilascio = 'giorno' in x ? { giorno: x.giorno } : { inizio: x.inizio };
-    const dove = 'giorno' in x ? quando(x.giorno, timeOnDay(b), oggi) : quando(giorno, localTimeKey(x.inizio), oggi);
-    // `null`: il rilascio non vale più (il blocco è cambiato nel frattempo): non c'è nulla da annullare
-    void moveBlock(appDb, b.id, r, Date.now(), Intl.DateTimeFormat().resolvedOptions().timeZone).then(
-      (annulla) => {
-        if (annulla)
-          avvisa(b.id, t('spostatoA', { titolo: titolo(b), quando: dove }), () => annulla(Date.now()), tastiera);
-      },
-      () => undefined,
-    );
-  };
-  const giornoBersaglio = presa?.bersaglio && 'giorno' in presa.bersaglio ? presa.bersaglio.giorno : null;
-  const suggerito = presa ? suggerimento(presa, blocchi(giorno), oggi) : '';
-  const riga = presa ? rigaAggancio(presa, oggi) : null;
-  const trascinabili = blocchi(giorno).some(canDrag);
+  const trascinabili = blocchi(giorno).some(canReorder);
 
   const sfondo = { sfondo: location };
   const creaAttivita = (
@@ -356,7 +285,7 @@ export function Today() {
           <>
             {/* Su mobile la striscia sta anche nella Settimana (S1) */}
             <div className={`${s.striscia} ${vista === 'settimana' ? s.soloMobile : ''}`}>
-              {giorniStriscia.map((g) => {
+              {settimana.map((g) => {
                 const primo = dayLoad(blocchi(g)).tipi[0];
                 return (
                   <button
@@ -368,7 +297,6 @@ export function Today() {
                     aria-label={fmt(g, { weekday: 'long', day: 'numeric', month: 'long' })}
                     data-carico={primo ? '' : undefined}
                     data-giorno-striscia={g}
-                    data-bersaglio={g === giornoBersaglio || undefined}
                     onClick={() => vai({ giorno: g })}
                   >
                     <span className={s.sigla}>{fmt(g, { weekday: 'short' })}</span>
@@ -383,15 +311,10 @@ export function Today() {
         {vista === 'giorno' && (
           <>
             <hr className={`${s.separatore} ${s.soloMobile}`} />
-            {/* S1 Desktop: la data del giorno con la nota del trascinamento a destra, in text-2 a riposo e nel primary con
-                il suggerimento durante la presa */}
+            {/* S1 Desktop: la data del giorno con la nota del trascinamento a destra */}
             <div className={`${s.rigaGiorno} ${s.soloDesktop}`}>
               <h2 className={s.giornoTitolo}>{giornoLungo}</h2>
-              {(suggerito || trascinabili) && (
-                <span className={s.notaGiorno} data-attiva={suggerito ? '' : undefined}>
-                  {suggerito || t('notaTrascina')}
-                </span>
-              )}
+              {trascinabili && <span className={s.notaGiorno}>{t('notaTrascina')}</span>}
             </div>
             <RitornoAssenza oggi={oggi} />
             {pronto && blocchi(giorno).length === 0 ? (
@@ -409,17 +332,10 @@ export function Today() {
               <Giornata
                 key={chiavePeriodo}
                 blocchi={blocchi(giorno)}
-                giorno={giorno}
-                settimana={giorniStriscia}
                 sfondo={sfondo}
                 verso={verso}
-                presa={presa}
-                suggerito={suggerito}
-                riga={riga}
-                istruzioni={istruzioni}
-                onPresa={setPresa}
-                onRilascio={rilascia}
                 onCompletato={completato}
+                onRiordino={() => avviso && chiudiToast(avviso.id)}
               />
             )}
           </>
@@ -530,22 +446,6 @@ export function Today() {
       {/* Senza bersaglio la card sollevata segue il puntatore nella colonna della giornata. Su un orario si aggancia
           nello spazio che la giornata apre; sulla striscia lascia il posto al giorno acceso, e il suggerimento sta in
           testa alla giornata (`Giornata`, S1 `drag=giorno`) */}
-      {presa?.punto && !presa.bersaglio && (
-        <div
-          className={s.fantasma}
-          data-tipo={presa.b.tipo}
-          style={{ width: presa.punto.w, transform: `translate(${presa.punto.x}px, ${presa.punto.y}px)` }}
-          aria-hidden
-        >
-          <CardSollevata b={presa.b} />
-        </div>
-      )}
-      <p className={s.soloLettore} role="status">
-        {presa && [riga && `${riga.pill} · ${riga.nota}`, suggerito].filter(Boolean).join('. ')}
-      </p>
-      <span id={istruzioni} hidden>
-        {t('istruzioniSposta')}
-      </span>
       <div className={s.regioneToast} role="status">
         {avviso && (
           <div className={s.toast}>
@@ -647,41 +547,29 @@ function RitornoAssenza({ oggi }: { oggi: string }) {
 
 /**
  * Giornata della vista Giorno: la card apre il Dettaglio, il cerchio fa la spunta diretta (MECC §3, D-DETT-3): completa
- * subito o apre il Dettaglio sulla sheet giusta (revisione delle fasi, voci rimaste); se nel frattempo la spunta non è
- * più possibile, o la scrittura fallisce, apre il Dettaglio, che spiega o ha lo stesso comando con il messaggio
- * d'errore. L'orologio batte al minuto per la card in corso e per la finestra della routine (D-CAL-2).
- * Le card trascinabili (MECC §15, `canDrag`) hanno la maniglia: dal puntatore la pressione diventa trascinamento oltre
- * pochi pixel e il bersaglio si legge sotto il puntatore; da tastiera Invio prende, le frecce scelgono fra gli orari
- * validi (su e giù) e i giorni validi della striscia (sinistra e destra), Invio rilascia, Esc lascia (D-DRAG-1).
+ * subito, con il toast, o apre il Dettaglio sul foglio giusto (revisione delle fasi, voci rimaste, esito); se nel
+ * frattempo la spunta non è più possibile, o la scrittura fallisce, apre il Dettaglio, che spiega o ha lo stesso comando
+ * con il messaggio d'errore. L'orologio batte al minuto per la card in corso e per la finestra della routine (D-CAL-2).
+ * Riordino dei todo senza orario (MECC §15, `canReorder`), solo nel loro gruppo di priorità: trascinamento dalla
+ * maniglia, e col mouse da tutta la card, con la card sollevata che segue il puntatore (su mobile sopra lo slot
+ * tratteggiato della posizione d'arrivo, su desktop sopra la riga originale; fuori dal gruppo il todo resta dov'era);
+ * su desktop le frecce «Sposta su» e «Sposta giù» con il puntatore sopra la riga o il fuoco; su mobile un tocco sulla
+ * maniglia apre la barra «Riordina». Il fuoco segue il todo spostato e una regione live annuncia la posizione.
  */
 function Giornata({
   blocchi,
-  giorno,
-  settimana,
   sfondo,
   verso,
-  presa,
-  suggerito,
-  riga,
-  istruzioni,
-  onPresa,
-  onRilascio,
   onCompletato,
+  onRiordino,
 }: {
   blocchi: BloccoCalendario[];
-  giorno: string;
-  settimana: string[];
   sfondo: Sfondo;
   verso?: Verso;
-  presa: Presa | null;
-  suggerito: string;
-  riga: { pill: string; nota: string } | null;
-  /** Id del testo nascosto con i comandi da tastiera, che descrive la maniglia. */
-  istruzioni: string;
-  onPresa: (p: Presa | null) => void;
-  onRilascio: (b: BloccoCalendario, x: Bersaglio, tastiera: boolean) => void;
   /** Spunta dalla lista scritta subito: il toast con «Annulla» (A7). */
   onCompletato: (b: BloccoCalendario) => void;
+  /** Comincia un riordino: il toast lascia il posto alla barra (S1 `move=attivo`). */
+  onRiordino: () => void;
 }) {
   const now = useMinuto();
   const navigate = useNavigate();
@@ -708,7 +596,7 @@ function Giornata({
     navigate(`/attivita/${b.id}`, { state: { ...sfondo, ...(passo && { vista: passo }) } });
   // `null`: la finestra si è chiusa fra il ridisegno al minuto e il tocco; il Dettaglio dice perché
   const spunta = (b: BloccoCalendario, istante: number) =>
-    void checkFromCalendar(appDb, b.id, istante, Intl.DateTimeFormat().resolvedOptions().timeZone).then(
+    void checkFromCalendar(appDb, b.id, istante, fuso()).then(
       (passo) => {
         if (passo === 'completa') onCompletato(b);
         else void apri(b, passo ?? undefined);
@@ -716,318 +604,353 @@ function Giornata({
       () => void apri(b),
     );
 
+  const righe = desktop ? sortDayDesktop(blocchi) : blocchi;
   const lista = useRef<HTMLOListElement>(null);
-  /** La pressione sulla maniglia: diventa trascinamento oltre `SOGLIA_PRESA`; `bersaglio` è l'ultimo mostrato. */
+  const barra = useRef<HTMLDivElement>(null);
+  // Riordino (MECC §15): il todo con la barra aperta (mobile), l'annuncio della regione live, il fuoco da ridare
+  const [mosso, setMosso] = useState<string | null>(null);
+  const [annuncio, setAnnuncio] = useState('');
+  const fuoco = useRef<{ id: string; freccia: Freccia; dove: 'riga' | 'barra'; da: number } | null>(null);
+  const posizione = (b: BloccoCalendario) => {
+    const g = reorderGroup(blocchi, b.id);
+    return { i: g.findIndex((x) => x.id === b.id), n: g.length };
+  };
+  const sposta = (b: BloccoCalendario, a: number, freccia?: Freccia, dove: 'riga' | 'barra' = 'riga') => {
+    const { n } = posizione(b);
+    if (freccia) fuoco.current = { id: b.id, freccia, dove, da: righe.findIndex((r) => r.id === b.id) };
+    void reorderTodo(appDb, b.id, a, istante(), fuso()).then(
+      (ok) => {
+        if (!ok) return void (fuoco.current = null);
+        const livello = t(LIVELLO[b.priorita ?? 'normale']);
+        setAnnuncio(
+          t('annuncioRiordino', { titolo: titolo(b), n: Math.min(Math.max(a, 0), n - 1) + 1, totale: n, livello }),
+        );
+      },
+      () => void (fuoco.current = null),
+    );
+  };
+  // Il fuoco segue il todo spostato (§15): sulla freccia usata, o sull'altra se quella si è spenta al bordo del gruppo.
+  // Si ridà quando l'ordine nuovo è disegnato: spostare la riga nel DOM può togliere il fuoco
+  useLayoutEffect(() => {
+    const f = fuoco.current;
+    if (!f || righe.findIndex((r) => r.id === f.id) === f.da) return;
+    fuoco.current = null;
+    const dove = f.dove === 'barra' ? barra.current : lista.current?.querySelector(`li[data-id="${f.id}"]`);
+    const tasto = (x: Freccia) => dove?.querySelector<HTMLButtonElement>(`button[data-freccia="${x}"]`);
+    const usata = tasto(f.freccia);
+    (usata && !usata.disabled ? usata : tasto(f.freccia === 'su' ? 'giu' : 'su'))?.focus();
+  });
+
+  // Trascinamento: il todo preso, la y della card sollevata nella lista e la posizione d'arrivo nel gruppo (`null`:
+  // fuori dal gruppo, il todo resta dov'era). Le posizioni del gruppo si leggono una volta, alla presa: la lista che si
+  // riordina sotto il dito non le sposta
+  const [presa, setPresa] = useState<{ id: string; y: number; a: number | null } | null>(null);
   const puntatore = useRef<{
     b: BloccoCalendario;
     x0: number;
     y0: number;
-    /** Il bordo sinistro della card, dove resta la card sollevata. */
-    x: number;
     dy: number;
-    w: number;
     attiva: boolean;
-    bersaglio: Bersaglio | null;
+    centri: number[];
+    zona: readonly [number, number];
+    a: number | null;
   } | null>(null);
-  const aggancio = (b: BloccoCalendario, indice: number, istante: number): Bersaglio | null => {
-    const inizio = dropStart(dropReferences(blocchi, b.id), indice, dropDuration(b), giorno, istante);
-    return inizio === null ? null : { indice, inizio };
-  };
-  const suGiorno = (b: BloccoCalendario, g: string, istante: number): Bersaglio | null =>
-    movedBlock(b, { giorno: g }, istante) ? { giorno: g } : null;
-  // Al rilascio il bersaglio si ricalcola con l'istante del rilascio: fra l'ultimo movimento e il rilascio può
-  // passare un multiplo di 5' (mai prima di adesso, D-DRAG-1)
-  const adesso = (b: BloccoCalendario, x: Bersaglio) =>
-    'giorno' in x ? suGiorno(b, x.giorno, Date.now()) : aggancio(b, x.indice, Date.now());
-
-  /**
-   * Il bersaglio sotto il puntatore (D-DRAG-1): un giorno della striscia, se lì il rilascio vale; altrimenti, nella zona
-   * degli orari (sotto la fascia senza orario su mobile, sopra su desktop, e un margine oltre la giornata), il punto
-   * d'inserimento dato dalle card con orario il cui centro sta sopra il puntatore. Fuori, nessuno: il blocco resta.
-   * Le posizioni sono quelle naturali, senza lo spazio aperto per il blocco del trascinamento: altrimenti spingerebbe le
-   * card sotto il dito e tratterrebbe il punto d'inserimento.
-   */
-  const bersaglioIn = (b: BloccoCalendario, x: number, y: number): Bersaglio | null => {
-    const istante = Date.now();
-    const sotto = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-giorno-striscia]');
-    if (sotto?.dataset.giornoStriscia) return suGiorno(b, sotto.dataset.giornoStriscia, istante);
-    const ol = lista.current;
-    if (!ol) return null;
-    const blocco = ol.querySelector<HTMLElement>(':scope > [data-blocco]');
-    const spazio = blocco ? blocco.offsetHeight + parseFloat(getComputedStyle(ol).rowGap) : 0;
-    const naturale = (el: HTMLElement) => {
-      const q = el.getBoundingClientRect();
-      const d = blocco && blocco.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING ? spazio : 0;
-      return { top: q.top - d, bottom: q.bottom - d };
-    };
-    const r = ol.getBoundingClientRect();
-    const fondo = r.bottom - spazio;
-    const righe = [...ol.querySelectorAll<HTMLElement>(':scope > li[data-id]')];
-    const fascia = righe.filter((el) => el.dataset.senzaOrario).map(naturale);
-    const [su, giu] = desktop
-      ? [r.top - MARGINE_ZONA, fascia[0]?.top ?? fondo + MARGINE_ZONA]
-      : [fascia.at(-1)?.bottom ?? r.top - MARGINE_ZONA, fondo + MARGINE_ZONA];
-    if (x < r.left || x > r.right || y < su || y > giu) return null;
-    const sopra = righe.filter((el) => {
-      if (el.dataset.senzaOrario || el.dataset.id === b.id) return false;
-      const q = naturale(el);
-      return (q.top + q.bottom) / 2 < y;
-    });
-    return aggancio(b, sopra.length, istante);
-  };
-
-  // Puntatore: si prende dalla maniglia, e col mouse da tutta la card (il cursore di presa di S1); al tocco il resto
-  // della card scorre, apre il Dettaglio e spunta come prima; il cerchio non prende mai. Quando il gesto diventa
-  // trascinamento la card cattura il puntatore; la pressione non scorre la pagina né cambia periodo (`.corpo`)
   const trascinata = useRef(false);
-  const giu = (e: PointerEvent<HTMLDivElement>) => {
-    const b = blocchi.find((x) => x.id === e.currentTarget.closest<HTMLElement>('[data-id]')?.dataset.id);
-    const bottone = (e.target as Element).closest('button');
-    const dallaManiglia = !!bottone?.hasAttribute('data-maniglia');
+  const relativa = (y: number) => y - (lista.current?.getBoundingClientRect().top ?? 0);
+  // Si prende dalla maniglia, e col mouse da tutta la card (il cursore di presa di S1); il cerchio non prende mai
+  const giu = (e: PointerEvent<HTMLDivElement>, b: BloccoCalendario) => {
+    const bersaglio = e.target as Element;
+    const dallaManiglia = !!bersaglio.closest('[data-maniglia]');
     trascinata.current = false;
-    if (
-      !b ||
-      !canDrag(b) ||
-      e.button !== 0 ||
-      (bottone && !dallaManiglia) ||
-      (!dallaManiglia && e.pointerType !== 'mouse')
-    )
-      return;
-    e.stopPropagation();
+    if (!canReorder(b) || e.button !== 0) return;
+    if (!dallaManiglia && (e.pointerType !== 'mouse' || bersaglio.closest('button'))) return;
+    e.stopPropagation(); // la pressione non scorre la pagina né cambia giorno (`.corpo`)
     if (!dallaManiglia) e.preventDefault(); // niente selezione del testo né fuoco sul collegamento
-    const card = e.currentTarget.getBoundingClientRect();
-    const [x0, y0] = [e.clientX, e.clientY];
-    puntatore.current = { b, x0, y0, x: card.left, dy: y0 - card.top, w: card.width, attiva: false, bersaglio: null };
+    const riga = e.currentTarget.getBoundingClientRect();
+    puntatore.current = {
+      b,
+      x0: e.clientX,
+      y0: e.clientY,
+      dy: e.clientY - riga.top,
+      attiva: false,
+      centri: [],
+      zona: [0, 0],
+      a: null,
+    };
   };
-  // La card sollevata resta nella colonna della giornata e segue il puntatore in verticale (S1 `drag`): il dito sceglie
-  // anche di lato, sui giorni della striscia, senza portarla fuori dallo schermo
   const muovi = (e: PointerEvent<HTMLDivElement>) => {
     const p = puntatore.current;
     if (!p || (!p.attiva && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) < SOGLIA_PRESA)) return;
-    // Si cattura solo adesso: un clic senza movimento resta del collegamento e apre il Dettaglio
-    if (!p.attiva) e.currentTarget.setPointerCapture(e.pointerId);
-    p.attiva = true;
-    p.bersaglio = bersaglioIn(p.b, e.clientX, e.clientY);
-    onPresa({ b: p.b, bersaglio: p.bersaglio, punto: { x: p.x, y: e.clientY - p.dy, w: p.w } });
+    if (!p.attiva) {
+      // Si cattura solo adesso: un clic senza movimento resta del collegamento (Dettaglio) o della maniglia (barra)
+      e.currentTarget.setPointerCapture(e.pointerId);
+      p.attiva = true;
+      setMosso(null);
+      onRiordino();
+      const posti = reorderGroup(blocchi, p.b.id).map((x) => ({
+        id: x.id,
+        r: lista.current?.querySelector(`li[data-id="${x.id}"]`)?.getBoundingClientRect(),
+      }));
+      const y = (r: DOMRect | undefined, k: 'top' | 'bottom') => relativa(r?.[k] ?? 0);
+      p.centri = posti.filter((x) => x.id !== p.b.id).map((x) => (y(x.r, 'top') + y(x.r, 'bottom')) / 2);
+      p.zona = [y(posti[0]?.r, 'top'), y(posti.at(-1)?.r, 'bottom')];
+    }
+    const y = relativa(e.clientY);
+    p.a = y < p.zona[0] || y > p.zona[1] ? null : p.centri.filter((c) => c < y).length;
+    setPresa({ id: p.b.id, y: y - p.dy, a: p.a });
   };
   const su = () => {
     const p = puntatore.current;
     puntatore.current = null;
     if (!p?.attiva) return;
     trascinata.current = true;
-    onPresa(null);
-    const x = p.bersaglio && adesso(p.b, p.bersaglio);
-    if (x) onRilascio(p.b, x, false);
+    setPresa(null);
+    if (p.a !== null && p.a !== posizione(p.b).i) sposta(p.b, p.a);
   };
-  // Il clic che chiude un trascinamento col mouse non apre il Dettaglio
+  const lascia = () => {
+    puntatore.current = null;
+    setPresa(null);
+  };
+  // Il clic che chiude un trascinamento non apre il Dettaglio né la barra
   const clic = (e: MouseEvent) => {
     if (!trascinata.current) return;
     trascinata.current = false;
     e.preventDefault();
     e.stopPropagation();
   };
-  const lascia = () => {
-    if (puntatore.current?.attiva) onPresa(null);
-    puntatore.current = null;
-  };
-  // Esc durante il trascinamento col puntatore: il blocco resta dov'era
-  const trascina = !!presa?.punto;
+  // Esc durante il trascinamento: il todo resta dov'era
+  const trascina = !!presa;
   useEffect(() => {
     if (!trascina) return;
     const esc = (e: globalThis.KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       puntatore.current = null;
-      onPresa(null);
+      setPresa(null);
     };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
-  }, [trascina, onPresa]);
+  }, [trascina]);
 
-  // Tastiera, l'alternativa al trascinamento: Invio prende, le frecce scelgono, Invio rilascia, Esc lascia
-  const daTastiera = (b: BloccoCalendario) => presa?.b.id === b.id && !presa.punto;
-  const tasto = (e: KeyboardEvent<HTMLButtonElement>, b: BloccoCalendario) => {
-    const x = daTastiera(b) ? (presa?.bersaglio ?? null) : undefined;
-    if (x === undefined) {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      e.preventDefault();
-      onPresa({ b, bersaglio: null });
-      return;
-    }
-    const istante = Date.now();
-    const passo = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1;
-    // Il prossimo bersaglio valido nella direzione; senza bersaglio, il primo (o l'ultimo andando indietro)
-    const scegli = (validi: Bersaglio[], i: number) => {
-      const nuovo =
-        validi[i < 0 ? (passo > 0 ? 0 : validi.length - 1) : Math.min(Math.max(i + passo, 0), validi.length - 1)];
-      if (nuovo) onPresa({ b, bersaglio: nuovo });
-    };
-    switch (e.key) {
-      case 'ArrowUp':
-      case 'ArrowDown': {
-        const agganci = Array.from({ length: dropReferences(blocchi, b.id).length + 1 }, (_, i) =>
-          aggancio(b, i, istante),
-        );
-        const validi = agganci.filter((v): v is Bersaglio => v !== null);
-        scegli(validi, x && 'indice' in x ? validi.findIndex((v) => 'indice' in v && v.indice === x.indice) : -1);
-        break;
-      }
-      case 'ArrowLeft':
-      case 'ArrowRight': {
-        const validi = settimana.map((g) => suGiorno(b, g, istante)).filter((v): v is Bersaglio => v !== null);
-        scegli(validi, x && 'giorno' in x ? validi.findIndex((v) => 'giorno' in v && v.giorno === x.giorno) : -1);
-        break;
-      }
-      case 'Enter':
-      case ' ':
-        onPresa(null);
-        {
-          const ora = x && adesso(b, x);
-          if (ora) onRilascio(b, ora, true);
-        }
-        break;
-      case 'Escape':
-        onPresa(null);
-        break;
-      default:
-        return;
-    }
-    e.preventDefault();
+  // Mobile: un tocco sulla maniglia senza trascinare apre la barra (WCAG 2.5.7); un secondo tocco o «Fine» la chiude
+  const tocca = (b: BloccoCalendario) => {
+    if (desktop) return;
+    onRiordino();
+    setAnnuncio('');
+    setMosso((m) => (m === b.id ? null : b.id));
   };
+  const preso = mosso && !desktop ? blocchi.find((x) => x.id === mosso && canReorder(x)) : undefined;
+  const qui = preso && posizione(preso);
 
-  const righe = desktop ? sortDayDesktop(blocchi) : blocchi;
-  // Il blocco del trascinamento (S1 `drag`): su un orario la giornata gli fa spazio nel punto d'inserimento, prima della
-  // card con orario al suo indice o dopo l'ultima (in cima o in coda se non ce ne sono), e dal puntatore ci mette la card
-  // sollevata; sulla striscia sta in testa alla giornata (`drag=giorno`), da tastiera sopra la card presa. Su desktop il
-  // suggerimento sta nella riga del giorno: un blocco che avrebbe solo quello non c'è
-  const x = presa?.bersaglio;
-  const orari = presa ? dropReferences(blocchi, presa.b.id) : [];
-  const sottoAggancio = x && 'indice' in x ? orari[x.indice] : undefined;
-  const ultimo = orari.at(-1);
-  const testo = desktop ? '' : suggerito;
-  const pos =
-    !x || (!testo && !riga)
-      ? -1
-      : 'giorno' in x
-        ? presa.punto
-          ? 0
-          : righe.findIndex((r) => r.id === presa.b.id)
-        : sottoAggancio
-          ? righe.indexOf(sottoAggancio)
-          : ultimo
-            ? righe.indexOf(ultimo) + 1
-            : desktop
-              ? 0
-              : righe.length;
-  const bloccoAggancio = presa && (
-    <li key="blocco" className={s.bloccoAggancio} data-blocco data-tipo={presa.b.tipo} aria-hidden>
-      <Suggerimento testo={testo} riga={riga} />
-      {presa.punto && x && 'indice' in x && <CardSollevata b={presa.b} />}
-    </li>
-  );
+  // Su mobile durante il trascinamento il todo preso lascia la lista: lo slot tratteggiato sta nella posizione d'arrivo
+  const mostrate = presa && !desktop ? anteprima(righe, reorderGroup(blocchi, presa.id), presa.id, presa.a) : righe;
+  const sollevato = presa && blocchi.find((x) => x.id === presa.id);
   return (
-    <ol ref={lista} className={s.giornata} data-verso={verso}>
-      {righe.map((b, i) => {
-        // Il cerchio (MECC §3, §24, S1): attivo, spento (routine e studio fuori dal loro giorno, studio non ancora da
-        // registrare) o assente per persi, saltati ed esiti di studio, con il posto che resta (titoli allineati)
-        const cerchio = checkCircle(b, now);
-        const fatta = cerchio === 'fatto';
-        const sub = sottotitolo(b);
-        const presaQui = presa?.b.id === b.id;
-        return [
-          i === pos && bloccoAggancio,
-          <li
-            key={b.id}
-            className={s.riga}
-            data-id={b.id}
-            data-tipo={b.tipo}
-            data-terminale={terminale(b) || undefined}
-            data-completato={fatta || undefined}
-            data-senza-orario={!b.conOrario || undefined}
-            data-in-corso={isLiveBlock(b, now) || undefined}
-            data-sollevata={presaQui ? (presa.punto ? 'puntatore' : 'tastiera') : undefined}
-          >
-            <span className={b.conOrario ? s.ora : s.priorita} data-alta={b.priorita === 'alta' || undefined}>
-              {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
+    <>
+      <ol ref={lista} className={s.giornata} data-verso={verso}>
+        {mostrate.map((b) => {
+          // Il cerchio (MECC §3, §24, S1): attivo, spento (routine e studio fuori dal loro giorno, studio non ancora da
+          // registrare) o assente per persi, saltati ed esiti di studio, con il posto che resta (titoli allineati)
+          const cerchio = checkCircle(b, now);
+          const fatta = cerchio === 'fatto';
+          const sub = sottotitolo(b);
+          const riordinabile = canReorder(b);
+          const { i, n } = riordinabile ? posizione(b) : { i: 0, n: 0 };
+          const slot = presa?.id === b.id && !desktop;
+          return (
+            <li
+              key={b.id}
+              className={s.riga}
+              data-id={b.id}
+              data-tipo={b.tipo}
+              data-terminale={terminale(b) || undefined}
+              data-completato={fatta || undefined}
+              data-senza-orario={!b.conOrario || undefined}
+              data-in-corso={isLiveBlock(b, now) || undefined}
+              data-mosso={mosso === b.id || undefined}
+              data-slot={slot || undefined}
+            >
+              <span className={b.conOrario ? s.ora : s.priorita} data-alta={b.priorita === 'alta' || undefined}>
+                {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
+              </span>
+              <span className={s.punto} />
+              {slot ? (
+                <span className={s.slot} />
+              ) : hero?.blocco.id === b.id ? (
+                <HeroCard
+                  b={hero.blocco}
+                  stato={hero.stato}
+                  now={now}
+                  attiva={ingressi?.attiva ?? null}
+                  sfondo={sfondo}
+                  onSpunta={cerchio === 'attivo' ? () => spunta(b, Date.now()) : undefined}
+                />
+              ) : (
+                <div
+                  className={s.card}
+                  onPointerDown={(e) => giu(e, b)}
+                  onPointerMove={muovi}
+                  onPointerUp={su}
+                  onPointerCancel={lascia}
+                  onClickCapture={clic}
+                >
+                  <span className={s.accento} />
+                  {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
+                      completato apre il Dettaglio, dove c'è «Riapri» (§3) */}
+                  {cerchio === 'assente' ? (
+                    <span className={s.spunta} data-assente aria-hidden />
+                  ) : (
+                    <button
+                      type="button"
+                      className={s.spunta}
+                      data-fatta={fatta || undefined}
+                      aria-disabled={cerchio === 'spento' || undefined}
+                      title={
+                        cerchio === 'spento' && b.giornoLocale !== oggi ? t('siSegnaNelGiornoPrevisto') : undefined
+                      }
+                      tabIndex={fatta ? -1 : undefined}
+                      aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
+                      onClick={() => (fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now()))}
+                    >
+                      {fatta && <Check size={12} strokeWidth={2.75} />}
+                    </button>
+                  )}
+                  {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
+                  <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
+                    <span className={s.titoloCard}>{titolo(b)}</span>
+                    {sub && <span className={s.sub}>{sub}</span>}
+                  </Link>
+                  {b.conOrario && b.orarioFine && (
+                    <span className={`${s.fascia} ${s.soloDesktop}`}>
+                      {b.orarioInizio} – {b.orarioFine}
+                    </span>
+                  )}
+                  <span className={s.badge}>{t(TIPO[b.tipo])}</span>
+                  {/* Maniglia a sei punti solo sui todo che si riordinano (MECC §15), sopra il collegamento della card; su
+                      desktop è solo il segno della presa: da tastiera ci sono le frecce */}
+                  {riordinabile && (
+                    <button
+                      type="button"
+                      className={s.maniglia}
+                      data-maniglia
+                      aria-label={t('riordinaTitolo', { titolo: titolo(b) })}
+                      aria-pressed={desktop ? undefined : mosso === b.id}
+                      aria-hidden={desktop || undefined}
+                      tabIndex={desktop ? -1 : undefined}
+                      onClick={() => tocca(b)}
+                    >
+                      <IconaManiglia />
+                    </button>
+                  )}
+                </div>
+              )}
+              {riordinabile && !slot && (
+                <span className={`${s.frecce} ${s.soloDesktop}`}>
+                  <button
+                    type="button"
+                    className={s.freccia}
+                    data-freccia="su"
+                    aria-label={t('spostaSu')}
+                    title={t('spostaSu')}
+                    disabled={i === 0}
+                    onClick={() => sposta(b, i - 1, 'su')}
+                  >
+                    <ChevronUp size={14} strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    className={s.freccia}
+                    data-freccia="giu"
+                    aria-label={t('spostaGiu')}
+                    title={t('spostaGiu')}
+                    disabled={i === n - 1}
+                    onClick={() => sposta(b, i + 1, 'giu')}
+                  >
+                    <ChevronDown size={14} strokeWidth={2} />
+                  </button>
+                </span>
+              )}
+            </li>
+          );
+        })}
+        {sollevato && (
+          <li className={s.sollevata} style={{ '--y': `${presa.y}px` } as CSSProperties} aria-hidden>
+            <CardSollevata b={sollevato} />
+          </li>
+        )}
+      </ol>
+      {preso && qui && (
+        <div ref={barra} className={s.barra} role="toolbar" aria-label={t('riordina')}>
+          <span className={s.testiBarra}>
+            <span className={s.titoloBarra}>{titolo(preso)}</span>
+            <span className={s.posizioneBarra}>
+              {maiuscola(
+                t('posizioneGruppo', {
+                  livello: t(LIVELLO[preso.priorita ?? 'normale']),
+                  n: qui.i + 1,
+                  totale: qui.n,
+                }),
+              )}
             </span>
-            <span className={s.punto} />
-            {hero?.blocco.id === b.id ? (
-              <HeroCard
-                b={hero.blocco}
-                stato={hero.stato}
-                now={now}
-                attiva={ingressi?.attiva ?? null}
-                sfondo={sfondo}
-                onSpunta={cerchio === 'attivo' ? () => spunta(b, Date.now()) : undefined}
-              />
-            ) : (
-              <div
-                className={s.card}
-                onPointerDown={giu}
-                onPointerMove={muovi}
-                onPointerUp={su}
-                onPointerCancel={lascia}
-                onClickCapture={clic}
-              >
-                <span className={s.accento} />
-                {/* Lo stesso bottone prima e dopo la spunta: il fuoco resta e la spunta entra con la transizione; da
-                  completato apre il Dettaglio, dove c'è «Riapri» (§3) */}
-                {cerchio === 'assente' ? (
-                  <span className={s.spunta} data-assente aria-hidden />
-                ) : (
-                  <button
-                    type="button"
-                    className={s.spunta}
-                    data-fatta={fatta || undefined}
-                    aria-disabled={cerchio === 'spento' || undefined}
-                    title={cerchio === 'spento' && b.giornoLocale !== oggi ? t('siSegnaNelGiornoPrevisto') : undefined}
-                    tabIndex={fatta ? -1 : undefined}
-                    aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
-                    onClick={() => (fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now()))}
-                  >
-                    {fatta && <Check size={12} strokeWidth={2.75} />}
-                  </button>
-                )}
-                {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
-                <Link to={`/attivita/${b.id}`} state={sfondo} className={s.testi}>
-                  <span className={s.titoloCard}>{titolo(b)}</span>
-                  {sub && <span className={s.sub}>{sub}</span>}
-                </Link>
-                {b.conOrario && b.orarioFine && (
-                  <span className={`${s.fascia} ${s.soloDesktop}`}>
-                    {b.orarioInizio} – {b.orarioFine}
-                  </span>
-                )}
-                <span className={s.badge}>{t(TIPO[b.tipo])}</span>
-                {/* Maniglia a sei punti solo sulle card che si trascinano (MECC §15); sopra il collegamento della card */}
-                {canDrag(b) && (
-                  <button
-                    type="button"
-                    className={s.maniglia}
-                    data-maniglia
-                    aria-label={t('spostaTitolo', { titolo: titolo(b) })}
-                    aria-describedby={istruzioni}
-                    aria-pressed={daTastiera(b)}
-                    onKeyDown={(e) => tasto(e, b)}
-                    onBlur={() => daTastiera(b) && onPresa(null)}
-                  >
-                    <IconaManiglia />
-                  </button>
-                )}
-              </div>
-            )}
-          </li>,
-        ];
-      })}
-      {pos === righe.length && bloccoAggancio}
-    </ol>
+          </span>
+          <button
+            type="button"
+            className={s.tastoBarra}
+            data-freccia="su"
+            aria-label={t('spostaSu')}
+            disabled={qui.i === 0}
+            onClick={() => sposta(preso, qui.i - 1, 'su', 'barra')}
+          >
+            <ChevronUp size={18} strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className={s.tastoBarra}
+            data-freccia="giu"
+            aria-label={t('spostaGiu')}
+            disabled={qui.i === qui.n - 1}
+            onClick={() => sposta(preso, qui.i + 1, 'giu', 'barra')}
+          >
+            <ChevronDown size={18} strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            className={s.fineBarra}
+            onClick={() => {
+              setMosso(null);
+              setAnnuncio('');
+            }}
+          >
+            {t('fineRiordino')}
+          </button>
+        </div>
+      )}
+      <p className={s.soloLettore} aria-live="polite">
+        {annuncio}
+      </p>
+    </>
   );
 }
 
-/** La card sollevata (S1 `drag`): la copia della card presa, con l'ombra del trascinamento e la maniglia. */
+/**
+ * L'ordine mostrato durante il trascinamento su mobile (§15): il todo preso va nella posizione d'arrivo `a` del suo
+ * gruppo (`gruppo` nell'ordine della vista), dove la riga mostra lo slot; fuori dal gruppo resta dov'era.
+ */
+function anteprima(righe: BloccoCalendario[], gruppo: BloccoCalendario[], id: string, a: number | null) {
+  const preso = righe.find((r) => r.id === id);
+  const altri = gruppo.filter((x) => x.id !== id);
+  const ultimo = altri.at(-1);
+  if (!preso || a === null || !ultimo) return righe;
+  const senza = righe.filter((r) => r.id !== id);
+  const prima = altri[a];
+  const i = prima ? senza.indexOf(prima) : senza.indexOf(ultimo) + 1;
+  return [...senza.slice(0, i), preso, ...senza.slice(i)];
+}
+
+/** La card sollevata (S1 `drag=lift`): la copia del todo preso, con l'ombra del trascinamento e la maniglia. */
 function CardSollevata({ b }: { b: BloccoCalendario }) {
   const sub = sottotitolo(b);
   return (
-    <div className={`${s.card} ${s.sollevata}`}>
+    <div className={s.card}>
       <span className={s.accento} />
       <span className={s.spunta} />
       <span className={s.testi}>
@@ -1035,27 +958,10 @@ function CardSollevata({ b }: { b: BloccoCalendario }) {
         {sub && <span className={s.sub}>{sub}</span>}
       </span>
       <span className={s.badge}>{t(TIPO[b.tipo])}</span>
-      <IconaManiglia />
+      <span className={s.maniglia}>
+        <IconaManiglia />
+      </span>
     </div>
-  );
-}
-
-/**
- * Il blocco del trascinamento di S1 `drag`: il suggerimento nel primary, che va a capo, e la riga di aggancio con la
- * pill (l'orario, o giorno e orario per un perso sulla striscia), la linea tratteggiata e la nota.
- */
-function Suggerimento({ testo, riga }: { testo: string; riga: { pill: string; nota: string } | null }) {
-  return (
-    <>
-      {testo && <span className={s.suggerimento}>{testo}</span>}
-      {riga && (
-        <span className={s.aggancio} data-aggancio>
-          <span className={s.oraAggancio}>{riga.pill}</span>
-          <span className={s.lineaAggancio} />
-          <span className={s.notaAggancio}>{riga.nota}</span>
-        </span>
-      )}
-    </>
   );
 }
 

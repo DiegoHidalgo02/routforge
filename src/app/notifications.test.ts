@@ -16,7 +16,6 @@ import { addLocalDays, local } from '../domain/time';
 import type { Orizzonte, Promemoria } from '../domain/types';
 import { createActivity } from './activities';
 import { completeBlock, deleteBlock, reopenBlock, toggleChecklist } from './completion';
-import { moveBlock } from './drag';
 import {
   CHIAVE_IMPOSTAZIONI_NOTIFICHE,
   createNotifications,
@@ -26,6 +25,7 @@ import {
 import type { Clock } from './ports/clock';
 import type { Notifications } from './ports/notifications';
 import { editRecurrence } from './recurrences';
+import { reorderTodo } from './reorder';
 import { runCycle } from './scheduler';
 import { abandonSession, anticipateSession, CHIAVE_SESSIONE_ATTIVA, endSession, startSession } from './session';
 
@@ -233,34 +233,17 @@ describe('Cambio di stato — SCENARI F6', () => {
     expect([p.armate.size, (await registro()).length]).toEqual([0, 0]);
   });
 
-  describe('Trascinamento — SCENARI G3 (notifiche ri-armate)', () => {
-    it('trascinare un todo senza orario alle 15:00 arma le sue notifiche; l’annulla le cancella di nuovo', async () => {
-      const id = await crea(todo(null), oggi(8));
+  describe('Riordino — SCENARI G3 (notifiche invariate)', () => {
+    it('riordinare un todo senza orario non arma nulla di nuovo: resta nel digest', async () => {
+      const a = await crea(senzaOrario('Prepara la valigia', '2026-09-28'), oggi(8));
+      await crea(senzaOrario('Prenota il treno', '2026-09-28'), oggi(8, 1));
       const p = portaFinta();
       const s = createNotifications(db, p.porta, orologio(oggi(8)));
       await s.reconcile(oggi(8));
-      expect(p.armate.size).toBe(0);
-      const annulla = await moveBlock(db, id, { inizio: oggi(15) }, oggi(9), FUSO);
+      const prima = p.vista();
+      expect(await reorderTodo(db, a, 1, oggi(9), FUSO)).toBe(true);
       await s.reconcile(oggi(9));
-      expect(p.vista()).toEqual([`pre:30:${id}@14:30`, `scadenza:0:${id}@15:00`]);
-      await annulla?.(oggi(9));
-      await s.reconcile(oggi(9));
-      expect(p.armate.size).toBe(0);
-    });
-
-    it('trascinare un perso a un orario nuovo lo ri-arma; l’annulla lo riporta perso e cancella', async () => {
-      await blocco({ id: 'r1', tipo: 'routine', inizio: oggi(7), fine: oggi(8) });
-      await runCycle(db, oggi(9), FUSO);
-      const p = portaFinta();
-      const s = createNotifications(db, p.porta, orologio(oggi(9)));
-      await s.reconcile(oggi(9));
-      const annulla = await moveBlock(db, 'r1', { inizio: oggi(18) }, oggi(9), FUSO);
-      await s.reconcile(oggi(9));
-      expect(p.vista()).toEqual(['pre:10:r1@17:50', 'inizio:0:r1@18:00', 'verifica:0:r1@18:30']);
-      await annulla?.(oggi(9));
-      await s.reconcile(oggi(9));
-      // Di nuovo perso alle 09:00: resta solo il suo avviso «perso» (T-020)
-      expect(p.vista()).toEqual(['perso:0:r1@09:00']);
+      expect(p.vista()).toEqual(prima);
     });
   });
 
@@ -549,14 +532,16 @@ describe('Blocco perso — SCENARI B7', () => {
     expect(await registro()).toContain('perso:0:r');
   });
 
-  it('un perso ripreso col trascinamento e perso di nuovo riceve un nuovo avviso (D-NOTIF-2)', async () => {
+  it('un perso riprogrammato (Modifica, T-042) e perso di nuovo riceve un nuovo avviso (D-NOTIF-2)', async () => {
     await blocco({ id: 'r', tipo: 'routine', inizio: oggi(18), fine: oggi(19) });
     const p = portaFinta();
     const s = createNotifications(db, p.porta, orologio(oggi(17)));
     await runCycle(db, oggi(19, 31), FUSO);
     await s.reconcile(oggi(19, 31));
     expect(p.vista(oggi(19, 31))).toEqual(['perso:0:r@19:31']);
-    await moveBlock(db, 'r', { inizio: oggi(20) }, oggi(19, 32), FUSO);
+    const perso = (await get(db, 'blocchi', 'r'))!;
+    const ripreso = { ...perso, stato: 'programmato' as const, persoIl: null, inizio: oggi(20), fine: oggi(21) };
+    await saveBlock(db, ripreso, oggi(19, 32), FUSO);
     await runCycle(db, oggi(21, 31), FUSO);
     await s.reconcile(oggi(21, 31));
     expect(p.vista(oggi(21, 31))).toEqual(['perso:0:r@21:31']);

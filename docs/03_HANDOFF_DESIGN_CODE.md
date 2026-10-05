@@ -110,8 +110,6 @@ il design ha la card per tipo), D-CAL-2 (aloni, card in corso, Mese vuoto), D-DE
 «Annulla» nel toast). Il vocabolario italiano dei mock e di `claude-design/docs/TESTI.md` sostituisce quello del
 vecchio design nelle sei lingue (T-031).
 
-**Test del vecchio design che restano verdi ma descrivono il comportamento superato** (da riscrivere col loro task):
-`src/domain/drag.test.ts`, `src/app/drag.test.ts`, `src/ui/Today.test.tsx` (vecchio G3 → T-044).
 
 ## 3. Verifica del design (05/10/2026, D-DESIGN-4)
 
@@ -255,6 +253,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     giorno»), con il titolo «Si segna nel giorno previsto» solo per gli altri giorni; esiti di studio (parziale,
     indietro) senza cerchio finché T-040 non li mette nell'archivio. I fogli aperti dal cerchio stanno ancora nel
     Dettaglio (T-056); la spunta disegnata e la chiusura della riga arrivano con l'archivio (T-040).
+57. Riordino (T-044, D-RIORD-1): la card sollevata segue il puntatore (i mock sono fermi: sul mobile la disegnano sopra
+    lo slot, sul desktop sopra la riga originale, che resta com'è); sul desktop la maniglia è solo il segno della presa,
+    fuori dall'ordine del fuoco, e la regione live c'è anche lì (MECC §15, il mock desktop non la ha); «Fine» della
+    barra è una chiave sua (`fineRiordino`: «Fine» di Crea è l'ora di fine).
 
 ## 4. Mappa schermata → design → task
 

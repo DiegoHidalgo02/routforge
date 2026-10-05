@@ -172,9 +172,12 @@ describe('Iperfocus — SCENARI D5 (UI)', () => {
     mostra('/sessione');
     await vi.waitFor(() => expect(box.textContent).toContain('Exit unlocks at 11:10'));
     expect(box.textContent).not.toContain('Finish');
-    // L'indietro del sistema resta sul timer e chiede conferma
-    window.dispatchEvent(new PopStateEvent('popstate'));
-    await vi.waitFor(() => expect(box.querySelector('[role="dialog"]')?.textContent).toContain('Exit locked'));
+    // L'indietro del sistema resta sul timer e chiede conferma. Il gestore si registra in un effetto dopo il disegno:
+    // l'indietro simulato si ripete finché il dialogo non compare, altrimenti su una macchina lenta andrebbe perso
+    await vi.waitFor(() => {
+      if (!box.querySelector('[role="dialog"]')) window.dispatchEvent(new PopStateEvent('popstate'));
+      expect(box.querySelector('[role="dialog"]')?.textContent).toContain('Exit locked');
+    });
     bottone('Stay').click();
     await vi.waitFor(() => expect(box.querySelector('[role="dialog"]')).toBeNull());
     bottone('Exit').click();

@@ -7,6 +7,7 @@
 import type { RoutForgeDb } from '../data/db';
 import { inTransaction, newId, save, saveBlock } from '../data/repository';
 import { validateActivity, type BozzaAttivita, type ErroreAttivita } from '../domain/activity';
+import { enterGroup } from '../domain/ordering';
 import { generateOccurrences } from './recurrences';
 
 export type EsitoCreazione = { ok: true; id: string } | { ok: false; errori: ErroreAttivita[] };
@@ -29,6 +30,8 @@ export async function createActivity(
     });
     return { ok: true, id };
   }
-  const b = await saveBlock(db, { ...v.blocco, ...(v.blocco.tipo === 'evento' ? { fasi } : {}) }, now, fuso);
+  // Un todo nuovo entra nel suo gruppo di priorità in fondo (§6), anche quello delle voci rimaste (A7)
+  const blocco = v.blocco.tipo === 'todo' ? enterGroup(v.blocco, now) : v.blocco;
+  const b = await saveBlock(db, { ...blocco, ...(blocco.tipo === 'evento' ? { fasi } : {}) }, now, fuso);
   return { ok: true, id: b.id };
 }

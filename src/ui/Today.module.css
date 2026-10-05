@@ -675,168 +675,218 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   color: var(--color-text-3);
 }
 
-/* Trascinamento (MECC §15; S1 `drag`, DESIGN.md «Trascinamento», D-DRAG-1). Maniglia a sei punti a destra delle sole
-   card trascinabili (la card stringe il margine destro a 8, come nel mock), sopra il collegamento della card, con il
-   cursore di presa; niente gesti del browser sulla maniglia: al tocco il trascinamento parte subito, il resto della card
-   scorre e si tocca come prima. L'area di tocco 44 cresce verso sinistra, dentro la card, che taglia ciò che sborda */
-.card:has(> .maniglia),
-.sollevata {
+/* Riordino dei todo senza orario (MECC §15; S1 `drag=lift`, `move`). Maniglia 36 × 44 a destra delle sole card che si
+   riordinano (la card stringe il margine destro a 8), sopra il collegamento della card, text-3, bianca con la barra
+   aperta; niente gesti del browser sulla maniglia: al tocco il trascinamento parte subito, il resto della card scorre */
+.card:has(> .maniglia) {
   padding-right: var(--space-2);
 }
 
 .maniglia {
   position: relative;
   z-index: 1;
-  width: var(--space-4);
-  height: var(--space-4);
+  width: var(--size-control-sm);
+  height: var(--size-touch);
   flex: none;
+  margin: -10px -6px -10px -8px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-checkbox);
-  background: none;
-  color: var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-3);
   cursor: grab;
   touch-action: none;
-  transition: color var(--dur-feedback) var(--ease-out);
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    color var(--dur-feedback) var(--ease-out);
 }
 
-.maniglia::after {
-  content: '';
-  position: absolute;
-  inset: calc((var(--space-4) - var(--size-touch)) / 2) calc(-1 * var(--space-2))
-    calc((var(--space-4) - var(--size-touch)) / 2) calc(var(--space-4) + var(--space-2) - var(--size-touch));
-}
-
-.maniglia:hover,
-.maniglia[aria-pressed='true'] {
+.maniglia:hover {
+  background: var(--color-surface-2);
   color: var(--color-text-2);
 }
 
-/* Alla pressione la card si solleva (S1 `style-active`); col mouse si prende da tutta la card, con il cursore di presa
-   sulle sole card trascinabili, e il clic senza movimento apre ancora il Dettaglio */
-.maniglia:active {
-  cursor: grabbing;
+.maniglia[aria-pressed='true'] {
+  color: var(--color-text);
 }
 
-.riga:not([data-sollevata]) .card:has(> .maniglia:active) {
-  box-shadow: var(--shadow-drag);
-  transform: scale(var(--scale-drag));
-}
-
+/* Col mouse si prende da tutta la card, con il cursore di presa sulle sole card che si riordinano */
 @media (pointer: fine) {
   .card:has(> .maniglia),
   .card:has(> .maniglia) .testi {
     cursor: grab;
   }
-
-  .riga:not([data-sollevata]) .card:has(> .maniglia):active {
-    box-shadow: var(--shadow-drag);
-    transform: scale(var(--scale-drag));
-  }
 }
 
-/* Durante il trascinamento col puntatore il cursore è la presa chiusa, ovunque */
-.oggi:has([data-sollevata='puntatore']) :is(*, .testi) {
-  cursor: grabbing;
+/* Barra aperta (S1 `move=attivo`): la card selezionata ha il bordo live e l'ombra del trascinamento */
+.riga[data-mosso] .card {
+  border-color: var(--color-border-live);
+  box-shadow: var(--shadow-drag);
+  transition:
+    border-color var(--dur-feedback) var(--ease-out),
+    box-shadow var(--dur-feedback) var(--ease-out);
 }
 
-/* Card sollevata: ombra drag, `scale(1.015) rotate(-.5deg)`, bordo live. Da tastiera si solleva sul posto, piena anche
-   se persa (S1 `drag=perso`); dal puntatore si solleva la copia (nello spazio del punto d'inserimento, o nella
-   `.fantasma` che segue il dito fuori dai bersagli) e al suo posto resta l'impronta */
-.sollevata,
-[data-sollevata='tastiera'] .card {
-  opacity: 1;
+/* Slot della posizione d'arrivo (S1 `drag=lift`, mobile): tratteggio border-strong r14 alto quanto la card; l'etichetta
+   della priorità resta a .4 */
+.slot {
+  height: var(--size-card-activity);
+  box-sizing: border-box;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+.riga[data-slot] .priorita {
+  opacity: var(--opacity-disabled);
+}
+
+/* Card sollevata: segue il puntatore nella colonna delle card, `scale(1.015) rotate(-.5deg)`, bordo live, ombra drag */
+.sollevata {
+  position: absolute;
+  z-index: 2;
+  top: var(--y);
+  left: var(--size-time-column);
+  right: 0;
+  pointer-events: none;
+}
+
+.sollevata .card {
   border-color: var(--color-border-live);
   box-shadow: var(--shadow-drag);
   transform: scale(var(--scale-drag)) rotate(-0.5deg);
 }
 
-.sollevata > svg {
-  flex: none;
-  color: var(--color-border-strong);
+.sollevata .maniglia {
+  color: var(--color-text-2);
 }
 
-[data-sollevata='tastiera'] .titoloCard {
-  color: var(--color-text);
+/* Durante il trascinamento il cursore è la presa chiusa, ovunque */
+.oggi:has(.sollevata) :is(*, .testi) {
+  cursor: grabbing;
 }
 
-[data-sollevata='tastiera'] .spunta[data-assente] {
-  visibility: visible;
-}
-
-[data-sollevata='puntatore'] .card {
-  opacity: var(--opacity-disabled);
-}
-
-.fantasma {
-  position: fixed;
-  z-index: 7;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-}
-
-/* Il blocco di S1 `drag`, impilato come nel mock: suggerimento, riga di aggancio, card. Su un orario sta nello spazio
-   del punto d'inserimento (dal puntatore con la card sollevata), sulla striscia in testa alla giornata, da tastiera
-   anche sopra la card presa */
-.bloccoAggancio {
+/* Frecce «Sposta su» e «Sposta giù» (S1 Desktop): 28 × 26 r8 impilate a destra della card, visibili con il puntatore
+   sopra la riga o con il fuoco dentro; spente sul primo e sull'ultimo del gruppo */
+.frecce {
+  grid-column: 3;
+  align-self: center;
+  justify-self: end;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  margin-left: var(--size-time-column);
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--dur-feedback) var(--ease-out);
 }
 
-/* Suggerimento: 12 nel primary, a capo se non entra */
-.suggerimento {
-  color: var(--color-primary);
-  font: var(--text-sm) / var(--leading-body) var(--font-ui);
+.riga:hover .frecce,
+.riga:focus-within .frecce {
+  opacity: 1;
 }
 
-/* Riga di aggancio: pill primary soft (l'orario, o giorno e orario), linea tratteggiata 6/6 di 2 px, nota */
-.aggancio {
+.freccia {
+  width: var(--size-chip-sm);
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-segment);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.freccia:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+.freccia:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+/* Barra «Riordina» (S1 `move=attivo`, mobile): al posto del toast, sopra la BottomNav; titolo e posizione nel gruppo,
+   «Sposta su» e «Sposta giù» 44 r12 (spenti ai bordi del gruppo), «Fine» */
+.barra {
+  position: fixed;
+  z-index: 6;
+  left: var(--space-page);
+  right: var(--space-page);
+  bottom: calc(var(--space-6) + var(--size-nav-pill) + var(--space-3) + env(safe-area-inset-bottom));
+  height: 60px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
+  padding: 0 6px 0 var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-2);
+  box-shadow: var(--shadow-toast);
+  animation: global(rf-up) var(--dur-layout) var(--ease-standard);
 }
 
-.oraAggancio {
-  height: var(--size-badge);
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font: 600 var(--text-xs) / 1 var(--font-num);
-  font-variant-numeric: tabular-nums;
-}
-
-.lineaAggancio {
+.testiBarra {
   flex: 1;
-  height: 2px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary) 0 calc(var(--space-3) / 2),
-    transparent calc(var(--space-3) / 2) var(--space-3)
-  );
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.notaAggancio {
-  flex: none;
+.titoloBarra {
+  overflow: hidden;
+  font: 600 var(--text-base) / 17px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.posizioneBarra {
   color: var(--color-text-2);
-  font: var(--text-xs) var(--font-ui);
+  font: var(--text-sm) / 16px var(--font-ui);
 }
 
-/* Giorno della striscia sotto la card: anello primary di 2 px sul cerchio (S1 `drag=giorno`) */
-.giornoStriscia[data-bersaglio] .numero {
-  box-shadow: inset 0 0 0 2px var(--color-primary);
+.tastoBarra,
+.fineBarra {
+  height: var(--size-control);
+  flex: none;
+  border-radius: var(--radius-control-lg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    opacity var(--dur-feedback) var(--ease-out);
 }
 
-/* Riga del giorno su desktop (S1 Desktop): la data e, a destra, la nota del trascinamento, text-2 a riposo e primary
-   con il suggerimento durante la presa */
+.tastoBarra {
+  width: var(--size-control);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.tastoBarra:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.fineBarra {
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  font: 600 var(--text-base) var(--font-ui);
+}
+
+.tastoBarra:hover:not(:disabled),
+.fineBarra:hover {
+  background: var(--color-surface-3);
+}
+
+/* Riga del giorno su desktop (S1 Desktop): la data e, a destra, la nota del trascinamento in text-2 */
 .rigaGiorno {
   display: flex;
   align-items: baseline;
@@ -859,11 +909,7 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   text-align: right;
 }
 
-.notaGiorno[data-attiva] {
-  color: var(--color-primary);
-}
-
-/* Toast con «Annulla» dopo il rilascio (S1 `drag=perso`): sopra la BottomNav su mobile, centrato in basso su desktop.
+/* Toast con «Annulla» dopo la spunta dalla lista (A7): sopra la BottomNav su mobile, centrato in basso su desktop.
    La sua regione di stato resta montata e fuori dal flusso: nella griglia desktop della vista Giorno non prende posto */
 .regioneToast {
   position: absolute;
@@ -1293,8 +1339,25 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
     background: var(--color-border);
   }
 
+  /* 60: la colonna dell'orario desktop; 42: le frecce del riordino (34) col loro respiro (S1 Desktop), per ogni riga */
   .riga {
-    grid-template-columns: 60px minmax(0, 1fr);
+    grid-template-columns: 60px minmax(0, 1fr) 42px;
+  }
+
+  .sollevata {
+    left: 60px;
+    right: 42px;
+  }
+
+  /* Su desktop la maniglia è solo il segno della presa (da tastiera ci sono le frecce) */
+  .maniglia {
+    width: auto;
+    height: auto;
+    margin: 0;
+  }
+
+  .maniglia:hover {
+    background: none;
   }
 
   .punto {
@@ -1312,23 +1375,13 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
     height: var(--space-5);
   }
 
-  /* Su desktop la card con la maniglia, e la sua copia sollevata, tengono il margine destro delle altre (S1 Desktop) */
-  .card:has(> .maniglia),
-  .sollevata {
+  /* Su desktop la card con la maniglia tiene il margine destro delle altre (S1 Desktop) */
+  .card:has(> .maniglia) {
     padding-right: var(--space-3);
-  }
-
-  /* 60: la colonna dell'orario desktop, come `.riga` (nessun token) */
-  .bloccoAggancio {
-    margin: 0 var(--space-2) 0 60px;
   }
 
   .rigaGiorno.soloDesktop {
     display: flex !important;
-  }
-
-  .notaAggancio {
-    font-size: var(--text-sm);
   }
 
   /* Toast centrato in basso nella colonna della giornata, 20 sopra il suo fondo (S1 Desktop `drag=perso`): coi
