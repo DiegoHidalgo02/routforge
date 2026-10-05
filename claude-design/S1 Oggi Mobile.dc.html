@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+::-webkit-scrollbar{display:none}
+@keyframes rf-swap-out{to{opacity:0;transform:translateY(-8px)}}
+@keyframes rf-swap-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes rf-neon{0%,100%{transform:scale(.9);filter:brightness(.85)}50%{transform:scale(1.2);filter:brightness(1.15)}}
+@keyframes rf-bar{0%,100%{opacity:.85}50%{opacity:1}}
+@keyframes rf-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes rf-deal-a{from{opacity:0;transform:translateY(-16px) scale(.9) rotate(-1.6deg)}to{opacity:1;transform:none}}
+@keyframes rf-deal-b{from{opacity:0;transform:translateY(-16px) scale(.9) rotate(1.6deg)}to{opacity:1;transform:none}}
+@keyframes rf-expand{from{opacity:0;transform:scale(.97);transform-origin:50% 0}to{opacity:1;transform:none}}
+@keyframes rf-hero-in{from{transform:scale(.97);opacity:.55}to{transform:none;opacity:1}}
+@keyframes rf-hero-ring{0%{opacity:0;transform:scale(1.02)}25%{opacity:.9;transform:none}100%{opacity:0;transform:none}}
+@keyframes rf-seg{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:none}}
+@keyframes rf-shrink{from{opacity:.4;transform:scaleY(.64) translateY(-10px);transform-origin:50% 0}to{opacity:1;transform:none}}
+@keyframes rf-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes rf-fade{from{opacity:0}to{opacity:1}}
+@keyframes rf-check{to{stroke-dashoffset:0}}
+@keyframes rf-collapse{from{max-height:64px;opacity:1}to{max-height:0;opacity:0;margin-bottom:-12px}}
+@keyframes rf-land{from{opacity:.3;transform:translateY(34px) scale(1.04)}to{opacity:1;transform:none}}
+@keyframes rf-burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1)}}
+@keyframes rf-bump-a{35%{transform:scale(1.18);color:#22C55E}100%{transform:none}}
+@keyframes rf-bump-b{35%{transform:scale(1.18);color:#22C55E}100%{transform:none}}
+@keyframes rf-collapse-hero{from{max-height:170px;opacity:1}to{max-height:0;opacity:0;margin-bottom:-12px}}
+@keyframes rf-pick-a{from{transform:scale(.86)}to{transform:none}}
+@keyframes rf-pick-b{from{transform:scale(.86)}to{transform:none}}
+@keyframes rf-enter-left{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes rf-day-a{from{opacity:.25;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes rf-day-b{from{opacity:.25;transform:translateX(18px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S1 Oggi (mobile)" ref="{{ rootRef }}" style="width:390px;height:844px;background:#0A0D13;border:1px solid #292E37;border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  <div style="height:16px;flex:none"></div>
+  <div data-scroller="{{ scrollerId }}" style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding-bottom:100px;position:relative">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 16px 0; margin-top: {{ headOffset }}px; position: relative; width: 360px; height: 64px">
+      <button aria-label="Account" onClick="{{ toggleMenu }}" style="position:relative;width:40px;height:40px;flex:none;border-radius:999px;background:#1E232C;border:1px solid #292E37;display:flex;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;cursor:pointer;padding:0" style-hover="background:#292E37"><span style="width:3px;height:10px;border-radius:2px;background:#fff"></span><span style="width:3px;height:16px;border-radius:2px;background:#fff"></span><span style="width:3px;height:12px;border-radius:2px;background:#fff"></span><span style="position:absolute;top:1px;right:1px;width:7px;height:7px;border-radius:999px;background:#22C55E;border:2px solid #0A0D13;box-shadow:0 0 6px 1px rgba(34,197,94,.7)"></span></button>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;position:relative;height:40px;justify-content:center">
+        <sc-if value="{{ showGreeting }}" hint-placeholder-val="{{ true }}"><div data-screen-label="Intro greeting" style="display:flex;flex-direction:column;animation:{{ greetAnim }}"><span style="font:600 20px/24px var(--font-ui);letter-spacing:-.01em">Ciao, Alex</span><span style="font:12px/16px var(--font-ui);color:#959CA8">Organizza. Focalizzati. Completa.</span></div></sc-if>
+        <sc-if value="{{ showDate }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;animation:rf-swap-in .4s cubic-bezier(.2,.7,.2,1)"><span style="font:600 18px/22px var(--font-ui);letter-spacing:-.01em">{{ hdrDay }}</span><span style="font:500 13px/16px var(--font-ui);color:#959CA8"><span style="font:500 13px var(--font-num)">{{ hdrNum }}</span> {{ hdrMonth }}</span></div></sc-if>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:10px;flex:none">
+        <button aria-label="Vista Giorno" onClick="{{ viewGiorno }}" style="position:relative;width:34px;height:34px;flex:none;border-radius:999px;background:{{ giornoBg }};border:1px solid {{ giornoBorder }};color:{{ giornoColor }};display:grid;place-items:center;cursor:pointer;padding:0;box-sizing:border-box" style-hover="background:{{ giornoHover }}" style-after="content:'';position:absolute;inset:-6px;border-radius:999px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M7 14h10M7 18h6"></path></svg></button>
+        <button aria-label="Vista Settimana" onClick="{{ viewSettimana }}" style="position:relative;width:34px;height:34px;flex:none;border-radius:999px;background:{{ settimanaBg }};border:1px solid {{ settimanaBorder }};color:{{ settimanaColor }};display:grid;place-items:center;cursor:pointer;padding:0;box-sizing:border-box" style-hover="background:{{ settimanaHover }}" style-after="content:'';position:absolute;inset:-6px;border-radius:999px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M9 10v11M15 10v11"></path></svg></button>
+        <button aria-label="Vista Mese" onClick="{{ viewMese }}" style="position:relative;width:34px;height:34px;flex:none;border-radius:999px;background:{{ meseBg }};border:1px solid {{ meseBorder }};color:{{ meseColor }};display:grid;place-items:center;cursor:pointer;padding:0;box-sizing:border-box" style-hover="background:{{ meseHover }}" style-after="content:'';position:absolute;inset:-6px;border-radius:999px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M3 15.5h18M9 10v11M15 10v11"></path></svg></button>
+      </div>
+      <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Menu account" style="position:absolute;left:16px;top:50px;width:264px;z-index:8;background:#1E232C;border:1px solid #292E37;border-radius:16px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.55);animation:rf-in .18s ease-out;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 10px 12px"><span style="width:32px;height:32px;border-radius:999px;background:#141820;border:1px solid #292E37;display:flex;align-items:center;justify-content:center;gap:2px;box-sizing:border-box"><span style="width:2px;height:8px;border-radius:2px;background:#fff"></span><span style="width:2px;height:13px;border-radius:2px;background:#fff"></span><span style="width:2px;height:10px;border-radius:2px;background:#fff"></span></span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 14px/18px var(--font-ui)">Alex</span><span style="font:12px/15px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">alex@example.com · in pari</span></span></div>
+          <sc-for list="{{ menu }}" as="m" hint-placeholder-count="4">
+            <a href="{{ m.href }}" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 10px;border-radius:10px;color:#fff" style-hover="background:#292E37">{{ m.icon }}<span style="flex:1;font:500 14px var(--font-ui)">{{ m.label }}</span><sc-if value="{{ m.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="height:20px;min-width:20px;padding:0 6px;border-radius:999px;background:#1C2439;color:#6E96F2;font:600 11px/20px var(--font-num);text-align:center">{{ m.badge }}</span></sc-if></a>
+          </sc-for>
+        </div>
+        <div onClick="{{ toggleMenu }}" style="position:fixed;inset:0;z-index:7"></div>
+      </sc-if>
+    </div>
+    <sc-if value="{{ hasSession }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="SessionShell banner" style="position:sticky;top:0;z-index:5;margin:12px 16px 0;height:44px;border-radius:12px;background:#1C2439;border:1px solid #1F3050;display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;box-sizing:border-box;box-shadow:0 8px 24px rgba(0,0,0,.35)"><span style="width:8px;height:8px;border-radius:999px;background:#6E96F2;flex:none;box-shadow:0 0 8px 2px rgba(110,150,242,.7)"></span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sessione in corso · <span style="font:600 13px var(--font-num)">12:41</span> · Event loop visualizzato</span><button onClick="{{ goTimer }}" style="height:32px;padding:0 12px;border-radius:9px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer" style-hover="background:#243A60">Riprendi</button></div>
+    </sc-if>
+    <sc-if value="{{ stripVisible }}" hint-placeholder-val="{{ true }}">
+    <div style="display: grid; grid-template-columns: repeat(7,1fr); margin-top: 16px; padding: 0 16px 14px; margin-bottom: -14px; text-align: center; position: relative; z-index: 2; background: linear-gradient(180deg,#0A0D13 78%,rgba(10,13,19,0)); padding-bottom: 23px; width: 361px; height: 54px; animation: {{ stripAnim }}">
+      <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+        <button onClick="{{ d.pick }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;padding:0;cursor:pointer;color:inherit"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ d.labColor }}">{{ d.lab }}</span><span style="width:30px;height:30px;border-radius:999px;background:{{ d.bg }};color:{{ d.color }};box-shadow:{{ d.ring }};display:grid;place-items:center;font:{{ d.weight }} 14px var(--font-num);box-sizing:border-box;transition:background .15s,color .15s">{{ d.num }}</span><span style="width:5px;height:5px;border-radius:999px;background:{{ d.dot }};box-shadow:{{ d.dotGlow }}"></span></button>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isDay }}" hint-placeholder-val="{{ true }}">
+    <div style="height:{{ dayPad }}px"></div>
+    <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Giorno vuoto" style="padding:56px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center"><span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#959CA8"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg></span><div style="display:flex;flex-direction:column;gap:4px;max-width:280px"><span style="font:600 15px/20px var(--font-ui)">Nessuna attività per oggi</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">Crea la prima, oppure carica un corso per avere una routine di studio.</span></div><div style="display:flex;gap:8px"><button onClick="{{ goCreate }}" style="height:44px;padding:0 18px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Crea attività</button><a href="S10%20Corsi%20Mobile.dc.html" style="height:44px;padding:0 16px;border-radius:12px;color:#fff;font:600 14px var(--font-ui);display:flex;align-items:center" style-hover="background:#1E232C">Vai ai corsi</a></div></div>
+    </sc-if>
+    <sc-if value="{{ showAbsence }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Ritorno dopo assenza" style="margin:12px 16px 0;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 6px 0 14px;border-radius:12px;background:#1E232C;border:1px solid #292E37"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg><span style="flex:1;min-width:0;font:13px/18px var(--font-ui);color:#fff;text-wrap:pretty">Bentornato. Sono passati <span style="font:500 13px var(--font-num)">3</span> giorni: il piano si è già riallineato, i todo sono a oggi.</span><button onClick="{{ dismissAbsence }}" aria-label="Chiudi" style="width:32px;height:32px;border-radius:999px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0;flex:none" style-hover="background:#292E37;color:#fff"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+    </sc-if>
+    <div ref="{{ wrapRef }}" style="position:relative;z-index:1;margin-top:{{ wrapMt }}px;padding:12px 16px 0;display:flex;flex-direction:column;gap:12px;animation:{{ dayAnim }}">
+      <sc-if value="{{ hasLine }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:59px;top:{{ lineTop }}px;bottom:41px;width:2px;background:linear-gradient(180deg,{{ lineTopColor }},rgba(58,64,75,.16) {{ lineFadeMid }}px,#3A404B {{ lineFadeEnd }}px,#3A404B calc(100% - 24px),transparent);pointer-events:none;z-index:0"></span></sc-if>
+      <sc-if value="{{ hasRail }}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:240px;overflow:visible;pointer-events:none"><path d="{{ rail1 }}" fill="none" stroke="#3A404B" style="stroke-width:{{ rail1w }};opacity:{{ rail1op }}"></path><path d="{{ rail2 }}" fill="none" stroke="#3A404B" style="stroke-width:{{ rail2w }};opacity:{{ rail2op }}"></path><path d="{{ rail3 }}" fill="none" stroke="#3A404B" style="stroke-width:{{ rail3w }};opacity:{{ rail3op }}"></path></svg></sc-if>
+      <sc-for list="{{ untimedFirst }}" as="u" hint-placeholder-count="1">
+        <div data-screen-label="Todo senza orario" style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;margin-top:{{ firstMt }}px;animation:{{ u.rowAnim }};overflow:{{ u.rowOverflow }};visibility:{{ u.vis }}">
+          <span style="font:600 10px/18px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ u.prioColor }};padding-top:14px">{{ u.prio }}</span>
+          <span style="position:absolute;left:40px;top:19px;width:8px;height:8px;border-radius:999px;background:{{ u.fill }};box-shadow:0 0 7px 1px {{ u.fill }};z-index:1"></span>
+          <div onClick="{{ u.open }}" data-land="{{ u.landKey }}" style="position:relative;overflow:hidden;background:#141820;border:1px solid {{ u.cardBorder }};border-radius:14px;box-shadow:{{ u.cardShadow }};padding:12px 10px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;cursor:{{ u.cursor }};transition:border-color .15s,box-shadow .15s" style-hover="background:#171c25"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ u.barBg }};box-shadow:{{ u.barGlow }}"></span><sc-if value="{{ u.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:14px;border:2px solid {{ u.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+            <button aria-label="{{ u.checkLabel }}" title="{{ u.checkLabel }}" aria-disabled="{{ u.locked }}" onClick="{{ u.check }}" style="position:relative;width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid {{ u.circBorder }};background:{{ u.circBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;padding:0;cursor:{{ u.circCursor }};opacity:{{ u.circOp }};transition:background .15s,border-color .15s" style-hover="border-color:#959CA8" style-after="content:'';position:absolute;inset:-11px;border-radius:999px"><sc-if value="{{ u.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ u.dashOff }};animation:{{ u.checkAnim }}"></path></svg></sc-if>{{ u.burstEl }}</button>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:{{ u.titleColor }};transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.title }}</span><span style="font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.sub }}</span></div>
+            <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ u.soft }};color:{{ u.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ u.type }}</span>
+            <button aria-label="Riordina «{{ u.title }}»" aria-pressed="{{ u.moving }}" onClick="{{ u.toggleMove }}" style="width:36px;height:44px;margin:-10px -6px -10px -8px;flex:none;border:0;border-radius:10px;background:transparent;color:{{ u.handleColor }};display:grid;place-items:center;padding:0;cursor:grab;touch-action:none" style-hover="background:#1E232C;color:#959CA8"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></button>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ dragOn }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Trascinamento · riordino nella lista" style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative">
+          <span style="font:600 10px/18px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ dragPrioColor }};padding-top:14px;opacity:.4">{{ dragPrio }}</span>
+          <div style="position:relative;height:64px;border-radius:14px;border:1.5px dashed #3A404B;box-sizing:border-box">
+            <div style="position:absolute;left:0;right:0;top:-10px;overflow:hidden;background:#141820;border:1px solid #334156;border-radius:14px;box-shadow:0 12px 28px -10px rgba(0,0,0,.7);padding:12px 10px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;transform:scale(1.015) rotate(-.5deg);z-index:2;cursor:grabbing">
+              <span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ dragBar }}"></span>
+              <span style="width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid #636975;box-sizing:border-box"></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dragTitle }}</span><span style="font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dragSub }}</span></div>
+              <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ dragSoft }};color:{{ dragInk }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ dragType }}</span>
+              <svg aria-label="Trascina" viewBox="0 0 24 24" width="16" height="16" fill="#959CA8" style="flex:none"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-for list="{{ itemsFirst }}" as="it" hint-placeholder-count="0">
+        <div style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;margin-top:{{ firstMt }}px;animation:{{ it.rowAnim }};overflow:{{ it.rowOverflow }};visibility:{{ it.vis }}">
+          <span style="font:{{ it.timeWeight }} 12px/18px var(--font-num);color:{{ it.timeColor }};padding-top:14px;text-shadow:{{ it.timeGlow }}">{{ it.time }}</span>
+          <span style="position:absolute;left:40px;top:19px;width:8px;height:8px;border-radius:999px;background:{{ it.dotBg }};box-shadow:{{ it.dotGlow }};animation:{{ it.dotAnim }};z-index:1"></span>
+          <sc-if value="{{ it.notHero }}" hint-placeholder-val="{{ true }}"><div onClick="{{ it.open }}" data-land="{{ it.landKey }}" style="position:relative;overflow:hidden;background:#141820;border:1px solid {{ it.cardBorder }};border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;cursor:{{ it.cursor }}" style-hover="background:#171c25"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.barBg }};box-shadow:{{ it.barGlow }};animation:{{ it.barAnim }}"></span><sc-if value="{{ it.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:14px;border:2px solid {{ it.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+            <button aria-label="{{ it.checkLabel }}" title="{{ it.checkLabel }}" aria-disabled="{{ it.locked }}" onClick="{{ it.check }}" style="position:relative;width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid {{ it.circBorder }};background:{{ it.circBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;padding:0;cursor:{{ it.circCursor }};opacity:{{ it.circOp }};transition:background .15s,border-color .15s" style-hover="border-color:#959CA8" style-after="content:'';position:absolute;inset:-11px;border-radius:999px"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ it.dashOff }};animation:{{ it.checkAnim }}"></path></svg></sc-if>{{ it.burstEl }}</button>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:{{ it.titleColor }};transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span></div>
+            <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+          </div></sc-if>
+          <sc-if value="{{ it.isHero }}" hint-placeholder-val="{{ false }}"><div data-screen-label="Card Adesso (hero)" onClick="{{ it.open }}" style="position:relative;overflow:hidden;background:#161B27;border:1px solid {{ it.heroBorder }};border-radius:18px;box-shadow:{{ it.heroShadow }};padding:14px 14px 14px 19px;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;cursor:pointer;animation:{{ it.heroAnim }};transform-origin:50% 0" style-after="content:'';position:absolute;inset:0;border-radius:18px;border:2px solid {{ it.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out .1s both"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.fill }}"></span>
+            <span style="grid-column:1;grid-row:1;display:flex;align-items:center;gap:6px;min-width:0;height:14px;font:600 11px/14px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ it.heroInk }}">{{ it.heroEyebrow }}</span>
+            <span style="grid-column:2;grid-row:1;justify-self:end;align-self:start;margin-top:-3px;height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+            <span style="grid-column:1;grid-row:2;margin-top:9px;min-width:0;font:600 20px/24px var(--font-ui);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty">{{ it.title }}</span>
+            <span style="grid-column:1;grid-row:3;margin-top:3px;min-width:0;display:flex;align-items:center;gap:5px;font:13px/17px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span>
+            <span style="grid-column:1;grid-row:4;margin-top:12px;display:flex;align-items:baseline;gap:5px;min-width:0"><span style="font:600 16px/20px var(--font-num);font-variant-numeric:tabular-nums;color:{{ it.heroInk }};flex:none">{{ it.heroNum }}</span><span style="font:500 12px/20px var(--font-num);color:#959CA8;flex:none">{{ it.heroUnit }}</span><span style="font:13px/20px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.heroSub }}</span></span>
+            <sc-if value="{{ it.heroIsStudy }}" hint-placeholder-val="{{ true }}"><button aria-label="{{ it.heroCta }}" title="{{ it.heroCta }}" onClick="{{ it.start }}" style="grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:{{ it.fill }};color:#0A0D13;border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 8px 18px -8px {{ it.fill }};display:grid;place-items:center;cursor:pointer;padding:0" style-hover="filter:brightness(1.12)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="margin-left:2px"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></button></sc-if>
+            <sc-if value="{{ it.heroHasCheck }}" hint-placeholder-val="{{ false }}"><button aria-label="{{ it.heroCheckLabel }}" title="{{ it.heroCheckLabel }}" onClick="{{ it.check }}" style="position:relative;grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:transparent;border:0;display:grid;place-items:center;cursor:pointer;padding:0"><span style="width:28px;height:28px;border-radius:999px;border:1.5px solid {{ it.heroCircBorder }};background:{{ it.heroCircBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;transition:background .15s,border-color .15s"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ it.dashOff }};animation:{{ it.checkAnim }}"></path></svg></sc-if></span>{{ it.burstEl }}</button></sc-if>
+          </div></sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ stacked }}" hint-placeholder-val="{{ true }}">
+          <div data-screen-label="Archivio completate" onPointerDown="{{ archDown }}" onPointerMove="{{ archMove }}" onPointerUp="{{ archUp }}" onPointerCancel="{{ archUp }}" style="order:-1;display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;top:{{ archiveDrag }}px;margin-bottom:{{ archiveMb }}px;transition:top .18s ease-out;touch-action:none;cursor:grab;user-select:none">
+            <div style="position:relative;opacity:.85"><span style="display:block;font:500 10px/18px var(--font-num);color:#959CA8;padding-top:{{ archiveTimePad }}px;padding-left:{{ archiveShift }}px">{{ archiveTime }}</span><sc-for list="{{ peeks }}" as="p" hint-placeholder-count="1"><span style="position:absolute;left:{{ p.timeLeft }}px;top:{{ p.timeTop }}px;font:500 10px/14px var(--font-num);color:#959CA8">{{ p.time }}</span></sc-for></div>
+            <span style="position:absolute;left:{{ archiveDotLeft }}px;top:{{ archiveDotTop }}px;width:{{ archiveDotSize }}px;height:{{ archiveDotSize }}px;border-radius:999px;background:#187B40;box-shadow:0 0 5px 1px rgba(34,197,94,.3);z-index:1"></span>
+            <sc-for list="{{ peeks }}" as="p" hint-placeholder-count="1"><span style="position:absolute;left:{{ p.dotLeft }}px;top:{{ p.dotTop }}px;width:{{ p.dotSize }}px;height:{{ p.dotSize }}px;border-radius:999px;background:#22C55E;opacity:{{ p.dotOp }};filter:{{ p.dotBlur }};z-index:1"></span></sc-for>
+            <div style="position:relative;padding-top:{{ stackPad }}px;transform:scale(.9);transform-origin:50% 0;opacity:.85">
+              <sc-for list="{{ peeks }}" as="p" hint-placeholder-count="1">
+                <div style="position:absolute;top:{{ p.top }}px;left:{{ p.inset }}px;right:{{ p.inset }}px;height:{{ p.h }}px;border-radius:14px 14px 0 0;background:#141820;border:1px solid #292E37;border-bottom:0;opacity:{{ p.op }};box-sizing:border-box;overflow:hidden;filter:blur(.5px);mask-image:linear-gradient(to bottom,#000 30%,rgba(0,0,0,.55) 70%,transparent);-webkit-mask-image:linear-gradient(to bottom,#000 30%,rgba(0,0,0,.55) 70%,transparent)"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ p.barBg }};opacity:.7"></span>
+                  <div style="height:64px;box-sizing:border-box;padding:12px 12px 12px 18px;display:flex;align-items:center;gap:14px">
+                    <span style="width:22px;height:22px;flex:none;border-radius:999px;background:#22C55E;display:grid;place-items:center;color:#0A0D13"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:#C4C9D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden"><span style="font:500 11px var(--font-num)">{{ p.time }}</span><span style="overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</span></span></div>
+                    <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ p.soft }};color:{{ p.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ p.type }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-for list="{{ doneList }}" as="it" hint-placeholder-count="1">
+                <div style="position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;opacity:{{ it.opacity }};animation:{{ it.landAnim }};box-shadow:0 -10px 14px -4px rgba(10,13,19,.85),inset 0 1px 0 rgba(255,255,255,.03),0 4px 12px -6px rgba(0,0,0,.5)"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.barBg }};box-shadow:{{ it.barGlow }}"></span>
+                  <span style="width:22px;height:22px;flex:none;border-radius:999px;background:#22C55E;display:grid;place-items:center;color:#0A0D13"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:#C4C9D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden"><span style="font:500 11px var(--font-num)">{{ it.time }}</span>{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span></div>
+                  <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ archiveOpen }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Completate aperte" onWheel="{{ archWheel }}" onPointerDown="{{ archDown }}" onPointerMove="{{ archMove }}" onPointerUp="{{ archUp }}" onPointerCancel="{{ archUp }}" style="order:-1;display:flex;flex-direction:column;gap:12px;position:relative;z-index:1;top:{{ archiveDrag }}px;transition:top .18s ease-out;touch-action:none;cursor:grab;user-select:none;animation:rf-in .2s ease-out">
+            <sc-for list="{{ doneAll }}" as="it" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;animation:{{ it.dealAnim }};animation-delay:{{ it.dealDelay }}ms;transform-origin:50% 0">
+                <span style="font:500 12px/18px var(--font-num);color:#959CA8;padding-top:14px;opacity:.4">{{ it.time }}</span>
+                <span style="position:absolute;left:40px;top:19px;width:8px;height:8px;border-radius:999px;background:#1B8E48;box-shadow:0 0 6px 1px rgba(34,197,94,.35);z-index:3"></span>
+                <div style="position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;opacity:.32"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.barBg }};box-shadow:{{ it.barGlow }}"></span>
+                  <span style="width:22px;height:22px;flex:none;border-radius:999px;background:#22C55E;display:grid;place-items:center;color:#0A0D13"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:#C4C9D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span></div>
+                  <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ hasUntimedRest }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ untimedRest }}" as="u" hint-placeholder-count="1">
+          <div data-screen-label="Todo senza orario" style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;animation:{{ u.rowAnim }};overflow:{{ u.rowOverflow }};visibility:{{ u.vis }}">
+            <span style="font:600 10px/18px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ u.prioColor }};padding-top:14px">{{ u.prio }}</span>
+            <span style="position:absolute;left:40px;top:19px;width:8px;height:8px;border-radius:999px;background:{{ u.fill }};box-shadow:0 0 7px 1px {{ u.fill }};z-index:1"></span>
+            <div onClick="{{ u.open }}" data-land="{{ u.landKey }}" style="position:relative;overflow:hidden;background:#141820;border:1px solid {{ u.cardBorder }};border-radius:14px;box-shadow:{{ u.cardShadow }};padding:12px 10px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;cursor:{{ u.cursor }};transition:border-color .15s,box-shadow .15s" style-hover="background:#171c25"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ u.barBg }};box-shadow:{{ u.barGlow }}"></span><sc-if value="{{ u.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:14px;border:2px solid {{ u.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+              <button aria-label="{{ u.checkLabel }}" title="{{ u.checkLabel }}" aria-disabled="{{ u.locked }}" onClick="{{ u.check }}" style="position:relative;width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid {{ u.circBorder }};background:{{ u.circBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;padding:0;cursor:{{ u.circCursor }};opacity:{{ u.circOp }};transition:background .15s,border-color .15s" style-hover="border-color:#959CA8" style-after="content:'';position:absolute;inset:-11px;border-radius:999px"><sc-if value="{{ u.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ u.dashOff }};animation:{{ u.checkAnim }}"></path></svg></sc-if>{{ u.burstEl }}</button>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:{{ u.titleColor }};transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.title }}</span><span style="font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.sub }}</span></div>
+              <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ u.soft }};color:{{ u.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ u.type }}</span>
+              <button aria-label="Riordina «{{ u.title }}»" aria-pressed="{{ u.moving }}" onClick="{{ u.toggleMove }}" style="width:36px;height:44px;margin:-10px -6px -10px -8px;flex:none;border:0;border-radius:10px;background:transparent;color:{{ u.handleColor }};display:grid;place-items:center;padding:0;cursor:grab;touch-action:none" style-hover="background:#1E232C;color:#959CA8"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></button>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-for list="{{ itemsRest }}" as="it" hint-placeholder-count="3">
+        <div style="display:grid;grid-template-columns:58px minmax(0,1fr);position:relative;animation:{{ it.rowAnim }};overflow:{{ it.rowOverflow }};visibility:{{ it.vis }}">
+          <span style="font:{{ it.timeWeight }} 12px/18px var(--font-num);color:{{ it.timeColor }};padding-top:14px;text-shadow:{{ it.timeGlow }}">{{ it.time }}</span>
+          <span style="position:absolute;left:40px;top:19px;width:8px;height:8px;border-radius:999px;background:{{ it.dotBg }};box-shadow:{{ it.dotGlow }};animation:{{ it.dotAnim }};z-index:1"></span>
+          <sc-if value="{{ it.notHero }}" hint-placeholder-val="{{ true }}"><div onClick="{{ it.open }}" data-land="{{ it.landKey }}" style="position:relative;overflow:hidden;background:#141820;border:1px solid {{ it.cardBorder }};border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 12px 18px;min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:14px;cursor:{{ it.cursor }}" style-hover="background:#171c25"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.barBg }};box-shadow:{{ it.barGlow }};animation:{{ it.barAnim }}"></span><sc-if value="{{ it.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:14px;border:2px solid {{ it.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+            <button aria-label="{{ it.checkLabel }}" title="{{ it.checkLabel }}" aria-disabled="{{ it.locked }}" onClick="{{ it.check }}" style="position:relative;width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid {{ it.circBorder }};background:{{ it.circBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;padding:0;cursor:{{ it.circCursor }};opacity:{{ it.circOp }};transition:background .15s,border-color .15s" style-hover="border-color:#959CA8" style-after="content:'';position:absolute;inset:-11px;border-radius:999px"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ it.dashOff }};animation:{{ it.checkAnim }}"></path></svg></sc-if>{{ it.burstEl }}</button>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);color:{{ it.titleColor }};transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span></div>
+            <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+          </div></sc-if>
+          <sc-if value="{{ it.isHero }}" hint-placeholder-val="{{ false }}"><div data-screen-label="Card Adesso (hero)" onClick="{{ it.open }}" style="position:relative;overflow:hidden;background:#161B27;border:1px solid {{ it.heroBorder }};border-radius:18px;box-shadow:{{ it.heroShadow }};padding:14px 14px 14px 19px;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;cursor:pointer;animation:{{ it.heroAnim }};transform-origin:50% 0" style-after="content:'';position:absolute;inset:0;border-radius:18px;border:2px solid {{ it.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out .1s both"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.fill }}"></span>
+            <span style="grid-column:1;grid-row:1;display:flex;align-items:center;gap:6px;min-width:0;height:14px;font:600 11px/14px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ it.heroInk }}">{{ it.heroEyebrow }}</span>
+            <span style="grid-column:2;grid-row:1;justify-self:end;align-self:start;margin-top:-3px;height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+            <span style="grid-column:1;grid-row:2;margin-top:9px;min-width:0;font:600 20px/24px var(--font-ui);letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty">{{ it.title }}</span>
+            <span style="grid-column:1;grid-row:3;margin-top:3px;min-width:0;display:flex;align-items:center;gap:5px;font:13px/17px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span>
+            <span style="grid-column:1;grid-row:4;margin-top:12px;display:flex;align-items:baseline;gap:5px;min-width:0"><span style="font:600 16px/20px var(--font-num);font-variant-numeric:tabular-nums;color:{{ it.heroInk }};flex:none">{{ it.heroNum }}</span><span style="font:500 12px/20px var(--font-num);color:#959CA8;flex:none">{{ it.heroUnit }}</span><span style="font:13px/20px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.heroSub }}</span></span>
+            <sc-if value="{{ it.heroIsStudy }}" hint-placeholder-val="{{ true }}"><button aria-label="{{ it.heroCta }}" title="{{ it.heroCta }}" onClick="{{ it.start }}" style="grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:{{ it.fill }};color:#0A0D13;border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 8px 18px -8px {{ it.fill }};display:grid;place-items:center;cursor:pointer;padding:0" style-hover="filter:brightness(1.12)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="margin-left:2px"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></button></sc-if>
+            <sc-if value="{{ it.heroHasCheck }}" hint-placeholder-val="{{ false }}"><button aria-label="{{ it.heroCheckLabel }}" title="{{ it.heroCheckLabel }}" onClick="{{ it.check }}" style="position:relative;grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:transparent;border:0;display:grid;place-items:center;cursor:pointer;padding:0"><span style="width:28px;height:28px;border-radius:999px;border:1.5px solid {{ it.heroCircBorder }};background:{{ it.heroCircBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;transition:background .15s,border-color .15s"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:{{ it.dashOff }};animation:{{ it.checkAnim }}"></path></svg></sc-if></span>{{ it.burstEl }}</button></sc-if>
+          </div></sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ dayDone }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Giornata chiusa" style="position:relative;overflow:hidden;background:#161B27;border:1px solid #22C55E4D;border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px #22C55E1A,0 14px 34px -14px #22C55E66,0 4px 12px -6px rgba(0,0,0,.5);display:flex;flex-direction:column;animation:rf-hero-in .55s cubic-bezier(.2,.8,.2,1) both">
+          <div style="padding:16px 16px 0;display:flex;align-items:center;gap:12px">
+            <span style="width:40px;height:40px;flex:none;border-radius:999px;background:#163029;color:#22C55E;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 11px/14px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#22C55E">Giornata chiusa</span><span style="font:600 18px/24px var(--font-ui);letter-spacing:-.01em">Tutto fatto per oggi</span></div>
+          </div>
+          <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:500 12px/16px var(--font-ui);color:#959CA8">La tua giornata</span><span style="font:500 12px/16px var(--font-num);color:#C4C9D2">{{ dayFrom }} – {{ dayTo }}</span></div>
+            <div aria-label="Composizione della giornata" style="display:flex;gap:3px;height:8px">
+              <sc-for list="{{ daySegs }}" as="g" hint-placeholder-count="7"><span style="flex:{{ g.flex }};min-width:4px;border-radius:999px;background:{{ g.fill }};transform-origin:0 50%;animation:rf-seg .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ g.delay }}ms"></span></sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;padding-top:6px">
+              <sc-for list="{{ dayLegend }}" as="l" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:8px;height:8px;border-radius:999px;background:{{ l.fill }};flex:none"></span><span style="flex:1;min-width:0;font:500 13px/18px var(--font-ui);color:#C4C9D2">{{ l.label }}</span><span style="font:500 13px/18px var(--font-num);color:#fff">{{ l.dur }}</span></span></sc-for>
+            </div>
+          </div>
+          <button onClick="{{ goTomorrow }}" style="margin-top:20px;min-height:60px;padding:10px 12px 10px 16px;border:0;border-top:1px solid #292E37;background:transparent;display:flex;align-items:center;gap:12px;cursor:pointer;color:#fff;text-align:left;font:inherit" style-hover="background:#1E232C">
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:500 12px/16px var(--font-ui);color:#959CA8">Domani · <span style="font:500 12px var(--font-num)">09:00</span></span><span style="font:600 14px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lezione di Algoritmi</span></span>
+            <span style="height:20px;padding:0 7px;border-radius:999px;background:#2A1F45;color:#B794FD;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Studio</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m9 18 6-6-6-6"></path></svg>
+          </button>
+        </div>
+      </sc-if>
+    </div>
+    <div style="margin-top:26px;padding:0 16px;display:flex;align-items:center;justify-content:space-between"><span style="font:600 13px/18px var(--font-ui);color:#C4C9D2">Il tuo progresso oggi</span></div>
+    <div style="margin-top:8px;padding:0 16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+      <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:10px;display:flex;flex-direction:column;gap:2px;height:104px;box-sizing:border-box;min-width:0">
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Completate</span>
+        <span style="font:600 18px/22px var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px"><span style="display:inline-block;transform-origin:0 70%;animation:{{ bumpAnim }}">{{ stats.done }}</span><span style="font:500 11px var(--font-ui);color:#959CA8"> / {{ stats.total }}</span></span>
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font:500 11px var(--font-num)">{{ stats.pctLabel }}</span> di oggi</span>
+        <div style="margin-top:auto;height:18px;display:flex;align-items:flex-end;flex:none"><div style="width:100%;height:6px;border-radius:999px;background:#292E37;overflow:hidden"><div style="width:{{ stats.pct }}%;height:100%;background:{{ doneColor }};border-radius:999px;box-shadow:0 0 8px 1px {{ doneColor }};transition:width .45s cubic-bezier(.4,0,.2,1)"></div></div></div>
+      </div>
+      <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:10px;display:flex;flex-direction:column;gap:2px;height:104px;box-sizing:border-box;min-width:0">
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Focus</span>
+        <span style="font:600 18px/22px var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px">{{ stats.focusH }}<span style="font:500 11px var(--font-ui);color:#959CA8">h</span> {{ stats.focusM }}<span style="font:500 11px var(--font-ui);color:#959CA8">m</span></span>
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font:500 11px var(--font-num);color:{{ stats.deltaColor }}">{{ stats.delta }}</span> vs ieri</span>
+        <div style="margin-top:auto;height:18px;display:flex;align-items:flex-end;gap:3px;flex:none"><sc-for list="{{ focusBars }}" as="fb" hint-placeholder-count="11"><span style="flex:1;height:{{ fb.h }};border-radius:2px;background:{{ fb.bg }};opacity:{{ fb.op }};box-shadow:{{ fb.glow }}"></span></sc-for></div>
+      </div>
+      <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:10px;display:flex;flex-direction:column;gap:2px;height:104px;box-sizing:border-box;min-width:0">
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Settimana</span>
+        <span style="font:600 18px/22px var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px">{{ stats.week }}</span>
+        <span style="font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">completate</span>
+        <div style="margin-top:auto;height:18px;flex:none;display:flex;align-items:flex-end"><svg viewBox="0 0 100 22" width="100%" height="18" preserveAspectRatio="none" style="display:block;filter:drop-shadow(0 0 4px {{ weekGlow }});opacity:{{ sparkOpacity }}"><path d="M0 17 C 12 15, 20 20, 30 14 S 46 5, 58 11 S 76 20, 88 7 L 100 5 V 22 H 0 Z" fill="{{ weekSoft }}"></path><path d="M0 17 C 12 15, 20 20, 30 14 S 46 5, 58 11 S 76 20, 88 7 L 100 5" fill="none" stroke="{{ weekColor }}" style="stroke-width:2;stroke-linecap:round"></path></svg></div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:0 16px;display:flex;align-items:center;justify-content:space-between"><span style="font:600 13px/18px var(--font-ui);color:#C4C9D2">Prossime attività</span><a href="#" onClick="{{ viewSettimana }}" style="display:flex;align-items:center;gap:4px;font:500 12px var(--font-ui);color:#959CA8">Vedi tutte<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+    <div style="margin:8px 16px 0;background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:10px 12px 2px;display:flex;flex-direction:column;gap:6px">
+      <sc-for list="{{ upcoming }}" as="g" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:6px"><span style="font:600 12px/16px var(--font-ui)">{{ g.label }}</span><span style="font:11px var(--font-ui);color:#959CA8;white-space:nowrap">• {{ g.date }}</span></div>
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid #292E37"><span style="width:44px;font:500 12px var(--font-num);color:#959CA8">{{ r.time }}</span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><span style="height:20px;padding:0 7px;border-radius:999px;background:{{ r.soft }};color:{{ r.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ r.type }}</span></div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <sc-if value="{{ noUpcoming }}" hint-placeholder-val="{{ false }}"><span style="font:13px/18px var(--font-ui);color:#959CA8;padding-bottom:8px">Niente in programma nei prossimi giorni.</span></sc-if>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Vista Settimana" style="padding:12px 16px 0;display:flex;flex-direction:column;gap:6px;animation:{{ weekAnim }}">
+        <sc-for list="{{ weekRows }}" as="d" hint-placeholder-count="7">
+          <div onClick="{{ d.pick }}" style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:8px;border-radius:14px;background:{{ d.rowBg }};border:1px solid {{ d.rowBorder }};box-sizing:border-box;cursor:pointer">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+              <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ d.labColor }}">{{ d.lab }}</span>
+              <span style="width:30px;height:30px;border-radius:999px;background:{{ d.numBg }};color:{{ d.numColor }};display:grid;place-items:center;font:{{ d.numWeight }} 14px var(--font-num)">{{ d.num }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <sc-for list="{{ d.blocks }}" as="b" hint-placeholder-count="2">
+                <div data-land="{{ b.landKey }}" style="visibility:{{ b.vis }};animation:{{ b.enterAnim }};position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);min-height:44px;box-sizing:border-box;padding:6px 10px 6px 14px;display:flex;align-items:center;gap:10px">
+                  <span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ b.fill }}"></span><sc-if value="{{ b.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:12px;border:2px solid {{ b.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+                  <span style="width:44px;flex:none;font:500 12px var(--font-num);color:#959CA8">{{ b.time }}</span>
+                  <span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.title }}</span>
+                  <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ b.soft }};color:{{ b.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ b.type }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ d.free }}" hint-placeholder-val="{{ false }}"><span style="font:500 12px/16px var(--font-ui);color:#636975;padding:8px 0 4px">libero</span></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Vista Mese" style="padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center">
+          <sc-for list="{{ weekRows }}" as="d" hint-placeholder-count="7">
+            <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">{{ d.lab }}</span>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:48px;gap:4px">
+          <sc-for list="{{ monthCells }}" as="c" hint-placeholder-count="35">
+            <button onClick="{{ c.pick }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:12px;background:{{ c.bg }};border:1px solid {{ c.border }};color:{{ c.color }};cursor:pointer;padding:0;box-sizing:border-box;transition:background .25s,color .25s,border-color .25s;animation:{{ c.pickAnim }}">
+              <span style="font:{{ c.weight }} 14px var(--font-num)">{{ c.num }}</span>
+              <span style="display:flex;align-items:center;justify-content:center;gap:3px;height:4px">
+                <sc-for list="{{ c.dots }}" as="t" hint-placeholder-count="2">
+                  <span data-land="{{ t.landKey }}" style="width:4px;height:4px;border-radius:999px;background:{{ t.bg }};visibility:{{ t.vis }}"></span>
+                </sc-for>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:2px">
+          <sc-for list="{{ monthLegend }}" as="l" hint-placeholder-count="4">
+            <span style="display:flex;align-items:center;gap:6px;font:12px var(--font-ui);color:#959CA8"><span style="width:6px;height:6px;border-radius:999px;background:{{ l.fill }}"></span>{{ l.label }} · <span style="font:500 12px var(--font-num)">{{ l.days }}</span></span>
+          </sc-for>
+        </div>
+        <span style="font:600 15px/20px var(--font-ui);padding-top:6px">{{ selDayLabel }}</span>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ monthDayList }}" as="b" hint-placeholder-count="4">
+            <div data-land="{{ b.landKey }}" style="visibility:{{ b.vis }};animation:{{ b.enterAnim }};position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);min-height:44px;box-sizing:border-box;padding:6px 10px 6px 14px;display:flex;align-items:center;gap:10px">
+              <span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ b.fill }}"></span><sc-if value="{{ b.isNew }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:12px;border:2px solid {{ b.fill }};pointer-events:none;animation:rf-hero-ring 1.2s ease-out both"></span></sc-if>
+              <span style="width:44px;flex:none;font:500 12px var(--font-num);color:#959CA8">{{ b.time }}</span>
+              <span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.title }}</span>
+              <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ b.soft }};color:{{ b.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ b.type }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isWeekEmpty }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Settimana vuota" style="padding:60px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+        <span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#636975"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+        <div style="display:flex;flex-direction:column;gap:4px;max-width:280px;text-align:center;flex:none"><span style="font:600 15px/20px var(--font-ui)">Settimana libera</span><span style="font:13px/18px var(--font-ui);color:#959CA8">Nessuna attività dal <span style="font:500 13px var(--font-num)">21</span> al <span style="font:500 13px var(--font-num)">27</span> settembre.</span></div>
+        <button onClick="{{ goCreate }}" style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 15px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Crea attività</button>
+      </div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div role="status" data-screen-label="Toast" style="position:absolute;left:16px;right:16px;bottom:93px;z-index:6;height:48px;border-radius:12px;background:#292E37;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;padding:0 6px 0 14px;box-sizing:border-box;animation:rf-up .3s cubic-bezier(.4,0,.2,1)"><span style="width:8px;height:8px;border-radius:999px;background:{{ toastDot }};flex:none"></span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ toastText }}</span><sc-if value="{{ toastUndo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ undo }}" style="height:36px;padding:0 12px;border-radius:9px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer;flex:none" style-hover="background:#3A404B">Annulla</button></sc-if></div>
+  </sc-if>
+  <sc-if value="{{ moveOn }}" hint-placeholder-val="{{ false }}">
+    <div role="toolbar" aria-label="Riordina" data-screen-label="Riordino senza trascinamento" style="position:absolute;left:16px;right:16px;bottom:93px;z-index:6;height:60px;border-radius:14px;background:#1E232C;border:1px solid #292E37;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:6px;padding:0 6px 0 14px;box-sizing:border-box;animation:rf-up .3s cubic-bezier(.4,0,.2,1)">
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 13px/17px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ moveTitle }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8;white-space:nowrap">{{ movePos }}</span></span>
+      <button aria-label="Sposta su" disabled="{{ moveUpOff }}" onClick="{{ moveUp }}" style="width:44px;height:44px;flex:none;border-radius:12px;background:#141820;border:1px solid #292E37;color:#fff;display:grid;place-items:center;padding:0;cursor:{{ moveUpCursor }};opacity:{{ moveUpOp }};transition:opacity .15s" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m18 15-6-6-6 6"></path></svg></button>
+      <button aria-label="Sposta giù" disabled="{{ moveDownOff }}" onClick="{{ moveDown }}" style="width:44px;height:44px;flex:none;border-radius:12px;background:#141820;border:1px solid #292E37;color:#fff;display:grid;place-items:center;padding:0;cursor:{{ moveDownCursor }};opacity:{{ moveDownOp }};transition:opacity .15s" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+      <button onClick="{{ moveDone }}" style="height:44px;padding:0 12px;flex:none;border-radius:12px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Fine</button>
+    </div>
+  </sc-if>
+  <span aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">{{ moveLive }}</span>
+  <sc-if value="{{ sheetOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:9;background:rgba(10,13,19,.72);display:flex;flex-direction:column;justify-content:flex-end;animation:rf-fade .2s ease-out">
+      <div role="dialog" aria-modal="true" aria-label="Voci rimaste" data-screen-label="Voci rimaste (da Oggi)" onClick="{{ stop }}" style="background:#1E232C;border-top:1px solid #292E37;border-radius:24px 24px 0 0;padding:8px 20px 34px;display:flex;flex-direction:column;gap:16px;animation:rf-up .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -12px 32px rgba(0,0,0,.45)">
+        <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:0 auto"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#2DD4BF">Segna come fatto</span><span style="font:600 18px/24px var(--font-ui)">{{ sheetTitle }}</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">«{{ sheetName }}» si completa comunque. Le voci rimaste puoi segnarle fatte o passarle a un nuovo todo.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ sheetRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:12px;height:52px;padding:0 14px;border-radius:10px;background:#141820;border:1px solid #292E37;box-sizing:border-box;position:relative;overflow:hidden;color:#fff"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#14B8A6"></span><span style="width:20px;height:20px;flex:none;border-radius:5px;border:1.5px solid #636975;box-sizing:border-box"></span><span style="flex:1;min-width:0;font:600 14px var(--font-ui)">{{ r }}</span></div>
+          </sc-for>
+          <span style="font:500 12px/16px var(--font-ui);color:#2DD4BF;text-align:right">{{ sheetMeta }}</span>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px">
+          <button onClick="{{ sheetAll }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37;color:#fff">Tutte fatte</button>
+          <button onClick="{{ sheetSplit }}" style="flex:1;height:44px;border-radius:12px;background:#14B8A6;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.5),0 10px 24px -12px rgba(20,184,166,.6)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.985)">Crea todo con le voci rimaste</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ esOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ esCancel }}" style="position:absolute;inset:0;z-index:9;background:rgba(10,13,19,.72);display:flex;flex-direction:column;justify-content:flex-end;animation:rf-fade .2s ease-out">
+      <div role="dialog" aria-modal="true" aria-label="Registra esito" data-screen-label="Registra esito (da Oggi)" onClick="{{ stop }}" style="background:#1E232C;border-top:1px solid #292E37;border-radius:24px 24px 0 0;padding:8px 20px 34px;display:flex;flex-direction:column;gap:16px;animation:rf-up .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -12px 32px rgba(0,0,0,.45)">
+        <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:0 auto"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#B794FD">Registra esito</span><span style="font:600 18px/24px var(--font-ui)">{{ esTitle }}</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">{{ esSub }}</span></div>
+        <div role="radiogroup" aria-label="Esito" style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ esRows }}" as="r" hint-placeholder-count="4"><button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:52px;padding:8px 14px;border-radius:10px;background:{{ r.bg }};border:1px solid {{ r.border }};box-sizing:border-box;cursor:pointer;text-align:left;width:100%;color:{{ r.color }};transition:background .15s,border-color .15s" style-hover="border-color:{{ r.hover }}"><span style="font:600 14px/18px var(--font-ui)">{{ r.label }}</span><span style="font:12px/16px var(--font-ui);color:{{ r.subColor }}">{{ r.sub }}</span></button></sc-for>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px"><button onClick="{{ esCancel }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37;color:#fff">Annulla</button><button onClick="{{ esConfirm }}" disabled="{{ esOff }}" style="flex:1;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;opacity:{{ esOp }};transition:opacity .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Registra esito</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ revOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ revCancel }}" style="position:absolute;inset:0;z-index:9;background:rgba(10,13,19,.72);display:flex;flex-direction:column;justify-content:flex-end;animation:rf-fade .2s ease-out">
+      <div role="dialog" aria-modal="true" aria-label="Revisione fasi" data-screen-label="Revisione fasi (da Oggi)" onClick="{{ stop }}" style="background:#1E232C;border-top:1px solid #292E37;border-radius:24px 24px 0 0;padding:8px 20px 34px;display:flex;flex-direction:column;gap:16px;animation:rf-up .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -12px 32px rgba(0,0,0,.45)">
+        <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:0 auto"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ revInk }}">{{ revEyebrow }}</span><span style="font:600 18px/24px var(--font-ui)">Revisione fasi</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">Risultano tutte fatte. Tocca solo quelle che hai saltato.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ revRows }}" as="r" hint-placeholder-count="3"><button onClick="{{ r.toggle }}" aria-pressed="{{ r.skipped }}" style="display:flex;align-items:center;gap:10px;height:52px;padding:0 14px 0 12px;border-radius:10px;background:#141820;border:1px solid #292E37;box-sizing:border-box;cursor:pointer;text-align:left;width:100%;color:#fff" style-hover="border-color:#3A404B"><span style="width:8px;height:8px;flex:none;border-radius:999px;background:{{ r.dotBg }};border:1.5px solid {{ r.dotBorder }};box-sizing:border-box;transition:background .15s"></span><span style="width:16px;flex:none;font:500 11px var(--font-num);color:#636975">{{ r.n }}</span><span style="flex:1;min-width:0;font:500 14px var(--font-ui);color:{{ r.color }};text-decoration:{{ r.deco }};transition:color .15s">{{ r.text }}</span><span style="font:500 11px var(--font-ui);color:#959CA8">{{ r.tag }}</span></button></sc-for>
+          <span style="font:500 12px/16px var(--font-num);color:#959CA8">{{ revSummary }}</span>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px"><button onClick="{{ revCancel }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37;color:#fff">Annulla</button><button onClick="{{ revConfirm }}" style="flex:1;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Conferma</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <nav style="position:absolute;left:50%;transform:translateX(-50%);width:264px;bottom:25px;height:56px;border-radius:999px;background:linear-gradient(180deg,#1A1F29,#111520);border:1px solid #2E343E;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 4px rgba(0,0,0,.4),0 14px 34px -6px rgba(0,0,0,.7),0 0 0 1px rgba(0,0,0,.6);display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;z-index:4;box-sizing:border-box">
+    <a href="#" onClick="{{ navToday }}" aria-current="page" style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#fff;font:500 10px/12px var(--font-ui)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>Oggi</a>
+    <button aria-label="Crea" onClick="{{ goCreate }}" style="width:44px;height:44px;border-radius:999px;background:#6E96F2;border:0;color:#0A0D13;display:grid;place-items:center;margin:0 auto;cursor:pointer;padding:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" style="stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M12 5v14"></path></svg></button>
+    <a href="S20%20Shell%20Mobile.dc.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;color:#959CA8;font:500 10px/12px var(--font-ui)" style-hover="color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Statistiche</a>
+  </nav>
+  <sc-if value="{{ creaOn }}" hint-placeholder-val="{{ false }}">
+    <div ref="{{ ovRef }}" style="position:absolute;inset:0;z-index:10;background:rgba(10,13,19,.72);opacity:{{ ovOp }};animation:rf-fade .2s ease-out"></div>
+    <div ref="{{ sheetRef }}" role="dialog" aria-modal="true" aria-label="Nuova attività" data-screen-label="Crea (foglio sopra Oggi)" style="position:absolute;left:0;top:56px;width:388px;height:786px;z-index:11;background:#141820;border:1px solid #292E37;border-bottom:0;border-radius:24px 24px 43px 43px;overflow:hidden;box-sizing:border-box;transform:translateY({{ sheetDy }}px);transition:{{ sheetTrans }};animation:rf-up .3s cubic-bezier(.4,0,.2,1)">
+      <div ref="{{ formRef }}" style="position:absolute;left:0;top:0;width:386px;height:786px;display:flex;flex-direction:column">
+        <div style="width:36px;height:4px;border-radius:999px;background:#3A404B;margin:8px auto 0;flex:none"></div>
+        <div style="flex:1;min-height:0;position:relative;margin-bottom:20px"><dc-import name="S4 Crea Panel" type="{{ sheetType }}" filled="{{ sheetFilled }}" reminder="{{ sheetReminder }}" due="{{ sheetDue }}" date="{{ sheetDate }}" mode="{{ sheetMode }}" on-create="{{ onSheetCreate }}" on-close="{{ closeCrea }}" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import></div>
+      </div>
+      <div aria-hidden="true" title="Trascina in basso per chiudere" onPointerDown="{{ sheetDown }}" onPointerMove="{{ sheetMove }}" onPointerUp="{{ sheetUp }}" onPointerCancel="{{ sheetUp }}" style="position:absolute;left:0;right:0;top:0;height:60px;z-index:3;touch-action:none;cursor:grab"></div>
+      <div ref="{{ faceRef }}" aria-hidden="true" style="position:absolute;left:0;top:0;width:296px;height:62px;opacity:0;pointer-events:none;box-sizing:border-box;padding:{{ facePad }};display:flex;align-items:center;gap:14px;color:#fff">
+        <span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ faceBar }}"></span>
+        <span style="width:22px;height:22px;flex:none;border-radius:999px;border:1.5px solid #636975;box-sizing:border-box"></span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px/20px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ faceTitle }}</span><span style="display:flex;align-items:center;gap:5px;font:13px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ faceIcon }}<span style="overflow:hidden;text-overflow:ellipsis">{{ faceSub }}</span></span></div>
+        <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ faceSoft }};color:{{ faceInk }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ faceType }}</span>
+        <sc-if value="{{ faceHandle }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#636975" style="flex:none;margin:0 3px"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;default&quot;,&quot;options&quot;:[&quot;default&quot;,&quot;empty&quot;,&quot;done&quot;],&quot;tsType&quot;:&quot;'default' | 'empty' | 'done'&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;giorno&quot;,&quot;options&quot;:[&quot;giorno&quot;,&quot;settimana&quot;,&quot;settimana-vuota&quot;,&quot;mese&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista (FUNZIONALITA §3)&quot;},&quot;drag&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;lift&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Trascinamento (MECCANISMI §15)&quot;},&quot;move&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;attivo&quot;],&quot;tsType&quot;:&quot;'no' | 'attivo'&quot;,&quot;section&quot;:&quot;Trascinamento (MECCANISMI §15)&quot;},&quot;now&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;adesso&quot;,&quot;options&quot;:[&quot;mancanti&quot;,&quot;adesso&quot;,&quot;recupera&quot;,&quot;passato&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Blocco Adesso (MECCANISMI §14)&quot;},&quot;nowKind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;study&quot;,&quot;options&quot;:[&quot;study&quot;,&quot;todo&quot;,&quot;routine&quot;,&quot;event&quot;],&quot;tsType&quot;:&quot;'study' | 'todo' | 'routine' | 'event'&quot;,&quot;section&quot;:&quot;Blocco Adesso (MECCANISMI §14)&quot;},&quot;strikeDelay&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:900,&quot;min&quot;:0,&quot;max&quot;:5000,&quot;step&quot;:100,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Blocco Adesso (MECCANISMI §14)&quot;},&quot;celebration&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;sobria&quot;,&quot;options&quot;:[&quot;sobria&quot;,&quot;piena&quot;,&quot;off&quot;],&quot;tsType&quot;:&quot;'sobria' | 'piena' | 'off'&quot;,&quot;section&quot;:&quot;Completamento (FUNZIONALITA §6, §23)&quot;},&quot;sheet&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;voci&quot;,&quot;fasi&quot;,&quot;esito&quot;],&quot;tsType&quot;:&quot;'no' | 'voci' | 'fasi' | 'esito'&quot;,&quot;section&quot;:&quot;Completamento (FUNZIONALITA §6, §23)&quot;},&quot;archive&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;stacked&quot;,&quot;options&quot;:[&quot;stacked&quot;,&quot;open&quot;],&quot;tsType&quot;:&quot;'stacked' | 'open'&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;menu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;absence&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;session&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;intro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;}}">
+class Component extends DCLogic {
+  // Parametri dell'indirizzo: le schermate collegate riportano qui lo stato (?dopo=sessione, ?nuovo=…, ?sessione=1)
+  Q = (() => { try { return new URLSearchParams(window.location.search); } catch (_) { return new URLSearchParams(''); } })();
+  q(k) { const u = this.Q.get(k); if (u !== null && u !== '') return u; const v = this.props[k]; return v !== undefined && v !== null && v !== '' ? v : undefined; }
+  // Card Adesso per tipo (prop nowKind): l'attività delle 16:00 cambia tipo; studio = play, gli altri tipi = cerchio di completamento
+  nowKind() { const k = this.Q.get('nowKind') || this.props.nowKind; return ['todo', 'routine', 'event'].includes(k) ? k : 'study'; }
+  nowItem() { return {
+    study: { id: 'Ripasso Modulo 0', time: '16:00', k: 'study', title: 'Ripasso Modulo 0', sub: 'Riattivazione JavaScript · Unità 0.7', icon: 'cap', live: true, dur: '45', span: '16:00 – 16:45', min: 45, detail: 'study' },
+    todo: { id: 'Inviare la relazione', time: '16:00', k: 'todo', title: 'Inviare la relazione', sub: 'Checklist 2/4 · orizzonte giorno', icon: 'check', live: true, dur: '30', span: '16:00 – 16:30', min: 30, left: this.LEFT['Inviare la relazione'] },
+    routine: { id: 'Corsa', time: '16:00', k: 'routine', title: 'Corsa', sub: 'Workout · 3 fasi', icon: 'dumbbell', live: true, dur: '45', span: '16:00 – 16:45', min: 45, phases: ['Riscaldamento', 'Corsa', 'Stretching'] },
+    event: { id: 'Riunione con il relatore', time: '16:00', k: 'event', title: 'Riunione con il relatore', sub: 'Aula 2.4 · Edificio B', icon: 'pin', live: true, dur: '60', span: '16:00 – 17:00', min: 60 }
+  }[this.nowKind()]; }
+  // Routine e studio si segnano solo nel loro giorno (MECC §3); todo ed eventi in qualsiasi giorno
+  isLocked(it) { return !!(it.other && it.date > 23 && (it.k === 'routine' || it.k === 'study')); }
+  ES = [['done', 'Completata', 'Il puntatore passa alla 0.8'], ['continue', 'Continua', 'Resta sulla 0.7 la prossima volta'], ['back', 'Indietro', 'La 0.6 torna da rivedere'], ['skip', 'Salta', 'La 0.7 esce dal percorso']];
+  esConfirm = () => { const id = this.state.esito, pick = this.state.esitoPick, it = this._esItem; if (!id || !pick || !it) return; this.setState({ esito: null }); this.runCheck(id, { text: 'Esito registrato · ' + it.title + ' · ' + this.ESITO[pick][0], dot: '#22C55E', undo: 'done', id }, x => ({ doneMode: { ...x.doneMode, [id]: pick } })); };
+  daySpan(list) { const m = h => +h.slice(0, 2) * 60 + +h.slice(3), f = n => String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0'); const tm = list.filter(x => /^\d\d:\d\d$/.test(String(x.time))); if (!tm.length) return { dayFrom: '', dayTo: '' }; return { dayFrom: f(Math.min(...tm.map(x => m(x.time)))), dayTo: f(Math.max(...tm.map(x => m(x.time) + (x.min || 0)))) }; }
+  revConfirm = () => { const it = this._revItem, id = this.state.review; if (!it || !id) return; const tot = it.phases.length, nSk = this.state.revSkipped.length, ok = tot - nSk;
+    const label = it.k === 'event' ? (nSk ? `Completato · ${nSk} ${nSk === 1 ? 'fase saltata' : 'fasi saltate'}` : 'Completato · tutte le fasi') : `Fatta · ${ok} ${ok === 1 ? 'fase' : 'fasi'} su ${tot}`;
+    this.setState({ review: null }); this.runCheck(id, { text: label, dot: '#22C55E', undo: 'done', id }, x => ({ doneMode: { ...x.doneMode, [id]: label } })); };
+  LEFT = { 'Inviare la relazione': ['Allegare i grafici', 'Rileggere le conclusioni'], 'Prepara la valigia': ['Adattatore', 'Contanti', 'Cuffie', 'Libro per il viaggio'], 'Leggere 20 pagine': ['Pagine 9–12', 'Pagine 13–16', 'Pagine 17–20'] };
+  ESITO = { done: ['Completata', 'Completata · 45 min'], continue: ['Continua', 'Continua · parziale · 45 min'], back: ['Indietro', 'Indietro · la 0.6 torna da rivedere'], skip: ['Salta', 'Saltata · 0.7 fuori dal percorso'] };
+  PRIO_LONG = { 'Alta': 'priorità alta', 'Norm.': 'priorità normale', 'Bassa': 'priorità bassa' };
+  state = { struck: false, absenceGone: false, greeting: true, greetOut: false, menuOpen: this.props.menu === true || this.props.menu === 'true', archiveOpen: this.props.archive === 'open', dragY: 0, day: 2, rowW: 0, ...this.viewInit(), ...this.flowInit() };
+  flowInit() {
+    const after = this.Q.get('dopo') === 'sessione', nuovo = this.Q.get('nuovo'), creato = this.Q.get('creato');
+    const P = { alta: 'Alta', normale: 'Norm.', bassa: 'Bassa' };
+    const created = nuovo ? { title: nuovo, prio: P[this.Q.get('prio')] || 'Norm.' } : null;
+    const CR = { todo: 'Todo creato', study: 'Routine di studio creata · occorrenze per 4 settimane', routine: 'Routine creata · occorrenze per 4 settimane', event: 'Evento creato', modifica: 'Modifiche salvate' };
+    const toast = after ? { text: 'Esito registrato · Ripasso Modulo 0 · ' + (this.ESITO[this.Q.get('esito')] || this.ESITO.done)[0], dot: '#22C55E', undo: null }
+      : created ? { text: 'Todo creato · ' + nuovo, dot: '#14B8A6', undo: 'created' }
+      : CR[creato] ? { text: CR[creato], dot: '#6E96F2', undo: null } : null;
+    return { checking: null, collapsing: null, doneExtra: after ? ['Ripasso Modulo 0'] : [], doneMode: {}, landT: after ? 'Ripasso Modulo 0' : null, returnT: created ? 'nuovo' : null, toast, sheet: this.props.sheet === 'voci' ? 'Prepara la valigia' : null, split: null, created,
+      moveT: this.props.move === 'attivo' ? 'Prenota il treno' : null, moveLive: '', uOrder: ['Prepara la valigia', 'Prenota il treno', 'Chiama Marco', ...(created ? ['nuovo'] : [])], bumped: after, review: this.props.sheet === 'fasi' ? 'Corsa' : null, revSkipped: [], esito: this.props.sheet === 'esito' ? 'Ripasso Modulo 0' : null, esitoPick: null,
+      wk: 0, added: [], land: null, landFace: null, crea: this.props.crea && typeof this.props.crea === 'object' ? this.props.crea : null, sheetDy: 0, sheetDrag: false, dayAnimN: 0, pageN: 0, pickN: 0 };
+  }
+  go(file, q) { try { window.location.href = encodeURI(file) + (q ? '?' + new URLSearchParams(q).toString() : ''); } catch (_) {} }
+  cel() { const c = this.q('celebration'); return c === 'piena' || c === 'off' ? c : 'sobria'; }
+  armToast() { clearTimeout(this.tt); this.tt = setTimeout(() => this.setState({ toast: null }), 5000); }
+  // Ciclo di completamento (FUNZ §2 e §6, MECC §3–4): spunta animata → la riga si chiude → la card atterra sul mazzo delle completate
+  checkItem(it, e) {
+    if (e) e.stopPropagation();
+    const s = this.state; if (s.checking || s.collapsing || it.done) return;
+    if (this.isLocked(it)) return;
+    // Studio: l'esito è la conferma (senza sessione conta la durata pianificata, MECC §11)
+    if (it.k === 'study') { clearTimeout(this.tt); this.setState({ esito: it.id, esitoPick: null, moveT: null, toast: null }); return; }
+    if (it.left && it.left.length) { clearTimeout(this.tt); this.setState({ sheet: it.id, moveT: null, toast: null }); return; }
+    if (it.phases && it.phases.length) { clearTimeout(this.tt); this.setState({ review: it.id, revSkipped: [], moveT: null, toast: null }); return; }
+    this.runCheck(it.id, { text: (it.k === 'event' ? 'Evento completato · ' : it.k === 'routine' ? 'Fatta · ' : 'Fatto · ') + it.title, dot: '#22C55E', undo: 'done', id: it.id });
+  }
+  runCheck(id, toast, patch) {
+    const off = this.cel() === 'off', t1 = off ? 0 : 560, t2 = off ? 0 : 260;
+    clearTimeout(this.tc1); clearTimeout(this.tc2); clearTimeout(this.tt);
+    this.setState({ checking: id, moveT: null, toast: null, returnT: null });
+    this.tc1 = setTimeout(() => this.setState({ collapsing: id }), t1);
+    this.tc2 = setTimeout(() => { this.setState(x => ({ checking: null, collapsing: null, doneExtra: [...x.doneExtra.filter(v => v !== id), id], landT: id, bumped: true, toast, ...(patch ? patch(x) : {}) })); this.armToast(); }, t1 + t2);
+  }
+  undo = () => {
+    const t = this.state.toast; if (!t) return; clearTimeout(this.tt);
+    if (t.undo === 'done') this.setState(x => { const dm = { ...x.doneMode }; delete dm[t.id]; return { toast: null, doneExtra: x.doneExtra.filter(v => v !== t.id), doneMode: dm, landT: null, returnT: t.id, split: t.split ? null : x.split, uOrder: t.split ? x.uOrder.filter(v => v !== 'split') : x.uOrder, bumped: true }; });
+    else if (t.undo === 'created') this.setState(x => ({ toast: null, created: null, uOrder: x.uOrder.filter(v => v !== 'nuovo'), bumped: true }));
+    else if (t.undo === 'added') this.setState(x => ({ toast: null, added: x.added.filter(a => a.id !== t.id), land: null, bumped: true }));
+  };
+  sheetAll = () => { const id = this.state.sheet; if (!id) return; this.setState({ sheet: null }); this.runCheck(id, { text: 'Fatto · tutte le voci spuntate', dot: '#22C55E', undo: 'done', id }, x => ({ doneMode: { ...x.doneMode, [id]: 'all' } })); };
+  sheetSplit = () => { const id = this.state.sheet; if (!id) return; const n = (this.LEFT[id] || []).length; this.setState({ sheet: null }); this.runCheck(id, { text: `Completato · ${n} ${n === 1 ? 'voce' : 'voci'} in un nuovo todo`, dot: '#14B8A6', undo: 'done', id, split: true }, x => ({ doneMode: { ...x.doneMode, [id]: 'split' }, split: id, uOrder: [...x.uOrder.filter(v => v !== 'split'), 'split'], returnT: 'split' })); };
+  // Riordino senza trascinamento (WCAG 2.5.7): tocco sulla maniglia → «Sposta su» · «Sposta giù» nella stessa priorità
+  moveBy(dir) {
+    const s = this.state, list = this._untimed || [], me = list.find(u => u.id === s.moveT); if (!me) return;
+    const group = list.filter(u => u.prio === me.prio), i = group.findIndex(u => u.id === me.id), j = i + dir;
+    if (j < 0 || j >= group.length) return;
+    const order = [...s.uOrder], other = group[j].id;
+    [me.id, other].forEach(id => { if (!order.includes(id)) order.push(id); });
+    const a = order.indexOf(me.id), b = order.indexOf(other); order[a] = other; order[b] = me.id;
+    this.setState({ uOrder: order, moveLive: `${me.title} · ${j + 1} di ${group.length} fra i todo a ${this.PRIO_LONG[me.prio]}` });
+  }
+  doneSub(it, mode) {
+    if (it.k === 'study') return (this.ESITO[mode] || this.ESITO[this.Q.get('esito')] || this.ESITO.done)[1];
+    if (typeof mode === 'string' && /^(Fatta|Completato)/.test(mode)) return mode;
+    if (it.k === 'event') return 'Completato';
+    if (mode === 'all') return it.sub.replace(/([Cc]hecklist) \d+\/(\d+)/, '$1 $2/$2');
+    if (mode === 'split') return it.sub.replace(/([Cc]hecklist \d+\/\d+)/, `$1 · ${it.left.length} voci in un nuovo todo`);
+    return it.sub;
+  }
+  burst() {
+    const C = ['#6E96F2', '#FACC15', '#F43F5E', '#2DD4BF', '#B794FD', '#22C55E'], D = [[-16, -14], [15, -15], [19, 4], [-19, 6], [-6, 19], [9, 17]];
+    return React.createElement('span', { 'aria-hidden': true, style: { position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, pointerEvents: 'none' } },
+      D.map(([x, y], i) => React.createElement('span', { key: i, style: { position: 'absolute', left: 0, top: 0, width: i % 2 ? 4 : 5, height: i % 2 ? 4 : 5, borderRadius: 999, background: C[i], '--dx': x + 'px', '--dy': y + 'px', animation: `rf-burst .6s cubic-bezier(.2,.8,.2,1) ${i * 20}ms both` } })));
+  }
+  flowVals(it, s) {
+    const cel = this.cel(), checking = s.checking === it.id, collapsing = s.collapsing === it.id, moving = s.moveT === it.id, live = !!it.live && !it.done;
+    return {
+      checking, moving, locked: this.isLocked(it), circOp: this.isLocked(it) ? .4 : 1, circCursor: this.isLocked(it) ? 'not-allowed' : 'pointer',
+      checkLabel: this.isLocked(it) ? 'Si segna nel giorno previsto' : { study: 'Registra esito', event: 'Completa evento', routine: 'Segna come fatta' }[it.k] || 'Segna come fatto',
+      circBg: checking ? '#22C55E' : 'transparent', circBorder: checking ? '#22C55E' : '#636975',
+      dashOff: cel === 'off' ? 0 : 24, checkAnim: cel === 'off' ? 'none' : 'rf-check .25s ease-out .04s forwards',
+      burstEl: checking && cel === 'piena' ? this.burst() : null, titleColor: checking ? '#C4C9D2' : '#fff',
+      rowAnim: collapsing ? (cel === 'off' ? 'rf-collapse .01s forwards' : 'rf-collapse .26s cubic-bezier(.4,0,.2,1) forwards') : s.returnT === it.id ? 'rf-in .3s ease-out both' : 'none',
+      rowOverflow: collapsing ? 'hidden' : 'visible',
+      cardBorder: moving || live ? '#334156' : '#292E37',
+      cardShadow: moving ? '0 12px 28px -10px rgba(0,0,0,.7)' : 'inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5)',
+      handleColor: moving ? '#fff' : '#636975', cursor: it.detail ? 'pointer' : 'default',
+      check: e => this.checkItem(it, e),
+      open: () => { if (it.detail) this.go('S5 Dettaglio Mobile.dc.html', { kind: it.detail }); },
+      toggleMove: e => { if (e) e.stopPropagation(); clearTimeout(this.tt); this.setState(x => ({ moveT: x.moveT === it.id ? null : it.id, toast: null, moveLive: '' })); },
+      start: e => { if (e) e.stopPropagation(); this.go('S15 Sessione Mobile.dc.html'); }
+    };
+  }
+  // ── «+ Crea» come foglio sopra Oggi e atterraggio della card nel calendario (DESIGN §6 «Creazione»)
+  WKF = [
+    [['07:30', 'Meditazione', 'routine'], ['09:00', 'Lezione di UI/UX', 'study'], ['18:00', 'Leggere 20 pagine', 'todo']],
+    [['11:00', 'Riunione progetto', 'event'], ['14:30', 'Palestra', 'routine']],
+    [['09:00', 'Lezione di UI/UX', 'study'], ['11:00', 'Riunione progetto', 'event'], ['14:30', 'Palestra', 'routine'], ['16:00', 'Ripasso Modulo 0', 'study'], ['19:00', 'Leggere 20 pagine', 'todo']],
+    [['07:30', 'Meditazione', 'routine'], ['09:00', 'Lezione di Algoritmi', 'study'], ['15:00', 'Dentista', 'event']],
+    [['14:30', 'Palestra', 'routine'], ['16:00', 'Ripasso Modulo 0', 'study']],
+    [],
+    [['07:30', 'Meditazione', 'routine'], ['—', 'Prepara la valigia', 'todo']]
+  ];
+  SUBS = { 'Meditazione': 'Senza durata', 'Lezione di UI/UX': 'Aula B2', 'Leggere 20 pagine': 'Deep Work · 30 min', 'Riunione progetto': 'Meet', 'Palestra': 'Workout · 3 fasi', 'Lezione di Algoritmi': 'Aula C1', 'Dentista': 'Studio Dott. Rossi', 'Ripasso Modulo 0': 'Riattivazione JavaScript · Unità 0.8' };
+  ICONS = { study: 'cap', event: 'pin', routine: 'sync', todo: 'check' };
+  DN = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+  absOf(s = this.state) { return 21 + 7 * (s.wk || 0) + s.day; }
+  dp(d) { const wd = ((d - 21) % 7 + 7) % 7, oct = d > 30; return { name: this.DN[wd], short: this.DN[wd].slice(0, 3).toLowerCase(), num: oct ? d - 30 : d, month: oct ? 'ottobre' : 'settembre', mshort: oct ? 'ott' : 'set' }; }
+  dayItems(d) {
+    const rows = Math.floor((d - 21) / 7) === 0 ? this.WKF[(d - 21) % 7] : [];
+    return rows.filter(b => b[0] !== '—').map(([time, title, k]) => ({ id: d + '-' + title, time, k, title, sub: this.SUBS[title] || '', icon: this.ICONS[k], done: d < 23, min: 45, other: true, date: d, phases: title === 'Dentista' ? ['Stampare le analisi', 'Portare i documenti'] : undefined }));
+  }
+  landOf(id, isTarget, isDot) {
+    const L = this.state.land;
+    if (!L || L.id !== id) return { landKey: '', vis: 'visible', isNew: false, enterAnim: 'none' };
+    const hidden = isDot ? !(L.shown || L.dot) : !L.shown;
+    return { landKey: hidden && isTarget ? 'target' : '', vis: hidden ? 'hidden' : 'visible', isNew: !!L.shown && !isDot, enterAnim: L.shown && L.enter === 'left' && !isDot ? 'rf-enter-left .36s cubic-bezier(.2,.8,.2,1) both' : 'none' };
+  }
+  rootRef = React.createRef(); sheetRef = React.createRef(); formRef = React.createRef(); faceRef = React.createRef(); ovRef = React.createRef();
+  reduced() { if (this.cel() === 'off') return true; try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; } }
+  frame() { return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }
+  wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+  anim(el, kf, o) { return new Promise(res => { if (!el || !el.animate) { res(); return; } const a = el.animate(kf, { fill: 'forwards', ...o }); a.onfinish = () => res(); a.oncancel = () => res(); }); }
+  geo() { const root = this.rootRef.current; if (!root) return null; const rr = root.getBoundingClientRect(), k = rr.width / (root.offsetWidth || 1) || 1; return { root, k, W: root.clientWidth, H: root.clientHeight, rel: el => { const b = el.getBoundingClientRect(); return { x: (b.left - rr.left) / k - 1, y: (b.top - rr.top) / k - 1, w: b.width / k, h: b.height / k }; } }; }
+  openCrea = (o = {}) => { clearTimeout(this.tt); this.setState({ crea: { type: 'todo', filled: false, date: this.absOf(), ...o }, sheetDy: 0, sheetDrag: false, toast: null, moveT: null, menuOpen: false }); };
+  closeCrea = async () => {
+    const sh = this.sheetRef.current, ov = this.ovRef.current, dy = this.state.sheetDy;
+    if (!this.reduced()) await Promise.all([this.anim(sh, [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'translateY(105%)' }], { duration: 240, easing: 'cubic-bezier(.4,0,1,1)' }), this.anim(ov, [{ opacity: 1 - Math.min(.6, dy / 600) }, { opacity: 0 }], { duration: 240 })]);
+    this.setState({ crea: null, sheetDy: 0, sheetDrag: false });
+  };
+  // Chiusura senza salvare: trascinamento verso il basso dal bordo alto del foglio (maniglia e intestazione); oltre 110 px si annulla, sotto torna su
+  sheetDown = e => { const g = this.geo(); this.sd = { y: e.clientY, k: g ? g.k : 1 }; this.setState({ sheetDrag: true }); try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} };
+  sheetMove = e => { if (!this.sd) return; this.setState({ sheetDy: Math.round(Math.max(0, (e.clientY - this.sd.y) / this.sd.k)) }); };
+  sheetUp = () => { if (!this.sd) return; this.sd = null; const dy = this.state.sheetDy; this.setState({ sheetDrag: false }); if (dy > 110) this.closeCrea(); else this.setState({ sheetDy: 0 }); };
+  async stepTo(target) {
+    for (let i = 0; i < 21 && this.absOf() !== target; i++) {
+      const cur = this.absOf(), n = cur + (target > cur ? 1 : -1), nwk = Math.floor((n - 21) / 7), nday = ((n - 21) % 7 + 7) % 7, paged = nwk !== this.state.wk;
+      this.setState(x => ({ wk: nwk, day: nday, dayAnimN: x.dayAnimN + 1, pageN: paged ? x.pageN + 1 : x.pageN }));
+      await this.wait(paged ? 280 : 170);
+    }
+  }
+  onSheetCreate = p => { if (p && p.edit) { this.closeCrea(); this.setState({ toast: { text: 'Modifiche salvate', dot: '#6E96F2', undo: null } }); this.armToast(); return; } this.land(p || {}); };
+  async land(p) {
+    const id = 'c' + Date.now(), T = this.T[p.k] || this.T.todo, d = p.date || 23;
+    const item = { id, k: p.k || 'todo', title: p.title || 'Senza titolo', sub: p.sub || '', time: p.untimed ? undefined : p.time, untimed: !!p.untimed, allDay: !!p.allDay, prio: p.prio || 'Norm.', date: d, min: p.min || 10, icon: this.ICONS[p.k] || 'check' };
+    const view = this.state.view, wkT = Math.floor((d - 21) / 7), dayT = ((d - 21) % 7 + 7) % 7, info = this.dp(d);
+    const when = d === 23 ? ' · oggi' : ' · ' + info.short + ' ' + info.num + ' ' + info.mshort;
+    const toast = { text: { todo: 'Todo creato · ' + item.title, study: 'Routine di studio creata' + when, routine: 'Routine creata' + when, event: 'Evento creato' + when }[item.k], dot: T.fill, undo: 'added', id };
+    const finish = (enter, patch) => { this.setState({ crea: null, sheetDy: 0, land: { id, shown: true, enter }, toast, bumped: d === 23, ...(patch || {}) }); this.armToast(); clearTimeout(this.tl); this.tl = setTimeout(() => this.setState(x => (x.land && x.land.id === id ? { land: null } : null)), 1400); };
+    this.setState(x => ({ added: [...x.added, item], land: { id, shown: false }, landFace: { title: item.title, sub: item.sub, k: item.k, untimed: item.untimed }, toast: null, moveT: null, wEmpty: false }));
+    await this.frame();
+    if (this.reduced()) { finish('none', view === 'mese' && d > 30 ? {} : { wk: wkT, day: dayT }); return; }
+    const g = this.geo(), sheet = this.sheetRef.current, form = this.formRef.current, face = this.faceRef.current, ov = this.ovRef.current;
+    if (!g || !sheet || !face) { finish('none', { wk: wkT, day: dayT }); return; }
+    const from = g.rel(sheet), W = g.W, H = g.H, target = () => g.root.querySelector('[data-land="target"]');
+    const px = n => Math.round(n * 10) / 10 + 'px';
+    // 1 · il foglio si rimpicciolisce in una card: il modulo svanisce, la faccia della card compare nell'ultimo tratto
+    const morph = (r, dur) => { face.style.width = px(r.w - 2); face.style.height = px(r.h - 2);
+      // riga compatta della Settimana (44 px): la faccia perde cerchio e sottotitolo
+      if (r.h < 56) { face.style.padding = '0 10px 0 14px'; const c1 = face.children[1], tx = face.children[2]; if (c1) c1.style.display = 'none'; if (tx && tx.children[1]) tx.children[1].style.display = 'none'; }
+      return Promise.all([
+      this.anim(sheet, [{ left: px(from.x), top: px(from.y), width: px(from.w), height: px(from.h), borderRadius: '24px 24px 43px 43px' }, { left: px(r.x), top: px(r.y), width: px(r.w), height: px(r.h), borderRadius: '14px' }], { duration: dur, easing: 'cubic-bezier(.4,0,.2,1)' }),
+      this.anim(form, [{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-out' }),
+      this.anim(face, [{ opacity: 0 }, { opacity: 0, offset: .45 }, { opacity: 1 }], { duration: dur }),
+      this.anim(ov, [{ opacity: 1 }, { opacity: 0 }], { duration: Math.round(dur * .8) })]); };
+    // giorno futuro: la card scivola verso destra, avanti nel tempo
+    const goRight = () => this.anim(sheet, [{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(' + (W + 40) + 'px)', opacity: 0 }], { duration: 380, easing: 'cubic-bezier(.5,0,.75,0)' });
+    // settimana e mese: la card diventa un puntino nel colore del tipo e si posa nella casella del giorno
+    const toDot = (r, cx, cy, size) => Promise.all([
+      this.anim(sheet, [{ left: px(r.x), top: px(r.y), width: px(r.w), height: px(r.h), borderRadius: '14px', backgroundColor: '#141820', borderColor: '#292E37', boxShadow: '0 0 0 0 rgba(0,0,0,0)' }, { left: px(cx - size / 2), top: px(cy - size / 2), width: px(size), height: px(size), borderRadius: '999px', backgroundColor: T.fill, borderColor: T.fill, boxShadow: '0 0 10px 2px ' + T.fill + 'B3' }], { duration: 380, easing: 'cubic-bezier(.55,0,.25,1)' }),
+      this.anim(face, [{ opacity: 1 }, { opacity: 0, offset: .35 }, { opacity: 0 }], { duration: 380 })]);
+    const intoView = async () => { const el = target(), sc = g.root.querySelector('[data-scroller]'); if (!el || !sc) return; const tb = g.rel(el), sb = g.rel(sc); if (tb.y < sb.y + 110 || tb.y + tb.h > sb.y + sb.h - 110) { sc.scrollTop += (tb.y - sb.y) - sb.h * .38; await this.frame(); } };
+    const stage = { x: 16, y: view === 'mese' ? H - 280 : Math.round(H * .5), w: W - 32, h: 64 }, stageDay = { x: 74, y: Math.round(H * .44), w: W - 90, h: 64 };
+    if (view === 'settimana') {
+      // Settimana: nessun puntino, la card si posa direttamente nella riga del giorno; altra settimana → a destra, cambio di pagina, entrata da sinistra
+      if (wkT !== this.state.wk) { await morph(stage, 460); await goRight(); this.setState(x => ({ crea: null, wk: wkT, day: dayT, pageN: x.pageN + 1 })); await this.wait(320); finish('left'); return; }
+      await intoView(); const el = target();
+      await morph(el ? g.rel(el) : stage, 520); finish('swap', { day: dayT }); return;
+    }
+    if (view === 'mese') {
+      // Mese: nessuno scorrimento fra i mesi. Nel mese mostrato la selezione passa al giorno, la card diventa il puntino della casella, 1 s dopo entra da sinistra nell'elenco del giorno
+      if (d > 30) { await morph(stage, 460); await goRight(); finish('none'); return; }
+      await morph(stage, 460);
+      if (d !== this.absOf()) { this.setState(x => ({ wk: wkT, day: dayT, pickN: x.pickN + 1 })); await this.wait(320); }
+      const el = target(), tb = el ? g.rel(el) : { x: W / 2, y: H / 2, w: 4, h: 4 };
+      await toDot(stage, tb.x + tb.w / 2, tb.y + tb.h / 2, 6);
+      this.setState({ crea: null, land: { id, shown: false, dot: true } });
+      await this.wait(1000); finish('left'); return;
+    }
+    if (d === this.absOf()) { await intoView(); const el = target(); await morph(el ? g.rel(el) : stageDay, 520); finish('swap'); return; }
+    await morph(stageDay, 480); await goRight(); this.setState({ crea: null, sheetDy: 0 });
+    await this.stepTo(d); await this.wait(140);
+    finish('left');
+  }
+  creaVals(s, dInfo) {
+    const cr = s.crea, LF = s.landFace || {}, FT = this.T[LF.k] || this.T.todo, an = (n, d) => n ? (n % 2 ? 'rf-day-a ' : 'rf-day-b ') + d + ' cubic-bezier(.2,.8,.2,1)' : 'none';
+    return {
+      rootRef: this.rootRef, sheetRef: this.sheetRef, formRef: this.formRef, faceRef: this.faceRef, ovRef: this.ovRef,
+      creaOn: !!cr, sheetType: cr ? cr.type || 'todo' : 'todo', sheetFilled: !!cr && (cr.filled === true || cr.filled === 'true'), sheetReminder: cr ? cr.reminder || 'auto' : 'auto', sheetDue: cr ? cr.due : undefined, sheetDate: cr ? Number(cr.date ?? this.absOf(s)) : undefined, sheetMode: cr ? cr.mode || 'create' : 'create',
+      onSheetCreate: this.onSheetCreate, closeCrea: this.closeCrea, sheetDown: this.sheetDown, sheetMove: this.sheetMove, sheetUp: this.sheetUp,
+      sheetDy: s.sheetDy, sheetTrans: s.sheetDrag ? 'none' : 'transform .22s cubic-bezier(.4,0,.2,1)', ovOp: 1 - Math.min(.6, s.sheetDy / 600),
+      faceTitle: LF.title || '', faceSub: LF.sub || '', faceType: FT.type, faceSoft: FT.soft, faceInk: FT.ink, faceBar: this.neon(FT).barBg, faceHandle: !!LF.untimed, faceIcon: LF.untimed || !LF.k ? null : this.icon(this.ICONS[LF.k] || 'check'), facePad: LF.untimed ? '12px 4px 12px 18px' : '12px 12px 12px 18px',
+      hdrDay: dInfo.name, hdrNum: String(dInfo.num), hdrMonth: dInfo.month, dayAnim: an(s.dayAnimN, '.24s'), stripAnim: an(s.pageN, '.3s'), weekAnim: an(s.pageN, '.3s')
+    };
+  }
+  viewInit(p = this.props) {
+    const v = p.view || this.Q.get('view') || 'giorno';
+    return { view: v.indexOf('mese') === 0 ? 'mese' : v.indexOf('settimana') === 0 ? 'settimana' : 'giorno', wEmpty: v.indexOf('vuot') > 0, drag: p.drag || 'no' };
+  }
+  wrapRef = React.createRef();
+  // La larghezza della riga serve a centrare la riduzione prospettica dell'archivio sulla card sottostante
+  measure = () => { const el = this.wrapRef.current; if (!el) return; const w = el.clientWidth - 32; if (w > 0 && w !== this.state.rowW) this.setState({ rowW: w }); };
+  componentDidMount() { const d = Number(this.props.day); if (this.props.day != null && this.props.day !== '' && !Number.isNaN(d)) this.setState({ day: d }); this.startIntro(); this.armStrike(); this.measure(); if (this.state.toast) this.armToast(); window.addEventListener('resize', this.measure); if (window.ResizeObserver && this.wrapRef.current) { this.ro = new ResizeObserver(this.measure); this.ro.observe(this.wrapRef.current); } }
+  // Swipe verticale sull'archivio: giù apre, su richiude; il trascinamento segue il dito a metà velocità
+  dragStart = null;
+  archWheel = e => { if (e.deltaY > 12 && this.state.archiveOpen) this.setState({ archiveOpen: false }); };
+  archDown = e => { this.dragStart = e.clientY; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} };
+  archMove = e => { if (this.dragStart == null) return; const d = e.clientY - this.dragStart; this.setState({ dragY: Math.round(Math.max(-40, Math.min(70, d)) * .5) }); };
+  archUp = e => { if (this.dragStart == null) return; const d = e.clientY - this.dragStart; this.dragStart = null; this.setState(x => ({ dragY: 0, archiveOpen: d > 28 ? true : d < -28 ? false : x.archiveOpen, landT: null })); };
+  // "Scatto dell'ora": la card dell'attività in corso passa da riga normale a hero dopo strikeDelay ms (0 = già scattata)
+  armStrike() {
+    clearTimeout(this.t3);
+    const d = Number(this.props.strikeDelay); const ms = Number.isNaN(d) ? 900 : d;
+    if (ms <= 0) { this.setState({ struck: true }); return; }
+    this.setState({ struck: false });
+    this.t3 = setTimeout(() => this.setState({ struck: true }), ms);
+  }
+  startIntro() {
+    // Il saluto vale all'apertura dell'app, non al ritorno da un'altra schermata
+    const back = ['dopo', 'nuovo', 'creato', 'sessione'].some(k => this.Q.has(k));
+    if (back || this.props.intro === false || this.props.intro === 'false') { this.setState({ greeting: false }); return; }
+    this.t1 = setTimeout(() => this.setState({ greetOut: true }), 2600);
+    this.t2 = setTimeout(() => this.setState({ greeting: false }), 3000);
+  }
+  componentWillUnmount() { clearTimeout(this.t1); clearTimeout(this.t2); clearTimeout(this.t3); clearTimeout(this.tc1); clearTimeout(this.tc2); clearTimeout(this.tt); clearTimeout(this.tl); window.removeEventListener('resize', this.measure); if (this.ro) this.ro.disconnect(); }
+  T = {
+    todo: { type: 'Todo', fill: '#14B8A6', ink: '#2DD4BF', soft: '#16302E', hi: '#7EF0E2' },
+    study: { type: 'Studio', fill: '#9B6CFA', ink: '#B794FD', soft: '#2A1F45', hi: '#D4C4FE' },
+    routine: { type: 'Routine', fill: '#FACC15', ink: '#FACC15', soft: '#34311E', hi: '#FDE68A' },
+    event: { type: 'Evento', fill: '#F43F5E', ink: '#FF4A67', soft: '#331D29', hi: '#FDA4AF' }
+  };
+  P = {
+    pin: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'],
+    cap: ['M22 10v6M2 10l10-5 10 5-10 5z', 'M6 12v5c3 3 9 3 12 0v-5'],
+    video: ['m22 8-6 4 6 4V8Z', 'M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'],
+    dumbbell: ['M2 12h3M19 12h3M8 12h8', 'M6 8h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM17 8h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z'],
+    check: ['m9 11 3 3L22 4', 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'],
+    book: ['M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z', 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'],
+    user: ['M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'],
+    bell: ['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0'],
+    gear: ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'],
+    sync: ['M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5', 'M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16M16 16h5v5']
+  };
+  icon(name, size = 12, color = 'currentColor') {
+    const d = this.P[name] || this.P.check;
+    return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: color, style: { strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, d.map((p, i) => React.createElement('path', { key: i, d: p })));
+  }
+  variant() { return this.q('variant') || 'default'; }
+  uid = Math.random().toString(36).slice(2, 8);
+  componentDidUpdate(prev) { if (prev.strikeDelay !== this.props.strikeDelay || prev.now !== this.props.now) this.armStrike(); if (prev.view !== this.props.view || prev.drag !== this.props.drag) this.setState(this.viewInit()); if (prev.move !== this.props.move) this.setState({ moveT: this.props.move === 'attivo' ? 'Prenota il treno' : null }); if (JSON.stringify(prev.crea || null) !== JSON.stringify(this.props.crea || null)) this.setState({ crea: this.props.crea || null, sheetDy: 0 }); if (prev.variant !== this.props.variant || prev.archive !== this.props.archive || prev.menu !== this.props.menu || prev.absence !== this.props.absence) this.setState({ absenceGone: false, archiveOpen: this.props.archive === 'open', menuOpen: this.props.menu === true || this.props.menu === 'true' }); }
+  neon(t) {
+    // Barra colore sobria: gradiente chiaro→pieno→chiaro, mai alone né animazione.
+    // L'attività in corso la segnala solo il puntino dell'ora fuori dalla card (neon lampeggiante).
+    return { barBg: `linear-gradient(180deg,${t.hi},${t.fill} 50%,${t.hi})`, barGlow: 'none', barAnim: 'none' };
+  }
+  deco(it) {
+    const t = this.T[it.k] || {};
+    const live = !!it.live && !it.done;
+    return { ...it, ...t, iconEl: this.icon(it.icon), ...this.neon(t),
+      timeColor: live ? '#fff' : '#959CA8', timeWeight: live ? 600 : 500, timeGlow: live ? '0 0 10px rgba(255,255,255,.45)' : 'none',
+      dotBg: live ? t.ink : t.fill, dotGlow: live ? `0 0 8px 2px ${t.ink}CC, 0 0 18px 6px ${t.ink}66` : '0 0 6px 1px ' + t.fill + 'AA', dotAnim: live ? 'rf-neon 1.8s ease-in-out infinite' : 'none',
+      cardBorder: live ? '#334156' : '#292E37' };
+  }
+  renderVals() {
+    const v = this.variant(), empty = v === 'empty', done = v === 'done', s = this.state;
+    const date = this.absOf(s), isToday = date === 23, dInfo = this.dp(date);
+    const archiveOpen = s.archiveOpen;
+    let all = [
+      { id: 'Prepara la valigia', k: 'todo', prio: 'Alta', title: 'Prepara la valigia', sub: 'Orizzonte settimana · checklist 3/7', untimed: true, min: 20, left: this.LEFT['Prepara la valigia'], detail: 'todo' },
+      { id: 'Prenota il treno', k: 'todo', prio: 'Alta', title: 'Prenota il treno', sub: 'Orizzonte giorno', untimed: true, min: 15 },
+      { id: 'Chiama Marco', k: 'todo', prio: 'Norm.', title: 'Chiama Marco', sub: 'Orizzonte giorno', untimed: true, min: 10 },
+      { id: 'Lezione di UI/UX', time: '09:00', k: 'study', title: 'Lezione di UI/UX', sub: 'Aula B2', icon: 'pin', done: true, min: 90 },
+      { id: 'Riunione progetto', time: '11:00', k: 'event', title: 'Riunione progetto', sub: 'Meet', icon: 'video', done: true, min: 60 },
+      { id: 'Palestra', time: '14:30', k: 'routine', title: 'Palestra', sub: 'Workout · 3 fasi su 3', icon: 'dumbbell', done: true, min: 70 },
+      this.nowItem(),
+      { id: 'Leggere 20 pagine', time: '19:00', k: 'todo', title: 'Leggere 20 pagine', sub: 'Deep Work · 30 min · checklist 2/5', icon: 'book', min: 30, left: this.LEFT['Leggere 20 pagine'] }
+    ];
+    // Todo nati in questa visita: le voci rimaste di un todo (MECC §4) o un todo creato da + Crea; entrano in fondo al loro gruppo (MECC §6)
+    if (s.split) { const o = all.find(x => x.id === s.split); if (o) all.push({ id: 'split', k: 'todo', prio: o.untimed ? o.prio : 'Norm.', title: o.title, sub: `Senza orario · checklist 0/${o.left.length}`, untimed: true, min: 0 }); }
+    if (s.created) all.push({ id: 'nuovo', k: 'todo', prio: s.created.prio, title: s.created.title, sub: 'Orizzonte giorno', untimed: true, min: 0 });
+    if (empty) all = [];
+    // Altri giorni: i blocchi della settimana dei mock; in ogni giorno, le attività create in questa visita
+    if (!isToday) all = empty ? [] : this.dayItems(date);
+    all = [...all, ...s.added.filter(a => a.date === date)];
+    const xs = s.doneExtra;
+    all = all.map(it => xs.includes(it.id) && !it.done ? { ...it, done: true, doneAt: xs.indexOf(it.id), sub: this.doneSub(it, s.doneMode[it.id]) } : it);
+    if (done && isToday) all = all.map(it => ({ ...it, done: true, sub: it.time === '16:00' ? 'Completata · confidenza 4/5' : it.time === '19:00' ? 'Deep Work · checklist 5/5' : it.sub }));
+    // L'ultima spunta del giorno chiude la giornata anche dal vivo (stessa card di variant=done)
+    const closed = isToday && (done || (!empty && all.length > 0 && all.every(it => it.done)));
+    all = all.map(it => { const fv = this.flowVals(it, s), lv = this.landOf(it.id, s.view === 'giorno'); return { ...this.deco(it), prioColor: it.prio === 'Alta' ? '#fff' : '#959CA8', ...fv, ...lv, rowAnim: lv.enterAnim !== 'none' ? lv.enterAnim : fv.rowAnim }; });
+    // Trascinamento: il todo sollevato esce dalla lista e lascia uno slot tratteggiato nella nuova posizione (solo ordine, mai orario)
+    const liftT = s.drag === 'lift' ? 'Prepara la valigia' : null;
+    const RANK = { 'Alta': 0, 'Norm.': 1, 'Bassa': 2 }, ord = id => { const i = s.uOrder.indexOf(id); return i < 0 ? 100 : i; };
+    const untimed = all.filter(it => it.untimed && !it.done && it.id !== liftT).sort((a, b) => RANK[a.prio] - RANK[b.prio] || ord(a.id) - ord(b.id));
+    this._untimed = untimed;
+    // Il mazzo è in ordine di completamento: l'ultima spuntata sta davanti
+    const doneAll = all.filter(it => it.done).sort((a, b) => (a.doneAt ?? -1) - (b.doneAt ?? -1));
+    let items = all.filter(it => !it.untimed && !it.done).sort((a, b) => (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) || String(a.time).localeCompare(String(b.time)));
+    const nowMode = this.q('now') || 'adesso';
+    const NOW = {
+      adesso: { eyebrow: 'Adesso', bigNum: '37', bigUnit: 'min', bigSub: '', title: 'Ripasso Modulo 0', sub: 'Riattivazione JavaScript · Unità 0.7', cta: 'Inizia', color: '#6E96F2', hi: '#9DB8F8', badge: 'Studio', soft: '#1C2439' },
+      mancanti: { eyebrow: 'Tra poco', bigNum: '12', bigUnit: 'min', bigSub: '', title: 'Ripasso Modulo 0', sub: 'Riattivazione JavaScript · Unità 0.7', cta: 'Anticipa', color: '#959CA8', hi: '#C4C9D2', badge: 'Studio', soft: '#1C2439' },
+      recupera: { eyebrow: 'Da recuperare', bigNum: '17:15', bigUnit: '', bigSub: 'ultimo avvio', title: 'Ripasso Modulo 0', sub: 'Riattivazione JavaScript · Unità 0.7', cta: 'Recupera', color: '#FACC15', hi: '#FDE68A', badge: 'Studio', soft: '#1C2439' },
+      passato: { eyebrow: 'Concluso', bigNum: '15:00', bigUnit: '', bigSub: '– 16:00', title: 'Dentista', sub: 'Studio Dott. Rossi', cta: 'Apri', color: '#959CA8', hi: '#C4C9D2', badge: 'Evento', soft: '#331D29' }
+    }[nowMode];
+    // Vista hero: niente blocco separato, la card dell'attività in corso cresce sul posto (resta dove sta nella lista)
+    const nk = this.nowKind();
+    // Todo ed evento con l'orario passato non diventano hero (MECC §14): niente «Da recuperare»
+    const heroOn = s.struck && nowMode !== 'passato' && !closed && !(nowMode === 'recupera' && (nk === 'todo' || nk === 'event'));
+    items = items.map(it => { const h = heroOn && !!it.live; return { ...it, isHero: h, notHero: !h,
+      // In corso: si mostra la durata dell'attività (se ne ha una); negli altri stati il dato del puntatore (tra poco / da recuperare)
+      heroEyebrow: NOW.eyebrow, heroNum: nowMode === 'adesso' && it.dur ? it.dur : NOW.bigNum, heroUnit: nowMode === 'adesso' && it.dur ? 'min' : NOW.bigUnit, heroSub: nowMode === 'adesso' && it.dur ? it.span : nowMode === 'recupera' && it.k === 'routine' ? 'poi risulta persa' : NOW.bigSub, heroCta: NOW.cta,
+      heroInk: it.ink, heroBorder: it.fill + '80', heroShadow: `inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px ${it.fill}26, 0 14px 34px -14px ${it.fill}80, 0 4px 12px -6px rgba(0,0,0,.5)`,
+      heroIsStudy: it.k === 'study', heroHasCheck: it.k !== 'study', heroCheckLabel: { todo: 'Segna come fatto', routine: 'Segna come fatta', event: 'Completa evento' }[it.k] || 'Segna come fatto',
+      heroCircBg: it.checking ? '#22C55E' : 'transparent', heroCircBorder: it.checking ? '#22C55E' : it.ink,
+      rowAnim: h && String(it.rowAnim).indexOf('rf-collapse ') === 0 ? it.rowAnim.replace('rf-collapse ', 'rf-collapse-hero ') : it.rowAnim,
+      heroAnim: 'rf-hero-in .55s cubic-bezier(.2,.8,.2,1) both' }; });
+    // Archivio: impilato (ultima completata intera, fino a 2 dietro in prospettiva) oppure aperto
+    const stacked = !archiveOpen && doneAll.length > 0;
+    const behind = stacked ? doneAll.slice(0, -1).slice(-1) : [];
+    // Geometria di una riga attività (64 px): titolo con line box 13→33, corpo del glifo ≈ 18→29 (BASE);
+    // il puntino dell'orario è centrato sulla riga del titolo (DOT_CY). L'archivio sta su un piano scalato .9.
+    // Passo fra le card impilate: la card davanti parte a 27, cioè 2 px sopra la base del titolo di quella
+    // dietro → ne copre ≈20%, il testo resta intuibile.
+    const CARD = 64, BASE = 29, DOT_CY = 23, SCALE = .9, STEP = BASE - 2;
+    const peeks = behind.map((p, i) => { const depth = behind.length - i; return { ...p, top: i * STEP, h: (behind.length - i) * STEP + 12, inset: depth * 10, op: depth === 2 ? .3 : .42, timeTop: Math.round((i * STEP + 10) * SCALE) - 5, dotOp: depth === 2 ? .2 : .3 }; });
+    const stackPad = behind.length * STEP;
+    const front = doneAll[doneAll.length - 1];
+    const doneList = stacked ? [{ ...front, opacity: .6, landAnim: s.landT && front.id === s.landT && this.cel() !== 'off' ? 'rf-land .42s cubic-bezier(.2,.78,.24,1) both' : 'none' }] : [];
+    const latest = doneAll[doneAll.length - 1];
+    const dots = empty ? [] : ['#F43F5E', '#9B6CFA', '#9B6CFA', '#FACC15', '#2DD4BF', null, null];
+    const week = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((lab, i) => {
+      const dd = 21 + 7 * s.wk + i, sel = i === s.day, today = dd === 23, addK = (s.added.find(a => a.date === dd && !(s.land && s.land.id === a.id && !s.land.shown)) || {}).k;
+      const dot = (s.wk === 0 ? dots[i] : null) || (addK ? this.T[addK].fill : null);
+      // Oggi non selezionato: anello sottile per restare riconoscibile
+      return { lab, num: this.dp(dd).num, dot: dot || 'transparent', dotGlow: dot ? `0 0 6px 1.5px ${dot}B3` : 'none', bg: sel ? '#fff' : 'transparent', color: sel ? '#0A0D13' : dot || today ? '#fff' : '#636975', labColor: sel ? '#fff' : '#959CA8', weight: sel || today ? 600 : 500, ring: today && !sel ? 'inset 0 0 0 1px #3A404B' : 'none', pick: () => this.setState({ day: i }) };
+    });
+    // La lista sale sotto la striscia dei giorni: le completate arretrano, le attività da fare guadagnano spazio in alto.
+    const dayPad = 2, wrapMt = archiveOpen || !stacked ? 0 : -16;
+    const stats = empty
+      ? { done: '0', total: '0', pct: 0, pctLabel: '0 %', focusH: '0', focusM: '00', delta: '—', deltaColor: '#959CA8', week: '0' }
+      : done
+        ? { done: '8', total: '8', pct: 100, pctLabel: '100 %', focusH: '4', focusM: '30', delta: '+38 %', deltaColor: '#22C55E', week: '28' }
+        : (() => { const tot = 8 + (s.split ? 1 : 0) + (s.created ? 1 : 0) + s.added.filter(a => a.date === 23).length, dn = 3 + xs.filter(id => !/^\d+-/.test(id) && !s.added.some(a => a.id === id && a.date !== 23)).length, st = xs.includes('Ripasso Modulo 0'), pc = Math.round(dn / tot * 100);
+          return { done: String(dn), total: String(tot), pct: pc, pctLabel: pc + ' %', focusH: st ? '4' : '3', focusM: st ? '30' : '45', delta: st ? '+38 %' : '+15 %', deltaColor: '#22C55E', week: String(24 + xs.length) }; })();
+    // Colore dai dati: ogni grafico è monocromo, nel colore del tipo di attività che ha pesato di più in quella
+    // statistica. Completate: il tipo più frequente fra le fatte di oggi (a parità, quello con più minuti).
+    // Focus: il tipo con più minuti oggi. Settimana: il tipo più frequente nella settimana. Il blu fisso sparisce.
+    const topType = (list, w) => { const m = {}; list.forEach(it => { m[it.k] = (m[it.k] || 0) + (w ? w(it) : 1); }); return Object.keys(m).sort((a, b) => m[b] - m[a])[0] || null; };
+    const doneK = topType(doneAll, it => 10000 + (it.min || 0)) || 'study', doneColor = empty ? '#6E96F2' : this.T[doneK].fill;
+    const focusK = topType(doneAll, it => it.min || 0) || 'study', FT = this.T[focusK];
+    const FOCUS = [40, 70, 35, 20, 55, 30, 85, 60, 45, 75];
+    const focusBars = [...FOCUS.map(h => ({ h: h + '%', bg: empty ? '#292E37' : FT.fill, op: empty ? 1 : .3, glow: 'none' })),
+      { h: '100%', bg: empty ? '#292E37' : `linear-gradient(180deg,${FT.hi},${FT.fill})`, op: 1, glow: empty ? 'none' : `0 0 8px 1px ${FT.fill}CC` }];
+    const row = r => ({ ...r, ...this.T[r.k] });
+    const upAdd = d => s.added.filter(a => a.date === d && a.time && !a.allDay && !(s.land && s.land.id === a.id && !s.land.shown)).map(a => ({ time: a.time, title: a.title, k: a.k })), byT = (a, b) => a.time.localeCompare(b.time);
+    const upcoming = empty ? [] : [
+      { label: 'Domani', date: 'Gio 24 Settembre', rows: [{ time: '09:00', title: 'Lezione di Algoritmi', k: 'study' }, { time: '15:00', title: 'Dentista', k: 'event' }, ...upAdd(24)].sort(byT).map(row) },
+      { label: 'Venerdì', date: 'Ven 25 Settembre', rows: [{ time: '16:00', title: 'Ripasso Modulo 0', k: 'study' }, ...upAdd(25)].sort(byT).map(row) }
+    ];
+    // L'archivio delle completate resta in testa al giorno (order:-1); la prima attività da fare gli si sovrappone.
+    const untimedFirst = untimed.slice(0, 1), untimedRest = untimed.slice(1);
+    const itemsFirst = untimed.length ? [] : items.slice(0, 1), itemsRest = untimed.length ? items : items.slice(1);
+    // Riduzione prospettica: l'archivio scala con origine al centro della riga, così la card completata
+    // resta centrata su quella da fare sottostante. Un solo dato regge tutto: il fattore di scala del piano.
+    // La prima attività da fare applica la stessa regola del 20%: parte 2 px sopra la base (scalata) del titolo
+    // dell'ultima completata. Il margine si ricava dall'altezza di layout dell'archivio (stackPad + card 53 + gap 12).
+    const firstTop = Math.round((stackPad + BASE) * SCALE) - 2;
+    const firstMt = stacked ? firstTop - (stackPad + CARD + 12) : 0, W = s.rowW || 326;
+    const shift = Math.round((W - 58) * (1 - SCALE) / 2);
+    // Prospettiva coerente: ogni livello dell'archivio è un piano più lontano, scalato attorno al centro
+    // della card (la card davanti scala .92; ogni livello dietro rientra di 10 px per lato, quindi scala meno).
+    // Pallino e linea stanno su quel piano: misura 8 · k, e il suo centro è la proiezione dell'asse 59,5
+    // verso il centro della card. Così la distanza pallino→card è la stessa di una riga da fare, ridotta di k.
+    const CW = W - 58, ccx = 74 + CW / 2;
+    const kAt = d => SCALE * (CW - 20 * d) / CW;
+    const projX = k => ccx + (59.5 - ccx) * k;
+    const r1 = n => Math.round(n * 10) / 10;
+    const frontK = kAt(0), frontSz = r1(8 * frontK), frontX = r1(projX(frontK)), frontCy = Math.round((stackPad + DOT_CY) * SCALE);
+    const peeksP = peeks.map((p, i) => { const d = peeks.length - i, k = kAt(d), sz = r1(8 * k), cy = Math.round((p.top + DOT_CY) * SCALE);
+      return { ...p, time: '', timeLeft: shift + 9 * d, dotSize: sz, dotOp: r1(.6 * k * k), dotBlur: d === 1 ? 'blur(.4px)' : 'blur(.8px)',
+        dotLeft: r1(projX(k) - 16 - sz / 2), dotTop: r1(cy - sz / 2), px: r1(projX(k)), py: 12 + cy, pk: k }; });
+    const nextDotY = 12 + stackPad + CARD + 12 + firstMt + DOT_CY;
+    // La linea segue gli stessi piani: un segmento per salto, spessore e opacità del piano più vicino dei due.
+    // Ogni segmento si ferma al bordo del pallino (raggio + 1 px), così non attraversa mai i pallini semitrasparenti.
+    const pts = [...peeksP.map(p => ({ x: p.px, y: p.py, k: p.pk, r: p.dotSize / 2 })), { x: frontX, y: 12 + frontCy, k: frontK, r: frontSz / 2 }, { x: 60, y: nextDotY, k: 1, r: 4 }];
+    const rails = [];
+    for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1];
+      const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, ta = a.r + 1, tb = b.r + 1;
+      rails.push({ d: `M${r1(a.x + ux * ta)} ${r1(a.y + uy * ta)} L${r1(b.x - ux * tb)} ${r1(b.y - uy * tb)}`, w: r1(b.k), op: r1(b.k * b.k) }); }
+    const rail = n => rails[n] || { d: 'M0 0', w: 0, op: 0 };
+    // Apertura dell'archivio: le carte escono dal mazzo una per volta, alternando il verso di rotazione
+    const doneOpen = doneAll.map((it, i) => ({ ...it, dealAnim: (i % 2 ? 'rf-deal-b' : 'rf-deal-a') + ' .42s cubic-bezier(.2,.78,.24,1) both', dealDelay: i * 75 }));
+    // Giornata chiusa: restano i tratti fra le carte del mazzo, sparisce quello verso la lista (non c'è più una timeline sotto)
+    const hasRail = stacked && ((untimedFirst.length + itemsFirst.length) > 0 || closed);
+    if (closed && rails.length) rails[rails.length - 1] = { d: 'M0 0', w: 0, op: 0 };
+    // Giornata chiusa: la barra mette in fila le attività del giorno (con orario, poi senza), larghezza = minuti, colore = tipo
+    const segOrder = [...all.filter(it => !it.untimed), ...all.filter(it => it.untimed)];
+    const daySegs = closed ? segOrder.map((it, i) => ({ flex: it.min || 10, fill: it.fill, delay: 250 + i * 70 })) : [];
+    const fmt = m => (m >= 60 ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '') : m + 'm');
+    const tot = {}; segOrder.forEach(it => { tot[it.k] = (tot[it.k] || 0) + (it.min || 0); });
+    const dayLegend = closed ? Object.keys(tot).sort((a, b) => tot[b] - tot[a]).map(k => ({ label: this.T[k].type, dur: fmt(tot[k]), fill: this.T[k].fill })) : [];
+    const showAbsence = this.props.absence === true || this.props.absence === 'true';
+    const menu = [
+      { label: 'Corsi', icon: this.icon('book', 18, '#959CA8'), href: 'S10%20Corsi%20Mobile.dc.html' },
+      { label: 'Esiti da registrare', icon: this.icon('bell', 18, '#959CA8'), badge: '3', hasBadge: true, href: 'S20%20Shell%20Mobile.dc.html?screen=notif' },
+      { label: 'Account e sincronizzazione', icon: this.icon('sync', 18, '#959CA8'), href: 'S20%20Shell%20Mobile.dc.html?screen=settings&view=account' },
+      { label: 'Impostazioni', icon: this.icon('gear', 18, '#959CA8'), href: 'S20%20Shell%20Mobile.dc.html?screen=settings&view=root' }
+    ];
+    const isDay = s.view === 'giorno', isWeek = s.view === 'settimana' && !s.wEmpty, isWeekEmpty = s.view === 'settimana' && s.wEmpty;
+    const isMonth = s.view === 'mese';
+    const mDots = { 1: ['study'], 2: ['routine', 'todo'], 3: ['study', 'event'], 4: ['routine'], 7: ['study', 'routine', 'todo'], 9: ['event'], 11: ['study', 'routine'], 14: ['study', 'todo'], 16: ['study'], 18: ['study', 'routine'], 21: ['study', 'todo'], 22: ['event', 'routine'], 23: ['study', 'event', 'routine', 'todo'], 24: ['study', 'event'], 25: ['routine', 'study'], 27: ['todo'], 29: ['routine'], 30: ['study', 'todo'] };
+    const DEEP = { todo: '#0D6E63', study: '#6D28D9', routine: '#8A6A05', event: '#B01235' };
+    const monthCells = Array.from({ length: 35 }, (_, i) => {
+      const num = i, inMonth = num >= 1 && num <= 30, sel = inMonth && num === date;
+      const fx = ((inMonth && !empty && mDots[num]) || []).map(k => ({ k, landKey: '', vis: 'visible' }));
+      const ad = (inMonth ? s.added.filter(a => a.date === num) : []).map(a => ({ k: a.k, ...this.landOf(a.id, s.view === 'mese', true) }));
+      const both = [...fx, ...ad], dots = both.length > 4 ? [...both.slice(0, 3), both[both.length - 1]] : both;
+      return {
+        num: inMonth ? String(num) : '', weight: sel ? 600 : 500,
+        bg: sel ? '#fff' : dots.length >= 3 ? '#242A34' : dots.length ? '#1A1F28' : 'transparent',
+        color: sel ? '#0A0D13' : inMonth ? '#fff' : '#636975',
+        border: sel ? '#fff' : dots.length ? '#292E37' : 'transparent',
+        pickAnim: sel && s.pickN ? (s.pickN % 2 ? 'rf-pick-a' : 'rf-pick-b') + ' .28s cubic-bezier(.2,.8,.2,1)' : 'none',
+        dots: dots.map(o => ({ bg: sel ? DEEP[o.k] : this.T[o.k].fill, landKey: o.landKey, vis: o.vis })),
+        pick: num >= 21 && num <= 30 ? () => this.setState({ wk: Math.floor((num - 21) / 7), day: (num - 21) % 7 }) : () => {}
+      };
+    });
+    const monthLegend = [['study', 'Studio', '12'], ['routine', 'Routine', '9'], ['todo', 'Todo', '7'], ['event', 'Eventi', '5']].map(([k, label, days]) => ({ label, days, fill: this.T[k].fill }));
+    const vb = id => {
+      const on = s.view === id;
+      return { [id + 'Bg']: on ? '#fff' : '#1E232C', [id + 'Border']: on ? '#fff' : '#292E37', [id + 'Color']: on ? '#0A0D13' : '#fff', [id + 'Hover']: on ? '#fff' : '#292E37' };
+    };
+    const viewBtns = { ...vb('giorno'), ...vb('settimana'), ...vb('mese'),
+      viewGiorno: () => this.setState({ view: 'giorno', wEmpty: false }),
+      viewSettimana: () => this.setState({ view: 'settimana', wEmpty: false }),
+      viewMese: () => this.setState({ view: 'mese', wEmpty: false }) };
+    // Settimana mostrata: blocchi dei mock (solo 21–27) e attività create, in ordine di orario (senza orario in coda)
+    const WK = this.WKF.map((blocks, i) => { const dd = 21 + 7 * s.wk + i, info = this.dp(dd); const add = s.added.filter(a => a.date === dd).map(a => [a.allDay ? '—' : (a.time || '—'), a.title, a.k, a.id]);
+      return { lab: info.name.slice(0, 3), num: info.num, blocks: [...(s.wk === 0 ? blocks : []), ...add].sort((x, y) => (x[0] === '—') - (y[0] === '—') || String(x[0]).localeCompare(String(y[0]))) }; })
+    const weekK = topType(WK.flatMap(d => d.blocks.map(b => ({ k: b[2] })))) || 'study', WT = this.T[weekK];
+    const weekColor = empty ? '#292E37' : WT.fill, weekSoft = empty ? '#1A1F28' : WT.soft, weekGlow = empty ? 'transparent' : WT.fill + 'B3';
+    const weekRows = WK.map((d, i) => {
+      const sel = i === s.day;
+      return {
+        lab: d.lab, num: d.num, free: d.blocks.length === 0,
+        rowBg: sel ? '#141820' : 'transparent', rowBorder: sel ? '#292E37' : 'transparent',
+        numBg: sel ? '#fff' : 'transparent', numColor: sel ? '#0A0D13' : d.blocks.length ? '#fff' : '#636975',
+        labColor: sel ? '#fff' : '#959CA8', numWeight: sel ? 600 : 500,
+        pick: () => this.setState({ day: i }),
+        blocks: d.blocks.map(([time, title, k, id]) => ({ time, title, ...this.T[k], ...(id ? this.landOf(id, s.view === 'settimana') : { landKey: '', vis: 'visible', isNew: false, enterAnim: 'none' }) }))
+      };
+    });
+    const dg = s.drag === 'lift' ? { title: 'Prepara la valigia', sub: 'Orizzonte settimana · checklist 3/7', k: 'todo', prio: 'Alta', prioColor: '#fff' } : null;
+    const dragVals = dg ? { dragOn: true, dragTitle: dg.title, dragSub: dg.sub, dragPrio: dg.prio, dragPrioColor: dg.prioColor, dragBar: this.neon(this.T.todo).barBg, dragSoft: this.T.todo.soft, dragInk: this.T.todo.ink, dragType: this.T.todo.type }
+      : { dragOn: false, dragTitle: '', dragSub: '', dragPrio: '', dragPrioColor: '#fff', dragBar: 'transparent', dragSoft: 'transparent', dragInk: '#fff', dragType: '' };
+    const wkTarget = -1;
+    const weekStrip = week.map((x, i) => ({ ...x, ring: i === wkTarget ? 'inset 0 0 0 2px #6E96F2' : (x.ring || 'none') }));
+    const sh = s.sheet ? all.find(x => x.id === s.sheet) : null, rv = s.review ? all.find(x => x.id === s.review) : null; this._revItem = rv; const es = s.esito ? all.find(x => x.id === s.esito) : null; this._esItem = es;
+    const mv = s.moveT && isDay ? untimed.find(u => u.id === s.moveT) : null;
+    const mGroup = mv ? untimed.filter(u => u.prio === mv.prio) : [], mIdx = mv ? mGroup.findIndex(u => u.id === mv.id) : -1;
+    const upOff = mIdx <= 0, downOff = mIdx < 0 || mIdx >= mGroup.length - 1, cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+    const flow = {
+      hasToast: !!s.toast && !mv && !sh && !rv && !es,
+      esOn: !!es, esTitle: es ? es.title : '', esSub: es ? 'Senza sessione · conta la durata pianificata, ' + (es.dur || es.min || 45) + ' min' : '', esOff: !s.esitoPick, esOp: s.esitoPick ? 1 : .4, esCancel: () => this.setState({ esito: null }), esConfirm: this.esConfirm,
+      esRows: this.ES.map(([k, label, sub]) => { const on = s.esitoPick === k; return { label, sub, on, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', color: on ? '#0A0D13' : '#fff', subColor: on ? '#3A404B' : '#959CA8', hover: on ? '#fff' : '#3A404B', pick: () => this.setState({ esitoPick: k }) }; }),
+      navToday: e => { if (e && e.preventDefault) e.preventDefault(); this.setState(x => ({ wk: 0, day: 2, pickN: x.view === 'mese' && this.absOf(x) !== 23 ? x.pickN + 1 : x.pickN })); const sc = this.rootRef.current && this.rootRef.current.querySelector('[data-scroller]'); if (sc && sc.scrollTo) sc.scrollTo({ top: 0, behavior: 'smooth' }); },
+      revOn: !!rv, revEyebrow: rv ? (rv.k === 'event' ? 'Completa evento' : 'Segna come fatta') : '', revInk: rv ? rv.ink : '#fff', revCancel: () => this.setState({ review: null }), revConfirm: this.revConfirm,
+      revRows: rv ? rv.phases.map((p, i) => { const sk = s.revSkipped.includes(p); return { text: p, n: String(i + 1).padStart(2, '0'), skipped: sk, dotBg: sk ? 'transparent' : '#22C55E', dotBorder: sk ? '#636975' : '#22C55E', color: sk ? '#636975' : '#fff', deco: sk ? 'line-through' : 'none', tag: sk ? 'saltata' : '', toggle: () => this.setState(x => ({ revSkipped: x.revSkipped.includes(p) ? x.revSkipped.filter(v => v !== p) : [...x.revSkipped, p] })) }; }) : [],
+      revSummary: rv ? `${rv.phases.length - s.revSkipped.length} fatte · ${s.revSkipped.length} ${s.revSkipped.length === 1 ? 'saltata' : 'saltate'}` : '', toastText: s.toast ? s.toast.text : '', toastDot: s.toast ? s.toast.dot : '#22C55E', toastUndo: !!(s.toast && s.toast.undo), undo: this.undo,
+      sheetOn: !!sh, sheetName: sh ? sh.title : '', sheetRows: sh ? sh.left : [], sheetTitle: sh ? (sh.left.length === 1 ? 'Una voce non spuntata' : `${sh.left.length} voci non spuntate`) : '',
+      sheetMeta: sh ? `${sh.left.length} ${sh.left.length === 1 ? 'voce' : 'voci'} · stessa priorità e scadenza · senza orario` : '',
+      closeSheet: () => this.setState({ sheet: null }), stop: e => e.stopPropagation(), sheetAll: this.sheetAll, sheetSplit: this.sheetSplit,
+      moveOn: !!mv, moveTitle: mv ? mv.title : '', movePos: mv ? `${cap(this.PRIO_LONG[mv.prio])} · ${mIdx + 1} di ${mGroup.length}` : '',
+      moveUpOff: upOff, moveDownOff: downOff, moveUpOp: upOff ? .4 : 1, moveDownOp: downOff ? .4 : 1, moveUpCursor: upOff ? 'not-allowed' : 'pointer', moveDownCursor: downOff ? 'not-allowed' : 'pointer',
+      moveUp: () => this.moveBy(-1), moveDown: () => this.moveBy(1), moveDone: () => this.setState({ moveT: null, moveLive: '' }), moveLive: s.moveLive,
+      goCreate: () => this.openCrea({ type: 'todo', filled: false }), goTimer: () => this.go('S15 Sessione Mobile.dc.html', { view: 'timer' }),
+      bumpAnim: s.bumped && this.cel() !== 'off' ? (Number(stats.done) % 2 ? 'rf-bump-a .45s ease-out' : 'rf-bump-b .45s ease-out') : 'none'
+    };
+    return {
+      ...flow, ...this.creaVals(s, dInfo), isDay, isWeek, isWeekEmpty, isMonth, monthCells, monthLegend, ...viewBtns, weekRows, ...dragVals,
+      selDayLabel: `${dInfo.name} ${dInfo.num} ${dInfo.month}`, monthDayList: weekRows[s.day].blocks, stripVisible: !isMonth,
+      showAbsence: showAbsence && isDay && !s.absenceGone, dismissAbsence: () => this.setState({ absenceGone: true }),
+      menuOpen: s.menuOpen, toggleMenu: () => this.setState(x => ({ menuOpen: !x.menuOpen })), menu,
+      untimedFirst, untimedRest, itemsFirst, itemsRest, hasUntimedRest: untimedRest.length > 0, firstMt: dg ? 0 : firstMt, wrapRef: this.wrapRef, hasLine: all.length > 1 && !closed, lineTop: hasRail ? Math.round(nextDotY) : 12 + DOT_CY, lineTopColor: hasRail ? '#3A404B' : 'transparent', lineFadeMid: 0, lineFadeEnd: hasRail ? 0 : 24, wrapMt,
+      hasRail, rail1: rail(0).d, rail1w: rail(0).w, rail1op: rail(0).op, rail2: rail(1).d, rail2w: rail(1).w, rail2op: rail(1).op, rail3: rail(2).d, rail3w: rail(2).w, rail3op: rail(2).op, archiveMb: 0, doneAll: doneOpen,
+      hasDone: doneAll.length > 0, stacked, archiveOpen, peeks: peeksP, stackPad, doneList, archiveDrag: s.dragY, archDown: this.archDown, archMove: this.archMove, archUp: this.archUp, archiveGap: untimed.length ? 4 : 0,
+      archiveTime: '', archiveTimePad: Math.round((stackPad + 14) * SCALE), archiveDotTop: r1(frontCy - frontSz / 2), archiveDotLeft: r1(frontX - 16 - frontSz / 2), archiveDotSize: frontSz, archiveShift: shift, peekTimeLeft: shift + 9,
+      archWheel: this.archWheel,
+      clock: done ? '21:30' : '16:08', week: weekStrip, items, upcoming, stats, showGreeting: s.greeting, showDate: !s.greeting, greetAnim: s.greetOut ? 'rf-swap-out .4s cubic-bezier(.4,0,.6,1) forwards' : 'none', hasSession: this.props.session === true || this.props.session === 'true' || this.Q.get('sessione') === '1',
+      hasData: !empty, noUpcoming: empty, showEmpty: empty && isDay && all.length === 0, doneColor, focusBars, weekColor, weekSoft, weekGlow, sparkOpacity: empty ? .25 : 1,
+      dayDone: closed && isDay, daySegs, dayLegend, ...this.daySpan(segOrder), goTomorrow: () => this.setState({ wk: 0, day: 3 }),
+      headOffset: 0,
+      dayPad,
+      notToday: !isToday, goToday: () => this.setState({ wk: 0, day: 2 }),
+      scrollerId: this.uid
+    };
+  }
+}
+</script>
+</body>
+</html>

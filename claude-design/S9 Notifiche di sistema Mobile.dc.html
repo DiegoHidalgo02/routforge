@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#8AAAF6}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S9 Notifiche di sistema" style="width:390px;height:844px;background:linear-gradient(160deg,#2A2F3A,#12151C);border:1px solid #292E37;border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  <div style="flex:none;padding:48px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:2px">
+    <span style="font:500 14px/18px var(--font-ui);color:#C4C9D2">Mercoledì 23 settembre</span>
+    <span style="font:600 64px/68px var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.03em">{{ clock }}</span>
+  </div>
+  <div style="flex:1;min-height:0;padding:0 12px 24px;display:flex;flex-direction:column;gap:8px;animation:rf-in .18s ease-out">
+    <sc-for list="{{ items }}" as="n" hint-placeholder-count="4">
+      <div style="background:rgba(20,24,32,.92);border:1px solid #292E37;border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <span style="width:18px;height:18px;border-radius:5px;background:#6E96F2;display:flex;align-items:center;justify-content:center;gap:2px;flex:none"><span style="width:2px;height:5px;border-radius:1px;background:#fff"></span><span style="width:2px;height:9px;border-radius:1px;background:#fff"></span><span style="width:2px;height:7px;border-radius:1px;background:#fff"></span></span>
+          <span style="font:500 12px/16px var(--font-ui);color:#C4C9D2">RoutForge</span>
+          <span style="font:500 12px/16px var(--font-num);color:#959CA8">{{ n.when }}</span>
+          <span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap"><span style="width:6px;height:6px;border-radius:999px;background:{{ n.dot }};flex:none"></span>{{ n.trigger }}</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 14px/18px var(--font-ui);text-wrap:pretty">{{ n.title }}</span>
+            <span style="font:13px/17px var(--font-ui);color:#959CA8;text-wrap:pretty">{{ n.body }}</span>
+          </div>
+          <sc-if value="{{ n.hasChrono }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 16px/18px var(--font-num);font-variant-numeric:tabular-nums">{{ n.chrono }}</span></sc-if>
+        </div>
+        <sc-if value="{{ n.hasActions }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;gap:4px;margin:0 -6px -4px">
+            <sc-for list="{{ n.actions }}" as="b" hint-placeholder-count="2"><button style="height:32px;padding:0 10px;border-radius:9px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer" style-hover="background:#1E232C">{{ b.label }}</button></sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+    <sc-if value="{{ hasSilent }}" hint-placeholder-val="{{ false }}">
+      <span style="display:flex;align-items:center;gap:6px;font:500 12px/14px var(--font-ui);color:#C4C9D2;padding:8px 4px 0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"></path><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path><path d="m2 2 20 20"></path></svg>Silenziose</span>
+      <sc-for list="{{ silent }}" as="n" hint-placeholder-count="1">
+        <div style="background:rgba(20,24,32,.92);border:1px solid #292E37;border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="width:18px;height:18px;border-radius:5px;background:#6E96F2;display:flex;align-items:center;justify-content:center;gap:2px;flex:none"><span style="width:2px;height:5px;border-radius:1px;background:#fff"></span><span style="width:2px;height:9px;border-radius:1px;background:#fff"></span><span style="width:2px;height:7px;border-radius:1px;background:#fff"></span></span>
+            <span style="font:500 12px/16px var(--font-ui);color:#C4C9D2">RoutForge</span>
+            <span style="font:500 12px/16px var(--font-num);color:#959CA8">{{ n.when }}</span>
+            <span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:500 11px/14px var(--font-ui);color:#959CA8;white-space:nowrap"><span style="width:6px;height:6px;border-radius:999px;background:{{ n.dot }};flex:none"></span>{{ n.trigger }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font:600 14px/18px var(--font-ui);text-wrap:pretty">{{ n.title }}</span>
+            <span style="font:13px/17px var(--font-ui);color:#959CA8;text-wrap:pretty">{{ n.body }}</span>
+          </div>
+          <sc-if value="{{ n.hasActions }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:4px;margin:0 -6px -4px">
+              <sc-for list="{{ n.actions }}" as="b" hint-placeholder-count="2"><button style="height:32px;padding:0 10px;border-radius:9px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer" style-hover="background:#1E232C">{{ b.label }}</button></sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;group&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;studio&quot;,&quot;options&quot;:[&quot;studio&quot;,&quot;todo&quot;,&quot;routine&quot;,&quot;sessione&quot;],&quot;tsType&quot;:&quot;'studio' | 'todo' | 'routine' | 'sessione'&quot;,&quot;section&quot;:&quot;Sequenza (MECCANISMI §13.2, §13.5, §13.6)&quot;}}">
+class Component extends DCLogic {
+  DOT = { study: '#9B6CFA', todo: '#14B8A6', routine: '#FACC15', event: '#F43F5E', none: '#959CA8' };
+  G = {
+    studio: {
+      clock: '17:16',
+      items: [
+        ['16:55', 'esito · fine + 10 min', 'study', 'Registra l\u2019esito · Ripasso Modulo 0', '16:00 – 16:45 · Unità 0.7 · Event loop visualizzato', ['Registra esito']],
+        ['16:22', 'verifica · metà durata', 'study', 'Ripasso Modulo 0 non è partita', 'Si avvia ancora come recupero fino alle 17:15', ['Inizia', 'Posticipa']],
+        ['16:00', 'inizio', 'study', 'Ripasso Modulo 0 · adesso', 'Fino alle 16:45 · Unità 0.7 · Event loop visualizzato', ['Inizia', 'Posticipa']],
+        ['15:55', '5 min prima', 'study', 'Ripasso Modulo 0 · alle 16:00', '45 min · Unità 0.7 · Event loop visualizzato', ['Inizia', 'Posticipa']]
+      ],
+      silent: [
+        ['17:15', 'blocco perso', 'study', 'Ripasso Modulo 0 · persa', 'Non avviata entro 30 min dalla fine. Un esito registrato la riabilita.', ['Registra esito']]
+      ]
+    },
+    todo: {
+      clock: '19:00',
+      items: [
+        ['19:00', 'scadenza', 'todo', 'Leggere 20 pagine · adesso', '19:00 – 19:30 · checklist 2/5', ['Segna fatto', 'Posticipa']],
+        ['18:30', '30 min prima', 'todo', 'Leggere 20 pagine · alle 19:00', '30 min · checklist 2/5', ['Segna fatto', 'Posticipa']],
+        ['08:00', 'digest del mattino', 'todo', '3 da fare (1 arretrato)', 'Prepara la valigia · Prenota il treno · Chiama Marco', []]
+      ],
+      silent: [
+        ['07:42', 'in ritardo · spostato a oggi', 'todo', 'Prepara la valigia · in ritardo', 'Non fatto ieri: ora è su oggi, rotola fino a domenica 27', ['Segna fatto', 'Posticipa']],
+        ['07:42', 'in ritardo · non fatto', 'todo', 'Ritira il pacco · non fatto', 'Era per ieri: resta lì e puoi ancora segnarlo fatto.', ['Segna fatto', 'Posticipa']]
+      ]
+    },
+    routine: {
+      clock: '16:11',
+      items: [
+        ['15:05', 'verifica · metà durata', 'routine', 'Palestra non è ancora segnata', '14:30 – 15:40 · si segna Fatta o Saltata dal blocco', ['Posticipa']],
+        ['14:30', 'inizio', 'routine', 'Palestra · adesso', '14:30 – 15:40 · 3 fasi', ['Posticipa']],
+        ['10:45', '15 min prima', 'event', 'Riunione progetto · alle 11:00', '11:00 – 12:00 · Meet', ['Posticipa']],
+        ['08:00', 'tutto il giorno', 'event', 'Scadenza tasse · oggi', 'Tutto il giorno', ['Posticipa']]
+      ],
+      silent: [
+        ['16:10', 'blocco perso', 'routine', 'Palestra · persa', 'Non segnata entro 30 min dalla fine. Fino alle 23:59 la segni ancora Fatta o Saltata dal blocco.', []]
+      ]
+    },
+    sessione: {
+      clock: '16:46',
+      items: [
+        ['16:03', 'persistente · solo Android', 'study', 'Sessione in corso', 'Ripasso Modulo 0 · Unità 0.7 · tempo extra', [], '+01:04'],
+        ['16:45', 'tempo scaduto', 'study', 'Tempo scaduto · Ripasso Modulo 0', 'Fine prevista delle 16:45. Il timer prosegue in tempo extra finché non termini.', []],
+        ['09:12', 'prova', 'none', 'Notifica di prova', 'Le notifiche di RoutForge arrivano su questo dispositivo.', []]
+      ],
+      silent: []
+    }
+  };
+  row([when, trigger, k, title, body, actions, chrono]) {
+    return { when, trigger, title, body, dot: this.DOT[k], actions: actions.map(label => ({ label })), hasActions: actions.length > 0, hasChrono: !!chrono, chrono: chrono || '' };
+  }
+  renderVals() {
+    const g = this.G[this.props.group] || this.G.studio;
+    const silent = g.silent.map(r => this.row(r));
+    return { clock: g.clock, items: g.items.map(r => this.row(r)), silent, hasSilent: silent.length > 0 };
+  }
+}
+</script>
+</body>
+</html>

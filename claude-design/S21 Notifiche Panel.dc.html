@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S21 Notifiche" style="display:flex;flex-direction:column;gap:20px;color:#fff;font-family:var(--font-ui)">
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:48px 16px;animation:rf-in .18s ease-out">
+      <span style="width:56px;height:56px;border-radius:999px;background:#163029;display:grid;place-items:center;color:#22C55E"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 18px/24px var(--font-ui)">Tutto in ordine</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:280px">Nessuna sessione di studio senza esito negli ultimi 3 giorni. Il prossimo avviso è alle <span style="font:500 14px var(--font-num);color:#fff">16:00</span>, Ripasso Modulo 0.</p></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasItems }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Esiti da registrare · ultimi 3 giorni</span><span style="font:500 12px/14px var(--font-num);color:#636975">{{ pendingCount }} · max 5</span></div>
+      <sc-for list="{{ pending }}" as="p" hint-placeholder-count="3">
+        <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:{{ p.fill }}"></span>
+          <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 14px/18px var(--font-ui);text-wrap:pretty">{{ p.title }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8"><span style="font:500 12px var(--font-num)">{{ p.when }}</span> · {{ p.reason }}</span></span><span style="height:20px;padding:0 7px;border-radius:999px;background:{{ p.soft }};color:{{ p.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ p.badge }}</span></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button onClick="{{ p.dismiss }}" style="height:36px;padding:0 12px;border-radius:10px;background:transparent;border:0;color:#959CA8;font:600 13px var(--font-ui);cursor:pointer" style-hover="background:#1E232C;color:#fff">{{ p.secondary }}</button>
+            <button onClick="{{ p.dismiss }}" style="height:36px;padding:0 14px;border-radius:10px;background:#6E96F2;color:#0A0D13;border:0;font:600 13px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">{{ p.primary }}</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Ieri</span><span style="font:500 12px/14px var(--font-num);color:#636975">gestite</span></div>
+    <sc-for list="{{ past }}" as="q" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid #292E37;opacity:.75"><span style="width:8px;height:8px;border-radius:999px;background:{{ q.fill }};flex:none"></span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 13px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ q.title }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8">{{ q.reason }}</span></span><span style="font:500 12px var(--font-num);color:#636975;flex:none">{{ q.when }}</span></div>
+    </sc-for>
+  </div>
+  <span style="font:12px/16px var(--font-ui);color:#636975;text-wrap:pretty">Le impostazioni delle notifiche (per tipo, digest) sono in Impostazioni → Notifiche.</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:358,&quot;height&quot;:700},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;list&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;empty&quot;],&quot;tsType&quot;:&quot;'list' | 'empty'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;}}">
+class Component extends DCLogic {
+  A = { study: ['#9B6CFA', '#B794FD', '#2A1F45', 'Studio'], todo: ['#14B8A6', '#2DD4BF', '#16302E', 'Todo'], routine: ['#FACC15', '#FACC15', '#34311E', 'Routine'], event: ['#F43F5E', '#FF4A67', '#331D29', 'Evento'] };
+  P = [
+    { id: 1, k: 'study', title: 'Ripasso Modulo 0 · Unità 0.7', when: 'oggi 09:00 – 10:00', reason: 'fine passata, nessun esito · ancora recuperabile', primary: 'Registra esito', secondary: 'Recupera' },
+    { id: 2, k: 'study', title: 'Ripasso Modulo 0 · Unità 0.7', when: 'ieri 16:00', reason: 'persa · un esito la riabilita, minuti = durata pianificata', primary: 'Registra esito', secondary: 'Apri unità' },
+    { id: 3, k: 'study', title: 'Studio · senza corso', when: 'ven 11 set · 20:00', reason: 'persa · esito solo sul blocco, nessuna unità', primary: 'Registra esito', secondary: 'Apri' }
+  ];
+  state = { gone: new Set(this.props.view === 'empty' ? [1, 2, 3] : []) };
+  componentDidUpdate(prev) { if (prev.view !== this.props.view) this.setState({ gone: new Set(this.props.view === 'empty' ? [1, 2, 3] : []) }); }
+  renderVals() {
+    const pending = this.P.filter(p => !this.state.gone.has(p.id)).map(p => { const a = this.A[p.k]; return { ...p, fill: a[0], ink: a[1], soft: a[2], badge: a[3], dismiss: () => this.setState(s => { const g = new Set(s.gone); g.add(p.id); return { gone: g }; }) }; });
+    const past = [{ k: 'event', title: 'Dentista', reason: 'completato · 1 fase saltata → todo creato', when: '15:52' }, { k: 'study', title: 'Lezione di UI/UX', reason: 'avviso 15 min prima', when: '08:45' }, { k: 'todo', title: 'Digest del mattino', reason: '3 todo senza orario', when: '08:00' }].map(q => ({ ...q, fill: this.A[q.k][0] }));
+    return { pending, pendingCount: String(pending.length), hasItems: pending.length > 0, isEmpty: pending.length === 0, past };
+  }
+}
+</script>
+</body>
+</html>

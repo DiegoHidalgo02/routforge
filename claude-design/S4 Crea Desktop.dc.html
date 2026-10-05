@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+</style>
+</helmet>
+<div data-screen-label="S4 Crea (desktop)" style="width:1280px;height:800px;position:relative;border-radius:16px;overflow:hidden;background:#0A0D13">
+  <div style="position:absolute;inset:0;isolation:isolate;z-index:0"><dc-import name="S1 Oggi Desktop" hint-size="1280px,800px"></dc-import></div>
+  <div style="position:absolute;inset:0;background:rgba(10,13,19,.6);z-index:1"></div>
+  <div style="position:absolute;top:0;right:0;bottom:0;width:440px;z-index:2;background:#141820;border-left:1px solid #292E37;box-shadow:0 12px 32px rgba(0,0,0,.45)">
+    <dc-import name="S4 Crea Panel" mode="{{ mode }}" due="{{ due }}" date="{{ date }}" type="{{ type }}" filled="{{ filled }}" reminder="{{ reminder }}" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;type&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;routine&quot;,&quot;options&quot;:[&quot;todo&quot;,&quot;study&quot;,&quot;routine&quot;,&quot;event&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;filled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;reminder&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;auto&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;off&quot;,&quot;custom&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;create&quot;,&quot;options&quot;:[&quot;create&quot;,&quot;edit&quot;],&quot;tsType&quot;:&quot;'create' | 'edit'&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;due&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;week&quot;,&quot;options&quot;:[&quot;today&quot;,&quot;week&quot;,&quot;month&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;}}">
+class Component extends DCLogic {
+  // Prototipo: i parametri dell'indirizzo (?view=…) valgono come prop quando la tavola non le passa
+  pp() { const o = {}; Object.keys(this.props).forEach(k => { const v = this.props[k]; if (v !== undefined && v !== null && v !== '') o[k] = v; }); try { new URLSearchParams(window.location.search).forEach((v, k) => { o[k] = v; }); } catch (_) {} return o; }
+  renderVals() {
+    const pp = this.pp(); return { type: pp.type || 'routine', filled: pp.filled !== false && pp.filled !== 'false', reminder: pp.reminder || 'auto', due: pp.due, date: pp.date, mode: pp.mode || 'create' }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+::-webkit-scrollbar{display:none}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rf-flip{from{opacity:0;transform:rotateX(-12deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S19 AI e pratica" style="position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;background:#141820;color:#fff;font-family:var(--font-ui);overflow:hidden">
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px 0 8px;flex:none">
+    <button aria-label="Indietro" style="width:40px;height:40px;border-radius:999px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0;flex:none" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 15px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ subtitle }}</span></span>
+    <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleScope }}" style="height:32px;padding:0 10px 0 12px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;font:600 12px var(--font-ui);display:inline-flex;align-items:center;gap:6px;cursor:pointer;flex:none" style-hover="background:#292E37">{{ scopeLabel }}<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#959CA8" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+    </sc-if>
+    <sc-if value="{{ hasProgress }}" hint-placeholder-val="{{ true }}"><span style="font:500 13px var(--font-num);font-variant-numeric:tabular-nums;color:#959CA8;flex:none">{{ progress }}</span></sc-if>
+  </div>
+  <sc-if value="{{ hasProgress }}" hint-placeholder-val="{{ true }}"><div style="margin:10px 20px 0;height:3px;border-radius:999px;background:#292E37;overflow:hidden;flex:none"><div style="width:{{ pct }}%;height:100%;border-radius:999px;background:#6E96F2;transition:width .3s"></div></div></sc-if>
+
+  <sc-if value="{{ isFlashDone }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Ripasso finito" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:40px 20px">
+      <span style="width:56px;height:56px;border-radius:999px;background:#163029;display:grid;place-items:center;color:#22C55E"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 15px/20px var(--font-ui)">Nessuna carta da ripassare</span><span style="font:13px/18px var(--font-ui);color:#959CA8;max-width:260px;text-wrap:pretty">Hai ripassato le <span style="font:500 13px var(--font-num);color:#fff">12</span> carte scadute. La prossima scade domani e la ritrovi qui.</span></div>
+      <button style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Chiudi</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isFlash }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:20px;gap:16px;max-width:600px;width:100%;box-sizing:border-box;margin:0 auto">
+      <button onClick="{{ flip }}" style="flex:1;min-height:260px;border-radius:16px;background:#1E232C;border:1px solid #292E37;padding:24px;display:flex;flex-direction:column;gap:16px;color:#fff;text-align:left;cursor:pointer;box-sizing:border-box;animation:rf-flip .25s ease-out" style-hover="border-color:#3A404B">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ sideColor }}">{{ sideLabel }}</span><span style="font:500 11px var(--font-num);color:#636975">{{ cardMeta }}</span></div>
+        <span style="flex:1;font:600 20px/28px var(--font-ui);letter-spacing:-.01em;text-wrap:pretty;display:flex;align-items:center">{{ cardText }}</span>
+        <sc-if value="{{ isBack }}" hint-placeholder-val="{{ false }}">
+          <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8;animation:rf-in .18s ease-out"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dal corso · Unità 0.7 › Concetto core</span></span>
+        </sc-if>
+        <sc-if value="{{ isFront }}" hint-placeholder-val="{{ true }}"><span style="font:12px/16px var(--font-ui);color:#636975">Tocca la carta per girarla</span></sc-if>
+      </button>
+      <sc-if value="{{ isFront }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ flip }}" style="height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Mostra risposta</button>
+      </sc-if>
+      <sc-if value="{{ isBack }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px;animation:rf-in .18s ease-out">
+          <span style="font:500 12px/14px var(--font-ui);color:#959CA8;text-align:center">Quanto la ricordavi?</span>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+            <sc-for list="{{ grades }}" as="g" hint-placeholder-count="4"><button onClick="{{ g.pick }}" style="height:48px;border-radius:12px;background:#1E232C;border:1px solid #292E37;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;font:600 13px var(--font-ui)" style-hover="background:#292E37;border-color:#3A404B">{{ g.label }}</button></sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isQuiz }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:20px 20px 28px;display:flex;flex-direction:column;gap:20px;max-width:600px;width:100%;box-sizing:border-box;margin:0 auto">
+      <h2 style="margin:0;font:600 18px/26px var(--font-ui);letter-spacing:-.01em;text-wrap:pretty">In quale ordine escono i log di: codice sincrono, un <span style="font:600 16px var(--font-num)">setTimeout</span> a zero e una promise già risolta?</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ options }}" as="o" hint-placeholder-count="4">
+          <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 14px 10px 12px;border-radius:12px;background:{{ o.bg }};border:1px solid {{ o.border }};color:{{ o.color }};text-align:left;cursor:pointer;box-sizing:border-box;transition:background .15s,border-color .15s" style-hover="border-color:#3A404B"><span style="width:24px;height:24px;flex:none;border-radius:999px;background:{{ o.letterBg }};color:{{ o.letterColor }};font:600 12px/24px var(--font-num);text-align:center">{{ o.letter }}</span><span style="flex:1;min-width:0;font:500 14px/20px var(--font-ui);text-wrap:pretty">{{ o.text }}</span>{{ o.mark }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ answered }}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius:12px;background:#1E232C;padding:14px 16px;display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+          <span style="display:flex;align-items:center;gap:8px;font:600 13px var(--font-ui);color:{{ verdictColor }}">{{ verdictIcon }}{{ verdict }}</span>
+          <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">Il codice sincrono gira per primo sull'unica corsia. Quando lo stack si svuota, i microtask (la callback della promise) vengono svuotati TUTTI prima che il prossimo task, il timer, entri: quindi sincrono → promise → setTimeout.<span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:6px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">1</span><span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:4px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">2</span></p>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dal corso · Unità 0.7 › Teoria › Event loop: microtasks and macrotasks</span></span>
+            <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">2</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tuoi · Registro previsioni event loop.pdf, p. 3</span></span>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:none;padding:12px 20px;border-top:1px solid #292E37;display:flex;justify-content:center;background:#141820"><button onClick="{{ quizCta }}" disabled="{{ quizDisabled }}" style="flex:1;max-width:560px;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;opacity:{{ quizOpacity }};transition:opacity .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">{{ quizLabel }}</button></div>
+  </sc-if>
+
+  <sc-if value="{{ isQuizDone }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Quiz · punteggio" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:40px 20px;animation:rf-in .3s ease-out">
+      <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#6E96F2">Quiz completato</span>
+      <span style="font:600 56px/60px var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.03em">8<span style="font:500 22px var(--font-ui);color:#959CA8"> / 10</span></span>
+      <span style="font:600 22px/28px var(--font-ui)">80 %</span>
+      <span style="font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">Salvato nelle Statistiche → Pratica come media dei punteggi. Le 2 domande sbagliate restano riapribili dall'unità.</span>
+      <div style="display:flex;gap:8px;margin-top:8px"><button style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Rivedi le sbagliate</button><button style="height:44px;padding:0 20px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6">Torna all'unità</button></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPracticeDone }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Pratica · riepilogo" style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:28px 20px 24px;max-width:520px;width:100%;box-sizing:border-box;margin:0 auto;animation:rf-in .3s ease-out">
+      <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#6E96F2">{{ pdEyebrow }}</span>
+      <span style="font:600 56px/60px var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.03em;white-space:nowrap">{{ pdScore }}<span style="font:500 22px var(--font-ui);color:#959CA8"> / {{ pdTotal }}</span></span>
+      <span style="font:600 22px/28px var(--font-ui);letter-spacing:-.01em">{{ pdPct }}</span>
+      <span style="font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:320px">{{ pdNote }}</span>
+      <div style="width:100%;border-radius:12px;background:#1E232C;border:1px solid #292E37;padding:12px 14px 4px;display:flex;flex-direction:column;text-align:left;box-sizing:border-box">
+        <span style="font:500 12px/14px var(--font-ui);color:#959CA8;padding-bottom:8px">{{ pdWrongTitle }}</span>
+        <sc-for list="{{ pdWrong }}" as="w" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;min-height:44px;border-top:1px solid #292E37">
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 13px/18px var(--font-ui)">{{ w.title }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8">{{ w.meta }}</span></span>
+            <span style="height:20px;padding:0 7px;border-radius:999px;background:#331E25;color:#FA4F4D;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ w.tag }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onClick="{{ pdRestart }}" style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Rifai la pratica</button>
+        <button style="height:44px;padding:0 20px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Torna all'unità</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Conversazioni AI" style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:12px;padding:16px 20px 24px;max-width:600px;width:100%;box-sizing:border-box;margin:0 auto">
+      <sc-if value="{{ hasChats }}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{ chatGroups }}" as="g" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column">
+            <span style="font:500 12px/14px var(--font-ui);color:#959CA8;padding:0 2px 8px">{{ g.label }}</span>
+            <div style="border-radius:12px;background:#1E232C;border:1px solid #292E37;overflow:hidden">
+              <sc-for list="{{ g.rows }}" as="c" hint-placeholder-count="3">
+                <button onClick="{{ c.open }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 12px;background:transparent;border:0;border-top:{{ c.border }};color:#fff;text-align:left;cursor:pointer;transition:background .15s;box-sizing:border-box" style-hover="background:#242A34">
+                  <span style="width:32px;height:32px;flex:none;border-radius:999px;background:{{ c.iconBg }};color:{{ c.iconColor }};display:grid;place-items:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:500 14px/18px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</span>
+                    <span style="font:12px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.scope }} · <span style="font:500 12px var(--font-num)">{{ c.msgs }}</span> messaggi</span>
+                  </span>
+                  <span style="font:500 11px var(--font-num);color:#636975;flex:none">{{ c.date }}</span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m9 18 6-6-6-6"></path></svg>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ noChats }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:40px 20px">
+          <span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#636975"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+          <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 15px/20px var(--font-ui)">Nessuna conversazione</span><span style="font:13px/18px var(--font-ui);color:#959CA8;max-width:260px">Le chat con l'AI restano qui, con l'ambito da cui sono partite.</span></div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isSwipe }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="DevSwipe" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:20px;gap:16px;max-width:600px;width:100%;box-sizing:border-box;margin:0 auto">
+      <div style="flex:1;min-height:260px;border-radius:16px;background:#1E232C;border:1px solid {{ swipeBorder }};padding:20px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;transform:translateX({{ swipeX }}px) rotate({{ swipeRot }}deg);transition:transform .25s cubic-bezier(.2,.7,.2,1),border-color .2s">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">{{ swipeKind }}</span><span style="font:500 11px var(--font-num);color:#636975">JavaScript · Node</span></div>
+        <pre style="margin:0;flex:1;padding:12px 14px;border-radius:10px;background:#141820;font:500 12px/18px var(--font-num);overflow:auto;white-space:pre">{{ swipeCode }}</pre>
+        <sc-if value="{{ swipeAnswered }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;animation:rf-in .18s ease-out"><span style="display:flex;align-items:center;gap:8px;font:600 13px var(--font-ui);color:{{ swipeVerdictColor }}">{{ swipeVerdictIcon }}{{ swipeVerdict }}</span><p style="margin:0;font:13px/19px var(--font-ui);color:#959CA8;text-wrap:pretty">fetch rigetta SOLO su errore di rete: un 404 è un fulfillment con <span style="font:500 12px var(--font-num);color:#fff">ok: false</span>. Controlla lo stato della risposta prima di leggere il body.</p><span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span>Dal corso · Unità 0.8 › Concetto core</span></div>
+        </sc-if>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onClick="{{ swipeLeft }}" style="height:56px;border-radius:12px;background:#1E232C;border:1px solid #292E37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer" style-hover="background:#292E37"><span style="display:flex;align-items:center;gap:6px;font:600 13px var(--font-ui)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Sinistra</span><span style="font:500 11px var(--font-ui);color:#959CA8">code smell · vulnerabilità · pattern errato</span></button>
+        <button onClick="{{ swipeRight }}" style="height:56px;border-radius:12px;background:#1E232C;border:1px solid #292E37;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer" style-hover="background:#292E37"><span style="display:flex;align-items:center;gap:6px;font:600 13px var(--font-ui)">Destra<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span><span style="font:500 11px var(--font-ui);color:#959CA8">codice pulito · architettura corretta · best practice</span></button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBug }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Bug Hunter" style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;display:flex;flex-direction:column;padding:20px;gap:16px;max-width:600px;width:100%;box-sizing:border-box;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 18px/26px var(--font-ui);letter-spacing:-.01em">Tocca la riga sbagliata</span><span style="font:13px/18px var(--font-ui);color:#959CA8">{{ bugHint }}</span></div>
+      <div style="border-radius:12px;background:#1E232C;border:1px solid #292E37;overflow:hidden">
+        <sc-for list="{{ bugLines }}" as="l" hint-placeholder-count="7">
+          <button onClick="{{ l.pick }}" style="display:flex;align-items:stretch;gap:0;width:100%;min-height:36px;padding:0;background:{{ l.bg }};border:0;border-top:{{ l.border }};color:#fff;text-align:left;cursor:pointer;transition:background .15s" style-hover="background:#242A34"><span style="width:36px;flex:none;display:grid;place-items:center;font:500 11px var(--font-num);color:{{ l.numColor }};background:{{ l.numBg }}">{{ l.n }}</span><span style="flex:1;min-width:0;padding:0 12px;display:flex;align-items:center;font:500 12px/18px var(--font-num);white-space:pre;overflow-x:auto">{{ l.code }}</span>{{ l.mark }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ bugSolved }}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius:12px;background:#1E232C;padding:14px 16px;display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+          <span style="display:flex;align-items:center;gap:8px;font:600 13px var(--font-ui);color:{{ bugVerdictColor }}">{{ bugVerdictIcon }}{{ bugVerdict }}</span>
+          <p style="margin:0;font:14px/21px var(--font-ui);text-wrap:pretty">La previsione alla riga 5 mette il timer prima della promise: i microtask si svuotano tutti prima del prossimo task, quindi <span style="font:500 13px var(--font-num)">3</span> precede <span style="font:500 13px var(--font-num)">2</span>. Il commento alla riga 7 va riscritto contro l'output osservato. Categoria: event loop.</p>
+          <pre style="margin:0;padding:12px 14px;border-radius:10px;background:#141820;font:500 12px/18px var(--font-num);overflow-x:auto;white-space:pre"><span style="color:#22C55E">// previsione</span>: 1, 4, 3, 2 — i microtask (then) escono prima del task (setTimeout)</pre>
+          <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span>Codice · event-loop-lab/previsioni.md, riga 5 · Dal corso · Unità 0.7</span>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:none;padding:12px 20px;border-top:1px solid #292E37;display:flex;align-items:center;gap:12px;background:#141820"><span style="font:500 12px var(--font-num);color:#959CA8">Punti <span style="color:#fff">{{ bugPoints }}</span> / 2 per esercizio · totale <span style="color:#fff">7 / 12</span></span><span style="flex:1"></span><sc-if value="{{ bugSolved }}" hint-placeholder-val="{{ false }}"><button onClick="{{ bugNext }}" style="height:40px;padding:0 16px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6">Prossimo</button></sc-if></div>
+  </sc-if>
+
+  <sc-if value="{{ isTrivia }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Audio Flash-Trivia" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px 20px 40px;max-width:520px;width:100%;box-sizing:border-box;margin:0 auto">
+      <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">A mani libere · funziona a schermo spento</span>
+      <div style="width:100%;border-radius:16px;background:#1E232C;border:1px solid #292E37;padding:24px 20px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box">
+        <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ triviaPhaseColor }}">{{ triviaPhase }}</span>
+        <span style="font:600 20px/28px var(--font-ui);letter-spacing:-.01em;text-wrap:pretty">{{ triviaText }}</span>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;height:24px"><sc-for list="{{ bars }}" as="b" hint-placeholder-count="9"><span style="width:3px;height:{{ b }}px;border-radius:2px;background:#6E96F2;opacity:.9"></span></sc-for></div>
+        <span style="font:500 12px var(--font-num);color:#636975">{{ triviaMeta }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button aria-label="Stop" onClick="{{ triviaStop }}" style="width:48px;height:48px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg></button>
+        <button aria-label="{{ triviaPlayLabel }}" onClick="{{ triviaToggle }}" style="width:64px;height:64px;border-radius:999px;background:#6E96F2;border:0;color:#0A0D13;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6">{{ triviaPlayIcon }}</button>
+        <button aria-label="Salta" onClick="{{ triviaSkip }}" style="width:48px;height:48px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 4l10 8-10 8zM17 4h2v16h-2z"></path></svg></button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:24px 20px 60px;animation:rf-in .18s ease-out">
+        <span style="width:56px;height:56px;border-radius:999px;background:#331E25;display:grid;place-items:center;color:#FA4F4D"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"></path><path d="M12 9v4M12 17h.01"></path></svg></span>
+        <div data-screen-label="Errore della chat" style="display:flex;flex-direction:column;gap:6px"><sc-if value="{{ errQuota }}" hint-placeholder-val="{{ false }}"><span style="font:600 18px/24px var(--font-ui)">Limite di richieste raggiunto</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">Gemini ha rifiutato la richiesta per quota del tuo piano (429). Riprova tra qualche minuto o scegli un modello più economico nelle Impostazioni.</p></sc-if><sc-if value="{{ errKey }}" hint-placeholder-val="{{ false }}"><span style="font:600 18px/24px var(--font-ui)">Chiave Gemini non valida</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">Gemini non riconosce la chiave salvata. Controllala o incollane una nuova in Impostazioni → Modello e chiave AI.</p></sc-if><sc-if value="{{ errModel }}" hint-placeholder-val="{{ false }}"><span style="font:600 18px/24px var(--font-ui)">Modello non incluso nel tuo piano</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">La tua chiave Gemini non dà accesso al modello scelto. Scegline un altro in Impostazioni: la conversazione resta qui.</p></sc-if><sc-if value="{{ errSafety }}" hint-placeholder-val="{{ false }}"><span style="font:600 18px/24px var(--font-ui)">Risposta bloccata</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">I filtri di sicurezza di Gemini hanno fermato la risposta. Riformula la domanda e inviala di nuovo.</p></sc-if></div>
+        <div style="display:flex;gap:8px"><sc-if value="{{ errQuota }}" hint-placeholder-val="{{ false }}"><button style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Impostazioni · Modello AI</button><button style="height:44px;padding:0 20px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#8AAAF6">Riprova</button></sc-if><sc-if value="{{ errSettings }}" hint-placeholder-val="{{ false }}"><button style="height:44px;padding:0 20px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#8AAAF6">Apri Impostazioni</button></sc-if><sc-if value="{{ errSafety }}" hint-placeholder-val="{{ false }}"><button style="height:44px;padding:0 20px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#8AAAF6">Riformula la domanda</button></sc-if></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isNoKey }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:24px 20px 60px;animation:rf-in .18s ease-out">
+        <span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#959CA8"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 1 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg></span>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 18px/24px var(--font-ui)">Serve la chiave API Gemini</span><p style="margin:0;font:14px/20px var(--font-ui);color:#959CA8;text-wrap:pretty;max-width:300px">La chat, i quiz e le flashcard usano un modello esterno con una chiave tua. Resta solo su questo dispositivo: va inserita su ognuno.</p></div>
+        <button style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 14px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:8px" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>Impostazioni · Modello AI</button>
+        <a href="#" style="font:500 13px var(--font-ui);color:#959CA8">Come ottenere una chiave</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isThread }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:16px 20px;display:flex;flex-direction:column;gap:14px;max-width:720px;width:100%;box-sizing:border-box;margin:0 auto">
+        <span style="text-align:center;font:12px/16px var(--font-ui);color:#636975;text-wrap:pretty">{{ scopeHint }}</span>
+        <div style="align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:16px 16px 4px 16px;background:#6E96F2;color:#0A0D13;font:14px/20px var(--font-ui);text-wrap:pretty">{{ q1 }}</div>
+        <div style="align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:8px">
+          <div style="padding:10px 14px;border-radius:16px 16px 16px 4px;background:#1E232C;font:14px/21px var(--font-ui);text-wrap:pretty">{{ a1 }}<sc-if value="{{ hasCites }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:6px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">1</span><span style="display:inline-flex;align-items:center;height:18px;padding:0 6px;margin-left:4px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px var(--font-num);vertical-align:middle">2</span></sc-if></div>
+          <sc-if value="{{ hasCites }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+              <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">1</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dal corso · Unità 0.7 › Concetto core</span></span>
+              <span style="display:flex;align-items:center;gap:8px;font:12px/16px var(--font-ui);color:#959CA8"><span style="width:18px;height:18px;border-radius:6px;background:#1C2439;color:#6E96F2;font:600 10px/18px var(--font-num);text-align:center;flex:none">2</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tuoi · Appunti del 18 set</span></span>
+            </div>
+          </sc-if>
+        </div>
+        <div style="align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:16px 16px 4px 16px;background:#6E96F2;color:#0A0D13;font:14px/20px var(--font-ui);text-wrap:pretty">{{ q2 }}</div>
+        <sc-if value="{{ isOffline }}" hint-placeholder-val="{{ false }}">
+          <div style="align-self:flex-start;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:#1E232C;border:1px solid #292E37;font:13px/18px var(--font-ui);color:#959CA8;animation:rf-in .18s ease-out"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#FA4F4D" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 20h.01M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M19 12.9a10 10 0 0 0-2.1-1.6M2 8.8a15 15 0 0 1 4.4-2.9M22 8.8a15 15 0 0 0-11.2-3.6M2 2l20 20"></path></svg><span style="flex:1;min-width:0;text-wrap:pretty">Offline. Il messaggio resta qui e parte quando torna la connessione. Quiz e flashcard già generati funzionano anche senza rete.</span></div>
+        </sc-if>
+        <sc-if value="{{ isTyping }}" hint-placeholder-val="{{ false }}">
+          <div style="align-self:flex-start;display:flex;align-items:center;gap:10px"><div style="padding:12px 14px;border-radius:16px 16px 16px 4px;background:#1E232C;display:flex;gap:4px"><span style="width:6px;height:6px;border-radius:999px;background:#959CA8"></span><span style="width:6px;height:6px;border-radius:999px;background:#636975"></span><span style="width:6px;height:6px;border-radius:999px;background:#3A404B"></span></div><button style="height:28px;padding:0 10px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#959CA8;font:600 11px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>Interrompi</button></div>
+        </sc-if>
+      </div>
+      <div style="flex:none;padding:8px 20px 16px;display:flex;gap:8px;align-items:flex-end;max-width:720px;width:100%;box-sizing:border-box;margin:0 auto"><div style="flex:1;min-height:44px;border-radius:12px;background:#1E232C;border:1px solid #292E37;display:flex;align-items:center;padding:0 14px;color:#636975;font:14px var(--font-ui);opacity:{{ inputOpacity }}">{{ inputPlaceholder }}</div><button aria-label="Invia" disabled="{{ isOffline }}" style="width:44px;height:44px;border-radius:12px;background:#6E96F2;border:0;color:#0A0D13;display:grid;place-items:center;cursor:pointer;padding:0;opacity:{{ inputOpacity }};box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div>
+    </sc-if>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:780},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;flashcard-front&quot;,&quot;options&quot;:[&quot;flashcard-front&quot;,&quot;flashcard-back&quot;,&quot;quiz&quot;,&quot;quiz-answered&quot;,&quot;quiz-done&quot;,&quot;devswipe&quot;,&quot;devswipe-wrong&quot;,&quot;devswipe-done&quot;,&quot;bughunter&quot;,&quot;bughunter-solved&quot;,&quot;bughunter-done&quot;,&quot;trivia&quot;,&quot;trivia-explain&quot;,&quot;trivia-done&quot;,&quot;chat&quot;,&quot;chat-global&quot;,&quot;chat-nokey&quot;,&quot;chat-offline&quot;,&quot;chat-error&quot;,&quot;chat-history&quot;,&quot;chat-history-vuota&quot;,&quot;flashcard-done&quot;,&quot;chat-error-key&quot;,&quot;chat-error-model&quot;,&quot;chat-error-safety&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;}}">
+class Component extends DCLogic {
+  OPTS = [
+    { l: 'A', t: 'Sincrono, poi setTimeout, poi la promise: i timer a zero sono immediati.' },
+    { l: 'B', t: 'Sincrono, poi la promise, poi setTimeout: i microtask precedono il prossimo task.', ok: true },
+    { l: 'C', t: 'Promise, sincrono, setTimeout: una promise già risolta non aspetta.' },
+    { l: 'D', t: 'Dipende dal browser: l\'ordine tra timer e microtask non è specificato.' }
+  ];
+  SCOPES = ['Unità 0.7', 'Modulo 0', 'Corso', 'Globale'];
+  svg(d, color, size = 16, w = 2) { return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: color, style: { strokeWidth: w, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, d.split('|').map((p, i) => React.createElement('path', { key: i, d: p }))); }
+  constructor(p) { super(p); this.state = this.initial(p); }
+  initial(p) {
+    const v = p.view || 'flashcard-front';
+    const done = v.endsWith('-done') && v !== 'quiz-done' && v !== 'flashcard-done';
+    const kind = v === 'flashcard-done' ? 'flashdone' : v.startsWith('chat-history') ? 'history' : done ? 'practicedone' : v === 'quiz-done' ? 'quizdone' : v.startsWith('quiz') ? 'quiz' : v.startsWith('chat') ? 'chat' : v.startsWith('devswipe') ? 'swipe' : v.startsWith('bughunter') ? 'bug' : v.startsWith('trivia') ? 'trivia' : 'flash';
+    return { kind, practice: done ? v.replace('-done', '') : null, noChats: v === 'chat-history-vuota', back: v === 'flashcard-back', card: 3, sel: v === 'quiz-answered' ? 'B' : null, answered: v === 'quiz-answered', q: 2, scope: v === 'chat-global' ? 3 : 0, nokey: v === 'chat-nokey', offline: v === 'chat-offline', error: v.startsWith('chat-error'), errKind: v.startsWith('chat-error-') ? v.slice(11) : 'quota', scopeOpen: false,
+      swipe: v === 'devswipe-wrong' ? 'right' : null, swipeN: 4, bugPick: v === 'bughunter-solved' ? 4 : null, bugTries: v === 'bughunter-solved' ? 1 : 0, triviaPlaying: true, triviaPhase: v === 'trivia-explain' ? 2 : 0, triviaN: 3 };
+  }
+  componentDidUpdate(prev) { if (prev.view !== this.props.view) this.setState(this.initial(this.props)); }
+  renderVals() {
+    const s = this.state, isFlash = s.kind === 'flash', isQuiz = s.kind === 'quiz', isChat = s.kind === 'chat', isQuizDone = s.kind === 'quizdone', isSwipe = s.kind === 'swipe', isBug = s.kind === 'bug', isTrivia = s.kind === 'trivia';
+    // SM-2 (MECCANISMI §19): solo l'etichetta del grado, l'intervallo calcolato non compare sul pulsante
+    const grades = [{ label: 'Niente' }, { label: 'Difficile' }, { label: 'Bene' }, { label: 'Facile' }].map(g => ({ ...g, pick: () => this.setState(x => ({ back: false, card: Math.min(12, x.card + 1) })) }));
+    // DevSwipe
+    const swipeAnswered = !!s.swipe, swipeWrong = s.swipe === 'right';
+    const swipeVals = { isSwipe, swipeKind: 'Frammento di codice', swipeCode: "const res = await fetch(url);\nconst data = await res.json();\nrender(data); // e se è un 404?", swipeAnswered, swipeX: s.swipe === 'right' ? 10 : s.swipe === 'left' ? -10 : 0, swipeRot: s.swipe === 'right' ? 1.5 : s.swipe === 'left' ? -1.5 : 0, swipeBorder: swipeAnswered ? (swipeWrong ? '#FA4F4D' : '#22C55E') : '#292E37',
+      swipeVerdict: swipeWrong ? 'Sbagliato · era da scartare (vibrazione breve)' : 'Giusto · code smell riconosciuto', swipeVerdictColor: swipeWrong ? '#FA4F4D' : '#22C55E', swipeVerdictIcon: this.svg(swipeWrong ? 'M18 6 6 18|M6 6l12 12' : 'M20 6 9 17l-5-5', swipeWrong ? '#FA4F4D' : '#22C55E', 16, 2.5),
+      swipeLeft: () => this.setState(x => x.swipe ? { swipe: null, swipeN: x.swipeN + 1 } : { swipe: 'left' }), swipeRight: () => this.setState(x => x.swipe ? { swipe: null, swipeN: x.swipeN + 1 } : { swipe: 'right' }),
+      swipeFooter: swipeAnswered ? 'Tocca ancora per la prossima · gli errori tornano una volta a fine mazzo · punteggio = giuste al primo passaggio / totali' : 'Si usa con una mano · destra = corretto, sinistra = errato' };
+    // Bug Hunter
+    const BUG = ['console.log(1);', 'setTimeout(() => console.log(2), 0);', 'Promise.resolve().then(() => console.log(3));', 'console.log(4);', '// previsione annotata: 1, 4, 2, 3', '// osservato in console: 1, 4, 3, 2', '// commento: il timer a 0 è immediato'];
+    const WRONG = 5, solved = s.bugPick === WRONG || s.bugTries >= 2;
+    const bugLines = BUG.map((code, i) => { const n = i + 1, picked = s.bugPick === n, isWrong = n === WRONG; let bg = 'transparent', numBg = '#141820', numColor = '#636975', mark = null;
+      if (solved && isWrong) { bg = '#163029'; numBg = '#22C55E'; numColor = '#0A0D13'; mark = React.createElement('span', { style: { display: 'grid', placeItems: 'center', padding: '0 12px' } }, this.svg('M20 6 9 17l-5-5', '#22C55E', 16, 2.5)); }
+      else if (picked && !isWrong) { bg = '#331E25'; numBg = '#FA4F4D'; numColor = '#0A0D13'; mark = React.createElement('span', { style: { display: 'grid', placeItems: 'center', padding: '0 12px' } }, this.svg('M18 6 6 18|M6 6l12 12', '#FA4F4D', 16, 2.5)); }
+      return { n: String(n), code, bg, numBg, numColor, border: i ? '1px solid #292E37' : '0', mark, pick: () => { if (solved) return; this.setState(x => ({ bugPick: n, bugTries: x.bugTries + 1 })); } }; });
+    const bugPts = s.bugPick === WRONG ? (s.bugTries === 1 ? 2 : 1) : 0;
+    const bugVals = { isBug, bugLines, bugSolved: solved, bugPoints: solved ? String(bugPts) : '—', bugHint: s.bugTries === 0 ? 'Primo tentativo giusto = 2 punti · secondo = 1 · poi la soluzione. Nessuna tastiera.' : s.bugTries === 1 && !solved ? 'Non è quella. Hai un secondo tentativo (1 punto).' : 'Esercizio 4 di 6',
+      bugVerdict: s.bugPick === WRONG ? (s.bugTries === 1 ? 'Riga 5 · 2 punti' : 'Riga 5 · 1 punto al secondo tentativo') : 'Due tentativi · 0 punti · soluzione', bugVerdictColor: bugPts ? '#22C55E' : '#959CA8', bugVerdictIcon: this.svg(bugPts ? 'M20 6 9 17l-5-5' : 'M12 9v4M12 17h.01|M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', bugPts ? '#22C55E' : '#959CA8', 16, 2.5), bugNext: () => this.setState({ bugPick: null, bugTries: 0 }) };
+    // Audio Flash-Trivia
+    const phases = [['Domanda · letta a voce', '#6E96F2', 'Che differenza c\'è tra coda dei task e coda dei microtask?', 'lettura · 4 s'], ['Silenzio · 5 s per rispondere a mente', '#959CA8', '…', '3 s'], ['Spiegazione · ~15 s', '#22C55E', 'I microtask (promise) vengono svuotati tutti appena lo stack è vuoto; i task (setTimeout, eventi) entrano uno per giro dell\'event loop, dopo i microtask.', 'lettura · 9 / 15 s']][s.triviaPhase];
+    const triviaVals = { isTrivia, triviaPhase: phases[0], triviaPhaseColor: phases[1], triviaText: phases[2], triviaMeta: `${phases[3]} · elemento ${s.triviaN} / 10 · voce di sistema · italiano`, bars: s.triviaPlaying && s.triviaPhase !== 1 ? [8, 16, 22, 12, 18, 24, 10, 16, 8] : [4, 4, 4, 4, 4, 4, 4, 4, 4],
+      triviaPlayLabel: s.triviaPlaying ? 'Pausa' : 'Play', triviaPlayIcon: s.triviaPlaying ? this.svg('M8 5v14|M16 5v14', '#0A0D13', 22, 2.5) : React.createElement('svg', { viewBox: '0 0 24 24', width: 22, height: 22, fill: '#0A0D13' }, React.createElement('path', { d: 'M6 3l14 9-14 9z' })),
+      triviaToggle: () => this.setState(x => ({ triviaPlaying: !x.triviaPlaying })), triviaSkip: () => this.setState(x => ({ triviaPhase: 0, triviaN: Math.min(10, x.triviaN + 1) })), triviaStop: () => this.setState({ triviaPlaying: false, triviaPhase: 0 }) };
+    const options = this.OPTS.map(o => {
+      const on = s.sel === o.l, done = s.answered;
+      let bg = '#1E232C', border = '#292E37', color = '#fff', letterBg = '#292E37', letterColor = '#959CA8', mark = null;
+      if (!done && on) { bg = '#fff'; border = '#fff'; color = '#0A0D13'; letterBg = '#0A0D13'; letterColor = '#fff'; }
+      if (done && o.ok) { bg = '#163029'; border = '#22C55E'; letterBg = '#22C55E'; letterColor = '#0A0D13'; mark = this.svg('M20 6 9 17l-5-5', '#22C55E', 18, 2.5); }
+      if (done && on && !o.ok) { bg = '#331E25'; border = '#FA4F4D'; letterBg = '#FA4F4D'; letterColor = '#0A0D13'; mark = this.svg('M18 6 6 18|M6 6l12 12', '#FA4F4D', 18, 2.5); }
+      if (done && !on && !o.ok) { color = '#959CA8'; }
+      return { letter: o.l, text: o.t, bg, border, color, letterBg, letterColor, mark, pick: () => { if (!s.answered) this.setState({ sel: o.l }); } };
+    });
+    const correct = s.sel === 'B';
+    const scopeHints = ['Contesto: Unità 0.7 · risorse del corso e materiali tuoi', 'Contesto: Modulo 0 · tutte le unità del modulo', 'Contesto: Syllabus Software Engineer 2026 · intero corso', 'Chat globale · nessun materiale in contesto, nessuna citazione'];
+    const global = s.scope === 3;
+    const isPracticeDone = s.kind === 'practicedone', isHistory = s.kind === 'history', isFlashDone = s.kind === 'flashdone';
+    const PD = {
+      devswipe: {
+        eyebrow: 'DevSwipe completato', score: '7', total: '10', pct: '70 %',
+        note: 'Salvato nelle Statistiche → Pratica come media dei punteggi. Ogni errore ha dato vibrazione e spiegazione.',
+        wrongTitle: 'Le 3 sbagliate, riproposte una volta',
+        wrong: [
+          { title: 'fetch senza controllo di response.ok', meta: 'Error handling · Unità 0.8', tag: 'rifatta' },
+          { title: 'Confronto number < string', meta: 'Coercizione · Unità 0.3', tag: 'rifatta' },
+          { title: 'setTimeout a 0 previsto prima del then', meta: 'Event loop · Unità 0.7', tag: 'rifatta' }
+        ]
+      },
+      bughunter: {
+        eyebrow: 'Bug Hunter completato', score: '7', total: '12', pct: '58 %',
+        note: 'Salvato nelle Statistiche → Pratica come media dei punteggi: 2 punti se la riga è giusta al primo tentativo, 1 al secondo.',
+        wrongTitle: 'I 2 esercizi sbagliati, riproposti una volta',
+        wrong: [
+          { title: 'previsioni.md · riga 5', meta: 'Event loop · Unità 0.7', tag: 'rifatto' },
+          { title: 'app.js · riga 24', meta: 'Truthiness su input "0" · Unità 0.3', tag: 'rifatto' }
+        ]
+      },
+      trivia: {
+        eyebrow: 'Playlist completata', score: '8', total: '10', pct: '80 %',
+        note: 'Nelle Statistiche → Pratica le playlist completate si contano; le domande sbagliate tornano nella prossima playlist.',
+        wrongTitle: 'Le 2 sbagliate, riproposte una volta',
+        wrong: [
+          { title: 'Cosa svuota per primo l\u2019event loop?', meta: 'Event loop · Unità 0.7', tag: 'ripetuta' },
+          { title: 'Differenza fra task e microtask', meta: 'Event loop · Unità 0.7', tag: 'ripetuta' }
+        ]
+      }
+    };
+    const pd = PD[s.practice] || PD.devswipe;
+    const pdTitleMap = { devswipe: 'DevSwipe', bughunter: 'Bug Hunter', trivia: 'Audio Flash-Trivia' };
+    const pdSubMap = { devswipe: 'Unità 0.8 · 10 carte · riepilogo', bughunter: 'Unità 0.7 · 6 esercizi · riepilogo', trivia: 'Unità 0.7 · playlist di 10 · riepilogo' };
+    const chatGroups = [
+      { label: 'Oggi', rows: [
+        { title: 'Perché il setTimeout a 0 esce dopo la promise?', scope: 'Dal corso · Unità 0.7', msgs: '6', date: '16:04' },
+        { title: 'Ripassa con me le 6 falsy e il caso "0"', scope: 'Dal corso · Modulo 0', msgs: '12', date: '11:20' }
+      ] },
+      { label: 'Ieri', rows: [
+        { title: 'Cosa cambia tra var e let letti prima della dichiarazione?', scope: 'Dal corso · Syllabus Software Engineer 2026', msgs: '9', date: 'ieri 21:10' }
+      ] },
+      { label: 'Questa settimana', rows: [
+        { title: 'Come organizzo i branch di un progetto?', scope: 'Globale · nessun materiale', msgs: '4', date: 'lun 21 set' }
+      ] },
+      { label: 'Prima', rows: [
+        { title: 'Riassumi i miei appunti su this e call-site', scope: 'Tuoi · materiali dell\u2019unità 0.6', msgs: '7', date: '11 set' }
+      ] }
+    ].map(g => ({ ...g, rows: g.rows.map((r, i) => ({ ...r, border: i === 0 ? '0' : '1px solid #292E37', iconBg: r.scope.startsWith('Globale') ? '#1E232C' : '#1C2439', iconColor: r.scope.startsWith('Globale') ? '#959CA8' : '#6E96F2', open: () => this.setState({ kind: 'chat' }) })) }));
+    return {
+      isFlash, isQuiz, isChat, isQuizDone, ...swipeVals, ...bugVals, ...triviaVals, hasProgress: isFlash || isQuiz || isSwipe || isBug || isTrivia,
+      isPracticeDone, isHistory, isFlashDone, hasChats: isHistory && !s.noChats, noChats: isHistory && s.noChats,
+      pdEyebrow: pd.eyebrow, pdScore: pd.score, pdTotal: pd.total, pdPct: pd.pct, pdNote: pd.note, pdWrongTitle: pd.wrongTitle, pdWrong: pd.wrong,
+      pdRestart: () => this.setState({ kind: s.practice === 'bughunter' ? 'bug' : s.practice === 'trivia' ? 'trivia' : 'swipe' }),
+      chatGroups,
+      title: isFlash || isFlashDone ? 'Ripasso trasversale' : isQuiz || isQuizDone ? 'Quiz' : isSwipe ? 'DevSwipe' : isBug ? 'Bug Hunter' : isTrivia ? 'Audio Flash-Trivia' : isHistory ? 'Conversazioni' : isPracticeDone ? pdTitleMap[this.state.practice] : 'Chat AI',
+      subtitle: isFlashDone ? 'Tutti i mazzi · nessuna carta scaduta' : isFlash ? 'Tutti i mazzi · 12 carte scadute · dalle più scadute' : isQuiz || isQuizDone ? 'Unità 0.7 · 10 domande · dal materiale' : isSwipe ? 'Unità 0.8 · 15 carte · difficoltà media' : isBug ? 'Unità 0.7 · 6 esercizi · dal tuo codice' : isTrivia ? 'Unità 0.7 · playlist di 10' : isHistory ? 'Cronologia delle chat · ambito e data' : isPracticeDone ? pdSubMap[this.state.practice] : (global ? 'Gemini 2.5 Flash · senza contesto' : 'Gemini 2.5 Flash · con contesto'),
+      progress: isFlash ? `${s.card} / 12` : isSwipe ? `${s.swipeN} / 15` : isBug ? '4 / 6' : isTrivia ? `${s.triviaN} / 10` : `${s.q} / 10`, pct: isFlash ? Math.round(s.card / 12 * 100) : isSwipe ? Math.round(s.swipeN / 15 * 100) : isBug ? 66 : isTrivia ? s.triviaN * 10 : Math.round(s.q / 10 * 100),
+      isFront: !s.back, isBack: s.back, sideLabel: s.back ? 'Retro' : 'Fronte', sideColor: s.back ? '#6E96F2' : '#959CA8', cardMeta: s.back ? 'ripassata 2 volte' : `carta ${s.card} · nuova`,
+      cardText: s.back ? 'Tutti, prima che il prossimo task entri nella corsia: la coda dei microtask si svuota per intero appena lo stack è vuoto, poi tocca a un solo task (es. setTimeout).' : 'Quanti microtask esegue l\'event loop prima del prossimo task, e perché?',
+      flip: () => this.setState(x => ({ back: !x.back })), grades,
+      options, answered: s.answered, verdict: correct ? 'Corretto' : 'Non corretto · la risposta giusta è B', verdictColor: correct ? '#22C55E' : '#FA4F4D', verdictIcon: this.svg(correct ? 'M20 6 9 17l-5-5' : 'M18 6 6 18|M6 6l12 12', correct ? '#22C55E' : '#FA4F4D', 16, 2.5),
+      quizLabel: s.answered ? 'Prossima domanda' : 'Conferma', quizDisabled: !s.sel, quizOpacity: s.sel ? 1 : .4,
+      quizCta: () => s.answered ? this.setState({ answered: false, sel: null, q: Math.min(6, s.q + 1) }) : this.setState({ answered: true }),
+      scopeLabel: this.SCOPES[s.scope], toggleScope: () => this.setState(x => ({ scope: (x.scope + 1) % 4 })), scopeHint: scopeHints[s.scope],
+      isNoKey: s.nokey, isError: s.error, errQuota: s.errKind === 'quota', errKey: s.errKind === 'key', errModel: s.errKind === 'model', errSafety: s.errKind === 'safety', errSettings: s.errKind === 'key' || s.errKind === 'model', isThread: !s.nokey && !s.error, isOffline: s.offline, isTyping: !s.offline, hasCites: !global,
+      q1: global ? 'Come si imposta un cron job su Linux?' : 'Perché il setTimeout a 0 esce dopo la promise?',
+      a1: global ? 'Con crontab -e apri la tabella dell\'utente; ogni riga ha cinque campi di tempo e il comando. Per esempio 0 7 * * 1-5 esegue alle 07:00 dal lunedì al venerdì.' : 'Perché la promise risolta accoda un microtask, e i microtask vengono svuotati tutti appena lo stack è vuoto. Il timer è un task: entra nella corsia solo al giro successivo dell\'event loop.',
+      q2: global ? 'E per farlo partire al riavvio?' : 'Quindi anche con setTimeout a 0 la promise vince sempre?',
+      inputPlaceholder: s.offline ? 'Offline · il messaggio parte al ritorno della rete' : (global ? 'Scrivi…' : 'Chiedi sull\'unità…'), inputOpacity: s.offline ? .5 : 1
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+/* RoutForge — tokens.css
+   Fonte unica dei valori usati nelle schermate S1–S22 e nello specimen. Dichiarare in Tailwind con @theme (o equivalente).
+   Hex = valore di verità; OKLCH = nota. Ogni token ha un uso nei componenti S*. Nessun valore fuori da questo file:
+   se serve un valore nuovo, prima si aggiunge qui con il suo uso. Regole d'uso in design/DESIGN.md · mappa delle schermate in HANDOFF.md */
+
+:root {
+  /* Neutri · tinti sulla tonalità 262 */
+  --color-bg:              #0A0D13; /* oklch(16% 0.012 262) · sfondo app, testo sopra il primary */
+  --color-surface:         #141820; /* oklch(21% 0.016 262) · card, stat card, nav, sheet, pannelli */
+  --color-surface-2:       #1E232C; /* oklch(26% 0.018 262) · input, icon button, riga, card dentro i pannelli */
+  --color-surface-3:       #292E37; /* oklch(30% 0.018 262) · hover dei controlli, knob off; = --color-border */
+  --color-surface-hover:   #242A34; /* oklch(28% 0.016 262) · hover delle righe navigabili */
+  --color-surface-card-hover: #171C25; /* hover della card attività da fare (S1) */
+  --color-surface-hero:    #161B27; /* fondo della card Adesso (S1) */
+  --color-surface-overrun: #161C28; /* barra in testa al timer in tempo extra (S15) */
+  --color-nav-top:         #1A1F29; /* BottomNav mobile: gradiente verticale, in alto */
+  --color-nav-bot:         #111520; /* BottomNav mobile: in basso */
+  --color-nav-border:      #2E343E; /* bordo della BottomNav */
+  --color-surface-month-1: #1A1F28; /* cella del mese con 1–2 blocchi (S1 desktop) */
+  --color-border:          #292E37; /* hairline 1 px */
+  --color-border-strong:   #3A404B; /* oklch(36% 0.018 262) · maniglia dei fogli, toggle off, bordo della card selezionata. Non per cerchio da fare, checkbox vuota e maniglia di riordino: 1,7:1 su surface, sotto il 3:1 dei componenti (WCAG 1.4.11) → text-3 */
+  --color-border-live:     #334156; /* bordo della card in corso e della card trascinata */
+
+  --color-text:            #FFFFFF; /* titoli, numeri · 17.8:1 su surface */
+  --color-text-dim:        #C4C9D2; /* titolo delle completate, highlight neutro degli stati */
+  --color-text-2:          #959CA8; /* oklch(69% 0.02 262) · sottotitoli, label, placeholder, meta · 6.4:1 surface · 5.7:1 surface-2 */
+  --color-text-3:          #636975; /* oklch(52% 0.02 262) · giorni senza impegni, disabled, numeri d'ordine; bordo del cerchio da fare, della checkbox vuota e maniglia di riordino (3,2:1 su surface) · mai testo informativo */
+
+  /* Primary · l'unico accento d'azione e il colore dei dati */
+  --color-primary:         #6E96F2; /* oklch(71% 0.11 265) · Button primary, FAB, "Inizia", eyebrow di contesto, barre dati · testo scuro sopra 6.2:1 */
+  --color-primary-hover:   #8AAAF6; /* hover dei link e dei primary */
+  --color-primary-active:  #5A82DE;
+  --color-primary-soft:    #1C2439; /* fondo dei badge primary ("Prossima", "auto"), passo 1 dei dati */
+  --color-primary-light:   #9DB8F8; /* estremi del gradiente della barra e dello sparkline */
+  --color-session-hover:   #243A60; /* hover di "Riprendi" nel banner sessione */
+
+  /* Dati · scala a quattro passi sul primary (heatmap, carico) */
+  --color-data-0:          #1E232C;
+  --color-data-1:          #1C2439;
+  --color-data-2:          #2E4785;
+  --color-data-4:          #6E96F2;
+  --color-data-area:       #1F3050; /* area sotto la curva dello sparkline */
+
+  /* Tipo · fill / ink / soft / light / deep — solo segnale di tipo, mai stato */
+  --color-cat-todo:          #14B8A6; /* oklch(70% 0.13 182) · glifi scuri sopra */
+  --color-cat-todo-ink:      #2DD4BF; /* 7.6:1 su soft */
+  --color-cat-todo-soft:     #16302E;
+  --color-cat-todo-light:    #7EF0E2; /* estremi del gradiente dell'accento, ultima barra del Focus */
+  --color-cat-study:         #9B6CFA; /* oklch(66% 0.21 297) · glifi scuri sopra, 5.1:1 */
+  --color-cat-study-ink:     #B794FD; /* oklch(75% 0.15 295) · 6.3:1 su soft */
+  --color-cat-study-soft:    #2A1F45;
+  --color-cat-study-light:   #D4C4FE;
+  --color-cat-routine:       #FACC15; /* oklch(86% 0.17 92) · glifi scuri sopra, mai bianchi */
+  --color-cat-routine-ink:   #FACC15; /* = fill · 8.6:1 su soft */
+  --color-cat-routine-soft:  #34311E;
+  --color-cat-routine-light: #FDE68A;
+  --color-cat-event:         #F43F5E; /* oklch(65% 0.22 16) */
+  --color-cat-event-ink:     #FF4A67; /* 4.8:1 su soft */
+  --color-cat-event-soft:    #331D29;
+  --color-cat-event-light:   #FDA4AF;
+
+  /* Tinte deep: marcatori su fondo bianco (chip del giorno selezionato) · ≥ 4.5:1 sul bianco */
+  --color-cat-todo-deep:     #0D6E63;
+  --color-cat-study-deep:    #6D28D9; /* 7.1:1 */
+  --color-cat-routine-deep:  #8A6A05;
+  --color-cat-event-deep:    #B01235;
+
+  /* Esito */
+  --color-success:         #22C55E; /* oklch(72% 0.19 150) · fatto, completato, delta + · fill del checkbox con spunta scura */
+  --color-success-soft:    #163029;
+  --color-success-light:   #86EFAC;
+  --color-archive-dot:     #187B40; /* pallino della completata davanti, archivio raccolto (S1) */
+  --color-archive-dot-open:#1B8E48; /* pallini ad archivio aperto (S1) */
+  --color-warning:         #FACC15; /* contatori incompleti (Go/No-Go 3/7) */
+  --color-danger:          #DD3035; /* oklch(59% 0.21 25) · solo eliminazione ed errore · bianco sopra 4.6:1 */
+  --color-danger-ink:      #FA4F4D; /* 4.7:1 su soft */
+  --color-danger-soft:     #331E25;
+
+  /* Selezione = bianco pieno con testo scuro (giorno, chip, segmento, tab) */
+  --color-selected:        #FFFFFF;
+  --color-selected-ink:    #0A0D13;
+
+  /* Overlay */
+  --overlay-sheet:         rgba(10,13,19,.6);  /* dietro le sheet nei Panel */
+  --overlay-sheet-frame:   rgba(10,13,19,.72); /* dietro le sheet nei frame mobile */
+
+  /* Solo scenografia dei mock: fondale di widget (S13) e notifiche di sistema (S9), non prodotto */
+  --color-widget-desk-top: #2A2F3A;
+  --color-widget-desk-bot: #12151C;
+
+  /* Tipografia */
+  --font-ui:  'Manrope', system-ui, sans-serif;            /* 400 · 500 · 600 · 700 */
+  --font-num: 'IBM Plex Mono', ui-monospace, monospace;    /* 400 · 500 · 600 · sempre font-variant-numeric: tabular-nums */
+
+  --text-4xs: 8px;   /* LUN MAR MER · solo widget */
+  --text-3xs: 9px;   /* 07:00 Mattina · solo widget */
+  --text-2xs: 10px;  /* badge, eyebrow, label nav e settimana, orari dell'archivio */
+  --text-xs:  11px;  /* orari in timeline desktop (font-num), sub delle righe, etichette della terna di progresso mobile */
+  --text-sm:  12px;  /* label di gruppo, sub, didascalie, delta */
+  --text-base: 13px; /* MetaRow, corpo compatto */
+  --text-md:  14px;  /* righe, titoli di unità, corpo (14/21 nei testi lunghi) */
+  --text-lg:  15px;  /* titolo card, intestazione di sezione */
+  --text-lg-2: 16px; /* wordmark, titolo della card attività (S1 mobile, 16/20), dato della card Adesso (font-num) */
+  --text-xl:  18px;  /* titolo sheet, data del giorno */
+  --text-xl-2: 20px; /* saluto, titolo della card Adesso */
+  --text-3xl: 22px;  /* titolo di pagina (corso, modulo, unità) */
+  --text-stat: 26px; /* valore delle StatCard (font-num, 26/30) */
+  --text-display: 34px; /* titolo dello specimen */
+  --text-timer: 44px;   /* timer (font-num, letter-spacing -.03em) */
+  --text-score: 56px;   /* punteggio di fine quiz (font-num, letter-spacing -.03em) */
+
+  --leading-tight: 1.15;
+  --leading-body: 1.5;   /* 14/21 */
+  --tracking-title: -.01em;
+  --tracking-body: .005em;
+  --tracking-eyebrow: .06em; /* 10–11 px uppercase */
+  --tracking-badge: .04em;   /* badge 10 px uppercase */
+
+  /* Spazio · scala 4 pt */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-page: 16px;        /* padding orizzontale mobile (20 nei Panel, 32 wide) */
+  --space-card-gap: 8px;
+  --space-activity-gap: 12px;
+  --space-card-inner: 14px;  /* 9/14 compatta */
+  --space-section: 24px;     /* tra sezioni (20–24) */
+  --size-touch: 44px;        /* target minimo anche dove il controllo misura 32–40 */
+
+  /* Misure di componente */
+  --size-control: 44px;      /* Button, IconButton, FAB, campo orario 48 */
+  --size-control-sm: 36px;
+  --size-chip: 32px;         /* pill di scadenza, priorità, giorni, promemoria */
+  --size-chip-sm: 28px;      /* segmenti del periodo, quantità */
+  --size-chip-type: 40px;    /* pill del tipo nel form Crea */
+  --size-badge: 20px;        /* badge tipo, "Prossima", "auto", SectionTag */
+  --size-row: 44px;          /* riga navigabile; 48 riga con sub; 56 riga modulo/unità */
+  --size-card-activity: 64px; /* S1 mobile · padding 12/12/12/18 · cerchio 22 · titolo 16/20 · sub 13/16 (desktop compatta, dal file) */
+  --size-check-activity: 22px;
+  --size-action-hero: 48px;  /* play / cerchio della card Adesso (cerchio visibile 28) */
+  --size-card-stat: 124px;   /* 116 nello specimen compatto e nella terna desktop */
+  --size-card-today: 104px;  /* terna "Il tuo progresso oggi" mobile · padding 10 · grafico 18 */
+  --size-nav-pill: 56px;     /* BottomNav 56 × 264 */
+  --size-fab: 44px;
+  --size-sidebar: 240px;
+  --size-detail-panel: 440px;
+  --size-time-column: 58px;  /* 60 su desktop · asse della timeline a 60 (linea 2 px) */
+  --size-timeline-line: 2px;
+  --size-dot: 8px;           /* pallino della timeline, centro a 23 px dal bordo della card · archivio: 8 · k */
+  --size-accent-bar: 3px;
+  --size-peek-band: 27px;    /* passo fra i livelli dell'archivio: base del titolo (29) − 2 · regola del 20 % */
+  --scale-archive: .9;       /* k = .9 · (CW − 20·d) / CW */
+  --offset-archive-inset: 10px; /* rientro per lato di ogni livello dietro */
+  --offset-archive-overlap: -55px; /* con un livello dietro: round((stackPad + 29) · .9) − 2 − (stackPad + 64 + 12); 0 ad archivio aperto e durante il trascinamento */
+  --offset-strip-under: -16px;     /* la lista scorre sotto la striscia dei giorni (0 ad archivio aperto) */
+  --scale-drag: 1.015;       /* card trascinata · rotate(-.5deg) */
+  --scale-press: .985;       /* Button primary attivo */
+
+  /* Raggi */
+  --radius-xs: 2px;         /* celle heatmap, smusso dell'accento (0 2px 2px 0) */
+  --radius-accent: 3px;
+  --radius-checkbox: 5px;   /* 6 nella checklist Go/No-Go */
+  --radius-chip-cite: 6px;  /* chip di citazione, SectionTag */
+  --radius-segment: 8px;
+  --radius-control-sm: 9px; /* logo, gruppi Impostazioni */
+  --radius-control: 10px;   /* select, LinkRow interna, box concetto core */
+  --radius-control-lg: 12px;/* Button, righe, card nei pannelli, ModuleGroup */
+  --radius-card: 14px;      /* card attività, StatCard, CourseCard */
+  --radius-card-lg: 16px;
+  --radius-card-hero: 18px; /* card Adesso (S1) */
+  --radius-sheet: 24px;     /* 24 24 0 0 */
+  --radius-widget: 28px;
+  --radius-pill: 999px;
+  --radius-phone-frame: 44px; /* solo mock */
+
+  /* Ombre · dieci famiglie, nessun'altra */
+  --shadow-card:         inset 0 1px 0 rgba(255,255,255,.03), 0 1px 2px rgba(0,0,0,.35), 0 4px 12px -6px rgba(0,0,0,.5); /* card su bg; le card dentro i pannelli su surface non hanno ombra */
+  --shadow-primary:      inset 0 1px 0 rgba(255,255,255,.7), 0 1px 1px rgba(0,0,0,.35), 0 6px 16px -8px rgba(0,0,0,.6); /* Button primary nei Panel */
+  --shadow-primary-soft: inset 0 1px 0 rgba(255,255,255,.45), 0 1px 1px rgba(0,0,0,.35), 0 6px 16px -8px rgba(0,0,0,.6); /* primary e FAB dentro le cornici (S1, S10, S13, S20 Shell) */
+  --shadow-fab:          var(--shadow-primary-soft);
+  --shadow-primary-cat:  inset 0 1px 0 rgba(255,255,255,.14), 0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(<fill>,.6); /* CTA nella tinta del tipo: terzo strato nel fill attivo (S4 CTA, S5 primary di tipo) */
+  --shadow-nav:          inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.4), 0 14px 34px -6px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.6); /* navbar mobile, quattro strati */
+  --shadow-float:        0 8px 24px rgba(0,0,0,.35); /* banner SessionShell (S1) */
+  --shadow-toast:        0 8px 24px rgba(0,0,0,.5);  /* toast con Undo (S5): stessa geometria di float, alpha .5 */
+  --shadow-menu:         0 18px 40px rgba(0,0,0,.55); /* menu account (S1) */
+  --shadow-drag:         0 12px 28px -10px rgba(0,0,0,.7); /* card trascinata (todo senza orario) */
+  --shadow-footer:       0 -12px 32px rgba(0,0,0,.45); /* footer della sheet dal basso (conferma elimina S11 Corso, ReviewSheet S5, debrief S15) — i footer fissi dei pannelli hanno solo hairline + fondo surface */
+  --shadow-panel:        0 12px 32px rgba(0,0,0,.45);  /* pannello desktop e widget */
+  --shadow-hero:         inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px <fill>26, 0 14px 34px -14px <fill>80, 0 4px 12px -6px rgba(0,0,0,.5); /* card Adesso, nel fill del tipo (alpha hex 26 · 80) */
+  --shadow-archive-front: 0 -10px 14px -4px rgba(10,13,19,.85); /* completata davanti dell'archivio raccolto, strato aggiunto a --shadow-card */
+
+  /* Aloni · solo pallini, ora della card in corso, card Adesso, marcatori di dato, anello del timer. Accento delle card escluso */
+  --glow-time-live:   0 0 10px rgba(255,255,255,.45); /* text-shadow dell'ora della card in corso */
+  --glow-dot-live:    0 0 8px 2px <ink>CC, 0 0 18px 6px <ink>66; /* pallino dell'attività in corso (con rf-neon); banner Sessione 0 0 8px 2px primary .7 */
+  --glow-dot-archive: 0 0 5px 1px rgba(34,197,94,.3); /* pallino della completata davanti */
+  --glow-dot-todo:    0 0 7px 1px currentColor;      /* pallino dei todo senza orario */
+  --glow-dot-week:    0 0 6px 1.5px currentColor;    /* pallino di carico della striscia della settimana (fill al 70 %) */
+  --glow-data:        0 0 8px 1px currentColor;      /* marcatori di dato della terna di progresso */
+  --glow-success:     0 0 6px 1px rgba(34,197,94,.5); /* spunta appena fatta */
+  --glow-timer-ring:  0 0 8px 1px rgba(110,150,242,.9), 0 0 20px 4px rgba(110,150,242,.4); /* anello del timer in corso */
+
+  /* Focus · da applicare a ogni controllo in implementazione (i mock non lo mostrano) */
+  --ring-focus:        0 0 0 2px #0A0D13, 0 0 0 4px #FFFFFF;
+  --ring-focus-danger: 0 0 0 2px #0A0D13, 0 0 0 4px #FA4F4D;
+
+  /* Opacità */
+  --opacity-disabled: .4;
+  --opacity-cta-idle: .4;   /* CTA del form Crea prima che i campi obbligatori siano compilati */
+  --opacity-locked: .6;     /* modulo bloccato */
+  --opacity-archive: .6;    /* pallino dell'archivio: .6 · k² */
+
+  /* Motion */
+  --dur-feedback: 150ms;  /* spunta, chip, toggle, hover */
+  --dur-reveal: 180ms;    /* rf-in */
+  --dur-block: 240ms;     /* rf-expand / rf-shrink */
+  --dur-seg: 500ms;       /* rf-seg segmenti della barra della giornata, stagger 70ms */
+  --dur-layout: 300ms;    /* rf-slide pannelli mobile · rf-up sheet */
+  --dur-swap: 400ms;      /* rf-swap saluto → data */
+  --dur-deal: 420ms;      /* rf-deal-a/b apertura dell'archivio · stagger 75ms */
+  --dur-cta: 450ms;       /* CTA del form: 40 % → fill del tipo */
+  --dur-hero: 550ms;      /* rf-hero-in della card Adesso */
+  --dur-strike: 900ms;    /* scatto dell'ora: ritardo dall'apertura (prop strikeDelay) */
+  --dur-hero-ring: 1200ms;/* rf-hero-ring, ritardo 100ms */
+  --dur-pulse: 2000ms;    /* rf-pulse pallino del timer */
+  --dur-neon: 1800ms;     /* rf-neon pallino della card in corso */
+  --dur-bar: 2400ms;      /* rf-bar accento della card in corso (S13) */
+  --dur-check: 250ms;     /* rf-check spunta disegnata sul cerchio (Celebrazioni sobria/piena) */
+  --dur-collapse: 260ms;  /* rf-collapse la riga spuntata si chiude, dopo 560ms di spunta visibile */
+  --dur-land: 420ms;      /* rf-land la card atterra davanti al mazzo delle completate */
+  --dur-burst: 600ms;     /* rf-burst coriandoli (Celebrazioni piena), stagger 20ms */
+  --dur-bump: 450ms;      /* rf-bump-a/b il contatore «Completate» pulsa in success */
+  --dur-morph: 520ms;     /* il foglio Crea si rimpicciolisce nella card (480 quando la card poi si sposta) */
+  --dur-away: 380ms;      /* la card scivola a destra verso un giorno futuro · si stringe nel puntino */
+  --dur-day-step: 170ms;  /* un giorno di scorrimento della striscia (280 al cambio di settimana) */
+  --dur-enter: 360ms;     /* rf-enter-left la card entra da sinistra nel giorno */
+  --dur-dot-hold: 1000ms; /* il puntino resta nella casella prima che entri la card */
+  --dur-toast: 5000ms;    /* durata del toast con «Annulla» */
+  --ease-out: ease-out;
+  --ease-standard: cubic-bezier(.4,0,.2,1);   /* rf-slide, rf-up, CTA */
+  --ease-out-soft: cubic-bezier(.2,.8,.2,1);  /* rf-expand, rf-shrink, rf-pop */
+  --ease-swap: cubic-bezier(.2,.7,.2,1);
+  --ease-deal: cubic-bezier(.2,.78,.24,1);
+}
+
+/* Keyframe · nomi usati nei componenti */
+@keyframes rf-in     { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }  /* reveal · in S1 Oggi dall'alto (-6px) */
+@keyframes rf-slide  { from { opacity:0; transform:translateX(24px) } to { opacity:1; transform:none } }
+@keyframes rf-up     { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
+@keyframes rf-expand { from { opacity:0; transform:scale(.97); transform-origin:50% 0 } to { opacity:1; transform:none } }
+@keyframes rf-shrink { from { opacity:.4; transform:scaleY(.64) translateY(-10px); transform-origin:50% 0 } to { opacity:1; transform:none } }
+@keyframes rf-swap-out { to { opacity:0; transform:translateY(-8px) } }
+@keyframes rf-swap-in  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes rf-flip   { from { opacity:0; transform:rotateX(-12deg) } to { opacity:1; transform:none } }
+@keyframes rf-deal-a { from { opacity:0; transform:translateY(-16px) scale(.9) rotate(-1.6deg) } to { opacity:1; transform:none } }
+@keyframes rf-deal-b { from { opacity:0; transform:translateY(-16px) scale(.9) rotate(1.6deg) } to { opacity:1; transform:none } }
+@keyframes rf-pulse  { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+@keyframes rf-bar    { 0%,100% { opacity:.85 } 50% { opacity:1 } }
+@keyframes rf-neon   { 0%,100% { transform:scale(.9); filter:brightness(.85) } 50% { transform:scale(1.2); filter:brightness(1.15) } }  /* sul pallino, l'alone è --glow-dot-live */
+@keyframes rf-seg    { from { opacity:0; transform:scaleX(0) } to { opacity:1; transform:none } }  /* transform-origin: 0 50% */
+@keyframes rf-hero-in   { from { transform:scale(.97); opacity:.55 } to { transform:none; opacity:1 } }
+@keyframes rf-hero-ring { 0% { opacity:0; transform:scale(1.02) } 25% { opacity:.9; transform:none } 100% { opacity:0; transform:none } }
+@keyframes rf-pop    { 0%,100% { transform:scale(.55); opacity:0 } 25% { transform:scale(1.12); opacity:1 } 40%,85% { transform:scale(1); opacity:1 } }
+@keyframes rf-spin   { to { transform:rotate(360deg) } }
+@keyframes rf-bell   { 0%,100% { transform:rotate(-6deg) } 50% { transform:rotate(6deg) } }
+@keyframes rf-check    { to { stroke-dashoffset:0 } }  /* path della spunta con stroke-dasharray:24; stroke-dashoffset:24 */
+@keyframes rf-collapse { from { max-height:64px; opacity:1 } to { max-height:0; opacity:0; margin-bottom:-12px } }  /* riga con overflow:hidden durante la chiusura; -12 = gap della lista */
+@keyframes rf-collapse-hero { from { max-height:170px; opacity:1 } to { max-height:0; opacity:0; margin-bottom:-12px } }  /* la card Adesso spuntata si chiude */
+@keyframes rf-land     { from { opacity:.3; transform:translateY(34px) scale(1.04) } to { opacity:1; transform:none } }
+@keyframes rf-burst    { 0% { opacity:0; transform:translate(-50%,-50%) scale(.3) } 25% { opacity:1 } 100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) } }
+@keyframes rf-bump-a   { 35% { transform:scale(1.18); color:#22C55E } 100% { transform:none } }  /* a/b alternati per ripartire a ogni cambio */
+@keyframes rf-bump-b   { 35% { transform:scale(1.18); color:#22C55E } 100% { transform:none } }
+@keyframes rf-done-pop { 0% { transform:scale(.6); opacity:0 } 60% { transform:scale(1.08); opacity:1 } 100% { transform:none } }  /* disco dell'esito registrato (S15) */
+@keyframes rf-pick-a   { from { transform:scale(.86) } to { transform:none } }  /* casella del Mese che diventa selezionata durante la creazione; a/b alternati */
+@keyframes rf-pick-b   { from { transform:scale(.86) } to { transform:none } }
+@keyframes rf-enter-left { from { opacity:0; transform:translateX(-28px) } to { opacity:1; transform:none } }
+@keyframes rf-day-a    { from { opacity:.25; transform:translateX(18px) } to { opacity:1; transform:none } }  /* a/b alternati a ogni giorno di scorrimento */
+@keyframes rf-day-b    { from { opacity:.25; transform:translateX(18px) } to { opacity:1; transform:none } }
+@keyframes rf-fade     { from { opacity:0 } to { opacity:1 } }  /* overlay dei fogli */
+
+/* Reduced motion: solo dissolvenze */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+::-webkit-scrollbar{display:none}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S11 Modulo" style="position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;background:#141820;color:#fff;font-family:var(--font-ui);overflow:hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 0 8px;flex:none">
+    <button aria-label="Indietro" onClick="{{ back }}" style="width:40px;height:40px;border-radius:999px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <button style="height:36px;padding:0 12px 0 10px;border-radius:999px;background:transparent;border:1px solid #292E37;color:#fff;font:600 13px var(--font-ui);display:inline-flex;align-items:center;gap:7px;cursor:pointer" style-hover="background:#1E232C"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6E96F2" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"></path><circle cx="12" cy="12" r="3"></circle></svg>Chiedi all'AI</button>
+  </div>
+  <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:8px {{ padX }}px 28px;display:flex;flex-direction:column;gap:24px;max-width:{{ maxW }};box-sizing:border-box">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#6E96F2">Modulo <span style="font:600 10px var(--font-num)">{{ m.nn }}</span> · Syllabus Software Engineer 2026</span>
+      <h1 style="margin:0;font:600 22px/28px var(--font-ui);letter-spacing:-.01em;text-wrap:pretty">{{ m.title }}</h1>
+      <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:3px;border-radius:999px;background:#292E37;overflow:hidden"><div style="width:{{ pctW }};height:100%;border-radius:999px;background:#6E96F2"></div></div><span style="font:500 11px var(--font-num);font-variant-numeric:tabular-nums;color:#959CA8">{{ progress }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+        <span style="display:flex;align-items:flex-start;gap:8px;font:500 13px/18px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px"><path d="m12 2 10 5-10 5L2 7z"></path><path d="m2 12 10 5 10-5M2 17l10 5 10-5"></path></svg><span style="flex:1;min-width:0;text-wrap:pretty">{{ m.typeLabel }}</span></span>
+        <span style="display:flex;align-items:flex-start;gap:8px;font:500 13px/18px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span style="flex:1;min-width:0;text-wrap:pretty">Finestra indicativa · <span style="font:500 13px var(--font-num)">{{ m.window }}</span></span></span>
+        <span style="display:flex;align-items:flex-start;gap:8px;font:500 13px/18px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="flex:1;min-width:0;text-wrap:pretty">Prerequisiti · {{ m.prereq }}</span></span>
+        <span style="display:flex;align-items:flex-start;gap:8px;font:500 13px/18px var(--font-ui);color:#6E96F2"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg><span style="flex:1;min-width:0">Puntatore · Unità <span style="font:500 13px var(--font-num)">{{ cur.n }}</span> · {{ cur.title }}</span></span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;background:#1E232C">
+      <span style="font:500 12px/14px var(--font-ui);color:#959CA8">Al termine saprai</span>
+      <sc-for list="{{ objectives }}" as="o" hint-placeholder-count="6"><span style="display:flex;gap:10px;font:13px/18px var(--font-ui);color:#fff;text-wrap:pretty"><span style="width:4px;height:4px;border-radius:999px;background:#6E96F2;flex:none;margin-top:7px"></span><span style="flex:1;min-width:0"><span style="font:600 13px var(--font-ui)">{{ o.verb }}</span> {{ o.rest }}</span></span></sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>Unità</span><span style="font:500 12px/14px var(--font-num);color:#636975">{{ unitCount }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ units }}" as="u" hint-placeholder-count="9">
+          <div style="border-radius:12px;background:#1E232C;overflow:hidden">
+            <button onClick="{{ u.toggle }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px 10px 12px;background:transparent;border:0;color:#fff;text-align:left;cursor:pointer;box-sizing:border-box" style-hover="background:#242A34">
+              <span style="width:28px;flex:none;font:500 12px var(--font-num);color:#636975">{{ u.n }}</span>
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 14px/18px var(--font-ui);color:{{ u.color }};text-wrap:pretty">{{ u.title }}</span><span style="font:500 11px/14px var(--font-ui);color:#636975">{{ u.sub }}</span></span>
+              <sc-if value="{{ u.done }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22C55E" style="stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+              <sc-if value="{{ u.current }}" hint-placeholder-val="{{ false }}"><span style="height:20px;padding:0 7px;border-radius:999px;background:#1C2439;color:#6E96F2;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">Prossima</span></sc-if>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;transform:rotate({{ u.rot }}deg);transition:transform .2s"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <sc-if value="{{ u.open }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:2px 14px 14px;display:flex;flex-direction:column;gap:18px;animation:rf-in .18s ease-out">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font:500 12px/14px var(--font-ui);color:#959CA8">Concetto core · {{ u.coreTitle }}</span>
+                  <div style="border-radius:10px;background:#141820;padding:12px 14px;border-left:3px solid #6E96F2"><p style="margin:0;font:500 14px/21px var(--font-ui);color:#fff;text-wrap:pretty">{{ u.coreText }}</p></div>
+                </div>
+                <sc-for list="{{ u.sections }}" as="s" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><span style="height:20px;padding:0 7px;border-radius:6px;background:#141820;color:#fff;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ s.label }}</span>{{ s.heading }}</span>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <sc-for list="{{ s.links }}" as="l" hint-placeholder-count="1">
+                        <a href="{{ l.url }}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-radius:10px;background:#141820;color:#fff;box-sizing:border-box" style-hover="background:#242A34">{{ l.icon }}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">{{ l.title }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8">{{ l.host }}</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+                      </sc-for>
+                    </div>
+                    <p style="margin:0;font:14px/21px var(--font-ui);color:#fff;text-wrap:pretty;white-space:pre-wrap">{{ s.description }}</p>
+                  </div>
+                </sc-for>
+                <button onClick="{{ u.openUnit }}" style="height:40px;border-radius:10px;background:#141820;border:1px solid #292E37;color:#fff;font:600 13px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;align-self:flex-start;padding:0 14px" style-hover="background:#292E37">Apri l'unità <span style="font:600 13px var(--font-num)">{{ u.n }}</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Criteri Go/No-Go</span><span style="font:500 12px/14px var(--font-num);color:{{ gngColor }}">{{ gngCount }}</span></div>
+      <div style="border-radius:12px;background:#1E232C;overflow:hidden">
+        <sc-for list="{{ criteria }}" as="c" hint-placeholder-count="7">
+          <button onClick="{{ c.toggle }}" style="display:flex;align-items:flex-start;gap:12px;width:100%;min-height:48px;padding:12px 14px;background:transparent;border:0;border-top:{{ c.border }};color:#fff;text-align:left;cursor:{{ c.cursor }};box-sizing:border-box" style-hover="background:#242A34">
+            <span style="width:20px;height:20px;border-radius:6px;flex:none;margin-top:1px;box-sizing:border-box;border:1.5px solid {{ c.boxBorder }};background:{{ c.boxBg }};display:grid;place-items:center">{{ c.check }}</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font:500 14px/20px var(--font-ui);color:{{ c.color }};text-wrap:pretty">{{ c.text }}</span><sc-if value="{{ c.auto }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px"><span style="height:20px;padding:0 7px;border-radius:999px;background:#1C2439;color:#6E96F2;font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center">auto</span><span style="font:12px/16px var(--font-ui);color:#959CA8">{{ c.autoMeta }}</span></span></sc-if></span>
+          </button>
+        </sc-for>
+      </div>
+      <p style="margin:0;font:12px/16px var(--font-ui);color:#636975;text-wrap:pretty">Tutti binari: il modulo passa o non passa. <span style="color:#959CA8">{{ m.noGo }}</span></p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"></path></svg>Progetto del modulo</span>
+      <a href="{{ m.projectUrl }}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 14px;border-radius:12px;background:#1E232C;color:#fff;box-sizing:border-box" style-hover="background:#242A34"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui);text-wrap:pretty">{{ m.projectTitle }}</span><span style="font:12px/16px var(--font-ui);color:#959CA8">{{ m.projectHost }}</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+    </div>
+  </div>
+  <div style="flex:none;padding:12px 20px;border-top:1px solid #292E37;display:flex;gap:8px;background:#141820">
+    <button onClick="{{ start }}" style="flex:1;max-width:{{ ctaMax }};height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);letter-spacing:.005em;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .1s" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE"><svg viewBox="0 0 24 24" width="14" height="14" fill="#0A0D13"><path d="M6 3l14 9-14 9z"></path></svg>{{ ctaLabel }} <span style="font:600 14px var(--font-num)">{{ cur.n }}</span></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:780},&quot;wide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;module&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:0,&quot;options&quot;:[0,1],&quot;tsType&quot;:&quot;0 | 1&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;openUnit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;0.7&quot;,&quot;options&quot;:[&quot;nessuna&quot;,&quot;0.1&quot;,&quot;0.2&quot;,&quot;0.3&quot;,&quot;0.4&quot;,&quot;0.5&quot;,&quot;0.6&quot;,&quot;0.7&quot;,&quot;0.8&quot;,&quot;0.9&quot;,&quot;1.1&quot;,&quot;1.2&quot;,&quot;1.3&quot;,&quot;1.4&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onOpenUnit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(id: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  DONE = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6']; CUR = '0.7';
+  // Scenario: Go/No-Go di M0 superato (7/7, «Domande socratiche» spuntato dal quiz del modulo); M1 aperto, nessun criterio spuntato.
+  state = { open: new Set(), checked: { 0: new Set([0, 1, 2, 3, 4, 5, 6]), 1: new Set() }, course: null };
+  componentDidMount() { import('./design/course-data.js').then(m => this.setState({ course: m.COURSE })); this.syncOpen(); }
+  componentDidUpdate(prev) { if (prev.openUnit !== this.props.openUnit || prev.module !== this.props.module) this.syncOpen(); }
+  syncOpen() { const o = this.props.openUnit; this.setState({ open: new Set(!o || o === 'nessuna' ? [] : [o]) }); }
+  svg(d, color, size) { return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: color, style: { strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, d.split('|').map((p, i) => React.createElement('path', { key: i, d: p }))); }
+  linkIcon(host) {
+    const d = /youtube|youtu\.be/.test(host) ? 'M22.5 12s0-3.5-.5-5a2.5 2.5 0 0 0-1.8-1.8C18.5 4.7 12 4.7 12 4.7s-6.5 0-8.2.5A2.5 2.5 0 0 0 2 7c-.5 1.5-.5 5-.5 5s0 3.5.5 5a2.5 2.5 0 0 0 1.8 1.8c1.7.5 8.2.5 8.2.5s6.5 0 8.2-.5A2.5 2.5 0 0 0 22 17c.5-1.5.5-5 .5-5z|M10 15.5v-7l6 3.5z'
+      : /github/.test(host) ? 'm16 18 6-6-6-6M8 6l-6 6 6 6'
+      : /javascript\.info|git-scm|missing\.csail|developer\.mozilla/.test(host) ? 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20|M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'
+      : 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z|M2 12h20|M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z';
+    return this.svg(d, '#959CA8', 16);
+  }
+  renderVals() {
+    const wide = this.props.wide === true || this.props.wide === 'true', open = this.state.open, c = this.state.course;
+    const mn = this.props.module === undefined || this.props.module === null ? 0 : Number(this.props.module);
+    const m = c ? (c.modules.find(x => x.n === mn) || c.modules[0]) : null;
+    const E = { nn: '', title: '', typeLabel: '', window: '', prereq: '', noGo: '', projectTitle: '', projectHost: '', projectUrl: '#' };
+    if (!m) return { m: E, cur: { n: '', title: '' }, objectives: [], units: [], criteria: [], unitCount: '', progress: '', pctW: '0%', gngCount: '', gngColor: '#959CA8', ctaLabel: 'Inizia da', start: () => {}, back: () => this.props.onBack && this.props.onBack(), padX: wide ? 32 : 20, maxW: wide ? '760px' : 'none', ctaMax: wide ? '320px' : 'none' };
+    const nDone = m.units.filter(u => this.DONE.includes(u.n)).length, cur = m.units.find(u => u.n === this.CUR) || m.units[0];
+    let linkTotal = 0;
+    const units = m.units.map(u => {
+      const isOpen = open.has(u.n), nLinks = u.sections.reduce((a, s) => a + s.links.length, 0), d = this.DONE.includes(u.n); linkTotal += nLinks;
+      return { n: u.n, title: u.title, color: d ? '#959CA8' : '#fff', sub: `${u.sections.length} sezioni · ${nLinks} link`, done: d, current: u.n === this.CUR, open: isOpen, rot: isOpen ? 180 : 0,
+        coreTitle: u.core ? u.core.title : '', coreText: u.core ? u.core.text : '',
+        sections: u.sections.map(s => ({ label: s.label, heading: s.heading.replace(/^\d+\.\s*/, ''), description: s.description, links: s.links.map(l => ({ ...l, icon: this.linkIcon(l.host) })) })),
+        openUnit: () => this.props.onOpenUnit && this.props.onOpenUnit(u.n),
+        toggle: () => this.setState(s => { const o = new Set(s.open); o.has(u.n) ? o.delete(u.n) : o.add(u.n); return { open: o }; }) };
+    });
+    const objectives = m.objectives.map(o => { const i = o.indexOf(' '); return { verb: o.slice(0, i), rest: o.slice(i + 1) }; });
+    const checked = this.state.checked[m.n] || new Set();
+    const criteria = m.criteria.map((cr, i) => { const on = checked.has(i); return { text: cr.text, auto: cr.auto, autoMeta: on ? 'spuntato dal quiz del modulo' : 'lo spunta il quiz del modulo · ultimo 6/10', on, cursor: cr.auto ? 'default' : 'pointer', border: i ? '1px solid #292E37' : '0', color: on ? '#959CA8' : '#fff', boxBorder: on ? '#22C55E' : '#3A404B', boxBg: on ? '#22C55E' : 'transparent', check: on ? this.svg('M20 6 9 17l-5-5', '#0A0D13', 13) : null,
+      toggle: () => { if (cr.auto) return; this.setState(s => { const set = new Set(s.checked[m.n] || []); set.has(i) ? set.delete(i) : set.add(i); const next = Object.assign({}, s.checked); next[m.n] = set; return { checked: next }; }); } }; });
+    const nOk = criteria.filter(x => x.on).length, pass = nOk === criteria.length;
+    return {
+      m: { nn: m.nn, title: m.title, typeLabel: m.type.charAt(0) + m.type.slice(1).toLowerCase() + (m.transversal ? ' · trasversali: ' + m.transversal.split('(')[0].replace(/^SOLO due — /, '').trim() : ''), window: m.window, prereq: m.prereq, noGo: m.noGo ? 'No-Go: ' + m.noGo : '', projectTitle: m.project.title, projectHost: m.project.resource ? m.project.resource.host : '', projectUrl: m.project.resource ? m.project.resource.url : '#' },
+      cur: { n: cur.n, title: cur.title }, objectives, units, criteria, unitCount: `${m.units.length} · ${linkTotal} link`,
+      progress: `${nDone} / ${m.units.length} unità · ${Math.round(nDone / m.units.length * 100)} %`, pctW: `${Math.round(nDone / m.units.length * 100)}%`,
+      gngCount: `${nOk} / ${criteria.length}${pass ? ' · Go' : ''}`, gngColor: pass ? '#22C55E' : '#FACC15',
+      ctaLabel: nDone ? 'Riprendi da' : 'Inizia da', start: () => this.props.onOpenUnit && this.props.onOpenUnit(cur.n), back: () => this.props.onBack && this.props.onBack(), padX: wide ? 32 : 20, maxW: wide ? '760px' : 'none', ctaMax: wide ? '320px' : 'none' };
+  }
+}
+</script>
+</body>
+</html>

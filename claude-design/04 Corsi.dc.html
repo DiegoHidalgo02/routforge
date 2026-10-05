@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#8AAAF6}
+</style>
+</helmet>
+<section data-screen-label="Corsi · import, corso, modulo, unità" style="padding:40px;display:flex;flex-direction:column;gap:24px">
+  <header style="display:flex;flex-direction:column;gap:8px;max-width:820px">
+    <span style="font:600 11px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">RoutForge · FUNZIONALITA §9 corsi, moduli e unità · §10 materiali · FORMATO_CORSO</span>
+    <h1 style="margin:0;font:600 28px/1.2 var(--font-ui)">Corsi · import, corso, modulo, unità</h1>
+  </header>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · nessun corso</figcaption><dc-import name="S10 Corsi Mobile" view="empty" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · import in corso</figcaption><dc-import name="S10 Corsi Mobile" view="importing" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · import con avvisi di lettura</figcaption><dc-import name="S10 Corsi Mobile" view="warnings" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · import non riuscito</figcaption><dc-import name="S10 Corsi Mobile" view="error" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · elenco corsi</figcaption><dc-import name="S10 Corsi Mobile" view="list" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Corso → moduli</figcaption><dc-import name="S10 Corsi Mobile" view="course" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Modulo → unità con 4 sezioni, Go/No-Go</figcaption><dc-import name="S10 Corsi Mobile" view="module" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Unità</figcaption><dc-import name="S10 Corsi Mobile" view="unit" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · elenco 320 + Corso</figcaption><dc-import name="S10 Corsi Desktop" view="course" hint-size="1280px,800px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · Modulo, colonna 760</figcaption><dc-import name="S10 Corsi Desktop" view="module" hint-size="1280px,800px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · Unità a due colonne</figcaption><dc-import name="S10 Corsi Desktop" view="unit" hint-size="1280px,800px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Elimina corso · conferma con ciò che sparisce (H3)</figcaption><dc-import name="S10 Corsi Mobile" view="course" confirm-delete="{{ true }}" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Unità non iniziata · Inizia sessione</figcaption><dc-import name="S10 Corsi Mobile" view="unit" unit-state="non iniziata" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Unità da rivedere (C3 Indietro)</figcaption><dc-import name="S10 Corsi Mobile" view="unit" unit-state="da rivedere" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Unità completata · Ripasso</figcaption><dc-import name="S10 Corsi Mobile" view="unit" unit-state="completata" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:390px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Mobile · Elenco con Sessione in corso (banner sotto l’header)</figcaption><dc-import name="S10 Corsi Mobile" view="list" session="{{ true }}" hint-size="390px,844px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1080px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Panel wide · Tuoi · nuovo link (§10)</figcaption><div style="position:relative;width:1080px;height:1500px;background:#141820;border:1px solid #292E37;border-radius:24px;overflow:hidden;box-sizing:border-box"><dc-import name="S12 Unità Panel" wide="{{ true }}" material="link" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import></div></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1080px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Panel wide · Tuoi · nuova nota in markdown (§10)</figcaption><div style="position:relative;width:1080px;height:1500px;background:#141820;border:1px solid #292E37;border-radius:24px;overflow:hidden;box-sizing:border-box"><dc-import name="S12 Unità Panel" wide="{{ true }}" material="note" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import></div></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1080px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Panel wide · PDF oltre 20 MB rifiutato (H2) · generazione in corso</figcaption><div style="position:relative;width:1080px;height:1500px;background:#141820;border:1px solid #292E37;border-radius:24px;overflow:hidden;box-sizing:border-box"><dc-import name="S12 Unità Panel" wide="{{ true }}" material="pdf-big" gen-state="loading" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import></div></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1080px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Panel wide · Generazione senza elementi validi: nulla salvato (H5)</figcaption><div style="position:relative;width:1080px;height:1500px;background:#141820;border:1px solid #292E37;border-radius:24px;overflow:hidden;box-sizing:border-box"><dc-import name="S12 Unità Panel" wide="{{ true }}" gen-state="error" style="position:absolute;inset:0" hint-size="100%,100%"></dc-import></div></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · nessun corso</figcaption><dc-import name="S10 Corsi Desktop" view="empty" hint-size="1280px,800px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · import in corso</figcaption><dc-import name="S10 Corsi Desktop" view="importing" hint-size="1280px,800px"></dc-import></figure>
+    <figure style="margin:0;display:flex;flex-direction:column;gap:12px;width:1280px"><figcaption style="font:13px var(--font-ui);color:#959CA8">Desktop · import non riuscito</figcaption><dc-import name="S10 Corsi Desktop" view="error" hint-size="1280px,800px"></dc-import></figure>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>

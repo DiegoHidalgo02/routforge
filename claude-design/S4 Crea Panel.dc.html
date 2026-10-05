@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+input::placeholder,textarea::placeholder{color:#636975}
+::-webkit-scrollbar{display:none}
+@keyframes rf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;background:#141820;color:#fff;font-family:var(--font-ui);overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:360px;background:{{ a.glow }};pointer-events:none;transition:background .3s"></div>
+  <div style="display:flex;align-items:center;padding:8px 20px 4px;min-height:44px;box-sizing:border-box;flex:none;position:relative">
+    <span style="display:flex;align-items:center;gap:8px;font:600 18px/24px var(--font-ui);white-space:nowrap"><span style="width:8px;height:8px;border-radius:999px;background:{{ a.fill }};transition:background .2s"></span>{{ headerTitle }}</span>
+    
+  </div>
+  <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:8px 20px 28px;display:flex;flex-direction:column;gap:24px;position:relative">
+
+    <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <sc-for list="{{ types }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.pick }}" style="height:40px;border-radius:999px;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.color }};display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:0 4px;transition:background .15s,border-color .15s,color .15s" style-hover="border-color:{{ t.hoverBorder }}">{{ t.icon }}<span style="font:{{ t.weight }} 12px/14px var(--font-ui)">{{ t.label }}</span></button>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-8px"><span style="height:20px;padding:0 7px;border-radius:999px;background:{{ a.soft }};color:{{ a.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center">{{ a.label }}</span><span style="font:500 12px/14px var(--font-ui);color:#636975">Il tipo non si cambia dopo la creazione</span></div>
+    </sc-if>
+    <sc-if value="{{ editRecurring }}" hint-placeholder-val="{{ false }}">
+    <span data-screen-label="Modifica di una ricorrenza" style="display:flex;align-items:flex-start;gap:8px;font:12px/16px var(--font-ui);color:#959CA8;text-wrap:pretty;margin-bottom:-8px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;margin-top:1px"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>Le modifiche valgono dalle prossime occorrenze, anche quella di oggi se non è ancora iniziata. Il passato resta com'è.</span>
+    </sc-if>
+
+    <input value="{{ title }}" onChange="{{ setTitle }}" placeholder="{{ titlePlaceholder }}" style="height:44px;background:transparent;border:0;border-bottom:1px solid #292E37;padding:0;color:#fff;font:600 22px/28px var(--font-ui);letter-spacing:-.01em;outline:0;width:100%;box-sizing:border-box" style-focus="border-bottom-color:{{ a.ink }}">
+
+    <sc-if value="{{ isStudy }}" hint-placeholder-val="{{ false }}">
+      <button style="height:44px;border-radius:10px;background:#1E232C;border:1px solid {{ courseBorder }};padding:0 14px;color:{{ courseColor }};font:500 14px var(--font-ui);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;width:100%;text-align:left;animation:rf-in .18s ease-out" style-hover="border-color:#3A404B"><span style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="{{ a.ink }}" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>{{ courseLabel }}</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m6 9 6 6 6-6"></path></svg></button>
+      <span style="margin-top:-16px;font:12px/16px var(--font-ui);color:#636975;text-align:right">L'unità da studiare la propone il puntatore del corso</span>
+    </sc-if>
+
+    <sc-if value="{{ showPriority }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M4 22V4a1 1 0 0 1 1-1h12l-2 5 2 5H5"></path></svg>Priorità</span></div>
+        <div style="display:flex;gap:6px">
+        <sc-for list="{{ priorities }}" as="p" hint-placeholder-count="3"><button onClick="{{ p.pick }}" style="height:32px;padding:0 12px;border-radius:999px;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.color }};font:{{ p.weight }} 12px var(--font-ui);display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:background .15s,border-color .15s"><span style="width:6px;height:6px;border-radius:999px;background:{{ p.dot }}"></span>{{ p.label }}</button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRepeating }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+        <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>Ripeti</span>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.pick }}" style="height:40px;border-radius:999px;background:{{ d.bg }};border:1px solid {{ d.border }};color:{{ d.color }};font:600 13px var(--font-ui);cursor:pointer;padding:0;transition:background .15s,border-color .15s">{{ d.label }}</button></sc-for>
+        </div>
+        <span style="font:500 12px/16px var(--font-ui);color:{{ a.ink }};text-align:right">{{ daysSummary }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+        <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Dal · fino a</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button style="height:44px;border-radius:10px;background:#1E232C;border:1px solid #292E37;padding:0 12px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:#3A404B"><span style="display:flex;flex-direction:column;gap:1px"><span style="font:11px/12px var(--font-ui);color:#959CA8">Inizio</span><span style="font:500 13px/16px var(--font-num)">{{ recStartLabel }}</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m6 9 6 6 6-6"></path></svg></button>
+          <button onClick="{{ toggleRecEnd }}" style="height:44px;border-radius:10px;background:#1E232C;border:1px solid #292E37;padding:0 12px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:#3A404B"><span style="display:flex;flex-direction:column;gap:1px"><span style="font:11px/12px var(--font-ui);color:#959CA8">Fine</span><span style="font:500 13px/16px var(--font-ui)">{{ recEndLabel }}</span></span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m6 9 6 6 6-6"></path></svg></button>
+        </div>
+        <sc-if value="{{ recHasEnd }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:6px;animation:rf-in .18s ease-out"><span style="font:12px/14px var(--font-ui);color:#959CA8;margin-right:4px">Dopo</span><sc-for list="{{ recNs }}" as="n" hint-placeholder-count="4"><button onClick="{{ n.pick }}" style="height:32px;min-width:36px;padding:0 10px;border-radius:999px;background:{{ n.bg }};border:1px solid {{ n.border }};color:{{ n.color }};font:{{ n.weight }} 12px var(--font-num);cursor:pointer">{{ n.label }}</button></sc-for><span style="flex:1"></span><sc-for list="{{ recUnits }}" as="u" hint-placeholder-count="3"><button onClick="{{ u.pick }}" style="height:32px;padding:0 10px;border-radius:999px;background:{{ u.bg }};border:1px solid {{ u.border }};color:{{ u.color }};font:{{ u.weight }} 12px var(--font-ui);cursor:pointer">{{ u.label }}</button></sc-for></div>
+          <span style="font:500 12px/16px var(--font-num);color:{{ a.ink }};text-align:right">{{ recEndMeta }}</span>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isTodo }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M8 2v4M16 2v4M3 10h18"></path><path d="M21 12V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"></path><circle cx="17.5" cy="17.5" r="3.5"></circle><path d="M17.5 16v1.5l1 1"></path></svg>Orizzonte</span><span style="font:500 12px/14px var(--font-num);color:{{ a.ink }}">{{ dueMeta }}</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <sc-for list="{{ dues }}" as="du" hint-placeholder-count="4">
+          <button onClick="{{ du.pick }}" style="height:32px;border-radius:999px;border:1px {{ du.borderStyle }} {{ du.border }};background:{{ du.bg }};color:{{ du.color }};display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:0 12px;transition:background .15s,border-color .15s" style-hover="border-color:{{ du.hoverBorder }}">{{ du.icon }}<span style="font:{{ du.weight }} 12px/14px var(--font-ui)">{{ du.label }}</span></button>
+        </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEvent }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:10px;animation:rf-in .18s ease-out">
+        <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Data</span>
+        <button onClick="{{ toggleDate }}" aria-expanded="{{ dateOpen }}" style="height:56px;border-radius:12px;background:#1E232C;border:1px solid #292E37;padding:0 8px 0 16px;color:#fff;display:flex;align-items:center;gap:14px;cursor:pointer;width:100%;text-align:left" style-hover="border-color:#3A404B">
+          <span style="font:600 26px/28px var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.02em">{{ dateNum }}</span>
+          <span style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font:600 14px/18px var(--font-ui)">{{ dateMonth }}</span><span style="font:12px/14px var(--font-ui);color:#959CA8">{{ dateWeekday }}</span></span>
+          <span style="width:36px;height:36px;border-radius:999px;display:grid;place-items:center;color:#959CA8;transform:rotate({{ dateRot }}deg);transition:transform .2s"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></span>
+        </button>
+        <sc-if value="{{ dateOpen }}" hint-placeholder-val="{{ false }}"><div role="listbox" aria-label="Giorno dell'evento" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;animation:rf-in .18s ease-out"><sc-for list="{{ dateChips }}" as="c" hint-placeholder-count="7"><button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="height:52px;border-radius:12px;background:{{ c.bg }};border:1px solid {{ c.border }};color:{{ c.color }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0" style-hover="border-color:{{ c.hover }}"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase">{{ c.lab }}</span><span style="font:600 15px/18px var(--font-num)">{{ c.num }}</span></button></sc-for></div></sc-if>
+      </div>
+      <button onClick="{{ toggleAllDay }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:32px;padding:0;background:none;border:0;color:#fff;cursor:pointer;text-align:left;width:100%;animation:rf-in .18s ease-out"><span style="font:500 14px/18px var(--font-ui)">Tutto il giorno</span><span style="width:44px;height:26px;flex:none;border-radius:999px;background:{{ allDayKnobBg }};position:relative;display:inline-block;transition:background .2s"><span style="position:absolute;top:2px;left:{{ allDayKnobLeft }}px;width:22px;height:22px;border-radius:999px;background:{{ allDayKnobColor }};transition:left .2s"></span></span></button>
+    </sc-if>
+
+    <sc-if value="{{ showTodoTime }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleTime }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:32px;padding:0;background:none;border:0;color:#fff;cursor:pointer;text-align:left;width:100%;animation:rf-in .18s ease-out"><span style="display:flex;flex-direction:column;gap:1px"><span style="font:500 14px/18px var(--font-ui)">Con orario</span></span><span style="width:44px;height:26px;flex:none;border-radius:999px;background:{{ timeKnobBg }};position:relative;display:inline-block;transition:background .2s"><span style="position:absolute;top:2px;left:{{ timeKnobLeft }}px;width:22px;height:22px;border-radius:999px;background:{{ timeKnobColor }};transition:left .2s"></span></span></button>
+    </sc-if>
+
+    <sc-if value="{{ showTime }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:8px;animation:rf-in .18s ease-out">
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end">
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;align-items:center;gap:6px;font:500 12px/16px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>{{ startLabel }}</span><input value="{{ startTime }}" onChange="{{ setStart }}" style="height:48px;border-radius:10px;background:#1E232C;border:1px solid #292E37;padding:0 14px;color:#fff;font:600 18px var(--font-num);font-variant-numeric:tabular-nums;outline:0;width:100%;box-sizing:border-box" style-focus="border-color:{{ a.ink }}"></label>
+          <sc-if value="{{ showEnd }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#636975" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;margin-bottom:15px"><path d="M5 12h14m-5-5 5 5-5 5"></path></svg></sc-if>
+          <sc-if value="{{ showEnd }}" hint-placeholder-val="{{ false }}"><label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;align-items:center;justify-content:space-between;font:500 12px/16px var(--font-ui);color:#959CA8">Fine<sc-if value="{{ endOptional }}" hint-placeholder-val="{{ false }}"><button aria-label="Rimuovi orario di fine" onClick="{{ removeEnd }}" style="width:20px;height:20px;border-radius:999px;background:transparent;border:0;color:#636975;display:grid;place-items:center;cursor:pointer;padding:0;margin:-2px 0" style-hover="color:#fff"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></sc-if></span><input value="{{ endTime }}" onChange="{{ setEnd }}" style="height:48px;border-radius:10px;background:#1E232C;border:1px solid {{ endBorder }};padding:0 14px;color:#fff;font:600 18px var(--font-num);font-variant-numeric:tabular-nums;outline:0;width:100%;box-sizing:border-box" style-focus="border-color:{{ a.ink }}"></label></sc-if>
+          <sc-if value="{{ showAddEnd }}" hint-placeholder-val="{{ false }}"><button onClick="{{ addEnd }}" style="height:48px;border-radius:10px;background:transparent;border:1px dashed #292E37;color:{{ a.ink }};font:500 13px var(--font-ui);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;grid-column:span 2" style-hover="border-color:{{ a.ink }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2.25;stroke-linecap:round"><path d="M5 12h14M12 5v14"></path></svg>Orario di fine</button></sc-if>
+        </div>
+        <sc-if value="{{ showSteps }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;animation:rf-in .18s ease-out"><span style="font:500 12px/14px var(--font-ui);color:#959CA8">Durata</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ steps }}" as="st" hint-placeholder-count="8"><button onClick="{{ st.pick }}" style="height:32px;min-width:40px;padding:0 10px;border-radius:999px;background:{{ st.bg }};border:1px solid {{ st.border }};color:{{ st.color }};font:{{ st.weight }} 12px var(--font-num);cursor:pointer">{{ st.label }}</button></sc-for></div><span style="font:12px/16px var(--font-ui);color:#636975;text-align:right">gradini da 5 a 240 minuti · fine <span style="font:500 12px var(--font-num);color:{{ a.ink }}">{{ todoEnd }}</span></span></div>
+        </sc-if>
+        <sc-if value="{{ showTimeNote }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;justify-content:flex-end;gap:8px;font:12px/16px var(--font-ui);color:{{ timeNoteColor }}"><sc-if value="{{ showDuration }}" hint-placeholder-val="{{ false }}"><span style="height:22px;padding:0 8px;border-radius:999px;background:#1E232C;border:1px solid #292E37;color:#fff;font:600 11px/20px var(--font-num);display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:999px;background:{{ a.fill }}"></span>{{ duration }}</span></sc-if>{{ timeNote }}</span></sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEvent }}" hint-placeholder-val="{{ false }}">
+      <span style="position:relative;display:flex;align-items:center;animation:rf-in .18s ease-out"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;position:absolute;left:14px"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg><input value="{{ location }}" onChange="{{ setLocation }}" placeholder="Luogo o link" style="height:44px;border-radius:10px;background:#1E232C;border:1px solid #292E37;padding:0 14px 0 40px;color:#fff;font:500 14px var(--font-ui);outline:0;width:100%;box-sizing:border-box" style-focus="border-color:{{ a.ink }}"></span>
+    </sc-if>
+
+    <sc-if value="{{ isTodo }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;animation:rf-in .18s ease-out">
+        <sc-for list="{{ checklist }}" as="c" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:12px;height:40px"><span style="width:20px;height:20px;flex:none;border-radius:5px;border:1.5px solid #636975;box-sizing:border-box"></span><input value="{{ c.text }}" onChange="{{ c.onChange }}" placeholder="Voce" style="flex:1;min-width:0;height:40px;background:transparent;border:0;border-bottom:1px solid #292E37;color:#fff;font:14px var(--font-ui);outline:0;padding:0" style-focus="border-bottom-color:{{ a.ink }}"><button aria-label="Elimina voce" onClick="{{ c.remove }}" style="width:32px;height:32px;flex:none;border-radius:999px;background:transparent;border:0;color:#636975;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="color:#FA4F4D;background:#1E232C"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+        </sc-for>
+        <button onClick="{{ addChecklist }}" style="display:flex;align-items:center;gap:12px;height:40px;background:none;border:0;padding:0;color:{{ a.ink }};font:500 14px var(--font-ui);cursor:pointer;text-align:left" style-hover="filter:brightness(1.15)"><span style="width:20px;height:20px;flex:none;border-radius:5px;border:1.5px dashed {{ a.ink }};box-sizing:border-box;display:grid;place-items:center"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="{{ a.ink }}" style="stroke-width:2.25;stroke-linecap:round"><path d="M5 12h14M12 5v14"></path></svg></span>{{ addChecklistLabel }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasPhases }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:6px;animation:rf-in .18s ease-out">
+        <sc-for list="{{ phases }}" as="f" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 6px 0 12px;border-radius:10px;background:#1E232C;box-sizing:border-box"><span style="width:8px;height:8px;flex:none;border-radius:999px;background:#22C55E"></span><span style="width:16px;flex:none;font:500 11px var(--font-num);color:#636975">{{ f.n }}</span><input value="{{ f.text }}" onChange="{{ f.onChange }}" placeholder="Fase" style="flex:1;min-width:0;height:40px;background:transparent;border:0;color:#fff;font:500 14px var(--font-ui);outline:0;padding:0"><button aria-label="Sposta su" onClick="{{ f.up }}" style="width:32px;height:32px;flex:none;border-radius:8px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0;opacity:{{ f.upOpacity }}" style-hover="background:#292E37;color:#fff"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m18 15-6-6-6 6"></path></svg></button><button aria-label="Sposta giù" onClick="{{ f.down }}" style="width:32px;height:32px;flex:none;border-radius:8px;background:transparent;border:0;color:#959CA8;display:grid;place-items:center;cursor:pointer;padding:0;opacity:{{ f.downOpacity }}" style-hover="background:#292E37;color:#fff"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button><button aria-label="Elimina fase" onClick="{{ f.remove }}" style="width:32px;height:32px;flex:none;border-radius:8px;background:transparent;border:0;color:#636975;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37;color:#FA4F4D"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+        </sc-for>
+        <button onClick="{{ addPhase }}" style="display:flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:10px;background:transparent;border:1px dashed #292E37;color:{{ a.ink }};font:500 14px var(--font-ui);cursor:pointer" style-hover="border-color:{{ a.ink }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2.25;stroke-linecap:round"><path d="M5 12h14M12 5v14"></path></svg>{{ addPhaseLabel }}</button>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Promemoria</span>
+      <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:6px">
+        <sc-for list="{{ reminderModes }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.pick }}" style="height:32px;padding:0 12px;border-radius:999px;background:{{ m.bg }};border:1px solid {{ m.border }};color:{{ m.color }};font:{{ m.weight }} 12px var(--font-ui);display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:background .15s,border-color .15s">{{ m.label }}</button></sc-for>
+      </div>
+      <sc-if value="{{ isCustom }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;opacity:{{ customOpacity }};animation:rf-in .18s ease-out;padding-left:0">
+          <sc-for list="{{ offsets }}" as="o" hint-placeholder-count="7"><button onClick="{{ o.pick }}" style="height:32px;padding:0 12px;border-radius:999px;background:{{ o.bg }};border:1px solid {{ o.border }};color:{{ o.color }};font:{{ o.weight }} 12px var(--font-ui);display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:background .15s,border-color .15s"><sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="{{ a.ink }}" style="stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{ o.label }}</button></sc-for>
+        </div>
+        <sc-if value="{{ showAlarms }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;animation:rf-in .18s ease-out"><span style="font:12px/16px var(--font-ui);color:#959CA8">Consegna come sveglia a schermo intero <span style="color:#636975">· solo anticipi fino a 7 ore</span></span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ alarms }}" as="al" hint-placeholder-count="3"><button onClick="{{ al.pick }}" style="height:32px;padding:0 12px 0 10px;border-radius:999px;background:{{ al.bg }};border:1px solid {{ al.border }};color:{{ al.color }};font:{{ al.weight }} 12px var(--font-ui);display:inline-flex;align-items:center;gap:6px;cursor:pointer"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"></path></svg>{{ al.label }}</button></sc-for></div></div>
+        </sc-if>
+        <sc-if value="{{ showReminderHint }}" hint-placeholder-val="{{ false }}"><span style="font:12px/16px var(--font-ui);color:#636975;padding-left:0">{{ reminderHint }}</span></sc-if>
+      </sc-if>
+      </sc-if>
+    </div>
+
+    <div style="border-top:1px solid #292E37;padding-top:20px;display:flex;flex-direction:column;gap:10px">
+      <span style="display:flex;align-items:center;gap:8px;font:500 12px/14px var(--font-ui);color:#959CA8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M4 4h16v10l-6 6H4z"></path><path d="M14 20v-6h6"></path></svg>Note</span>
+      <textarea value="{{ notes }}" onChange="{{ setNotes }}" placeholder="Aggiungi una nota" rows="2" style="min-height:48px;border-radius:10px;background:transparent;border:0;padding:0;color:#fff;font:14px/20px var(--font-ui);outline:0;width:100%;box-sizing:border-box;resize:vertical;display:block"></textarea>
+    </div>
+  </div>
+  <div style="flex:none;padding:12px 20px;border-top:1px solid #292E37;display:flex;gap:8px;background:#141820;position:relative">
+    <button onClick="{{ closePanel }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#1E232C;color:#fff">Annulla</button>
+    <button onClick="{{ create }}" style="flex:1;height:44px;border-radius:12px;background:{{ ctaBg }};color:{{ ctaColor }};border:0;font:600 14px var(--font-ui);letter-spacing:.005em;cursor:{{ ctaCursor }};opacity:{{ ctaOpacity }};box-shadow:{{ ctaShadow }};transition:opacity .35s ease,background .45s cubic-bezier(.4,0,.2,1),color .45s,box-shadow .45s,transform .1s" style-hover="filter:brightness(1.08)" style-active="transform:scale(.985)">{{ ctaLabel }}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:780},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;create&quot;,&quot;options&quot;:[&quot;create&quot;,&quot;edit&quot;],&quot;tsType&quot;:&quot;'create' | 'edit'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;type&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;todo&quot;,&quot;options&quot;:[&quot;todo&quot;,&quot;study&quot;,&quot;routine&quot;,&quot;event&quot;],&quot;tsType&quot;:&quot;'todo' | 'study' | 'routine' | 'event'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;filled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;reminder&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;auto&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;off&quot;,&quot;custom&quot;],&quot;tsType&quot;:&quot;'auto' | 'off' | 'custom'&quot;,&quot;section&quot;:&quot;Stato iniziale&quot;},&quot;due&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;week&quot;,&quot;options&quot;:[&quot;today&quot;,&quot;week&quot;,&quot;month&quot;],&quot;tsType&quot;:&quot;'today' | 'week' | 'month'&quot;,&quot;section&quot;:&quot;Stato iniziale · solo Todo (orizzonte)&quot;}}">
+class Component extends DCLogic {
+  A = {
+    todo: { label: 'Todo', fill: '#14B8A6', ink: '#2DD4BF', soft: '#16302E', icon: 'check' },
+    study: { label: 'Studio', fill: '#6E96F2', ink: '#6E96F2', soft: '#1C2439', icon: 'cap' },
+    routine: { label: 'Routine', fill: '#FACC15', ink: '#FACC15', soft: '#34311E', icon: 'repeat' },
+    event: { label: 'Evento', fill: '#F43F5E', ink: '#FF4A67', soft: '#331D29', icon: 'cal' }
+  };
+  P = {
+    check: ['m9 11 3 3L22 4', 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'],
+    cap: ['M22 10v6M2 10l10-5 10 5-10 5z', 'M6 12v5c3 3 9 3 12 0v-5'],
+    repeat: ['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3'],
+    cal: ['M8 2v4M16 2v4M3 10h18', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],
+    sun: ['M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'],
+    week: ['M8 2v4M16 2v4M3 10h18', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', 'M7 14h10'],
+    month: ['M8 2v4M16 2v4M3 10h18', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', 'M7 14h2M11 14h2M15 14h2M7 18h2M11 18h2'],
+    wind: ['M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2', 'M9.6 4.6A2 2 0 1 1 11 8H2', 'M12.6 19.4A2 2 0 1 0 14 16H2']
+  };
+  OFFSETS = ['1 giorno', '1 ora', '30 min', '15 min', '10 min', '5 min', "All'inizio"];
+  icon(name, size = 18, color = 'currentColor') {
+    return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: color, style: { strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, this.P[name].map((d, i) => React.createElement('path', { key: i, d })));
+  }
+  constructor(p) { super(p); this.state = this.initial(p); }
+  initial(p) {
+    const type = p.type || 'todo', filled = p.filled !== false && p.filled !== 'false';
+    const s = {
+      type, reminder: p.reminder || 'auto', custom: new Set(filled ? ['1 ora', '5 min', "All'inizio"] : []),
+      priority: 'Normale', due: p.due && p.due !== 'none' ? p.due : 'today', hasTime: p.reminder === 'custom', allDay: false, hasEnd: type === 'routine' ? filled : true,
+      todoDur: 30, recEnd: 'never', recN: 4, recUnit: 'settimane', alarms: new Set(),
+      startTime: { study: '14:00', routine: '07:00', event: '15:00', todo: '18:00' }[type], endTime: { study: '16:30', routine: '08:30', event: '16:00', todo: '18:30' }[type],
+      days: new Set(filled ? (type === 'routine' ? [0, 1, 2, 3, 4, 5, 6] : [0, 2, 4]) : []),
+      course: filled && type === 'study' ? 'Syllabus Software Engineer 2026' : '', location: filled && type === 'event' ? 'Studio Dott. Rossi · via Roma 12' : '',
+      title: '', notes: '', checklist: [], phases: [], date: (() => { const d0 = Number(p.date); return d0 >= 23 && d0 <= 29 ? d0 : 23; })(), dateOpen: false
+    };
+    if (filled) {
+      s.title = { todo: 'Prepara la valigia', study: 'Ripasso Modulo 0', routine: 'Mattina', event: 'Dentista' }[type];
+      if (type === 'todo') { s.checklist = ['Passaporto', 'Caricabatterie', 'Medicine', 'Adattatore']; s.due = p.due && p.due !== 'none' ? p.due : 'week'; }
+      if (type === 'routine') s.phases = ['Sveglia', 'Skin-care', 'Meditazione'];
+      if (type === 'event') { s.phases = ['Stampare le analisi', 'Portare i documenti']; s.notes = 'Chiedere del preventivo per l\'apparecchio.'; }
+    }
+    return s;
+  }
+  componentDidUpdate(prev) { if (prev.type !== this.props.type || prev.filled !== this.props.filled || prev.reminder !== this.props.reminder || prev.due !== this.props.due || prev.date !== this.props.date) this.setState(this.initial(this.props)); }
+  rgba(hex, al) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${al})`; }
+  // Selezione: bordo e testo bianchi; il colore del tipo vive solo in un gradiente leggero di sfondo e nei glifi.
+  grad(fill, hi = .22, lo = .05) { return `linear-gradient(180deg,${this.rgba(fill, hi)},${this.rgba(fill, lo)})`; }
+  // Selezionato = bianco pieno con testo ink, come il giorno nel calendario. Il colore del tipo resta nei dettagli.
+  chip(a, label, on, pick, extra = {}) { return { label, on, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', color: on ? '#0A0D13' : '#959CA8', weight: on ? 600 : 500, pick, ...extra }; }
+  toggleSet(name, k) { this.setState(s => { const n = new Set(s[name]); n.has(k) ? n.delete(k) : n.add(k); return { [name]: n }; }); }
+  listOps(name) {
+    const arr = this.state[name];
+    return arr.map((text, i) => ({
+      text, n: String(i + 1).padStart(2, '0'),
+      onChange: e => this.setState(s => { const a = [...s[name]]; a[i] = e.target.value; return { [name]: a }; }),
+      remove: () => this.setState(s => ({ [name]: s[name].filter((_, j) => j !== i) })),
+      up: () => i > 0 && this.setState(s => { const a = [...s[name]]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; return { [name]: a }; }),
+      down: () => i < arr.length - 1 && this.setState(s => { const a = [...s[name]]; [a[i + 1], a[i]] = [a[i], a[i + 1]]; return { [name]: a }; }),
+      upOpacity: i === 0 ? .3 : 1, downOpacity: i === arr.length - 1 ? .3 : 1
+    }));
+  }
+  mins(t) { const m = /^(\d{1,2}):(\d{2})$/.exec((t || '').trim()); return m ? +m[1] * 60 + +m[2] : null; }
+  fmt(m) { const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`; }
+  go(file, q) { try { window.location.href = encodeURI(file) + (q && Object.keys(q).length ? '?' + new URLSearchParams(q).toString() : ''); } catch (_) {} }
+  renderVals() {
+    const s = this.state, t = s.type, a = this.A[t];
+    const isTodo = t === 'todo', isStudy = t === 'study', isRoutine = t === 'routine', isEvent = t === 'event';
+    const todoTimed = isTodo && s.hasTime;
+    const showTime = isStudy || isRoutine || todoTimed || (isEvent && !s.allDay);
+    const showEnd = isStudy || isEvent || (isRoutine && s.hasEnd);
+    const st = this.mins(s.startTime), en = this.mins(s.endTime);
+    const dur = showEnd && st != null && en != null ? en - st : null;
+    const durBad = dur != null && dur <= 0 && !(isRoutine || isStudy);
+    const overnight = dur != null && dur <= 0 && (isRoutine || isStudy);
+    const noPunctual = (isTodo && !todoTimed) || (isEvent && s.allDay);
+    // Giorno di partenza = giorno selezionato su Oggi (entro i prossimi 7 giorni, altrimenti oggi)
+    const dLab = d => ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'][(d - 21) % 7] + ' ' + (d > 30 ? d - 30 + ' ott' : d + ' set');
+    const dues = [
+      { k: 'today', label: 'Giorno', meta: 'solo ' + dLab(s.date), icon: 'sun' },
+      { k: 'week', label: 'Settimana', meta: 'rotola fino a ' + dLab(s.date + 6 - ((s.date - 21) % 7)), icon: 'week' },
+      { k: 'month', label: 'Mese', meta: 'rotola fino al 30 set', icon: 'month' }
+    ].map(d => { const on = s.due === d.k; return { ...d, on, weight: on ? 600 : 500, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', borderStyle: 'solid', hoverBorder: on ? '#fff' : '#3A404B', color: on ? '#0A0D13' : '#959CA8', icon: this.icon(d.icon, 14, on ? a.fill : '#959CA8'), pick: () => this.setState({ due: d.k }) }; });
+    const nDays = s.days.size;
+    const ready = isStudy ? nDays > 0 : isRoutine ? !!s.title.trim() && nDays > 0 : !!s.title.trim();
+    const STEPS = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 210, 240];
+    const steps = STEPS.map(m => this.chip(a, this.fmt(m), s.todoDur === m, () => this.setState({ todoDur: m })));
+    const tEnd = st != null ? st + s.todoDur : null, todoEnd = tEnd != null ? `${String(Math.floor(tEnd / 60) % 24).padStart(2, '0')}:${String(tEnd % 60).padStart(2, '0')}` : '—';
+    const recNs = [1, 2, 4, 8, 12].map(n => this.chip(a, String(n), s.recN === n, () => this.setState({ recN: n })));
+    const recUnits = ['giorni', 'settimane', 'mesi'].map(u => this.chip(a, u, s.recUnit === u, () => this.setState({ recUnit: u })));
+    const alarmable = this.OFFSETS.filter(o => s.custom.has(o) && o !== '1 giorno');
+    const alarms = alarmable.map(o => this.chip(a, o, s.alarms.has(o), () => this.toggleSet('alarms', o)));
+    return {
+      a: { ...a, glow: `linear-gradient(180deg,${this.rgba(a.fill, .2)},${this.rgba(a.fill, .06)} 55%,rgba(20,24,32,0))` },
+      types: Object.entries(this.A).map(([k, v]) => { const on = k === t; return { label: v.label, on, weight: on ? 600 : 500, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', hoverBorder: on ? '#fff' : '#3A404B', color: on ? '#0A0D13' : '#959CA8', iconBg: on ? this.rgba(v.fill, .16) : '#1E232C', icon: this.icon(v.icon, 14, on ? v.fill : '#959CA8'), pick: () => this.setState(this.initial({ ...this.props, type: k, due: undefined })) }; }),
+      isTodo, isStudy, isEvent, isRepeating: isStudy || isRoutine, hasPhases: isRoutine || isEvent, showPriority: isTodo && !todoTimed,
+      showTodoTime: isTodo, timeHint: todoTimed ? 'inizio + durata · promemoria puntuali' : 'senza orario · in cima al giorno, ordinato per priorità',
+      showTime, showEnd: showEnd && !isTodo, endOptional: isRoutine, showAddEnd: isRoutine && !s.hasEnd, showSteps: todoTimed, steps, todoEnd,
+      toggleRecEnd: () => this.setState(x => ({ recEnd: x.recEnd === 'never' ? 'after' : 'never' })), recHasEnd: s.recEnd === 'after', recEndLabel: s.recEnd === 'never' ? 'Per sempre' : 'A termine', recNs, recUnits, recEndMeta: `termina dopo ${s.recN} ${s.recN === 1 ? s.recUnit.replace(/i$|e$/, s.recUnit === 'mesi' ? 'e' : s.recUnit === 'giorni' ? 'o' : 'a') : s.recUnit} · occorrenze generate 28 giorni avanti`,
+      digestOnly: isTodo && !todoTimed, showReminder: !(isTodo && !todoTimed), showAlarms: s.reminder === 'custom' && !noPunctual && alarmable.length > 0, alarms,
+      addEnd: () => this.setState({ hasEnd: true }), removeEnd: () => this.setState({ hasEnd: false }),
+      title: s.title, setTitle: e => this.setState({ title: e.target.value }),
+      titlePlaceholder: { todo: 'Cosa devi fare?', study: 'Titolo (facoltativo)', routine: 'Nome della routine', event: 'Nome dell\'evento' }[t],
+      courseLabel: s.course || 'Corso', courseColor: s.course ? '#fff' : '#636975', courseBorder: s.course ? '#292E37' : a.ink,
+      priorities: ['Alta', 'Normale', 'Bassa'].map(p => this.chip(a, p, s.priority === p, () => this.setState({ priority: p }), { dot: p === 'Alta' ? a.fill : p === 'Normale' ? '#959CA8' : '#636975' })),
+      days: ['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((label, i) => this.chip(a, label, s.days.has(i), () => this.toggleSet('days', i))),
+      daysSummary: nDays === 7 ? 'Ogni giorno' : nDays === 0 ? 'Scegli i giorni' : nDays === 5 && [0, 1, 2, 3, 4].every(i => s.days.has(i)) ? 'Lun – ven' : `${nDays} ${nDays === 1 ? 'giorno' : 'giorni'} a settimana`,
+      dues, dueMeta: (dues.find(d => d.on) || {}).meta || '',
+      toggleTime: () => this.setState(x => ({ hasTime: !x.hasTime })),
+      timeKnobBg: s.hasTime ? a.fill : '#292E37', timeKnobLeft: s.hasTime ? 20 : 2, timeKnobColor: s.hasTime ? '#0A0D13' : '#959CA8',
+      toggleAllDay: () => this.setState(x => ({ allDay: !x.allDay })),
+      allDayKnobBg: s.allDay ? a.fill : '#292E37', allDayKnobLeft: s.allDay ? 20 : 2, allDayKnobColor: s.allDay ? '#fff' : '#959CA8',
+      startLabel: 'Inizio', startTime: s.startTime, endTime: s.endTime,
+      setStart: e => this.setState({ startTime: e.target.value }), setEnd: e => this.setState({ endTime: e.target.value }),
+      endBorder: durBad ? '#FA4F4D' : '#292E37',
+      showDuration: dur != null && !durBad && !isTodo, duration: dur != null && !durBad ? this.fmt(overnight ? dur + 1440 : dur) : '',
+      showTimeNote: !isTodo && (durBad || dur != null || (isRoutine && !s.hasEnd)), timeNote: durBad ? 'La fine deve venire dopo l\'inizio' : overnight ? 'finisce il giorno dopo' : (isRoutine && !s.hasEnd) ? 'senza durata · resta aperta tutto il giorno' : '', timeNoteColor: durBad ? '#FA4F4D' : '#636975',
+      location: s.location, setLocation: e => this.setState({ location: e.target.value }),
+      checklist: this.listOps('checklist'), addChecklist: () => this.setState(x => ({ checklist: [...x.checklist, ''] })),
+      addChecklistLabel: s.checklist.length ? 'Aggiungi voce' : 'Checklist',
+      phases: this.listOps('phases'), addPhase: () => this.setState(x => ({ phases: [...x.phases, ''] })),
+      addPhaseLabel: s.phases.length ? 'Aggiungi fase' : 'Fasi',
+      reminderModes: [{ k: 'auto', label: 'Auto' }, { k: 'off', label: 'Off' }, { k: 'custom', label: 'Personalizzato' }].map(m => this.chip(a, m.label, s.reminder === m.k, () => this.setState({ reminder: m.k }))),
+      isCustom: s.reminder === 'custom', customOpacity: noPunctual ? .4 : 1,
+      offsets: this.OFFSETS.map(o => this.chip(a, o, s.custom.has(o), () => !noPunctual && this.toggleSet('custom', o))),
+      showReminderHint: noPunctual, reminderHint: 'Con «tutto il giorno» avvisa alle 08:00 del giorno',
+      notes: s.notes, setNotes: e => this.setState({ notes: e.target.value }),
+      isEdit: this.props.mode === 'edit', isCreate: this.props.mode !== 'edit', editRecurring: this.props.mode === 'edit' && (t === 'study' || t === 'routine'), headerTitle: this.props.mode === 'edit' ? 'Modifica attività' : 'Nuova attività',
+      ctaLabel: this.props.mode === 'edit' ? 'Salva' : { todo: 'Crea todo', study: 'Crea routine di studio', routine: 'Crea routine', event: 'Crea evento' }[t],
+      // Prototipo: la CTA riporta su Oggi con il todo nuovo in fondo al suo gruppo di priorità (MECC §6)
+      create: () => {
+        if (!(ready && !durBad)) return;
+        const w = this.props.wide === true || this.props.wide === 'true', cb = this.props.onCreate;
+        if (typeof cb === 'function') {
+          if (this.props.mode === 'edit') { cb({ edit: true }); return; }
+          // Da Crea solo i prossimi 7 giorni: prima occorrenza non ancora conclusa (orologio dei mock: mer 23 set, 16:08); l'evento usa la sua data
+          const nowM = 16 * 60 + 8, endS = isRoutine && !s.hasEnd ? '23:59' : s.endTime;
+          // Todo ed evento: il giorno scelto; routine: prima occorrenza dal giorno d'inizio (sempre entro i 7 giorni successivi)
+          let date = s.date || 23;
+          if (isStudy || isRoutine) { for (let o = 0; o < 8; o++) { const dd = date + o; if (s.days.has((dd - 21) % 7) && (dd !== 23 || this.mins(endS) > nowM)) { date = dd; break; } } }
+          const allDay = isEvent && s.allDay, untimed = isTodo && !todoTimed, cl = s.checklist.length, ph = s.phases.length;
+          const DUE = { today: 'giorno', week: 'settimana', month: 'mese' };
+          const sub = isTodo ? (todoTimed ? this.fmt(s.todoDur) : 'Orizzonte ' + (DUE[s.due] || 'giorno')) + (cl ? ' · checklist 0/' + cl : '')
+            : isStudy ? (s.course || 'Senza corso')
+            : isRoutine ? [s.days.size === 7 ? 'Ogni giorno' : '', s.hasEnd ? '' : 'senza durata', ph ? ph + ' fasi' : ''].filter(Boolean).join(' · ')
+            : (s.location || (allDay ? 'Tutto il giorno' : ''));
+          const min = isTodo ? (todoTimed ? s.todoDur : 10) : allDay ? 0 : Math.max(5, this.mins(endS) - this.mins(s.startTime));
+          cb({ k: t, title: s.title.trim() || (isStudy ? 'Studio' : ''), untimed, allDay, prio: untimed ? ({ Alta: 'Alta', Normale: 'Norm.', Bassa: 'Bassa' }[s.priority] || 'Norm.') : null, time: untimed ? '' : allDay ? 'tutto' : s.startTime, date, min, sub: sub ? sub.charAt(0).toUpperCase() + sub.slice(1) : '' });
+          return;
+        }
+        const q = this.props.mode === 'edit' ? { creato: 'modifica' } : isTodo && !todoTimed ? { nuovo: s.title.trim(), prio: { Alta: 'alta', Normale: 'normale', Bassa: 'bassa' }[s.priority] || 'normale' } : { creato: isTodo ? 'todo' : t };
+        this.go(w ? 'S1 Oggi Desktop.dc.html' : 'S1 Oggi Mobile.dc.html', q);
+      },
+      closePanel: () => { if (typeof this.props.onClose === 'function') { this.props.onClose(); return; } this.go(this.props.wide === true || this.props.wide === 'true' ? 'S1 Oggi Desktop.dc.html' : 'S1 Oggi Mobile.dc.html'); },
+      recStartLabel: s.date === 23 ? 'Oggi · 23 set' : dLab(s.date), dateOpen: !!s.dateOpen, toggleDate: () => this.setState(x => ({ dateOpen: !x.dateOpen })), dateRot: s.dateOpen ? 180 : 0,
+      dateNum: String(s.date > 30 ? s.date - 30 : s.date), dateMonth: s.date > 30 ? 'Ottobre 2026' : 'Settembre 2026', dateWeekday: ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'][(s.date - 21) % 7],
+      dateChips: [23, 24, 25, 26, 27, 28, 29].map(d => { const on = s.date === d; return { lab: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'][(d - 21) % 7], num: String(d), on, bg: on ? '#fff' : '#141820', border: on ? '#fff' : '#292E37', color: on ? '#0A0D13' : '#959CA8', hover: on ? '#fff' : '#3A404B', pick: () => this.setState({ date: d, dateOpen: false }) }; }),
+      ctaOpacity: ready && !durBad ? 1 : .4, ctaCursor: ready && !durBad ? 'pointer' : 'not-allowed',
+      ctaBg: ready && !durBad ? a.fill : '#6E96F2', ctaColor: '#0A0D13',
+      ctaShadow: ready && !durBad ? `inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.5),0 10px 24px -12px ${this.rgba(a.fill, .6)}` : 'inset 0 1px 0 rgba(255,255,255,.7),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)'
+    };
+  }
+}
+</script>
+</body>
+</html>

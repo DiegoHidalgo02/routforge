@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D13;color:#fff;--font-ui:'Manrope',system-ui,sans-serif;--font-num:'IBM Plex Mono',ui-monospace,monospace;font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+a{color:#fff;text-decoration:none}a:hover{color:#6E96F2}
+::-webkit-scrollbar{display:none}
+@keyframes rf-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes rf-fade{from{opacity:0}to{opacity:1}}
+@keyframes rf-slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes rf-check{to{stroke-dashoffset:0}}
+@keyframes rf-bump-a{35%{transform:scale(1.18);color:#22C55E}100%{transform:none}}
+@keyframes rf-bump-b{35%{transform:scale(1.18);color:#22C55E}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</helmet>
+<div data-screen-label="S1 Oggi (desktop)" style="position:relative;width:1280px;height:800px;background:#0A0D13;border:1px solid #292E37;border-radius:16px;overflow:hidden;display:grid;grid-template-columns:240px minmax(0,1fr);box-sizing:border-box">
+  <aside style="background:#141820;border-right:1px solid #292E37;padding:20px 16px;display:flex;flex-direction:column;gap:2px;min-height:0">
+    <div style="display:flex;align-items:center;gap:10px;padding:2px 10px 18px"><span style="width:30px;height:30px;border-radius:9px;background:#6E96F2;display:flex;align-items:center;justify-content:center;gap:3px"><span style="width:3px;height:9px;border-radius:2px;background:#fff"></span><span style="width:3px;height:16px;border-radius:2px;background:#fff"></span><span style="width:3px;height:12px;border-radius:2px;background:#fff"></span></span><span style="font:700 16px var(--font-ui);letter-spacing:-.01em">RoutForge</span></div>
+    <a href="#" style="display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:10px;background:#1C2439;color:#6E96F2;font:600 14px var(--font-ui)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>Oggi</a>
+    <a href="S20%20Shell%20Desktop.dc.html" style="display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:10px;color:#959CA8;font:500 14px var(--font-ui)" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Statistiche</a>
+    <button onClick="{{ goCreate }}" style="margin-top:10px;height:40px;border-radius:10px;background:#6E96F2;color:#0A0D13;border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6);font:600 14px var(--font-ui);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer" style-hover="background:#8AAAF6"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" style="stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M12 5v14"></path></svg>Crea</button>
+    <sc-if value="{{ hasSession }}" hint-placeholder-val="{{ false }}"><a href="S15%20Sessione%20Desktop.dc.html?view=timer" data-screen-label="Sessione in corso (sidebar)" style="margin-top:14px;padding:12px;border-radius:12px;background:#1C2439;border:1px solid #1F3050;display:flex;flex-direction:column;gap:6px;color:#fff" style-hover="background:#243A60"><span style="display:flex;align-items:center;gap:8px;font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#6E96F2"><span style="width:6px;height:6px;border-radius:999px;background:#6E96F2;box-shadow:0 0 8px 2px rgba(110,150,242,.7)"></span>Sessione in corso</span><span style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font:600 20px/24px var(--font-num);font-variant-numeric:tabular-nums">12:41</span><span style="font:600 12px var(--font-ui)">Riprendi</span></span><span style="font:12px/16px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Event loop visualizzato</span></a></sc-if>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:2px">
+      <a href="S20%20Shell%20Desktop.dc.html?screen=settings&amp;view=account" style="display:flex;align-items:center;gap:10px;height:48px;padding:0 8px;border-radius:10px;color:#fff" style-hover="background:#1E232C"><span style="width:30px;height:30px;flex:none;border-radius:999px;background:#1E232C;border:1px solid #292E37;display:grid;place-items:center;font:600 12px var(--font-ui);color:#959CA8;box-sizing:border-box">A</span><span style="display:flex;flex-direction:column;min-width:0"><span style="font:600 13px/16px var(--font-ui)">Alex</span><span style="display:flex;align-items:center;gap:6px;font:11px/14px var(--font-ui);color:#959CA8"><span style="width:6px;height:6px;border-radius:999px;background:#22C55E"></span>Sincronizzato · <span style="font:500 11px var(--font-num)">2</span> min</span></span></a>
+      <a href="S20%20Shell%20Desktop.dc.html?screen=settings" style="display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:10px;color:#959CA8;font:500 14px var(--font-ui)" style-hover="background:#1E232C;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg>Impostazioni</a>
+    </div>
+  </aside>
+  <main style="display:grid;grid-template-columns:{{ mainCols }};gap:24px;padding:24px 28px;min-height:0;box-sizing:border-box">
+    <section style="display:flex;flex-direction:column;min-height:0;min-width:0;position:relative">
+      <div style="display:flex;align-items:center;gap:8px;height:32px">
+        <button style="display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;color:#fff;font:600 18px/24px var(--font-ui);cursor:pointer;white-space:nowrap">{{ periodLabel }}<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#959CA8" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button>
+        <span style="flex:1"></span>
+        <div style="background:#1E232C;border-radius:10px;padding:2px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px">
+          <sc-for list="{{ viewTabs }}" as="v" hint-placeholder-count="3">
+            <button onClick="{{ v.pick }}" style="height:28px;padding:0 12px;border-radius:8px;border:0;background:{{ v.bg }};color:{{ v.color }};font:600 12px var(--font-ui);cursor:pointer">{{ v.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;height:32px;border-radius:999px;background:#1E232C;border:1px solid #292E37;padding:0 2px;flex:none;box-sizing:border-box"><button aria-label="{{ prevLabel }}" style="width:28px;height:28px;border-radius:999px;background:transparent;border:0;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m15 18-6-6 6-6"></path></svg></button><button style="height:28px;padding:0 8px;border-radius:999px;background:transparent;border:0;color:#fff;font:600 12px var(--font-ui);cursor:pointer;white-space:nowrap" style-hover="background:#292E37">Oggi</button><button aria-label="{{ nextLabel }}" style="width:28px;height:28px;border-radius:999px;background:transparent;border:0;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0" style-hover="background:#292E37"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></button></div>
+      </div>
+      <sc-if value="{{ isDay }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-top:16px;text-align:center">
+        <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+          <button style="display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:0;cursor:pointer;color:inherit"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ d.labColor }}">{{ d.lab }}</span><span style="width:30px;height:30px;border-radius:999px;background:{{ d.bg }};color:{{ d.color }};box-shadow:{{ d.ring }};display:grid;place-items:center;font:{{ d.weight }} 14px var(--font-num)">{{ d.num }}</span><span style="width:5px;height:5px;border-radius:999px;background:{{ d.dot }}"></span></button>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;padding:0 0 6px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #292E37"><span style="font:600 15px/20px var(--font-ui)">Mercoledì <span style="font:600 15px var(--font-num)">23</span> settembre</span><span style="font:12px var(--font-ui);color:{{ dayNoteColor }}">{{ dayNote }}</span></div>
+      <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:8px 0 24px;position:relative">
+        <div style="position:relative;display:flex;flex-direction:column;gap:8px">
+          <span style="position:absolute;left:45.5px;top:18px;height:{{ lineHeight }}px;width:1px;background:#292E37"></span>
+          <sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+            <div onMouseEnter="{{ it.enter }}" onMouseLeave="{{ it.leave }}" onFocus="{{ it.focusIn }}" onBlur="{{ it.focusOut }}" style="display:grid;grid-template-columns:60px minmax(0,1fr) 34px;position:relative;margin-top:{{ it.gapTop }}px">
+              <span style="font:500 11px/18px var(--font-num);color:{{ it.timeColor }};padding-top:10px">{{ it.time }}</span>
+              <sc-if value="{{ it.hasDot }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:42px;top:15px;width:8px;height:8px;border-radius:999px;background:{{ it.fill }}"></span></sc-if>
+              <sc-if value="{{ it.notHero }}" hint-placeholder-val="{{ true }}"><div style="position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:9px 12px 9px 14px;min-height:56px;box-sizing:border-box;display:flex;align-items:center;gap:12px;cursor:{{ it.cursor }}" style-hover="background:#171c25"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:{{ it.fill }}"></span>
+                <sc-if value="{{ it.done }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#22C55E;display:grid;place-items:center;color:#0A0D13"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span></sc-if>
+                <sc-if value="{{ it.open }}" hint-placeholder-val="{{ true }}"><button aria-label="Segna come fatto" onClick="{{ it.check }}" style="position:relative;width:20px;height:20px;flex:none;border-radius:999px;border:1.5px solid {{ it.circBorder }};background:{{ it.circBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;padding:0;cursor:pointer;transition:background .15s,border-color .15s" style-hover="border-color:#959CA8" style-focus="outline:none;box-shadow:0 0 0 2px #0A0D13,0 0 0 4px #FFFFFF" style-after="content:'';position:absolute;inset:-12px;border-radius:999px"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:24;animation:rf-check .25s ease-out .04s forwards"></path></svg></sc-if></button></sc-if>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px/18px var(--font-ui);color:{{ it.titleColor }};transition:color .15s">{{ it.title }}</span><span style="display:flex;align-items:center;gap:5px;font:12px/15px var(--font-ui);color:#959CA8">{{ it.iconEl }}{{ it.sub }}</span></div>
+                <span style="font:500 11px var(--font-num);color:#636975">{{ it.range }}</span>
+                <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+                <sc-if value="{{ it.drag }}" hint-placeholder-val="{{ false }}"><svg aria-label="Trascina" viewBox="0 0 24 24" width="16" height="16" fill="#636975" style="flex:none;cursor:grab"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></sc-if>
+              </div></sc-if>
+              <sc-if value="{{ it.isHero }}" hint-placeholder-val="{{ false }}"><div data-screen-label="Card Adesso (hero)" style="position:relative;overflow:hidden;background:#161B27;border:1px solid {{ it.heroBorder }};border-radius:18px;box-shadow:{{ it.heroShadow }};padding:14px 14px 14px 19px;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;cursor:pointer"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:{{ it.fill }}"></span>
+                <span style="grid-column:1;grid-row:1;display:flex;align-items:center;gap:6px;min-width:0;height:14px;font:600 11px/14px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ it.ink }}">Adesso</span>
+                <span style="grid-column:2;grid-row:1;justify-self:end;align-self:start;margin-top:-3px;height:20px;padding:0 7px;border-radius:999px;background:{{ it.soft }};color:{{ it.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ it.type }}</span>
+                <span style="grid-column:1;grid-row:2;margin-top:9px;min-width:0;font:600 20px/24px var(--font-ui);letter-spacing:-.01em;color:{{ it.titleColor }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty">{{ it.title }}</span>
+                <span style="grid-column:1;grid-row:3;margin-top:3px;min-width:0;display:flex;align-items:center;gap:5px;font:13px/17px var(--font-ui);color:#959CA8;white-space:nowrap;overflow:hidden">{{ it.iconEl }}<span style="overflow:hidden;text-overflow:ellipsis">{{ it.sub }}</span></span>
+                <span style="grid-column:1;grid-row:4;margin-top:12px;display:flex;align-items:baseline;gap:5px;min-width:0"><span style="font:600 16px/20px var(--font-num);font-variant-numeric:tabular-nums;color:{{ it.ink }};flex:none">{{ it.heroNum }}</span><span style="font:500 12px/20px var(--font-num);color:#959CA8;flex:none">min</span><span style="font:500 12px/20px var(--font-num);color:#959CA8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.range }}</span></span>
+                <sc-if value="{{ it.heroIsStudy }}" hint-placeholder-val="{{ true }}"><button aria-label="Inizia" title="Inizia" onClick="{{ goSession }}" style="grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:{{ it.fill }};color:#0A0D13;border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 8px 18px -8px {{ it.fill }};display:grid;place-items:center;cursor:pointer;padding:0" style-hover="filter:brightness(1.12)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="margin-left:2px"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></button></sc-if>
+                <sc-if value="{{ it.heroHasCheck }}" hint-placeholder-val="{{ false }}"><button aria-label="{{ it.heroCheckLabel }}" title="{{ it.heroCheckLabel }}" onClick="{{ it.check }}" style="grid-column:2;grid-row:3 / span 2;justify-self:end;align-self:end;width:48px;height:48px;border-radius:999px;background:transparent;border:0;display:grid;place-items:center;cursor:pointer;padding:0" style-focus="outline:none;box-shadow:0 0 0 2px #0A0D13,0 0 0 4px #FFFFFF"><span style="width:28px;height:28px;border-radius:999px;border:1.5px solid {{ it.heroCircBorder }};background:{{ it.heroCircBg }};box-sizing:border-box;display:grid;place-items:center;color:#0A0D13;transition:background .15s,border-color .15s"><sc-if value="{{ it.checking }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" style="stroke-width:2.75;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5" style="stroke-dasharray:24;stroke-dashoffset:24;animation:rf-check .25s ease-out .04s forwards"></path></svg></sc-if></span></button></sc-if>
+              </div></sc-if>
+              <sc-if value="{{ it.drag }}" hint-placeholder-val="{{ false }}"><div data-screen-label="Frecce di riordino" style="grid-column:3;align-self:center;justify-self:end;display:flex;flex-direction:column;gap:4px;opacity:{{ it.moveOpacity }};transition:opacity .15s ease-out"><button aria-label="Sposta su" disabled="{{ it.upOff }}" onClick="{{ it.moveUp }}" style="width:28px;height:26px;border-radius:8px;background:#141820;border:1px solid #292E37;color:#fff;display:grid;place-items:center;padding:0;cursor:{{ it.upCursor }};opacity:{{ it.upOpacity }}" style-hover="background:#1E232C" style-focus="outline:none;box-shadow:0 0 0 2px #0A0D13,0 0 0 4px #FFFFFF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m18 15-6-6-6 6"></path></svg></button><button aria-label="Sposta giù" disabled="{{ it.downOff }}" onClick="{{ it.moveDown }}" style="width:28px;height:26px;border-radius:8px;background:#141820;border:1px solid #292E37;color:#fff;display:grid;place-items:center;padding:0;cursor:{{ it.downCursor }};opacity:{{ it.downOpacity }};box-shadow:{{ it.downRing }}" style-hover="background:#1E232C" style-focus="outline:none;box-shadow:0 0 0 2px #0A0D13,0 0 0 4px #FFFFFF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"></path></svg></button></div></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ dragOn }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:60px;right:42px;bottom:{{ dragBottom }}px;transform:scale(1.015) rotate(-.5deg);box-shadow:0 12px 28px -10px rgba(0,0,0,.7);background:#141820;border:1px solid #334156;border-radius:14px;padding:9px 12px 9px 14px;min-height:56px;box-sizing:border-box;display:flex;align-items:center;gap:12px;overflow:hidden">
+              <span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:{{ dragFill }}"></span>
+              <span style="width:20px;height:20px;flex:none;border-radius:999px;border:1.5px solid #636975;box-sizing:border-box"></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px/18px var(--font-ui)">{{ dragTitle }}</span><span style="font:12px/15px var(--font-ui);color:#959CA8">{{ dragSub }}</span></div>
+              <span style="height:20px;padding:0 7px;border-radius:999px;background:{{ dragSoft }};color:{{ dragInk }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ dragType }}</span>
+              <svg aria-label="Trascina" viewBox="0 0 24 24" width="16" height="16" fill="#959CA8" style="flex:none"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px">
+          <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+            <div onClick="{{ d.pick }}" style="display:flex;flex-direction:column;gap:8px;min-height:0;border-radius:14px;padding:8px 2px;box-sizing:border-box;background:{{ d.colBg }};border:1px solid {{ d.colBorder }};cursor:pointer">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:none">
+                <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ d.labColor }}">{{ d.lab }}</span>
+                <span style="width:30px;height:30px;border-radius:999px;background:{{ d.bg }};color:{{ d.color }};display:grid;place-items:center;font:{{ d.weight }} 14px var(--font-num)">{{ d.num }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto">
+                <sc-for list="{{ d.blocks }}" as="b" hint-placeholder-count="2">
+                  <div style="position:relative;overflow:hidden;background:#141820;border:1px solid #292E37;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:7px 6px 7px 10px;display:flex;flex-direction:column;gap:2px">
+                    <span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:{{ b.fill }}"></span>
+                    <span style="font:500 11px/14px var(--font-num);color:{{ b.timeColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.time }}</span>
+                    <span style="font:600 12px/15px var(--font-ui);color:{{ b.titleColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.title }}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ d.free }}" hint-placeholder-val="{{ false }}"><span style="font:500 11px/14px var(--font-ui);color:#636975;text-align:center;padding-top:6px">libero</span></sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isWeekEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center">
+          <span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#636975"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+          <div style="display:flex;flex-direction:column;gap:4px;max-width:280px;text-align:center;flex:none"><span style="font:600 15px/20px var(--font-ui)">Settimana libera</span><span style="font:13px/18px var(--font-ui);color:#959CA8">Nessuna attività dal <span style="font:500 13px var(--font-num)">21</span> al <span style="font:500 13px var(--font-num)">27</span> settembre.</span></div>
+          <button onClick="{{ goCreate }}" style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 15px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Crea attività</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center">
+          <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+            <span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#959CA8">{{ d.lab }}</span>
+          </sc-for>
+        </div>
+        <div style="margin-top:8px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:minmax(56px,1fr);gap:6px">
+          <sc-for list="{{ monthCells }}" as="c" hint-placeholder-count="35">
+            <button onClick="{{ c.pick }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px;background:{{ c.bg }};border:1px solid {{ c.border }};color:{{ c.color }};cursor:pointer;padding:0;box-sizing:border-box">
+              <span style="font:{{ c.weight }} 14px var(--font-num)">{{ c.num }}</span>
+              <span style="display:flex;align-items:center;justify-content:center;gap:3px;height:4px">
+                <sc-for list="{{ c.dots }}" as="t" hint-placeholder-count="2">
+                  <span style="width:4px;height:4px;border-radius:999px;background:{{ t.bg }}"></span>
+                </sc-for>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <sc-for list="{{ monthLegend }}" as="l" hint-placeholder-count="4">
+            <span style="display:flex;align-items:center;gap:6px;font:12px var(--font-ui);color:#959CA8"><span style="width:6px;height:6px;border-radius:999px;background:{{ l.fill }}"></span>{{ l.label }} · <span style="font:500 12px var(--font-num)">{{ l.days }}</span> giorni</span>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isMonthEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center">
+          <span style="width:56px;height:56px;border-radius:999px;background:#1E232C;display:grid;place-items:center;color:#636975"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+          <div style="display:flex;flex-direction:column;gap:4px;max-width:280px;text-align:center;flex:none"><span style="font:600 15px/20px var(--font-ui)">Settembre senza attività</span><span style="font:13px/18px var(--font-ui);color:#959CA8">Nessun blocco in questo mese.</span></div>
+          <button onClick="{{ goCreate }}" style="height:44px;padding:0 20px;border-radius:12px;background:#1E232C;color:#fff;border:1px solid #292E37;font:600 15px var(--font-ui);cursor:pointer" style-hover="background:#292E37">Crea attività</button>
+        </div>
+      </sc-if>
+    </section>
+    <sc-if value="{{ showAside }}" hint-placeholder-val="{{ true }}">
+    <aside style="display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto;scrollbar-width:none">
+      <sc-if value="{{ notMonth }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:32px"><span style="font:600 15px/20px var(--font-ui)">Il tuo progresso oggi</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none">
+        <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px;display:flex;flex-direction:column;height:116px;box-sizing:border-box">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;height:16px"><span style="font:500 13px/16px var(--font-ui);color:#959CA8">Completate</span><span style="width:26px;height:26px;flex:none;border-radius:999px;background:#2A1F45;color:#B794FD;display:grid;place-items:center;margin:-2px -4px 0 0"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" style="stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path></svg></span></div>
+          <span style="font:600 20px/24px var(--font-num);font-variant-numeric:tabular-nums;margin-top:3px"><span style="display:inline-block;transform-origin:0 70%;animation:{{ bumpAnim }}">{{ pDone }}</span><span style="font:500 13px var(--font-ui);color:#959CA8"> / {{ pTotal }}</span></span>
+          <span style="font:500 12px/14px var(--font-num);color:#959CA8;margin-top:4px">{{ pPctLabel }}</span>
+          <div style="margin-top:10px;height:22px"><div style="height:6px;border-radius:999px;background:#292E37;overflow:hidden"><div style="width:{{ pPct }}%;transition:width .45s cubic-bezier(.4,0,.2,1);height:100%;background:#9B6CFA;box-shadow:0 0 8px 1px #9B6CFA;border-radius:999px"></div></div></div>
+        </div>
+        <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px;display:flex;flex-direction:column;height:116px;box-sizing:border-box">
+          <span style="font:500 13px/16px var(--font-ui);color:#959CA8">Focus</span>
+          <span style="font:600 20px/24px var(--font-num);font-variant-numeric:tabular-nums;margin-top:3px;white-space:nowrap">{{ fH }}<span style="font:500 13px var(--font-ui);color:#959CA8">h</span> {{ fM }}<span style="font:500 13px var(--font-ui);color:#959CA8">m</span></span>
+          <span style="font:500 12px/14px var(--font-num);color:#959CA8;margin-top:4px"><span style="color:#22C55E">{{ fDelta }}</span> vs ieri</span>
+          <div style="margin-top:10px;height:22px;display:flex;align-items:flex-end;gap:3px"><span style="flex:1;height:40%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:70%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:35%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:20%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:55%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:30%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:85%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:60%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:45%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:75%;border-radius:2px;background:#9B6CFA;opacity:.3"></span><span style="flex:1;height:100%;border-radius:2px;background:linear-gradient(180deg,#D4C4FE,#9B6CFA);box-shadow:0 0 8px 1px #9B6CFACC"></span></div>
+        </div>
+        <div style="grid-column:1 / -1;background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px;display:flex;align-items:center;gap:16px;height:72px;box-sizing:border-box">
+          <div style="display:flex;flex-direction:column;flex:none"><span style="font:500 13px/16px var(--font-ui);color:#959CA8">Attività completate</span><span style="display:flex;align-items:baseline;gap:8px;margin-top:3px"><span style="font:600 20px/24px var(--font-num);font-variant-numeric:tabular-nums">24</span><span style="font:12px var(--font-ui);color:#959CA8">questa settimana</span></span></div>
+          <svg viewBox="0 0 160 40" width="100%" height="40" preserveAspectRatio="none" style="display:block;min-width:0;filter:drop-shadow(0 0 4px #FACC15B3)"><path d="M0 30 C 20 28, 30 35, 45 25 S 70 10, 90 20 S 120 35, 140 12 L 160 8 V 40 H 0 Z" fill="#34311E"></path><path d="M0 30 C 20 28, 30 35, 45 25 S 70 10, 90 20 S 120 35, 140 12 L 160 8" fill="none" stroke="#FACC15" style="stroke-width:2;stroke-linecap:round"></path></svg>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><span style="font:600 15px/20px var(--font-ui)">Prossime attività</span><a href="#" onClick="{{ goWeek }}" style="display:flex;align-items:center;gap:4px;font:13px var(--font-ui);color:#959CA8">Vedi tutte<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" style="stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+      <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 4px;display:flex;flex-direction:column;gap:8px;flex:none">
+        <sc-for list="{{ upcoming }}" as="g" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:6px"><span style="font:600 13px/16px var(--font-ui)">{{ g.label }}</span><span style="font:12px var(--font-ui);color:#959CA8">• {{ g.date }}</span></div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid #292E37"><span style="width:44px;font:500 12px var(--font-num);color:#959CA8">{{ r.time }}</span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><span style="height:20px;padding:0 7px;border-radius:999px;background:{{ r.soft }};color:{{ r.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ r.type }}</span></div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#141820;border:1px solid #292E37;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.35),0 4px 12px -6px rgba(0,0,0,.5);padding:12px 12px 4px;display:flex;flex-direction:column;flex:none">
+          <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:8px"><span style="font:600 15px/20px var(--font-ui)">{{ selDayLabel }}</span></div>
+          <sc-for list="{{ dayList }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid #292E37"><span style="width:44px;flex:none;font:500 12px var(--font-num);color:#959CA8">{{ r.time }}</span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><span style="height:20px;padding:0 7px;border-radius:999px;background:{{ r.soft }};color:{{ r.ink }};font:600 10px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;display:inline-flex;align-items:center;flex:none">{{ r.type }}</span></div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </aside>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ revOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ revCancel }}" style="position:absolute;inset:0;z-index:9;background:rgba(10,13,19,.6);animation:rf-fade .2s ease-out">
+      <div role="dialog" aria-modal="true" aria-label="Revisione fasi" data-screen-label="Revisione fasi (da Oggi)" onClick="{{ stop }}" style="position:absolute;top:0;right:0;bottom:0;width:440px;background:#141820;border-left:1px solid #292E37;box-shadow:0 12px 32px rgba(0,0,0,.45);padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;animation:rf-slide .3s cubic-bezier(.4,0,.2,1)">
+        
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:{{ revInk }}">{{ revEyebrow }}</span><span style="font:600 18px/24px var(--font-ui)">Revisione fasi</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">Risultano tutte fatte. Tocca solo quelle che hai saltato.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ revRows }}" as="r" hint-placeholder-count="3"><button onClick="{{ r.toggle }}" aria-pressed="{{ r.skipped }}" style="display:flex;align-items:center;gap:10px;height:52px;padding:0 14px 0 12px;border-radius:10px;background:#1E232C;border:1px solid #292E37;box-sizing:border-box;cursor:pointer;text-align:left;width:100%;color:#fff" style-hover="border-color:#3A404B"><span style="width:8px;height:8px;flex:none;border-radius:999px;background:{{ r.dotBg }};border:1.5px solid {{ r.dotBorder }};box-sizing:border-box;transition:background .15s"></span><span style="width:16px;flex:none;font:500 11px var(--font-num);color:#636975">{{ r.n }}</span><span style="flex:1;min-width:0;font:500 14px var(--font-ui);color:{{ r.color }};text-decoration:{{ r.deco }};transition:color .15s">{{ r.text }}</span><span style="font:500 11px var(--font-ui);color:#959CA8">{{ r.tag }}</span></button></sc-for>
+          <span style="font:500 12px/16px var(--font-num);color:#959CA8">{{ revSummary }}</span>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px"><button onClick="{{ revCancel }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#292E37;color:#fff">Annulla</button><button onClick="{{ revConfirm }}" style="flex:1;height:44px;border-radius:12px;background:#6E96F2;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.35),0 6px 16px -8px rgba(0,0,0,.6)" style-hover="background:#8AAAF6" style-active="transform:scale(.985);background:#5A82DE">Conferma</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div role="status" data-screen-label="Toast" style="position:absolute;left:268px;bottom:24px;z-index:8;width:420px;height:48px;border-radius:12px;background:#292E37;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;padding:0 6px 0 14px;box-sizing:border-box;animation:rf-up .3s cubic-bezier(.4,0,.2,1)"><span style="width:8px;height:8px;border-radius:999px;background:{{ toastDot }};flex:none"></span><span style="flex:1;min-width:0;font:500 13px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ toastText }}</span><sc-if value="{{ toastUndo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ undo }}" style="height:36px;padding:0 12px;border-radius:9px;background:transparent;border:0;color:#fff;font:600 13px var(--font-ui);cursor:pointer;flex:none" style-hover="background:#3A404B">Annulla</button></sc-if></div>
+  </sc-if>
+  <sc-if value="{{ sheetOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:9;background:rgba(10,13,19,.6);animation:rf-fade .2s ease-out">
+      <div role="dialog" aria-modal="true" aria-label="Voci rimaste" data-screen-label="Voci rimaste (da Oggi)" onClick="{{ stop }}" style="position:absolute;top:0;right:0;bottom:0;width:440px;background:#141820;border-left:1px solid #292E37;box-shadow:0 12px 32px rgba(0,0,0,.45);padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;animation:rf-slide .3s cubic-bezier(.4,0,.2,1)">
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 10px/12px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:#2DD4BF">Segna come fatto</span><span style="font:600 18px/24px var(--font-ui)">{{ sheetTitle }}</span><span style="font:13px/18px var(--font-ui);color:#959CA8;text-wrap:pretty">«{{ sheetName }}» si completa comunque. Le voci rimaste puoi segnarle fatte o passarle a un nuovo todo.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ sheetRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:12px;height:48px;padding:0 14px;border-radius:10px;background:#1E232C;border:1px solid #292E37;box-sizing:border-box;position:relative;overflow:hidden;color:#fff"><span style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#14B8A6"></span><span style="width:20px;height:20px;flex:none;border-radius:5px;border:1.5px solid #636975;box-sizing:border-box"></span><span style="flex:1;min-width:0;font:600 14px var(--font-ui)">{{ r }}</span></div>
+          </sc-for>
+          <span style="font:500 12px/16px var(--font-ui);color:#2DD4BF;text-align:right">{{ sheetMeta }}</span>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px">
+          <button onClick="{{ sheetAll }}" style="height:44px;padding:0 16px;border-radius:12px;background:transparent;color:#959CA8;border:0;font:600 14px var(--font-ui);cursor:pointer" style-hover="background:#1E232C;color:#fff">Tutte fatte</button>
+          <button onClick="{{ sheetSplit }}" style="flex:1;height:44px;border-radius:12px;background:#14B8A6;color:#0A0D13;border:0;font:600 14px var(--font-ui);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(0,0,0,.5),0 10px 24px -12px rgba(20,184,166,.6)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.985)">Crea todo con le voci rimaste</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;giorno&quot;,&quot;options&quot;:[&quot;giorno&quot;,&quot;settimana&quot;,&quot;settimana-vuota&quot;,&quot;mese&quot;,&quot;mese-vuoto&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vista&quot;},&quot;drag&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;lift&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Trascinamento (MECCANISMI §15)&quot;},&quot;session&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sessione in corso (carta nella sidebar)&quot;},&quot;move&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;no&quot;,&quot;options&quot;:[&quot;no&quot;,&quot;hover&quot;,&quot;focus&quot;],&quot;tsType&quot;:&quot;'no' | 'hover' | 'focus'&quot;,&quot;section&quot;:&quot;Riordino con le frecce (desktop)&quot;},&quot;nowKind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;study&quot;,&quot;options&quot;:[&quot;study&quot;,&quot;todo&quot;,&quot;routine&quot;,&quot;event&quot;],&quot;tsType&quot;:&quot;'study' | 'todo' | 'routine' | 'event'&quot;,&quot;section&quot;:&quot;Card Adesso (MECCANISMI §14)&quot;}}">
+class Component extends DCLogic {
+  T = {
+    todo: { type: 'Todo', fill: '#14B8A6', ink: '#2DD4BF', soft: '#16302E', deep: '#0D6E63' },
+    study: { type: 'Studio', fill: '#9B6CFA', ink: '#B794FD', soft: '#2A1F45', deep: '#6D28D9' },
+    routine: { type: 'Routine', fill: '#FACC15', ink: '#FACC15', soft: '#34311E', deep: '#8A6A05' },
+    event: { type: 'Evento', fill: '#F43F5E', ink: '#FF4A67', soft: '#331D29', deep: '#B01235' }
+  };
+  P = {
+    pin: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'],
+    cap: ['M22 10v6M2 10l10-5 10 5-10 5z', 'M6 12v5c3 3 9 3 12 0v-5'],
+    video: ['m22 8-6 4 6 4V8Z', 'M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'],
+    dumbbell: ['M2 12h3M19 12h3M8 12h8', 'M6 8h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM17 8h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z'],
+    check: ['m9 11 3 3L22 4', 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'],
+    book: ['M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z', 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z']
+  };
+  icon(name) {
+    const d = this.P[name] || this.P.check;
+    return React.createElement('svg', { viewBox: '0 0 24 24', width: 12, height: 12, fill: 'none', stroke: 'currentColor', style: { strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', flex: 'none' } }, d.map((p, i) => React.createElement('path', { key: i, d: p })));
+  }
+  // Parametri dell'indirizzo: le schermate collegate riportano qui lo stato (?dopo=sessione, ?nuovo=…, ?sessione=1)
+  Q = (() => { try { return new URLSearchParams(window.location.search); } catch (_) { return new URLSearchParams(''); } })();
+  ESITO = { done: ['Completata', 'Completata · 45 min'], continue: ['Continua', 'Continua · parziale · 45 min'], back: ['Indietro', 'Indietro · la 0.6 torna da rivedere'], skip: ['Salta', 'Saltata · 0.7 fuori dal percorso'] };
+  nowKindD() { const k = this.Q.get('nowKind') || this.props.nowKind; return ['todo', 'routine', 'event'].includes(k) ? k : 'study'; }
+  nowItemD() { return {
+    study: { time: '16:00', range: '16:00 – 16:45', k: 'study', title: 'Ripasso Modulo 0', sub: 'Riattivazione JavaScript · Unità 0.7', icon: 'cap', hero: true, dur: '45' },
+    todo: { time: '16:00', range: '16:00 – 16:30', k: 'todo', title: 'Inviare la relazione', sub: 'Checklist 2/4 · orizzonte giorno', icon: 'check', hero: true, dur: '30' },
+    routine: { time: '16:00', range: '16:00 – 16:45', k: 'routine', title: 'Corsa', sub: 'Workout · 3 fasi', icon: 'dumbbell', hero: true, dur: '45', phases: ['Riscaldamento', 'Corsa', 'Stretching'] },
+    event: { time: '16:00', range: '16:00 – 17:00', k: 'event', title: 'Riunione con il relatore', sub: 'Aula 2.4 · Edificio B', icon: 'pin', hero: true, dur: '60' }
+  }[this.nowKindD()]; }
+  heroVals(it) { if (!it.isHero) return {}; const ck = this.state.checking === it.key; return { heroBorder: it.fill + '80', heroShadow: `inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px ${it.fill}26,0 14px 34px -14px ${it.fill}80,0 4px 12px -6px rgba(0,0,0,.5)`, heroNum: it.dur || '45', heroIsStudy: it.k === 'study', heroHasCheck: it.k !== 'study', heroCheckLabel: { todo: 'Segna come fatto', routine: 'Segna come fatta', event: 'Completa evento' }[it.k] || 'Segna come fatto', heroCircBg: ck ? '#22C55E' : 'transparent', heroCircBorder: ck ? '#22C55E' : it.ink }; }
+  revConfirm = () => { const it = this._revItemD, id = this.state.review; if (!it || !id) return; const tot = it.phases.length, nSk = this.state.revSkipped.length, ok = tot - nSk;
+    const label = it.k === 'event' ? (nSk ? `Completato · ${nSk} ${nSk === 1 ? 'fase saltata' : 'fasi saltate'}` : 'Completato · tutte le fasi') : `Fatta · ${ok} ${ok === 1 ? 'fase' : 'fasi'} su ${tot}`;
+    this.setState({ review: null }); this.runCheck(id, { text: label, dot: '#22C55E', undo: 'done', id }, x => ({ doneMode: { ...x.doneMode, [id]: label } })); };
+  LEFT = { 'Inviare la relazione': ['Allegare i grafici', 'Rileggere le conclusioni'], 'Prepara la valigia': ['Adattatore', 'Contanti', 'Cuffie', 'Libro per il viaggio'], 'Leggere 20 pagine': ['Pagine 9–12', 'Pagine 13–16', 'Pagine 17–20'] };
+  go(file, q) { try { window.location.href = encodeURI(file) + (q ? '?' + new URLSearchParams(q).toString() : ''); } catch (_) {} }
+  doneSub(it, mode) {
+    if (it.k === 'study') return (this.ESITO[this.Q.get('esito')] || this.ESITO.done)[1];
+    if (typeof mode === 'string' && /^(Fatta|Completato)/.test(mode)) return mode;
+    if (it.k === 'event') return 'Completato';
+    if (mode === 'all') return it.sub.replace(/([Cc]hecklist) \d+\/(\d+)/, '$1 $2/$2');
+    if (mode === 'split') return it.sub.replace(/([Cc]hecklist \d+\/\d+)/, `$1 · ${(this.LEFT[it.key] || []).length} voci in un nuovo todo`);
+    return it.sub;
+  }
+  // Spunta dalla lista (FUNZ §2 e §6, MECC §3–4): la riga resta al suo posto in secondo piano, il toast offre «Annulla»
+  checkVals(it) {
+    const checking = this.state.checking === it.key;
+    return { checking, circBg: checking ? '#22C55E' : 'transparent', circBorder: checking ? '#22C55E' : '#636975', titleColor: checking ? '#C4C9D2' : it.titleColor, check: e => { if (e) e.stopPropagation(); this.checkItem(it); } };
+  }
+  checkItem(it) {
+    const s = this.state; if (s.checking || it.done || it.k === 'study') return;
+    if (this.LEFT[it.key]) { clearTimeout(this.tt); this.setState({ sheet: it.key, toast: null }); return; }
+    if (it.phases && it.phases.length) { clearTimeout(this.tt); this.setState({ review: it.key, revSkipped: [], toast: null }); return; }
+    this.runCheck(it.key, { text: (it.k === 'event' ? 'Evento completato · ' : it.k === 'routine' ? 'Fatta · ' : 'Fatto · ') + it.title, dot: '#22C55E', undo: 'done', id: it.key });
+  }
+  runCheck(id, toast, patch) {
+    clearTimeout(this.tc); clearTimeout(this.tt);
+    this.setState({ checking: id, toast: null });
+    this.tc = setTimeout(() => { this.setState(x => ({ checking: null, doneX: [...x.doneX.filter(v => v !== id), id], bumped: true, toast, ...(patch ? patch(x) : {}) })); this.tt = setTimeout(() => this.setState({ toast: null }), 5000); }, 600);
+  }
+  sheetAll = () => { const id = this.state.sheet; if (!id) return; this.setState({ sheet: null }); this.runCheck(id, { text: 'Fatto · tutte le voci spuntate', dot: '#22C55E', undo: 'done', id }, x => ({ doneMode: { ...x.doneMode, [id]: 'all' } })); };
+  sheetSplit = () => {
+    const id = this.state.sheet; if (!id) return; const n = this.LEFT[id].length, src = this.U[id];
+    this.U.split = { key: 'split', time: '—', range: src ? src.range : 'solo oggi', k: 'todo', title: id, sub: `Senza orario · checklist 0/${n}`, icon: 'check', prio: src ? src.prio : 'normale' };
+    this.setState({ sheet: null });
+    this.runCheck(id, { text: `Completato · ${n} voci in un nuovo todo`, dot: '#14B8A6', undo: 'done', id, split: true }, x => ({ doneMode: { ...x.doneMode, [id]: 'split' }, uOrder: [...x.uOrder.filter(v => v !== 'split'), 'split'] }));
+  };
+  undo = () => {
+    const t = this.state.toast; if (!t) return; clearTimeout(this.tt);
+    if (t.undo === 'done') this.setState(x => { const dm = { ...x.doneMode }; delete dm[t.id]; return { toast: null, doneX: x.doneX.filter(v => v !== t.id), doneMode: dm, uOrder: t.split ? x.uOrder.filter(v => v !== 'split') : x.uOrder, bumped: true }; });
+    else if (t.undo === 'created') this.setState(x => ({ toast: null, uOrder: x.uOrder.filter(v => v !== 'nuovo'), bumped: true }));
+  };
+  componentDidMount() { if (this.state.toast) this.tt = setTimeout(() => this.setState({ toast: null }), 5000); }
+  componentWillUnmount() { clearTimeout(this.tc); clearTimeout(this.tt); }
+  state = this.init();
+  // Todo senza orario di oggi: in coda su desktop, per priorità e poi nell'ordine scelto dall'utente
+  U = {
+    'Prepara la valigia': { time: '—', range: 'entro dom 27', k: 'todo', title: 'Prepara la valigia', sub: 'Checklist 3/7', icon: 'check', prio: 'alta' },
+    'Prenota il treno': { time: '—', range: 'solo oggi', k: 'todo', title: 'Prenota il treno', sub: 'Orizzonte giorno', icon: 'check', prio: 'alta' },
+    'Chiama Marco': { time: '—', range: 'solo oggi', k: 'todo', title: 'Chiama Marco', sub: 'Orizzonte giorno · priorità normale', icon: 'check', prio: 'normale' }
+  };
+  RANK = { alta: 0, normale: 1, bassa: 2 };
+  // Riordino senza trascinamento (WCAG 2.5.7): frecce a destra del todo senza orario, con il puntatore sopra o con il fuoco; solo dentro la stessa priorità
+  moveVals(it) {
+    const s = this.state, noop = () => {};
+    if (!it.drag) return { moveOpacity: 0, upOff: true, downOff: true, upOpacity: 0.4, downOpacity: 0.4, upCursor: 'default', downCursor: 'default', downRing: 'none', moveUp: noop, moveDown: noop, enter: noop, leave: noop, focusIn: noop, focusOut: noop };
+    const grp = s.uOrder.filter(t => this.U[t] && this.U[t].prio === it.prio && !s.doneX.includes(t)), i = grp.indexOf(it.key), upOff = i <= 0, downOff = i >= grp.length - 1;
+    const swap = d => this.setState(x => { const o = x.uOrder.slice(), a = o.indexOf(it.key), b = o.indexOf(grp[i + d]); if (a < 0 || b < 0) return null; o[a] = grp[i + d]; o[b] = it.key; return { uOrder: o }; });
+    const show = s.hoverKey === it.key || s.focusKey === it.key;
+    return {
+      moveOpacity: show ? 1 : 0, upOff, downOff, upOpacity: upOff ? 0.4 : 1, downOpacity: downOff ? 0.4 : 1,
+      upCursor: upOff ? 'not-allowed' : 'pointer', downCursor: downOff ? 'not-allowed' : 'pointer',
+      downRing: s.ringKey === it.key && !downOff ? '0 0 0 2px #0A0D13, 0 0 0 4px #FFFFFF' : 'none',
+      moveUp: () => { if (!upOff) swap(-1); }, moveDown: () => { if (!downOff) swap(1); },
+      enter: () => this.setState({ hoverKey: it.key }), leave: () => this.setState(x => x.hoverKey === it.key ? { hoverKey: null } : null),
+      focusIn: () => this.setState({ focusKey: it.key }), focusOut: () => this.setState(x => x.focusKey === it.key ? { focusKey: null, ringKey: null } : null)
+    };
+  }
+  init(p = this.props) {
+    const v = p.view || 'giorno';
+    return {
+      view: v.indexOf('mese') === 0 ? 'mese' : v.indexOf('settimana') === 0 ? 'settimana' : 'giorno',
+      empty: v.indexOf('vuot') > 0, drag: p.drag || 'no', sel: 2,
+      ...this.flowInit(),
+      hoverKey: p.move === 'hover' ? 'Prepara la valigia' : null, focusKey: p.move === 'focus' ? 'Prepara la valigia' : null, ringKey: p.move === 'focus' ? 'Prepara la valigia' : null
+    };
+  }
+  flowInit() {
+    const after = this.Q.get('dopo') === 'sessione', nuovo = this.Q.get('nuovo'), creato = this.Q.get('creato');
+    const P = { alta: 'alta', normale: 'normale', bassa: 'bassa' };
+    const created = nuovo ? { title: nuovo, prio: P[this.Q.get('prio')] || 'normale' } : null;
+    const CR = { todo: 'Todo creato', study: 'Routine di studio creata · occorrenze per 4 settimane', routine: 'Routine creata · occorrenze per 4 settimane', event: 'Evento creato', modifica: 'Modifiche salvate' };
+    const toast = after ? { text: 'Esito registrato · Ripasso Modulo 0 · ' + (this.ESITO[this.Q.get('esito')] || this.ESITO.done)[0], dot: '#22C55E', undo: null }
+      : created ? { text: 'Todo creato · ' + nuovo, dot: '#14B8A6', undo: 'created' }
+      : CR[creato] ? { text: CR[creato], dot: '#6E96F2', undo: null } : null;
+    return { uOrder: ['Prepara la valigia', 'Prenota il treno', 'Chiama Marco', ...(created ? ['nuovo'] : [])], created, doneX: after ? ['Ripasso Modulo 0'] : [], doneMode: {}, checking: null, sheet: null, toast, bumped: after, review: null, revSkipped: [] };
+  }
+  componentDidUpdate(prev) { if (prev.view !== this.props.view || prev.drag !== this.props.drag || prev.move !== this.props.move) this.setState(this.init()); }
+  go(view) { this.setState({ view, empty: false }); }
+  renderVals() {
+    if (this.state.created && !this.U.nuovo) this.U.nuovo = { time: '—', range: 'solo oggi', k: 'todo', title: this.state.created.title, sub: 'Orizzonte giorno', icon: 'check', prio: this.state.created.prio };
+    const deco = it => ({ ...it, ...this.T[it.k], time: it.time === '—' ? '' : it.time, drag: !it.done && it.time === '—', cursor: !it.done && it.time === '—' ? 'grab' : 'default', open: !it.done, hasDot: true, titleColor: it.done ? '#959CA8' : '#fff', timeColor: it.hero ? '#fff' : '#959CA8', isHero: !!it.hero, notHero: !it.hero, iconEl: this.icon(it.icon) });
+    const items = [
+      { time: '09:00', range: '09:00 – 10:30', k: 'study', title: 'Lezione di UI/UX', sub: 'Aula B2', icon: 'pin', done: true },
+      { time: '11:00', range: '11:00 – 12:00', k: 'event', title: 'Riunione progetto', sub: 'Meet', icon: 'video', done: true },
+      { time: '14:30', range: '14:30 – 15:30', k: 'routine', title: 'Palestra', sub: 'Workout · 3 fasi su 3', icon: 'dumbbell', done: true },
+      this.nowItemD(),
+      { time: '19:00', range: '19:00 – 19:30', k: 'todo', title: 'Leggere 20 pagine', sub: 'Deep Work · checklist 2/5', icon: 'book' },
+      ...this.state.uOrder.map(t => { const c = this.state.created, base = t === 'nuovo' && c ? { time: '—', range: 'solo oggi', k: 'todo', title: c.title, sub: 'Orizzonte giorno', icon: 'check', prio: c.prio } : this.U[t]; return base ? { ...base, key: t } : null; }).filter(Boolean).sort((a, b) => this.RANK[a.prio] - this.RANK[b.prio])
+    ].map(it => { const key = it.key || it.title, sx = this.state; return sx.doneX.includes(key) && !it.done ? { ...it, key, done: true, hero: false, sub: this.doneSub({ ...it, key }, sx.doneMode[key]) } : { ...it, key }; })
+     .map(deco).map(it => ({ ...it, gapTop: 0, ...this.moveVals(it), ...this.checkVals(it) })).map(it => ({ ...it, ...this.heroVals(it) }));
+    const sxs = this.state, nX = sxs.doneX.length, pTotal = 8 + (sxs.uOrder.includes('split') ? 1 : 0) + (sxs.created && sxs.uOrder.includes('nuovo') ? 1 : 0), pDone = 3 + nX, pPct = Math.round(pDone / pTotal * 100), studyDone = sxs.doneX.includes('Ripasso Modulo 0');
+    const rvD = sxs.review ? items.find(x => x.key === sxs.review) : null; this._revItemD = rvD;
+    const shD = sxs.sheet ? items.find(x => x.key === sxs.sheet) : null, leftD = shD ? this.LEFT[shD.key] : [];
+    const flowD = {
+      pDone: String(pDone), pTotal: String(pTotal), pPct, pPctLabel: pPct + ' %', fH: studyDone ? '4' : '3', fM: studyDone ? '30' : '45', fDelta: studyDone ? '+38 %' : '+15 %',
+      bumpAnim: sxs.bumped ? (pDone % 2 ? 'rf-bump-a .45s ease-out' : 'rf-bump-b .45s ease-out') : 'none',
+      hasToast: !!sxs.toast && !shD && !rvD,
+      revOn: !!rvD, revEyebrow: rvD ? (rvD.k === 'event' ? 'Completa evento' : 'Segna come fatta') : '', revInk: rvD ? rvD.ink : '#fff', revCancel: () => this.setState({ review: null }), revConfirm: this.revConfirm,
+      revRows: rvD ? rvD.phases.map((p, i) => { const sk = sxs.revSkipped.includes(p); return { text: p, n: String(i + 1).padStart(2, '0'), skipped: sk, dotBg: sk ? 'transparent' : '#22C55E', dotBorder: sk ? '#636975' : '#22C55E', color: sk ? '#636975' : '#fff', deco: sk ? 'line-through' : 'none', tag: sk ? 'saltata' : '', toggle: () => this.setState(x => ({ revSkipped: x.revSkipped.includes(p) ? x.revSkipped.filter(v => v !== p) : [...x.revSkipped, p] })) }; }) : [],
+      revSummary: rvD ? `${rvD.phases.length - sxs.revSkipped.length} fatte · ${sxs.revSkipped.length} ${sxs.revSkipped.length === 1 ? 'saltata' : 'saltate'}` : '', toastText: sxs.toast ? sxs.toast.text : '', toastDot: sxs.toast ? sxs.toast.dot : '#22C55E', toastUndo: !!(sxs.toast && sxs.toast.undo), undo: this.undo,
+      sheetOn: !!shD, sheetName: shD ? shD.title : '', sheetRows: leftD, sheetTitle: leftD.length === 1 ? 'Una voce non spuntata' : `${leftD.length} voci non spuntate`, sheetMeta: `${leftD.length} ${leftD.length === 1 ? 'voce' : 'voci'} · stessa priorità e scadenza · senza orario`,
+      closeSheet: () => this.setState({ sheet: null }), stop: e => e.stopPropagation(), sheetAll: this.sheetAll, sheetSplit: this.sheetSplit,
+      goCreate: () => this.go('S4 Crea Desktop.dc.html', { filled: 'false', date: String(this.state.view === 'settimana' ? 21 + this.state.sel : 23) }), goSession: e => { if (e) e.stopPropagation(); this.go('S15 Sessione Desktop.dc.html', { view: 'setup' }); }
+    };
+    const dots = ['#F43F5E', '#9B6CFA', '#9B6CFA', '#FACC15', '#2DD4BF', null, null];
+    const week = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((lab, i) => {
+      const sel = i === 2, dot = dots[i];
+      return { lab, num: 21 + i, dot: dot || 'transparent', bg: sel ? '#fff' : 'transparent', color: sel ? '#0A0D13' : dot ? '#fff' : '#636975', labColor: sel ? '#fff' : '#959CA8', weight: sel ? 600 : 500 };
+    });
+    const row = r => ({ ...r, ...this.T[r.k] });
+    const upcoming = [
+      { label: 'Domani', date: 'Gio 24 Settembre', rows: [{ time: '09:00', title: 'Lezione di Algoritmi', k: 'study' }, { time: '15:00', title: 'Dentista', k: 'event' }].map(row) },
+      { label: 'Venerdì', date: 'Ven 25 Settembre', rows: [{ time: '16:00', title: 'Ripasso Modulo 0', k: 'study' }].map(row) }
+    ];
+    const s = this.state, view = s.view, empty = s.empty, drag = s.drag;
+    const isDay = view === 'giorno', isWeek = view === 'settimana' && !empty, isWeekEmpty = view === 'settimana' && empty;
+    const isMonth = view === 'mese' && !empty, isMonthEmpty = view === 'mese' && empty;
+    const viewTabs = [['giorno', 'Giorno'], ['settimana', 'Settimana'], ['mese', 'Mese']].map(([id, label]) => {
+      const on = view === id;
+      return { label, bg: on ? '#fff' : 'transparent', color: on ? '#0A0D13' : '#959CA8', pick: () => this.go(id) };
+    });
+    const W = [
+      { lab: 'Lun', num: 21, blocks: [['09:00', 'Lezione di UI/UX', 'study'], ['18:00', 'Leggere 20 pagine', 'todo']] },
+      { lab: 'Mar', num: 22, blocks: [['11:00', 'Riunione progetto', 'event'], ['14:30', 'Palestra', 'routine']] },
+      { lab: 'Mer', num: 23, blocks: [['09:00', 'Lezione di UI/UX', 'study'], ['11:00', 'Riunione progetto', 'event'], ['14:30', 'Palestra', 'routine'], ['16:00', 'Ripasso Modulo 0', 'study'], ['19:00', 'Leggere 20 pagine', 'todo']] },
+      { lab: 'Gio', num: 24, blocks: [['09:00', 'Lezione di Algoritmi', 'study'], ['15:00', 'Dentista', 'event']] },
+      { lab: 'Ven', num: 25, blocks: [['14:30', 'Palestra', 'routine'], ['16:00', 'Ripasso Modulo 0', 'study']] },
+      { lab: 'Sab', num: 26, blocks: [] },
+      { lab: 'Dom', num: 27, blocks: [['—', 'Prepara la valigia', 'todo']] }
+    ];
+    const weekDays = W.map((d, i) => {
+      const sel = i === s.sel;
+      return {
+        lab: d.lab, num: d.num, free: d.blocks.length === 0,
+        colBg: sel ? '#141820' : 'transparent', colBorder: sel ? '#292E37' : 'transparent',
+        bg: sel ? '#fff' : 'transparent', color: sel ? '#0A0D13' : d.blocks.length ? '#fff' : '#636975',
+        labColor: sel ? '#fff' : '#959CA8', weight: sel ? 600 : 500,
+        pick: () => this.setState({ sel: i }),
+        blocks: d.blocks.map(([time, title, k]) => ({ time: time === '—' ? '—' : time, title, ...this.T[k], timeColor: '#959CA8', titleColor: '#fff' }))
+      };
+    });
+    const loadBg = n => n >= 3 ? '#242A34' : n >= 1 ? '#1A1F28' : 'transparent';
+    const mDots = { 1: ['study'], 2: ['routine', 'todo'], 3: ['study', 'event'], 4: ['routine'], 7: ['study', 'routine', 'todo'], 9: ['event'], 11: ['study', 'routine'], 14: ['study', 'todo'], 16: ['study'], 18: ['study', 'routine'], 21: ['study', 'todo'], 22: ['event', 'routine'], 23: ['study', 'event', 'routine', 'todo'], 24: ['study', 'event'], 25: ['routine', 'study'], 27: ['todo'], 29: ['routine'], 30: ['study', 'todo'] };
+    const monthCells = Array.from({ length: 35 }, (_, i) => {
+      const n = i, inMonth = n >= 1 && n <= 30, dots = (!empty && inMonth && mDots[n]) || [];
+      const sel = inMonth && n === 23;
+      return {
+        num: inMonth ? String(n) : '', sel,
+        bg: sel ? '#fff' : loadBg(dots.length), color: sel ? '#0A0D13' : inMonth ? '#fff' : '#636975',
+        border: sel ? '#fff' : dots.length ? '#292E37' : 'transparent',
+        weight: sel ? 600 : 500,
+        dots: dots.map(k => ({ bg: sel ? this.T[k].deep : this.T[k].fill })),
+        pick: () => {}
+      };
+    });
+    const monthLegend = [['study', 'Studio', '12'], ['routine', 'Routine', '9'], ['todo', 'Todo', '7'], ['event', 'Eventi', '5']].map(([k, label, days]) => ({ label, days: empty ? '0' : days, fill: this.T[k].fill }));
+    const dayList = items.filter(it => !it.done).map(it => ({ ...it, time: it.time || 'senza orario' }));
+    const D = {
+      lift: { bottom: 70, title: 'Prenota il treno', sub: 'Orizzonte giorno', k: 'todo' },
+    };
+    const d = D[drag] || null;
+    const dragVals = d ? {
+      dragOn: true, dragBottom: d.bottom, dragTitle: d.title, dragSub: d.sub, dragFill: this.T[d.k].fill, dragSoft: this.T[d.k].soft, dragInk: this.T[d.k].ink, dragType: this.T[d.k].type
+    } : { dragOn: false, dragBottom: 0, dragTitle: '', dragSub: '', dragFill: 'transparent', dragSoft: 'transparent', dragInk: '#fff', dragType: '' };
+    const weekTarget = -1;
+    const weekRing = week.map((x, i) => ({ ...x, ring: i === weekTarget ? 'inset 0 0 0 2px #6E96F2' : 'none' }));
+    return {
+      ...flowD, hasSession: this.props.session === true || this.props.session === 'true' || this.Q.get('sessione') === '1', items, week: weekRing, upcoming, lineHeight: (items.length - 1) * 64 + 24 + (items.some(it => it.isHero) ? 73 : 0),
+      viewTabs, goWeek: () => this.go('settimana'), isDay, isWeek, isWeekEmpty, isMonth, isMonthEmpty, notMonth: !isMonth && !isMonthEmpty,
+      showAside: !(isWeek || isWeekEmpty), mainCols: (isWeek || isWeekEmpty) ? 'minmax(0,1fr)' : 'minmax(0,1fr) 360px',
+      weekDays, monthCells, monthLegend, dayList,
+      periodLabel: isDay ? 'Settembre 2026' : isWeek || isWeekEmpty ? '21 – 27 settembre' : 'Settembre 2026',
+      prevLabel: isDay ? 'Giorno precedente' : isWeek || isWeekEmpty ? 'Settimana precedente' : 'Mese precedente',
+      nextLabel: isDay ? 'Giorno successivo' : isWeek || isWeekEmpty ? 'Settimana successiva' : 'Mese successivo',
+      swipeNote: isDay ? 'trascina i todo senza orario' : isWeek || isWeekEmpty ? 'scorri per la settimana precedente o successiva' : 'scorri per il mese precedente o successivo',
+      selDayLabel: 'Mercoledì 23 settembre',
+      dayNote: d && d.hint ? d.hint : 'trascina i todo senza orario', dayNoteColor: d && d.hint ? '#6E96F2' : '#959CA8',
+      ...dragVals
+    };
+  }
+}
+</script>
+</body>
+</html>
