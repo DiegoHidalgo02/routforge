@@ -1,7 +1,9 @@
 // «+ Crea» (S4 Crea Panel/Mobile/Desktop; FUNZ §3, MECC §2): quattro tipi nello stesso form, campi per tipo. Su
 // mobile una sheet sotto i 56 px di testa, da 1024 px un pannello a destra di 440 (DESIGN.md, S4 Desktop). La
-// validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Il todo non ha data né
-// corso (S4 Crea, D-DESIGN-1 n. 20): parte da oggi e l'orizzonte dice fin dove rotola. L'anticipo
+// validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Si parte dal giorno
+// selezionato in Oggi se cade fra oggi e oggi + 6, altrimenti da oggi, e le date si scelgono solo lì (MECC §2, G5): il
+// todo non ha data né corso e l'orizzonte dice fin dove rotola. Nessuna ×: «Annulla», Esc o il trascinamento in basso
+// del bordo alto; dopo la creazione Oggi mostra «… creato» con «Annulla» (`avvisi.ts`). L'anticipo
 // libero del promemoria (MECC §13.1, fino a 31 giorni) non è nel mock: riga «Altro anticipo» con le chip di S4
 // (T-019, divergenza 35).
 import {
@@ -25,9 +27,11 @@ import {
   Sun,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useLocation, useNavigate, type Location } from 'react-router';
 import { createActivity } from '../app/activities';
+import { deleteBlock } from '../app/completion';
+import { deleteRecurrence } from '../app/recurrences';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import {
@@ -38,8 +42,10 @@ import {
   MAX_ANTICIPO_SVEGLIA,
   MAX_CARATTERI_VOCE,
   MAX_VOCI_CHECKLIST,
+  creationDays,
   endsNextDay,
   recurrenceLastDay,
+  startDay,
   validateActivity,
   wallDuration,
   type BozzaAttivita,
@@ -48,7 +54,8 @@ import {
 import { horizonLastDay } from '../domain/lost';
 import { local, localDayKey, localInstant } from '../domain/time';
 import type { Orizzonte, Priorita } from '../domain/types';
-import { durata, fmtData, SETTIMANA } from './format';
+import { lascia } from './avvisi';
+import { durata, fmtData, fuso, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
 
@@ -139,11 +146,19 @@ interface Form {
   sveglie: number[];
 }
 
-function initial(): Form {
+/** Trascinamento in giù oltre il quale il foglio si chiude senza salvare (S4 Crea). */
+const SOGLIA_CHIUSURA = 110;
+
+/** Il messaggio dopo la creazione (TESTI): «Todo creato · …», «Evento creato», «Routine creata · …». */
+const creato = (b: BozzaAttivita): string =>
+  b.tipo === 'todo'
+    ? t('todoCreato', { titolo: b.titolo || t('tipoTodo') })
+    : t(b.tipo === 'evento' ? 'eventoCreato' : b.tipo === 'routine' ? 'routineCreata' : 'studioCreata');
+
+function initial(partenza: string): Form {
   const now = new Date();
   // L'ora piena successiva, al più le 23:00: dopo le 23 un «00:00» di oggi sarebbe già passato
   const ora = `${String(Math.min(now.getHours() + 1, 23)).padStart(2, '0')}:00`;
-  const oggi = localDayKey(now.getTime());
   return {
     tipo: 'todo',
     titolo: '',
@@ -159,8 +174,8 @@ function initial(): Form {
     checklist: [],
     fasi: [],
     giorni: [],
-    giorno: oggi,
-    dataInizio: oggi,
+    giorno: partenza,
+    dataInizio: partenza,
     termine: null,
     corsoId: null,
     luogo: '',
@@ -170,7 +185,7 @@ function initial(): Form {
   };
 }
 
-function toDraft(f: Form, oggi: string): BozzaAttivita {
+function toDraft(f: Form): BozzaAttivita {
   const comune = {
     titolo: f.titolo,
     note: f.note,
@@ -185,8 +200,8 @@ function toDraft(f: Form, oggi: string): BozzaAttivita {
       return {
         ...comune,
         tipo: 'todo',
-        // Il todo parte da oggi (S4 Crea, D-DESIGN-1 n. 20)
-        giorno: oggi,
+        // Il todo parte dal giorno di partenza (MECC §2, G5)
+        giorno: f.giorno,
         orario: f.conOrario ? { inizio: f.inizio, durata: f.durata } : null,
         orizzonte: f.orizzonte,
         priorita: f.priorita,
@@ -232,7 +247,13 @@ function Interruttore({ on, onClick, children }: { on: boolean; onClick: () => v
  * Data con il selettore nativo sotto un campo disegnato (S4): l'input trasparente copre il campo, il tocco apre il
  * selettore. `grande` = data dell'evento e del todo (giorno a 26); altrimenti il campo «Inizio» della ricorrenza.
  */
-function CampoData(p: { giorno: string; grande?: boolean; onChange: (g: string) => void }) {
+function CampoData(p: {
+  giorno: string;
+  grande?: boolean;
+  /** I giorni fra cui si sceglie (MECC §2, G5: da oggi a oggi + 6). */
+  giorni: readonly [string, string];
+  onChange: (g: string) => void;
+}) {
   const d = localInstant(p.giorno, '00:00');
   return (
     <label className={p.grande ? s.data : s.campo}>
@@ -255,6 +276,8 @@ function CampoData(p: { giorno: string; grande?: boolean; onChange: (g: string) 
         type="date"
         className={s.dataNativa}
         value={p.giorno}
+        min={p.giorni[0]}
+        max={p.giorni[1]}
         required
         onClick={(e) => {
           try {
@@ -263,7 +286,10 @@ function CampoData(p: { giorno: string; grande?: boolean; onChange: (g: string) 
             // selettore non disponibile: resta l'input nativo
           }
         }}
-        onChange={(e) => e.currentTarget.value && p.onChange(e.currentTarget.value)}
+        onChange={(e) => {
+          const g = e.currentTarget.value;
+          if (g && g >= p.giorni[0] && g <= p.giorni[1]) p.onChange(g);
+        }}
       />
     </label>
   );
@@ -358,12 +384,41 @@ function Voci(p: { voci: string[]; fasi?: boolean; onChange: (v: string[]) => vo
 
 export function Create() {
   const navigate = useNavigate();
-  const primaSchermata = useLocation().key === 'default';
+  const location = useLocation();
+  const primaSchermata = location.key === 'default';
   const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
   const dialogo = useRef<HTMLDialogElement>(null);
-  const [f, setF] = useState(initial);
-  // Il todo parte dal giorno in cui si apre il form (S4 Crea, D-DESIGN-1 n. 20)
+  // Il giorno di partenza (MECC §2, G5): il giorno selezionato in Oggi sotto il foglio, se cade fra oggi e oggi + 6
   const [oggi] = useState(() => localDayKey(Date.now()));
+  const giorni = creationDays(oggi);
+  const [f, setF] = useState(() => {
+    const sfondo = (location.state as { sfondo?: Location } | null)?.sfondo;
+    const selezionato = sfondo?.pathname === '/' ? new URLSearchParams(sfondo.search).get('giorno') : null;
+    return initial(startDay(selezionato, oggi));
+  });
+  // Su mobile il foglio si chiude senza salvare trascinandolo in basso dal bordo alto, oltre 110 px (S4); col mouse no
+  const [giu, setGiu] = useState(0);
+  const presa = useRef<number | null>(null);
+  const tira = {
+    onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse') return;
+      presa.current = e.clientY;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
+      if (presa.current !== null) setGiu(Math.max(0, e.clientY - presa.current));
+    },
+    onPointerUp: () => {
+      if (presa.current === null) return;
+      presa.current = null;
+      if (giu > SOGLIA_CHIUSURA) chiudi();
+      else setGiu(0);
+    },
+    onPointerCancel: () => {
+      presa.current = null;
+      setGiu(0);
+    },
+  };
   const [corsi, setCorsi] = useState<SchedaCorso[]>([]);
   const [errore, setErrore] = useState(false);
   const [inCorso, setInCorso] = useState(false);
@@ -375,7 +430,7 @@ export function Create() {
   }, []);
   useEffect(() => watch(() => courseCards(appDb), setCorsi), []);
 
-  const bozza = toDraft(f, oggi);
+  const bozza = toDraft(f);
   const pronta = validateActivity(bozza).ok;
   const { tipo } = f;
   const ricorrente = tipo === 'routine' || tipo === 'studio';
@@ -402,8 +457,18 @@ export function Create() {
     setInCorso(true);
     try {
       // ponytail: Date.now() e il fuso letti qui come in Courses; passano dalla porta Clock quando nasce
-      const r = await createActivity(appDb, bozza, Date.now(), Intl.DateTimeFormat().resolvedOptions().timeZone);
-      if (r.ok) return chiudi();
+      const r = await createActivity(appDb, bozza, Date.now(), fuso());
+      if (r.ok) {
+        // Oggi mostra «… creato» con «Annulla», che toglie l'attività appena creata (G5)
+        const { id } = r;
+        lascia({
+          id,
+          testo: creato(bozza),
+          annulla: () =>
+            ricorrente ? deleteRecurrence(appDb, id, Date.now()) : deleteBlock(appDb, id, Date.now(), fuso()),
+        });
+        return chiudi();
+      }
     } catch {
       setErrore(true);
     }
@@ -411,18 +476,25 @@ export function Create() {
   };
 
   return (
-    <dialog ref={dialogo} className={s.pannello} data-tipo={tipo} aria-labelledby="crea-titolo" onClose={chiudi}>
+    <dialog
+      ref={dialogo}
+      className={s.pannello}
+      data-tipo={tipo}
+      aria-labelledby="crea-titolo"
+      onClose={chiudi}
+      style={giu ? { transform: `translateY(${giu}px)` } : undefined}
+    >
       <div className={s.alone} aria-hidden />
-      <div className={s.maniglia} aria-hidden />
-      <header className={s.testa}>
-        <h1 id="crea-titolo" className={s.titoloPannello}>
-          <span className={s.puntoTipo} />
-          {t('nuovaAttivita')}
-        </h1>
-        <button type="button" className={s.chiudi} aria-label={t('chiudi')} onClick={chiudi}>
-          <X size={18} />
-        </button>
-      </header>
+      {/* Nessuna ×: si chiude con «Annulla», con Esc o trascinando in basso il bordo alto (S4) */}
+      <div className={s.presa} {...tira}>
+        <div className={s.maniglia} aria-hidden />
+        <header className={s.testa}>
+          <h1 id="crea-titolo" className={s.titoloPannello}>
+            <span className={s.puntoTipo} />
+            {t('nuovaAttivita')}
+          </h1>
+        </header>
+      </div>
 
       <div className={s.corpo}>
         <div className={s.tipi} role="group" aria-label={t('tipo')}>
@@ -504,7 +576,7 @@ export function Create() {
             <div className={s.gruppo}>
               <Etichetta Icona={CalendarDays}>{t('dalFinoA')}</Etichetta>
               <div className={s.dueColonne}>
-                <CampoData giorno={f.dataInizio} onChange={(dataInizio) => set({ dataInizio })} />
+                <CampoData giorno={f.dataInizio} giorni={giorni} onChange={(dataInizio) => set({ dataInizio })} />
                 <button
                   type="button"
                   className={s.campo}
@@ -556,7 +628,7 @@ export function Create() {
               <Etichetta Icona={CalendarDays}>{t('orizzonte')}</Etichetta>
               <span className={`${s.meta} ${s.num}`}>
                 {t(f.orizzonte === 'giorno' ? 'soloIl' : 'rotolaFino', {
-                  data: fmtData.format(horizonLastDay(localInstant(oggi, '00:00'), f.orizzonte)),
+                  data: fmtData.format(horizonLastDay(localInstant(f.giorno, '00:00'), f.orizzonte)),
                 })}
               </span>
             </div>
@@ -574,7 +646,7 @@ export function Create() {
         {tipo === 'evento' && (
           <div className={s.gruppo}>
             <Etichetta Icona={CalendarDays}>{t('data')}</Etichetta>
-            <CampoData giorno={f.giorno} grande onChange={(giorno) => set({ giorno })} />
+            <CampoData giorno={f.giorno} grande giorni={giorni} onChange={(giorno) => set({ giorno })} />
           </div>
         )}
 

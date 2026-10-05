@@ -80,23 +80,10 @@
   transition: background var(--dur-feedback) var(--ease-out);
 }
 
-/* IconButton da 40 (S4 Panel) */
-.chiudi {
-  width: var(--size-chip-type);
-  height: var(--size-chip-type);
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-text-2);
-  cursor: pointer;
-}
-
-.chiudi:hover {
-  background: var(--color-surface-2);
-  color: var(--color-text);
+/* Bordo alto del foglio: maniglia e testata, da cui su mobile si trascina in basso per chiudere (S4) */
+.presa {
+  flex: none;
+  touch-action: none;
 }
 
 .corpo {

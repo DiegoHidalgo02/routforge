@@ -8,7 +8,8 @@
 //   --scenario: l'app gira nello scenario dei mock (mercoledì 23 settembre 2026, 16:08, Date iniettato nella pagina) con
 //   il corso di esempio salvato e la giornata di S1; --sessione aggiunge una sessione libera avviata 12 minuti prima
 //   (banner e carta). --ora HH:MM sposta l'orologio (15:48 «Tra poco», 16:50 «Da recuperare»); --adesso studio | todo |
-//   routine | evento sceglie l'attività delle 16:00 (prop `nowKind` di S1).
+//   routine | evento sceglie l'attività delle 16:00 (prop `nowKind` di S1). --clic "<selettore>" tocca un elemento
+//   dell'app prima della foto (es. 'a[href="/crea"]' per il foglio Crea).
 // Windows: EDGE può indicare un altro eseguibile di Edge/Chrome.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -30,6 +31,7 @@ const arg = (nome, predefinito = '') => {
 const tavola = arg('--tavola');
 const stato = arg('--stato').toLowerCase();
 const rotta = arg('--app');
+const clic = arg('--clic');
 const out = resolve(RADICE, arg('--out', 'coverage/confronto'));
 const sessione = process.argv.includes('--sessione');
 const [ore, minuti] = arg('--ora', '16:08').split(':').map(Number);
@@ -266,14 +268,25 @@ try {
     await cdp('Page.navigate', { url: `http://localhost:${PORTA_APP}${rotta}` });
     // La pagina è pronta quando il suo testo resta uguale per un secondo (dati letti, animazioni d'entrata finite), al
     // più 30 s: su una macchina carica Vite e IndexedDB rispondono tardi
-    let prima = '';
-    for (let i = 0; i < 60; i++) {
-      await sleep(500);
-      const ora = String(await js('document.body.innerText'));
-      if (i >= 6 && ora === prima && ora.length > 0) break;
-      prima = ora;
+    const ferma = async () => {
+      let prima = '';
+      for (let i = 0; i < 60; i++) {
+        await sleep(500);
+        const ora = String(await js('document.body.innerText'));
+        if (i >= 6 && ora === prima && ora.length > 0) break;
+        prima = ora;
+      }
+      await sleep(1500);
+    };
+    await ferma();
+    // --clic: un tocco su un elemento dell'app (es. «+» per il foglio Crea), poi di nuovo l'attesa
+    if (clic) {
+      const trovato = await js(
+        `(() => { const el = document.querySelector(${JSON.stringify(clic)}); el?.click(); return !!el; })()`,
+      );
+      if (!trovato) throw new Error(`--clic: nessun elemento per ${clic}`);
+      await ferma();
     }
-    await sleep(1500);
     const fotoApp = await foto(`${nome}-app.png`);
     console.log(`app:    ${fotoApp}  (${rotta})`);
   }

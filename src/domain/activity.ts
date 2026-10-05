@@ -16,6 +16,24 @@ import type { Blocco, Orizzonte, Priorita, Promemoria, Ricorrenza } from './type
 /** Ancora dei todo senza orario: 12:00–23:59 del loro giorno (§1), anche quando rotolano (§6). */
 export const ANCORA_TODO = '12:00';
 
+/** Da Crea si creano attività solo nei prossimi 7 giorni, oggi compreso (§2, SCENARI G5). */
+export const GIORNI_CREAZIONE = 7;
+
+/** I giorni in cui Crea può far partire un'attività (§2, G5): da oggi a oggi + 6. */
+export const creationDays = (oggi: string): readonly [string, string] => [
+  oggi,
+  shiftPeriod(oggi, 'giorno', GIORNI_CREAZIONE - 1),
+];
+
+/**
+ * Il giorno di partenza del foglio Crea (§2, G5): il giorno selezionato in Oggi se cade fra oggi e oggi + 6, altrimenti
+ * oggi. Vale per l'orizzonte del todo, la data dell'evento e l'inizio della ricorrenza.
+ */
+export function startDay(selezionato: string | null, oggi: string): string {
+  const [primo, ultimo] = creationDays(oggi);
+  return selezionato && isDayKey(selezionato) && selezionato >= primo && selezionato <= ultimo ? selezionato : oggi;
+}
+
 /** Gradini della durata di un todo con orario, in minuti (§2). */
 export const GRADINI_DURATA = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 210, 240] as const;
 /** Durata predefinita del form «+ Crea» per un todo con orario, in minuti: anche quella del todo senza orario che si trascina su un orario (§15). */

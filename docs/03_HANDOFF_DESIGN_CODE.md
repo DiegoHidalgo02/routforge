@@ -265,6 +265,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     `rf-land` e `rf-collapse` alla spunta (la card passa al mazzo al ridisegno) e con i segmenti senza scaglionamento;
     le card dell'archivio aperto restano a `--opacity-archive` (il .32 del mock non regge il contrasto); Invio e Spazio
     sul mazzo in attesa del n. 13.
+60. Crea (T-050): il foglio non si rimpicciolisce fino alla card né la fa posare nel calendario (Giorno, Settimana,
+    Mese): l'attività compare al suo posto al ridisegno e Oggi mostra «… creato» con «Annulla»; la chiusura trascinando
+    in basso vale solo al tocco (col mouse «Annulla» ed Esc). La data dell'evento e l'inizio della ricorrenza si
+    scelgono solo fra oggi e oggi + 6.
 
 ## 4. Mappa schermata → design → task
 

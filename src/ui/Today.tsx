@@ -64,6 +64,7 @@ import { useMinuto, useOggi } from './clock';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
+import { ascolta } from './avvisi';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
@@ -224,6 +225,24 @@ export function Today() {
       },
     });
   };
+  // Gli avvisi lasciati da Crea (G5): «Todo creato · …» con «Annulla», che toglie l'attività creata
+  useEffect(
+    () =>
+      ascolta((a) => {
+        clearTimeout(timerToast.current);
+        timerToast.current = setTimeout(() => setAvviso(undefined), ANNULLA_MS);
+        setAvviso({
+          id: a.id,
+          testo: a.testo,
+          annulla: () => {
+            clearTimeout(timerToast.current);
+            setAvviso(undefined);
+            void a.annulla().catch(() => undefined);
+          },
+        });
+      }),
+    [],
+  );
   // Spunta dalla lista completata subito (§3, A7): «Fatto · …», «Fatta · …», «Evento completato · …»; «Annulla» riapre
   const completato = (b: BloccoCalendario) =>
     avvisa(b.id, t(FATTO[b.tipo], { titolo: titolo(b) }), () => reopenBlock(appDb, b.id, Date.now(), fuso()));

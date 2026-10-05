@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   GRADINI_DURATA,
+  creationDays,
   endsNextDay,
   recurrenceLastDay,
+  startDay,
   validateActivity,
   wallDuration,
   type BozzaAttivita,
@@ -302,5 +304,19 @@ describe('Casi limite — MECCANISMI §2, §7', () => {
     expect(endsNextDay('09:00', '09:00')).toBe(true);
     expect(endsNextDay('09:00', '10:00')).toBe(false);
     expect(endsNextDay('9', '10:00')).toBe(false);
+  });
+});
+
+describe('Crea dal giorno selezionato — SCENARI G5', () => {
+  // Oggi è mercoledì 23 settembre 2026: da Crea si parte fra il 23 e il 29
+  it('il foglio parte dal giorno selezionato in Oggi se cade fra oggi e oggi + 6 (venerdì 25, lunedì 28)', () => {
+    expect(creationDays('2026-09-23')).toEqual(['2026-09-23', '2026-09-29']);
+    expect(startDay('2026-09-25', '2026-09-23')).toBe('2026-09-25');
+    expect(startDay('2026-09-28', '2026-09-23')).toBe('2026-09-28');
+    expect(startDay('2026-09-29', '2026-09-23')).toBe('2026-09-29');
+  });
+  it('con un giorno già passato, oltre il 29, nessuno o non valido, parte da oggi', () => {
+    for (const g of ['2026-09-22', '2026-09-30', null, '2026-02-30'])
+      expect(startDay(g, '2026-09-23')).toBe('2026-09-23');
   });
 });
