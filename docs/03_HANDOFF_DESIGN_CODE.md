@@ -257,6 +257,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     lo slot, sul desktop sopra la riga originale, che resta com'è); sul desktop la maniglia è solo il segno della presa,
     fuori dall'ordine del fuoco, e la regione live c'è anche lì (MECC §15, il mock desktop non la ha); «Fine» della
     barra è una chiave sua (`fineRiordino`: «Fine» di Crea è l'ora di fine).
+58. Progresso e prossime attività (T-040, D-PROG-1): i colori dei grafici si calcolano anche su desktop (il mock li ha
+    fissi), la curva della settimana viene dai dati, le barre del Focus aspettano il n. 11; «Prossime attività» guarda i
+    28 giorni seguenti. Le classi delle frecce del riordino si chiamano `frecceRiordino`: con `frecce` coprivano le
+    frecce del periodo della testata (difetto di T-044, corretto).
 
 ## 4. Mappa schermata → design → task
 

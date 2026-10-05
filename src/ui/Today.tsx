@@ -12,7 +12,8 @@
 // In testa alla giornata il messaggio del ritorno dopo un'assenza (T-014, D-ASSENZA-1). Nella vista Giorno i todo senza
 // orario si riordinano nel loro gruppo di priorità (MECC §15, T-044): maniglia a sei punti, frecce su desktop, barra
 // «Riordina» su mobile; nessun orario, giorno o «Annulla». Arrivano con il loro task l'archivio impilato delle
-// completate, «Il tuo progresso oggi» e «Prossime attività» dei mock (T-040).
+// completate e la Giornata chiusa (T-040). Sotto la giornata su mobile, nella colonna di 360 su desktop, «Il tuo
+// progresso oggi» e «Prossime attività» (T-040, `Progress.tsx`).
 import {
   CalendarCheck,
   CalendarDays,
@@ -40,6 +41,7 @@ import { calendarDays, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar, reopenBlock } from '../app/completion';
 import { appDb, watch } from '../app/db';
 import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
+import { progressInputs, type IngressiProgresso } from '../app/progress';
 import { reorderTodo } from '../app/reorder';
 import { dayLoad, isDayKey, monthGrid, monthLegend, swipeDay, weekOf, type Vista } from '../domain/calendar';
 import { checkCircle, type PassoSpunta } from '../domain/completion';
@@ -53,6 +55,7 @@ import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
+import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { SessionBannerSlot } from './Session';
 import s from './Today.module.css';
 
@@ -142,6 +145,12 @@ export function Today() {
     [chiave],
   );
   const blocchi = (g: string) => (periodo?.chiave === chiave ? periodo.giorni.get(g) : undefined) ?? [];
+  // «Il tuo progresso oggi» e «Prossime attività» (FUNZ §2): solo nella vista Giorno, sempre su oggi
+  const [progresso, setProgresso] = useState<IngressiProgresso>();
+  useEffect(
+    () => (vista === 'giorno' ? watch(() => progressInputs(appDb, oggi), setProgresso) : undefined),
+    [vista, oggi],
+  );
   const pronto = periodo?.chiave === chiave;
 
   // Il saluto compare una volta per avvio dell'app, in testa alla vista Giorno (FUNZ §2)
@@ -337,6 +346,16 @@ export function Today() {
                 onCompletato={completato}
                 onRiordino={() => avviso && chiudiToast(avviso.id)}
               />
+            )}
+            {progresso && (
+              <div className={s.lato}>
+                <ProgressoOggi ingressi={progresso} oggi={oggi} />
+                <ProssimeAttivita
+                  prossimi={progresso.prossimi}
+                  oggi={oggi}
+                  onVediTutte={() => vai({ vista: 'settimana' })}
+                />
+              </div>
             )}
           </>
         )}
@@ -844,10 +863,10 @@ function Giornata({
                 </div>
               )}
               {riordinabile && !slot && (
-                <span className={`${s.frecce} ${s.soloDesktop}`}>
+                <span className={`${s.frecceRiordino} ${s.soloDesktop}`}>
                   <button
                     type="button"
-                    className={s.freccia}
+                    className={s.frecciaRiordino}
                     data-freccia="su"
                     aria-label={t('spostaSu')}
                     title={t('spostaSu')}
@@ -858,7 +877,7 @@ function Giornata({
                   </button>
                   <button
                     type="button"
-                    className={s.freccia}
+                    className={s.frecciaRiordino}
                     data-freccia="giu"
                     aria-label={t('spostaGiu')}
                     title={t('spostaGiu')}

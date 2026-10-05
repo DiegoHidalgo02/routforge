@@ -35,7 +35,7 @@ const sessione = process.argv.includes('--sessione');
 const [ore, minuti] = arg('--ora', '16:08').split(':').map(Number);
 const adesso = arg('--adesso', 'studio');
 const scenario = sessione || process.argv.includes('--scenario') || process.argv.includes('--ora');
-// La giornata di S1 (scenario dei mock): [ore, minuti] di inizio e fine; `unita` = lo studio sul puntatore 0.7
+// La giornata di S1 (scenario dei mock): [ore, minuti, giorno di settembre se non il 23] di inizio e fine; `unita` = lo studio sul puntatore 0.7
 const voci = (fatte, totali) =>
   Array.from({ length: totali }, (_, i) => ({ testo: `Voce ${i + 1}`, fatta: i < fatte }));
 const ADESSO = {
@@ -59,6 +59,10 @@ const GIORNATA = [
   { tipo: 'todo', titolo: 'Prepara la valigia', da: [12, 0], conOrario: false, priorita: 'alta' },
   { tipo: 'todo', titolo: 'Prenota il treno', da: [12, 0], conOrario: false, priorita: 'alta' },
   { tipo: 'todo', titolo: 'Chiama Marco', da: [12, 0], conOrario: false, priorita: 'normale' },
+  // «Prossime attività» del mock: giovedì 24 e venerdì 25
+  { tipo: 'studio', titolo: 'Lezione di Algoritmi', da: [9, 0, 24], a: [10, 30, 24] },
+  { tipo: 'evento', titolo: 'Dentista', da: [15, 0, 24], a: [16, 0, 24] },
+  { tipo: 'studio', titolo: 'Ripasso Modulo 0', da: [16, 0, 25], a: [16, 45, 25] },
 ];
 if (!tavola || !stato) {
   console.error(
@@ -243,7 +247,7 @@ try {
           await importSampleCourse(appDb, Date.now());
           const corso = (await appDb.corsi.toArray())[0];
           const unita = (await appDb.unita.toArray()).find((u) => u.numero === '0.7');
-          const alle = ([h, m]) => new Date(2026, 8, 23, h, m).getTime();
+          const alle = ([h, m, g = 23]) => new Date(2026, 8, g, h, m).getTime();
           for (const { da, a, unita: n, ...b } of ${JSON.stringify(GIORNATA)}) {
             const studio = n ? { corsoId: corso.id, unitaId: unita.id } : {};
             const dati = { stato: 'programmato', conOrario: true, ...b, ...studio, inizio: alle(da), fine: a ? alle(a) : null };
@@ -260,7 +264,16 @@ try {
       if (esito !== 'ok') throw new Error(`semina dello scenario: ${esito}`);
     }
     await cdp('Page.navigate', { url: `http://localhost:${PORTA_APP}${rotta}` });
-    await sleep(3500);
+    // La pagina è pronta quando il suo testo resta uguale per un secondo (dati letti, animazioni d'entrata finite), al
+    // più 30 s: su una macchina carica Vite e IndexedDB rispondono tardi
+    let prima = '';
+    for (let i = 0; i < 60; i++) {
+      await sleep(500);
+      const ora = String(await js('document.body.innerText'));
+      if (i >= 6 && ora === prima && ora.length > 0) break;
+      prima = ora;
+    }
+    await sleep(1500);
     const fotoApp = await foto(`${nome}-app.png`);
     console.log(`app:    ${fotoApp}  (${rotta})`);
   }

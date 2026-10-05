@@ -1,0 +1,348 @@
+/* «Il tuo progresso oggi» e «Prossime attività» (S1): carte surface r14 con hairline e --shadow-card; colori dei grafici
+   dal tipo che pesa di più (`data-tipo`, styles/global.css), primary senza dati. Restano letterali le misure dei mock
+   fuori dalla scala dei token: interlinee, margini 26 · 3 · 2, padding 10 della terna mobile, binario 6, area 18,
+   card desktop 116 e 72, colonna oraria 44, gap 10 e 6. */
+.progresso,
+.prossime {
+  --grafico: var(--color-primary);
+  --grafico-soft: var(--color-surface-3);
+}
+
+[data-tipo] {
+  --grafico: var(--fill);
+  --grafico-soft: var(--soft);
+}
+
+.titoloSezione {
+  margin: 0;
+  color: var(--color-text-dim);
+  font: 600 var(--text-base) / 18px var(--font-ui);
+}
+
+.progresso {
+  margin-top: 26px;
+}
+
+.terna {
+  margin-top: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-card-gap);
+}
+
+.card {
+  min-width: 0;
+  height: var(--size-card-today);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.etichetta,
+.sub {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) / 14px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  font-family: var(--font-num);
+}
+
+.sub[data-delta='su'] {
+  color: var(--color-success);
+}
+
+.valore {
+  margin-top: 2px;
+  font: 600 var(--text-xl) / 22px var(--font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unita {
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-ui);
+}
+
+.valoreSettimana {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Barra di Completate: binario surface-3 di 6, riempimento nel colore del grafico con l'alone dei dati */
+.binario {
+  height: 6px;
+  margin-top: auto;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+}
+
+.riempimento {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--grafico);
+  color: var(--grafico);
+  box-shadow: var(--glow-data);
+  transition: width var(--dur-bump) var(--ease-standard);
+}
+
+.andamento {
+  width: 100%;
+  height: 18px;
+  margin-top: auto;
+  overflow: visible;
+}
+
+.area {
+  fill: var(--grafico-soft);
+}
+
+.linea {
+  fill: none;
+  stroke: var(--grafico);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.disco {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin: -2px -4px 0 0;
+  border-radius: var(--radius-pill);
+  background: var(--soft, var(--color-surface-3));
+  color: var(--ink, var(--color-text-2));
+}
+
+/* Prossime attività */
+.prossime {
+  margin-top: var(--space-5);
+}
+
+.testaProssime {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.vediTutte {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.cartaProssime {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px var(--space-3) 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.vuoto {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  color: var(--color-text-2);
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.gruppo {
+  display: flex;
+  flex-direction: column;
+}
+
+.giorno {
+  padding-bottom: 6px;
+  font: 600 var(--text-sm) / 16px var(--font-ui);
+}
+
+.data {
+  color: var(--color-text-2);
+  font: var(--text-xs) var(--font-ui);
+  white-space: nowrap;
+}
+
+.riga {
+  min-height: var(--size-row);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.ora {
+  width: var(--size-touch);
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.titoloRiga {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 500 var(--text-base) var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--soft);
+  color: var(--ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+/* Su mobile gli elementi solo desktop spariscono, e viceversa; altrimenti tengono il display della loro classe */
+@media (width < 1024px) {
+  .soloDesktop {
+    display: none !important;
+  }
+}
+
+/* Desktop da 1024 px (D-UI-1): colonna di 360; Completate e Focus affiancate alte 116, «Attività completate» su tutta
+   la riga alta 72 con la curva accanto al numero */
+@media (min-width: 1024px) {
+  .soloMobile {
+    display: none !important;
+  }
+
+  .progresso {
+    margin-top: 0;
+  }
+
+  .titoloSezione {
+    display: flex;
+    align-items: center;
+    min-height: var(--size-chip);
+    color: var(--color-text);
+    font: 600 var(--text-lg) / 20px var(--font-ui);
+  }
+
+  .terna {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    height: 116px;
+    padding: var(--space-3);
+  }
+
+  .etichetta {
+    font: 500 var(--text-base) / 16px var(--font-ui);
+  }
+
+  .valore {
+    margin-top: 3px;
+    font-size: var(--text-xl-2);
+    line-height: 24px;
+  }
+
+  .unita {
+    font-size: var(--text-base);
+  }
+
+  .sub {
+    margin-top: var(--space-1);
+    font: 500 var(--text-sm) / 14px var(--font-num);
+  }
+
+  .binario {
+    margin-top: 10px;
+  }
+
+  .settimana {
+    grid-column: 1 / -1;
+    height: 72px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-4);
+  }
+
+  .settimana .etichetta {
+    grid-column: 1;
+  }
+
+  .settimana .valoreSettimana {
+    grid-column: 1;
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .settimana .sub {
+    font: var(--text-sm) var(--font-ui);
+  }
+
+  .settimana .andamento {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    height: 40px;
+    align-self: center;
+  }
+
+  .prossime {
+    margin-top: var(--space-2);
+  }
+
+  .vediTutte {
+    font: var(--text-base) var(--font-ui);
+  }
+
+  .cartaProssime {
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3) var(--space-1);
+  }
+
+  .giorno {
+    font-size: var(--text-base);
+  }
+
+  .data {
+    font-size: var(--text-sm);
+  }
+}

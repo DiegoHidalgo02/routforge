@@ -18,6 +18,9 @@ import { t } from './i18n';
 import { Today } from './Today';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// Un flusso della UI qui scrive in IndexedDB e aspetta il ridisegno di giornata, progresso e card Adesso: su una macchina
+// carica supera i 5 s di Vitest anche quando è corretto
+vi.setConfig({ testTimeout: 20_000 });
 /**
  * Lunedì 28 settembre 2026 alle 08:58: oggi nei test. L'orologio finto di Vitest qui scorre con il tempo reale: da
  * adesso il primo aggancio è comunque alle 09:00, il multiplo di 5' successivo (§15).
@@ -156,11 +159,14 @@ describe('Riordino — SCENARI G3 (UI di Oggi)', () => {
     expect(tasto(riga('Prepara la valigia'), 'su')?.disabled).toBe(true);
 
     tasto(riga('Prenota il treno'), 'su')!.click();
-    await vi.waitFor(() =>
-      expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
+    await vi.waitFor(
+      () => expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
+      { timeout: 5000 },
     );
     // «Sposta su» ora è spenta: il fuoco passa all'altra freccia; la regione live dice la posizione nel gruppo
-    await vi.waitFor(() => expect(document.activeElement).toBe(tasto(riga('Prenota il treno'), 'giu')));
+    await vi.waitFor(() => expect(document.activeElement).toBe(tasto(riga('Prenota il treno'), 'giu')), {
+      timeout: 5000,
+    });
     expect(annuncio()).toBe(
       t('annuncioRiordino', { titolo: 'Prenota il treno', n: 1, totale: 2, livello: t('livelloAlta') }),
     );
@@ -177,21 +183,22 @@ describe('Riordino — SCENARI G3 (UI di Oggi)', () => {
     const maniglia = riga('Prenota il treno')!.querySelector<HTMLButtonElement>('button[data-maniglia]')!;
     maniglia.click();
     const barra = () => box.querySelector(`[role="toolbar"][aria-label="${t('riordina')}"]`);
-    await vi.waitFor(() => expect(barra()?.textContent).toContain('Prenota il treno'));
+    await vi.waitFor(() => expect(barra()?.textContent).toContain('Prenota il treno'), { timeout: 5000 });
     expect(maniglia.getAttribute('aria-pressed')).toBe('true');
     expect(tasto(barra(), 'giu')?.disabled).toBe(true);
 
     tasto(barra(), 'su')!.click();
-    await vi.waitFor(() =>
-      expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
+    await vi.waitFor(
+      () => expect(fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Compleanno', 'Chiama Marco']),
+      { timeout: 5000 },
     );
-    await vi.waitFor(() => expect(tasto(barra(), 'su')?.disabled).toBe(true));
+    await vi.waitFor(() => expect(tasto(barra(), 'su')?.disabled).toBe(true), { timeout: 5000 });
     expect(tasto(barra(), 'giu')?.disabled).toBe(false);
     expect(barra()?.textContent).toContain('1');
     expect(annuncio()).toContain('Prenota il treno');
 
     [...barra()!.querySelectorAll('button')].find((x) => x.textContent === t('fineRiordino'))!.click();
-    await vi.waitFor(() => expect(barra()).toBeNull());
+    await vi.waitFor(() => expect(barra()).toBeNull(), { timeout: 5000 });
     expect(annuncio()).toBe('');
   });
 });
@@ -236,19 +243,28 @@ describe('Spunta dalla lista — SCENARI A7, C10 (UI di Oggi)', () => {
   const cerchio = (titolo: string) =>
     box.querySelector<HTMLButtonElement>(`button[aria-label="${t('segnaFattoTitolo', { titolo })}"]`);
   const stato = async (id: string) => (await readDetail(appDb, id))!.blocco.stato;
+  /** «Completate» di «Il tuo progresso oggi»: «fatte / totali». */
+  const completate = () =>
+    [...(box.querySelector('[aria-labelledby="progresso-titolo"]')?.querySelectorAll('span') ?? [])]
+      .map((x) => x.textContent)
+      .find((x) => /^\d+ \/ \d+$/.test(x ?? ''));
 
   it('«Chiama Marco» senza voci: il cerchio lo completa senza aprire il dettaglio; «Annulla» del toast lo riapre', async () => {
     const id = await crea(todo('Chiama Marco', null));
     mostra();
     await vi.waitFor(() => expect(cerchio('Chiama Marco')).not.toBeNull(), { timeout: 5000 });
+    await vi.waitFor(() => expect(completate()).toBe('0 / 1'), { timeout: 5000 });
     cerchio('Chiama Marco')!.click();
     await vi.waitFor(() => expect(toast()?.textContent).toContain(t('toastFatto', { titolo: 'Chiama Marco' })), {
       timeout: 5000,
     });
     expect(await stato(id)).toBe('completato');
+    // «Il tuo progresso oggi» si aggiorna con la spunta e con «Annulla» (DATI-UI)
+    await vi.waitFor(() => expect(completate()).toBe('1 / 1'), { timeout: 5000 });
 
     toast()!.querySelector('button')!.click();
     await vi.waitFor(async () => expect(await stato(id)).toBe('programmato'), { timeout: 5000 });
+    await vi.waitFor(() => expect(completate()).toBe('0 / 1'), { timeout: 5000 });
   });
 
   it('un’occorrenza di studio di domani ha il cerchio spento: il tocco non scrive nulla (C10)', async () => {

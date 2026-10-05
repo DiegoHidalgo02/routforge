@@ -18,6 +18,7 @@ export * from './scheduler/horizon';
 export * from './scheduler/cycle';
 export * from './scheduler/absence';
 export * from './completion';
+export * from './progress';
 export * from './checklist';
 export * from './phases';
 export * from './session';

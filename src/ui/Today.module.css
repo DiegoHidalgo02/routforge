@@ -343,6 +343,13 @@
   background: linear-gradient(90deg, transparent, var(--color-border) 20%, var(--color-border) 80%, transparent);
 }
 
+/* Colonna laterale della vista Giorno (T-040): su mobile sotto la giornata, su desktop la colonna di 360 di S1 Desktop
+   dall'altezza della testata, con «Il tuo progresso oggi» e «Prossime attività» */
+.lato {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Ritorno dopo un'assenza (S1 Mobile `absence`, DESIGN.md AbsenceBanner): 48 surface-2 r12 con hairline, icona 16
    text-2, testo 13/18 con i giorni in font-num, chiudi ghost 32 con area di tocco 44 (DESIGN.md §4); nessuna
    animazione d'entrata, come nel mock. Gap 10 → 8, rientro destro 6 → 4 e respiro del testo a capo 6 → 4 (a parità
@@ -769,7 +776,7 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
 
 /* Frecce «Sposta su» e «Sposta giù» (S1 Desktop): 28 × 26 r8 impilate a destra della card, visibili con il puntatore
    sopra la riga o con il fuoco dentro; spente sul primo e sull'ultimo del gruppo */
-.frecce {
+.frecceRiordino {
   grid-column: 3;
   align-self: center;
   justify-self: end;
@@ -780,12 +787,12 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   transition: opacity var(--dur-feedback) var(--ease-out);
 }
 
-.riga:hover .frecce,
-.riga:focus-within .frecce {
+.riga:hover .frecceRiordino,
+.riga:focus-within .frecceRiordino {
   opacity: 1;
 }
 
-.freccia {
+.frecciaRiordino {
   width: var(--size-chip-sm);
   height: 26px;
   display: grid;
@@ -798,11 +805,11 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   cursor: pointer;
 }
 
-.freccia:hover:not(:disabled) {
+.frecciaRiordino:hover:not(:disabled) {
   background: var(--color-surface-2);
 }
 
-.freccia:disabled {
+.frecciaRiordino:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
@@ -1501,5 +1508,12 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   .oggi:has(> .corpo[data-vista='giorno']) > .testa,
   .corpo[data-vista='giorno'] > * {
     grid-column: 1;
+  }
+
+  /* Le righe della colonna di sinistra: testata, striscia, data del giorno, ritorno dopo un'assenza, giornata */
+  .corpo[data-vista='giorno'] > .lato {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    gap: var(--space-2);
   }
 }

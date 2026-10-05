@@ -2,18 +2,18 @@
 
 *Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart). Contesto tecnico, non un diario: il dettaglio dei task fatti sta nelle loro righe di `docs/TASKS.md`, nelle decisioni e nei commit.*
 
-**Data**: 2026-10-05 · **Passo corrente** (CONTESTO §6): 5 — Notifiche: modello, digest, posticipi e one-shot fatti (T-019, T-020, T-045), adapter nativi in T-021 · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` (typecheck su due tsconfig, lint, formato, 695 test in 54 file); 06/10: macchina satura, test verdi con `--maxWorkers=2` e i file lenti da soli
+**Data**: 2026-10-05 · **Passo corrente** (CONTESTO §6): 5 — Notifiche: modello, digest, posticipi e one-shot fatti (T-019, T-020, T-045), adapter nativi in T-021 · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` (typecheck su due tsconfig, lint, formato, 696 test in 55 file); 06/10: macchina satura, test verdi con `--maxWorkers=2`
 
 ## Fatto
-- **S1, 05/10/2026**: T-048 card Adesso nella lista (`heroBlock`, `HeroCard`; scatto di 900 ms su mobile, nessuna chiusura); T-049 cerchio per tutti i tipi (`checkCircle`; evento e studio dal cerchio, toast «Fatto · …» con «Annulla»); T-044 riordino dei todo senza orario nel gruppo (`ordine`, D-RIORD-1; frecce, barra «Riordina», card sollevata); `npm run confronto -- --ora HH:MM --adesso <tipo>` con la giornata di S1.
+- **S1, 05/10/2026**: T-048 card Adesso nella lista (`heroBlock`, `HeroCard`; scatto di 900 ms su mobile, nessuna chiusura); T-049 cerchio per tutti i tipi (`checkCircle`; evento e studio dal cerchio, toast «Fatto · …» con «Annulla»); T-044 riordino dei todo senza orario nel gruppo (`ordine`, D-RIORD-1; frecce, barra «Riordina», card sollevata); T-040 «Il tuo progresso oggi» e «Prossime attività» (D-PROG-1); `npm run confronto -- --ora HH:MM --adesso <tipo>` con la giornata di S1.
 - **T-052 (05/10/2026)** primo incremento del nuovo design: token del pacchetto importati senza copia, segnaposto per tipo, banner della sessione sotto l'intestazione, carta della sidebar con «Riprendi», «Oggi» della barra; `npm run confronto -- --scenario | --sessione`.
-- **Preparazione al nuovo design (05/10/2026, D-DESIGN-4)**: verifica del design e mappa schermata → task (`docs/03_HANDOFF_DESIGN_CODE.md` §3–§4); `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`; regole in `.claude/rules/ui.md` e `CLAUDE.md` §9; con conferma `claude-design/`, `CLAUDE.md`, `npm install`, `git push`.
+- **Preparazione al nuovo design (05/10/2026, D-DESIGN-4)**: verifica del design e mappa schermata → task (`docs/03_HANDOFF_DESIGN_CODE.md` §3–§4); `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`; regole in `.claude/rules/ui.md` e `CLAUDE.md` §9.
 - **Nuovo design (05/10/2026, D-DESIGN-3)**: 59 file importati via MCP in `claude-design/` (byte verificati); `docs/spec/` = `spec/` del pacchetto (60 scenari: A6, A7, C10, F7, G5 nuovi; G2 e G3 riscritti); T-048–T-051, T-039 annullato; codice ↔ design in `docs/03_HANDOFF_DESIGN_CODE.md` §2.
 - **Pulizia del 04/10/2026** (D-DESIGN-2): vecchio export, `design:check`, guida operativa, audit della foundation e piani di T-013 e T-019 nella storia git (`3c60512`); `.claude/council-cache/` ignorata da git, CP2 da rifare sul nuovo design.
 - **Fino al 02/10/2026**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
 
 ## In corso
-- Nessun task in corso.
+- T-040: restano l'archivio delle completate e la Giornata chiusa (mobile; handoff §3 n. 12, n. 13).
 
 ## Problemi aperti
 **Da decidere con l'utente, non bloccanti**
@@ -46,7 +46,7 @@
 - Nuovo design importato il 05/10/2026 (D-DESIGN-3): le differenze fra le spec del 30/09 e quelle del pacchetto sono assorbite dalla spec (richiesta dell'utente); le divergenze fra il codice attuale e il design sono in `docs/03_HANDOFF_DESIGN_CODE.md` §2 (undici voci, con i task). Le 38 del vecchio export restano nella storia git (`3c60512`). Le prossime, per schermata, si annotano nell'handoff.
 
 ## Prossimo task
-- **S1 sul nuovo design**: T-040 (progresso, prossime attività, archivio, Giornata chiusa), poi T-056, T-050 e CP2 su S1 (`/incremento`).
+- **S1 sul nuovo design**: T-040 (archivio, Giornata chiusa), poi T-056, T-050 e CP2 su S1 (`/incremento`).
 - Domande per l'utente aperte dalla verifica: le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 (le principali nel report del 05/10: riduzione animazioni, chiave Gemini solo sul dispositivo, «Inizia» o «Avvia sessione», categoria nel sub delle card); ognuna ferma solo il task che la tocca.
 - Backlog fuori dal design: **T-021** (adapter nativi, Opus 5.5; CP3 deciso) resta il primo `aperto` in ordine di file per `/task next`.
 
