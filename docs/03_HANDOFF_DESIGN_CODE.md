@@ -211,7 +211,41 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 39. Tavola 06 «Bug Hunter · soluzione» monta il secondo tentativo, non lo stato risolto: da correggere nel design;
     vale il codice del Panel e SCENARI I3. T-028.
 
-**S15, S8, S9, S21** (tavole 05, 08): voci 40 e seguenti, sotto.
+**S15 Sessione, S8, S9, S21** (tavole 05, 08)
+40. Intervallo non verificato: il mock ha «Conta come studio» e «Lascia fuori», il codice e D-TIMER-2 «Conta nel
+    focus» senza alternativa. Decisione: il mock; «Lascia fuori» lascia l'intervallo escluso (§10.4) e chiude
+    l'avviso; D-TIMER-2 si allinea col task. T-055.
+41. «Esci comunque» in iperfocus: il mock resta sullo schermo col toast, CONTROLLI dice «sessione chiusa».
+    **Bloccante** (destinazione e chiusura). T-055.
+42. Timer con barra di 3 px al posto dell'anello di DESIGN e CONTROLLI; la pill «Iperfocus» del timer non è
+    raggiungibile (iperfocus apre lo schermo intero). Decisione: il mock; la pill non si costruisce. T-055.
+43. «Cambia unità» anche fuori dal pomodoro e senza un foglio di scelta disegnato. **Bloccante**. T-055.
+44. Durata «Personalizzata» senza controllo d'inserimento; cronometro in corso (conto in avanti) non disegnato.
+    **Bloccante**. T-055.
+45. Sessione senza unità (il setup offre «Nessuna unità», C9): timer, Materiale, ambito AI, debrief e fine mostrano
+    sempre «Unità 0.7». **Bloccante** (resa); intanto vale MECC §11. T-055.
+46. «Registra esito» senza sessione (da S21, dalla notifica dell'esito, dal cerchio: C6, C10): il debrief del mock ha
+    sempre il timer dietro, «Continua a studiare», «Abbandona», minuti per unità. **Bloccante** (che cosa si toglie).
+    T-049, T-022.
+47. «Abbandona»: manca la variante delle sessioni senza blocco (nessuna soglia, MECC §10.5); sotto soglia il mock torna
+    al setup, il prodotto a Oggi col blocco `programmato` (D7); sopra, «conta nel piano» è sì per regola. Decisione:
+    spec per regola e navigazione, testo del mock dove c'è il blocco. T-055.
+48. Fine: il «+1» del mock compare a ogni Completata o Continua che conta, MECC §12 lo dà solo alla prima del giorno;
+    «La card su Oggi è spuntata» è falso per la libera o con «conta» spento. Decisione: si applicano entrambe le
+    condizioni. T-055.
+49. Pausa e pomodoro: il mock ferma il conto, D1 lo vuole in corsa per le sessioni ancorate all'orologio; senza durata
+    il mock fissa 120 min, D-POMO-1 vuole 4 cicli. Decisione: SCENARI D1, D2 e la spec. T-055.
+50. Debrief senza altezza massima: a 360 × 640 sborda. Decisione: come il Dettaglio, fino a 56 px dal bordo alto con
+    scorrimento interno (DESIGN §6). T-055.
+51. AI dentro la sessione: «Ambito» senza menu, campo finto, nessuno stato senza chiave o offline. Decisione: CONTROLLI
+    (ambito = unità della sessione) e gli stati di S19. T-055, T-026.
+52. S8 Sveglia: «Chiudi» in più rispetto alle «due azioni» di DESIGN e a MECC §13.2. Decisione: il mock, senza azione.
+    S9: trigger, tempi, azioni e canali coincidono con MECC §13.2, F1, F3, F7, A4; «Si avvia ancora come recupero fino
+    alle 17:15» contro MECC §8 («anche dopo»): vince il mock, spec da allineare. T-021.
+53. S21: «Recupera» solo sulle righe non ancora perse (MECC §8, §10.1 lo ammettono anche da perso): vince il design, il
+    recupero di un perso resta nel Dettaglio. «Ieri · gestite»: motivi verbatim dai mock, sezione omessa se vuota. T-022.
+54. S21 «Segna tutte lette» sta nell'intestazione della shell senza comportamento; il contatore conta le pendenti; il
+    «segno di novità» di MECC §8 non è disegnato. **Bloccante**. T-022.
 
 ## 4. Mappa schermata → design → task
 
