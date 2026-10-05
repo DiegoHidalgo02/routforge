@@ -24,6 +24,7 @@ export function Shell() {
   if (banner && exitLocked(banner.sessione, now)) return <Navigate to="/sessione" replace />;
   // «+ Crea» si apre sopra la schermata corrente (App.tsx)
   const sfondo = { sfondo: location };
+  const vistaOggi = location.pathname === '/' ? new URLSearchParams(location.search).get('vista') : null;
   return (
     <div className={s.shell} data-sessione={banner ? '' : undefined}>
       <aside className={s.sidebar}>
@@ -57,12 +58,13 @@ export function Shell() {
         </div>
       </aside>
       <main className={s.main} data-piena={sessione || undefined}>
-        {banner && <SessionBanner vista={banner} variante="banner" />}
+        {/* Il banner della sessione lo mette ogni schermata sotto la sua intestazione (SessionBannerSlot) */}
         <Outlet />
       </main>
       {barra && (
         <nav className={s.bottomNav} aria-label={t('navigazione')}>
-          <NavLink to="/" end className={s.tab}>
+          {/* «Oggi» riporta al giorno di oggi e in cima alla lista, nella vista scelta (`claude-design/CLAUDE.md`) */}
+          <NavLink to={vistaOggi ? `/?vista=${vistaOggi}` : '/'} end className={s.tab} onClick={() => scrollTo(0, 0)}>
             <House size={18} />
             {t('oggi')}
           </NavLink>

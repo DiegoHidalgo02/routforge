@@ -13,7 +13,7 @@ Per la schermata e gli stati indicati:
 1. Per ogni stato: `npm run confronto -- --tavola "<0N Nome>" --stato "<pezzo della didascalia>" --app "<rotta>"`
    (la misura viene dalla tavola: 390×844 o 1280×800); guarda le due immagini in `coverage/confronto/` con Read e
    confronta layout, misure, colori, tipografia e stati visivi. La cornice del telefono della tavola è scenografia.
-2. Nel codice: solo i token di `src/ui/styles/tokens.css` (niente valori hardcoded); `--ring-focus` e
+2. Nel codice: solo i token di `claude-design/design/tokens.css` (niente valori hardcoded); `--ring-focus` e
    `--ring-focus-danger` su ogni controllo; un solo primary per vista; cifre in `--font-num`; target ≥ 44 px; con
    riduzione animazioni solo dissolvenze; scala del testo al 200 % senza testo informativo tagliato; mobile sotto
    1024 px e desktop da 1024 (D-UI-1); stati vuoto, caricamento ed errore; nessun testo fuori dal dizionario.

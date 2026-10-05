@@ -430,7 +430,10 @@ export function SessionBanner({ vista, variante }: { vista: VistaSessione; varia
           <span className={s.pallino} />
           {t('sessioneInCorso')}
         </span>
-        <span className={s.bannerTempo}>{tempo}</span>
+        <span className={s.bannerRiga}>
+          <span className={s.bannerTempo}>{tempo}</span>
+          <span className={s.bannerAzione}>{t('riprendi')}</span>
+        </span>
         <span className={s.bannerTitolo}>{titolo}</span>
       </Link>
     );
@@ -445,6 +448,15 @@ export function SessionBanner({ vista, variante }: { vista: VistaSessione; varia
       </Link>
     </div>
   );
+}
+
+/**
+ * Banner «Sessione in corso» sotto l'intestazione di ogni schermata mobile e sopra la striscia dei giorni
+ * (`claude-design/CLAUDE.md` «Oggi», NAVIGAZIONE §2); su desktop c'è la carta della sidebar e il banner è nascosto.
+ */
+export function SessionBannerSlot() {
+  const vista = useSessionView();
+  return vista ? <SessionBanner vista={vista} variante="banner" /> : null;
 }
 
 /** Tempo del messaggio «Interruzione iperfocus registrata», come il toast del trascinamento (D-DRAG-1). */

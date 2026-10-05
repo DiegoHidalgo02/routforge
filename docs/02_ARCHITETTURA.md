@@ -30,7 +30,7 @@ src/
 │                (T-019, D-NOTIF-1: la sveglia è un attributo della voce, nessuna porta Alarms; adapter web
 │                `platform/notifications.ts`, testi da `ui/notificationTexts.ts` iniettati da `main.tsx`)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
-│                Impostazioni), componenti, hook. Solo token di `src/ui/styles/tokens.css`.
+│                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css` (importati da `src/main.tsx`, D-DESIGN-4).
 └── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
                  DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
                  Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView); device
@@ -135,7 +135,7 @@ resta fuori dal dominio.
   rotte in `src/ui/App.tsx`; testi con `t()` di `src/ui/i18n` (sei JSON, lingua da `pickLanguage`, MECC §23); punto di
   composizione `src/main.tsx` (font, token, lingua, archiviazione persistente), fuori dagli strati.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
-- Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `src/ui/styles/tokens.css`
+- Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `claude-design/design/tokens.css` (importati da `src/main.tsx`, D-DESIGN-4)
   (copia non modificata dei token dell'export del design: oggi del vecchio, INV-20 sospeso fino al nuovo handoff),
   niente Tailwind né stili inline con valori; icone `lucide-react` (tratto 1.75); font Manrope e IBM Plex Mono locali
   (`@fontsource`); rotte con `react-router`.

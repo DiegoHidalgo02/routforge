@@ -9,8 +9,9 @@ paths:
   comportamento viene dalle spec, l'aspetto dal design importato in `claude-design/` (05/10/2026, D-DESIGN-3) dopo il
   suo handoff per schermata (`docs/03_HANDOFF_DESIGN_CODE.md`; `claude-design/CLAUDE.md` sono le decisioni
   vincolanti del design). Se design e spec divergono vince il design (D-DESIGN-1) e la divergenza va nell'handoff.
-- Colori, tipografia, spaziature, raggi e ombre solo dai token di `src/ui/styles/tokens.css` (copia non modificata dei
-  token dell'export del design: oggi del vecchio, finché il nuovo handoff non la sostituisce); nessun valore hardcoded.
+- Colori, tipografia, spaziature, raggi e ombre solo dai token di `claude-design/design/tokens.css`, importati così come
+  sono da `src/main.tsx` (nessuna copia, D-DESIGN-4); i token a segnaposto (`<fill>`, `<ink>`) si risolvono per tipo in
+  `src/ui/styles/global.css`; nessun valore hardcoded.
 - Stack (D-STACK-1): React 19 + Vite; componenti `.tsx` con CSS Modules che usano solo `var(--…)`; niente Tailwind né
   stili inline con valori; icone da `lucide-react` (tratto 1.75); font locali (`@fontsource`); rotte con `react-router`.
 - Ogni testo visibile è una chiave i18n nelle sei lingue (FUNZ §22), notifiche incluse; i valori del dominio

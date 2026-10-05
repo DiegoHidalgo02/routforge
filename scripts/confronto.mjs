@@ -5,9 +5,11 @@
 // telefono della tavola è scenografia.
 // Uso: npm run confronto -- --tavola "01 Oggi" --stato "archivio completate aperto" [--app /] [--out coverage/confronto]
 //   --stato: un pezzo del testo della didascalia, maiuscole indifferenti; senza --app si fotografa solo il mock.
+//   --scenario: l'app gira nello scenario dei mock (mercoledì 23 settembre 2026, 16:08, Date iniettato nella pagina) con
+//   il corso di esempio salvato; --sessione aggiunge una sessione libera avviata 12 minuti prima (banner e carta).
 // Windows: EDGE può indicare un altro eseguibile di Edge/Chrome.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { serveMock } from './mock.mjs';
@@ -27,6 +29,8 @@ const tavola = arg('--tavola');
 const stato = arg('--stato').toLowerCase();
 const rotta = arg('--app');
 const out = resolve(RADICE, arg('--out', 'coverage/confronto'));
+const sessione = process.argv.includes('--sessione');
+const scenario = sessione || process.argv.includes('--scenario');
 if (!tavola || !stato) {
   console.error(
     'uso: npm run confronto -- --tavola "01 Oggi" --stato "<pezzo della didascalia>" [--app /] [--out dir]',
@@ -38,6 +42,12 @@ if (!existsSync(join(RADICE, 'claude-design', fileTavola))) {
   console.error(`tavola non trovata: claude-design/${fileTavola}`);
   process.exit(2);
 }
+// Misura dello stato: `hint-size` del dc-import nella figura con quella didascalia, letta dal file (il motore di
+// anteprima sostituisce il dc-import quando disegna)
+const figuraSorgente = readFileSync(join(RADICE, 'claude-design', fileTavola), 'utf8')
+  .split('<figure')
+  .find((f) => (f.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/)?.[1] ?? '').toLowerCase().includes(stato));
+const misura = (figuraSorgente?.match(/hint-size="(\d+)px,(\d+)px"/)?.slice(1) ?? ['390', '844']).map(Number);
 mkdirSync(out, { recursive: true });
 
 const vivo = async (url) => {
@@ -142,10 +152,8 @@ try {
     const figure = [...document.querySelectorAll('figure')];
     const f = figure.find((x) => (x.querySelector('figcaption')?.textContent ?? '').toLowerCase().includes(${JSON.stringify(stato)}));
     if (!f) return { didascalie: figure.map((x) => x.querySelector('figcaption')?.textContent ?? '') };
-    const imp = f.querySelector('dc-import');
     const r = f.getBoundingClientRect();
-    const [w, h] = (imp?.getAttribute('hint-size') ?? '390px,844px').split(',').map((v) => parseInt(v, 10));
-    return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height, w, h, didascalia: f.querySelector('figcaption')?.textContent ?? '' };
+    return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height, w: ${misura[0]}, h: ${misura[1]}, didascalia: f.querySelector('figcaption')?.textContent ?? '' };
   })()`;
   // La pagina si carica e il motore di anteprima disegna le figure dopo: si aspetta la didascalia, poi l'altezza
   let fig = await js(cerca);
@@ -186,6 +194,33 @@ try {
     const mobile = fig.w < 1024;
     await cdp('Emulation.setDeviceMetricsOverride', { width: fig.w, height: fig.h, deviceScaleFactor: 1, mobile });
     await cdp('Emulation.setTouchEmulationEnabled', { enabled: mobile, maxTouchPoints: 5 });
+    if (scenario) {
+      // Orologio dello scenario dei mock: Date sposta l'istante, i timer restano veri (ora locale di parete)
+      await cdp('Page.addScriptToEvaluateOnNewDocument', {
+        source: `(() => { const D = Date; const scarto = new D(2026, 8, 23, 16, 8).getTime() - D.now();
+          class F extends D { constructor(...a) { if (a.length) super(...a); else super(D.now() + scarto); }
+            static now() { return D.now() + scarto; } }
+          globalThis.Date = F; })();`,
+      });
+      // Il profilo di Edge è nuovo a ogni esecuzione: il database parte vuoto
+      await cdp('Page.navigate', { url: `http://localhost:${PORTA_APP}/` });
+      await sleep(2500);
+      const esito = await js(`(async () => {
+        try {
+          const { appDb } = await import('/src/app/db.ts');
+          const { importSampleCourse } = await import('/src/app/courseImport.ts');
+          await importSampleCourse(appDb, Date.now());
+          if (${sessione}) {
+            const { startSession } = await import('/src/app/session.ts');
+            const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const scelta = { unitaId: null, corsoId: null, durata: 50, modalita: 'continua', iperfocus: false };
+            await startSession(appDb, null, scelta, Date.now() - 12 * 60000, fuso);
+          }
+          return 'ok';
+        } catch (e) { return String(e && e.stack || e); }
+      })()`);
+      if (esito !== 'ok') throw new Error(`semina dello scenario: ${esito}`);
+    }
     await cdp('Page.navigate', { url: `http://localhost:${PORTA_APP}${rotta}` });
     await sleep(3500);
     const fotoApp = await foto(`${nome}-app.png`);

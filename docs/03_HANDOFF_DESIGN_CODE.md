@@ -23,8 +23,8 @@ d'implementazione della UI: `.claude/rules/ui.md`.*
 - **Prossimo passo**: l'handoff per schermata in questo file (schermata → file del design → task), con il prompt
   preparativo dell'utente adattato al repository; la prima schermata implementata va al CP2 (`docs/06_SUPERVISIONE.md`).
   Finché una schermata non è mappata qui, il suo riferimento visivo non è attivo.
-- **All'handoff valgono gli invarianti già scritti**: i token del nuovo design (`claude-design/design/tokens.css`)
-  entrano in `src/ui/styles/tokens.css` e il loro confronto torna nel gate (INV-20).
+- **Token**: dal T-052 l'app importa `claude-design/design/tokens.css` così com'è da `src/main.tsx`, senza copia
+  (INV-20); i token a segnaposto sono risolti per tipo in `src/ui/styles/global.css` (§3 n. 1).
 - **L'export si versiona così com'è** in `claude-design/` (D-DESIGN-1); si cambia in Claude Design e si reimporta, mai
   a mano. `.gitignore`, `.prettierignore` ed `eslint.config.js` lo escludono già (ZIP, formato, lint). I `.dc.html`
   caricano React 18 e i font da internet solo per l'anteprima dei mock: non è prodotto.
@@ -73,9 +73,8 @@ focus visibile assente dai mock; il testo del ritorno dopo un'assenza («…, i 
 `ritornoAssenza`) può essere falso per MECC §6, perché i todo con orizzonte giorno o scaduto restano «non fatti» nel
 loro giorno.
 
-**Dipendenze del codice dal vecchio design**: `src/ui/styles/tokens.css` (copia del vecchio export, da non modificare
-a mano; INV-20 sospeso), font `@fontsource/manrope` e `@fontsource/ibm-plex-mono`, icone `lucide-react` col tratto
-1.75 (D-STACK-1), `src/ui/Logomark.tsx`, voce dei testi (`PRODUCT.md`, `src/ui/i18n/`), eccezione di
+**Dipendenze del codice dal vecchio design**: font `@fontsource/manrope` e `@fontsource/ibm-plex-mono`, icone
+`lucide-react` col tratto 1.75 (D-STACK-1; il nuovo design li conferma: ASSET), `src/ui/Logomark.tsx`, voce dei testi (`PRODUCT.md`, `src/ui/i18n/`), eccezione di
 `.impeccable/config.json` su `src/ui/Detail.module.css`. Le sigle S1…S22 in commenti, test, task fatti, decisioni e
 nella colonna «Dove» di `docs/TRACCIABILITA.md` nominano le schermate del vecchio export: sono storia, finché
 l'handoff non dà i nomi nuovi.

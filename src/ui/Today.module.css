@@ -112,7 +112,6 @@
 }
 
 /* Area di tocco 44 sui controlli più bassi (DESIGN.md §4): il bottone misura 28–34, l'area la estende */
-.tornaOggi,
 .segmento,
 .freccia,
 .oggiPill,
@@ -120,7 +119,6 @@
   position: relative;
 }
 
-.tornaOggi::after,
 .segmento::after,
 .freccia::after,
 .oggiPill::after,
@@ -129,26 +127,6 @@
   position: absolute;
   inset: calc((100% - var(--size-touch)) / 2) 0;
   border-radius: inherit;
-}
-
-.tornaOggi {
-  min-height: var(--size-chip);
-  flex: none;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-selected);
-  border-radius: var(--radius-pill);
-  background: var(--color-selected);
-  color: var(--color-selected-ink);
-  font: 600 var(--text-sm) var(--font-ui);
-  white-space: nowrap;
-  cursor: pointer;
-  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
-  transition: background var(--dur-feedback) var(--ease-out);
-}
-
-.tornaOggi:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
 }
 
 .segmentato {

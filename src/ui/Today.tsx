@@ -53,6 +53,7 @@ import { maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { NowBlock } from './NowBlock';
 import { ProfileMenu } from './ProfileMenu';
+import { SessionBannerSlot } from './Session';
 import s from './Today.module.css';
 
 // Forme brevi nella colonna dell'orario («Norm.», S1)
@@ -293,11 +294,7 @@ export function Today() {
           </span>
           <span className={`${s.periodo} ${s.soloDesktop}`}>{etichettaPeriodo}</span>
         </h1>
-        {giorno !== oggi && (
-          <button type="button" className={`${s.tornaOggi} ${s.soloMobile}`} onClick={() => vai({ giorno: oggi })}>
-            {t('oggi')}
-          </button>
-        )}
+        {/* Su mobile si torna a oggi con «Oggi» della barra in basso, nessun tasto qui (`claude-design/CLAUDE.md`) */}
         <Segmentato viste={VISTE} vista={vista} vai={vai} className={s.soloDesktop} />
         {/* Su mobile le viste si scelgono solo con le tre icone in alto a destra (S1 Mobile) */}
         <div className={`${s.iconeVista} ${s.soloMobile}`} role="group" aria-label={t('vista')}>
@@ -326,6 +323,7 @@ export function Today() {
           </button>
         </div>
       </header>
+      <SessionBannerSlot />
 
       <div
         className={s.corpo}

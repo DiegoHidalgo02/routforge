@@ -1237,6 +1237,18 @@
     text-transform: uppercase;
   }
 
+  /* Tempo e «Riprendi» sulla stessa riga (S20 Shell Desktop, carta della sidebar) */
+  .bannerRiga {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .bannerAzione {
+    font: 600 var(--text-sm) var(--font-ui);
+  }
+
   .bannerTempo {
     font: 600 var(--text-xl-2) / 24px var(--font-num);
     font-variant-numeric: tabular-nums;

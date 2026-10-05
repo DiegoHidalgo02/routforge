@@ -133,7 +133,7 @@
   grid-column: 1;
   grid-row: 2;
   margin-top: var(--space-2);
-  font: 600 var(--text-lg-3) / var(--leading-tight) var(--font-ui);
+  font: 600 var(--text-lg-2) / var(--leading-tight) var(--font-ui);
   letter-spacing: var(--tracking-title);
 }
 
@@ -201,7 +201,7 @@
   align-items: center;
   padding: 0 var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-action);
+  border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
   color: var(--color-text);
   font: 600 var(--text-base) var(--font-ui);

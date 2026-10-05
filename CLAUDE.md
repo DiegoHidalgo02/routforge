@@ -50,7 +50,7 @@ registra, un test per riga), `docs/STATO.md` (dove siamo, problemi aperti).
 src/domain/     meccanismi puri: nessun import da UI, DB, piattaforma. Testabili in isolamento (CONTESTO §3)
 src/data/       persistenza locale Dexie/IndexedDB (D-DATA-1); ogni record: id UUID, createdAt, updatedAt, deletedAt
 src/app/        servizi che orchestrano dominio + dati: scheduler, sessione, notifiche, puntatore, sync
-src/ui/         schermate e componenti React 19 (D-STACK-1); SOLO i token di src/ui/styles/tokens.css
+src/ui/         schermate e componenti React 19 (D-STACK-1); SOLO i token di claude-design/design/tokens.css
 src/platform/   adapter nativi dietro interfacce (Capacitor da T-021: notifiche, sveglie, Non Disturbare, widget, file system, TTS)
 ```
 Regola di dipendenza: `ui → app → data → domain`; `platform` è usato solo da `app` tramite interfacce.

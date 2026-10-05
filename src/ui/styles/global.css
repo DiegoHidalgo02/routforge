@@ -1,6 +1,8 @@
-/* Base dell'app (D-STACK-1): solo i token di tokens.css. */
+/* Base dell'app (D-STACK-1): solo i token di `claude-design/design/tokens.css`, importati da `src/main.tsx`. */
 :root {
   color-scheme: dark;
+  /* Fuori da un tipo l'alone del pallino è quello del banner Sessione (commento di --glow-dot-live: primary al 70 %) */
+  --glow-dot-live: 0 0 8px 2px color-mix(in srgb, var(--color-primary) 70%, transparent);
 }
 
 body {
@@ -57,4 +59,18 @@ a {
   --soft: var(--color-cat-event-soft);
   --light: var(--color-cat-event-light);
   --deep: var(--color-cat-event-deep);
+}
+
+/* Token a segnaposto del pacchetto (`<fill>`, `<ink>`: non sono CSS valido così come sono, docs/03_HANDOFF §3 n. 1)
+   risolti sui colori del tipo; gli alfa esadecimali 26 · 80 · CC · 66 diventano 15 · 50 · 80 · 40 % di color-mix(). */
+[data-tipo] {
+  --shadow-primary-cat:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 1px 2px rgba(0, 0, 0, 0.5),
+    0 10px 24px -12px color-mix(in srgb, var(--fill) 60%, transparent);
+  --shadow-hero:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px color-mix(in srgb, var(--fill) 15%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--fill) 50%, transparent), 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+  --glow-dot-live:
+    0 0 8px 2px color-mix(in srgb, var(--ink) 80%, transparent),
+    0 0 18px 6px color-mix(in srgb, var(--ink) 40%, transparent);
 }
