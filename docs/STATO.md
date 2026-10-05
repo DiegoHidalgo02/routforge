@@ -46,10 +46,10 @@
 - Nuovo design importato il 05/10/2026 (D-DESIGN-3): le differenze fra le spec del 30/09 e quelle del pacchetto sono assorbite dalla spec (richiesta dell'utente); le divergenze fra il codice attuale e il design sono in `docs/03_HANDOFF_DESIGN_CODE.md` §2 (undici voci, con i task). Le 38 del vecchio export restano nella storia git (`3c60512`). Le prossime, per schermata, si annotano nell'handoff.
 
 ## Prossimo task
-- **S1 sul nuovo design**: T-056 (fogli della spunta sopra Oggi, annulla dell'esito), poi CP2 su S1.
+- **Dopo il CP2**: T-056 (fogli della spunta sopra Oggi, annulla dell'esito), poi S5 (T-054, T-042), S15 (T-055), S10–S12 (T-053).
 - Domande per l'utente aperte dalla verifica: le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 (le principali nel report del 05/10: riduzione animazioni, chiave Gemini solo sul dispositivo, «Inizia» o «Avvia sessione», categoria nel sub delle card); ognuna ferma solo il task che la tocca.
 - Backlog fuori dal design: **T-021** (adapter nativi, Opus 5.5; CP3 deciso) resta il primo `aperto` in ordine di file per `/task next`.
 
 ## Checkpoint in attesa
 - **CP3 Nativo deciso dall'utente il 02/10/2026** (D-NATIVO-1): Android (T-021, T-023) e iOS (T-036). I prossimi: CP4 prima di T-033, CP5 prima di T-026.
-- **CP2 da rifare sul nuovo design** (scelta dell'utente del 04/10/2026): approvazione visiva della prima schermata implementata con l'handoff, che mette il marcatore sui task successivi (`docs/06_SUPERVISIONE.md`). Il CP2 del 25/09/2026 valeva per il vecchio design.
+- **CHECKPOINT: CP2** — S1 Oggi è sul nuovo design (T-048, T-049, T-044, T-040, T-050): serve l'approvazione visiva, mobile e desktop (`npm run dev`, o `npm run confronto -- --tavola "01 Oggi" --stato "…" --app / --scenario`), e le risposte ai bloccanti di S1 (handoff §3 n. 2, 9–13, 15, 16, 18). Marcatore CP2 su T-056, T-054, T-042, T-055, T-053.

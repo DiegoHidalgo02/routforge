@@ -272,7 +272,7 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 
 ## 4. Mappa schermata → design → task
 
-Ordine di `/incremento` (prima riga = primo incremento); CP2 si rifà su S1 dopo T-050.
+Ordine di `/incremento` (prima riga = primo incremento); CP2 si rifà su S1 dopo T-050: S1 è pronto per il CP2 dal 06/10/2026 (T-048, T-049, T-044, T-040, T-050), le schermate successive aspettano l'approvazione.
 
 | Schermata | File del design (`claude-design/`) | Tavola | Task |
 |---|---|---|---|
