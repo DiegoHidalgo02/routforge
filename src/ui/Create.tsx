@@ -3,7 +3,8 @@
 // validazione è del dominio (`validateActivity`): la CTA è attiva solo se la bozza è valida. Si parte dal giorno
 // selezionato in Oggi se cade fra oggi e oggi + 6, altrimenti da oggi, e le date si scelgono solo lì (MECC §2, G5): il
 // todo non ha data né corso e l'orizzonte dice fin dove rotola. Nessuna ×: «Annulla», Esc o il trascinamento in basso
-// del bordo alto; dopo la creazione Oggi mostra «… creato» con «Annulla» (`avvisi.ts`). L'anticipo
+// del bordo alto; dopo la creazione Oggi mostra «… creato» con «Annulla» (`avvisi.ts`). In Modifica (T-042, S4
+// `mode=edit`) lo stesso foglio parte dall'attività, il tipo resta, «Salva» torna a Oggi con «Modifiche salvate». L'anticipo
 // libero del promemoria (MECC §13.1, fino a 31 giorni) non è nel mock: riga «Altro anticipo» con le chip di S4
 // (T-019, divergenza 35).
 import {
@@ -28,9 +29,9 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
-import { useLocation, useNavigate, type Location } from 'react-router';
-import { createActivity } from '../app/activities';
-import { deleteBlock } from '../app/completion';
+import { Navigate, useLocation, useNavigate, useParams, type Location } from 'react-router';
+import { createActivity, editActivity } from '../app/activities';
+import { deleteBlock, readDetail, type DettaglioAttivita } from '../app/completion';
 import { deleteRecurrence } from '../app/recurrences';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
@@ -45,11 +46,13 @@ import {
   creationDays,
   endsNextDay,
   recurrenceLastDay,
+  recurrenceTerm,
   startDay,
   validateActivity,
   wallDuration,
   type BozzaAttivita,
   type Termine,
+  type VoceBozza,
 } from '../domain/activity';
 import { horizonLastDay } from '../domain/lost';
 import { local, localDayKey, localInstant } from '../domain/time';
@@ -60,6 +63,8 @@ import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
 
 type Tipo = BozzaAttivita['tipo'];
+/** Una riga della checklist o delle fasi: in Modifica porta la spunta della voce o l'id della fase (D-MOD-1). */
+type Riga = Exclude<VoceBozza, string>;
 const TIPI: { tipo: Tipo; chiave: Chiave; Icona: typeof Plus }[] = [
   { tipo: 'todo', chiave: 'tipoTodo', Icona: SquareCheckBig },
   { tipo: 'studio', chiave: 'tipoStudio', Icona: GraduationCap },
@@ -133,8 +138,8 @@ interface Form {
   durata: number;
   orizzonte: Orizzonte;
   priorita: Priorita;
-  checklist: string[];
-  fasi: string[];
+  checklist: Riga[];
+  fasi: Riga[];
   giorni: number[];
   giorno: string;
   dataInizio: string;
@@ -182,6 +187,49 @@ function initial(partenza: string): Form {
     modo: 'auto',
     anticipi: [],
     sveglie: [],
+  };
+}
+
+/** Il form della Modifica (T-042): la definizione per routine e studio, il blocco per todo ed evento. */
+function fromDetail({ blocco: b, ricorrenza: r, fasi }: DettaglioAttivita): Form {
+  const base = initial(b.giornoLocale);
+  const p = r?.promemoria ?? b.promemoria ?? { modo: 'auto' };
+  const anticipi = p.modo === 'personalizzato' ? p.anticipi : [];
+  const comune: Form = {
+    ...base,
+    tipo: b.tipo,
+    titolo: r?.titolo ?? b.titolo ?? '',
+    note: r?.note ?? b.note ?? '',
+    fasi: fasi.map(({ id, etichetta }) => ({ testo: etichetta, id })),
+    modo: p.modo,
+    anticipi: anticipi.map((a) => a.minuti),
+    sveglie: anticipi.filter((a) => a.sveglia).map((a) => a.minuti),
+  };
+  if (r)
+    return {
+      ...comune,
+      inizio: r.orarioInizio,
+      fine: r.orarioFine ?? alle(r.orarioInizio, 60),
+      conFine: r.orarioFine !== null,
+      giorni: r.giorni,
+      dataInizio: r.dataInizio,
+      termine: recurrenceTerm(r.dataInizio, r.dataFine),
+      corsoId: r.corsoId,
+    };
+  return {
+    ...comune,
+    conOrario: b.conOrario,
+    tuttoIlGiorno: !b.conOrario,
+    ...(b.conOrario &&
+      b.orarioFine !== null && {
+        inizio: b.orarioInizio,
+        fine: b.orarioFine,
+        durata: wallDuration(b.orarioInizio, b.orarioFine) ?? DURATA_TODO,
+      }),
+    orizzonte: b.orizzonte ?? 'giorno',
+    priorita: b.priorita ?? 'normale',
+    checklist: b.checklist?.map(({ testo, fatta }) => ({ testo, fatta })) ?? [],
+    luogo: b.luogo ?? '',
   };
 }
 
@@ -305,9 +353,9 @@ function Etichetta({ Icona, children }: { Icona: typeof Plus; children: ReactNod
 }
 
 /** Checklist (todo, MECC §4) o fasi (routine ed evento, MECC §5): voci vuote scartate dal dominio. */
-function Voci(p: { voci: string[]; fasi?: boolean; onChange: (v: string[]) => void }) {
+function Voci(p: { voci: Riga[]; fasi?: boolean; onChange: (v: Riga[]) => void }) {
   const { voci, fasi, onChange } = p;
-  const cambia = (i: number, v: string) => onChange(voci.map((x, j) => (j === i ? v : x)));
+  const cambia = (i: number, testo: string) => onChange(voci.map((x, j) => (j === i ? { ...x, testo } : x)));
   const scambia = (i: number, j: number) => {
     const a = [...voci];
     [a[i], a[j]] = [a[j]!, a[i]!];
@@ -328,7 +376,7 @@ function Voci(p: { voci: string[]; fasi?: boolean; onChange: (v: string[]) => vo
           )}
           <input
             className={s.inputVoce}
-            value={v}
+            value={v.testo}
             maxLength={fasi ? undefined : MAX_CARATTERI_VOCE}
             placeholder={t(fasi ? 'fase' : 'voce')}
             aria-label={t(fasi ? 'fase' : 'voce')}
@@ -370,7 +418,7 @@ function Voci(p: { voci: string[]; fasi?: boolean; onChange: (v: string[]) => vo
         <button
           type="button"
           className={fasi ? s.aggiungiFase : s.aggiungiVoce}
-          onClick={() => onChange([...voci, ''])}
+          onClick={() => onChange([...voci, { testo: '' }])}
         >
           <span className={fasi ? undefined : s.casellaNuova}>
             <Plus size={fasi ? 14 : 12} strokeWidth={2.25} />
@@ -382,7 +430,19 @@ function Voci(p: { voci: string[]; fasi?: boolean; onChange: (v: string[]) => vo
   );
 }
 
+// `/crea`, o `/attivita/:id/modifica`: la Modifica apre lo stesso foglio quando l'attività è letta (T-042)
 export function Create() {
+  const { id } = useParams();
+  const [d, setD] = useState<DettaglioAttivita | null>();
+  useEffect(() => {
+    if (id) void readDetail(appDb, id).then((x) => setD(x ?? null));
+  }, [id]);
+  if (!id) return <Foglio />;
+  if (d === null) return <Navigate to="/" replace />;
+  return d ? <Foglio modifica={d} /> : null;
+}
+
+function Foglio({ modifica }: { modifica?: DettaglioAttivita }) {
   const navigate = useNavigate();
   const location = useLocation();
   const primaSchermata = location.key === 'default';
@@ -391,8 +451,9 @@ export function Create() {
   // Il giorno di partenza (MECC §2, G5): il giorno selezionato in Oggi sotto il foglio, se cade fra oggi e oggi + 6
   const [oggi] = useState(() => localDayKey(Date.now()));
   const giorni = creationDays(oggi);
+  const sfondo = (location.state as { sfondo?: Location } | null)?.sfondo;
   const [f, setF] = useState(() => {
-    const sfondo = (location.state as { sfondo?: Location } | null)?.sfondo;
+    if (modifica) return fromDetail(modifica);
     const selezionato = sfondo?.pathname === '/' ? new URLSearchParams(sfondo.search).get('giorno') : null;
     return initial(startDay(selezionato, oggi));
   });
@@ -457,6 +518,16 @@ export function Create() {
     setInCorso(true);
     try {
       // ponytail: Date.now() e il fuso letti qui come in Courses; passano dalla porta Clock quando nasce
+      if (modifica) {
+        const r = await editActivity(appDb, modifica.blocco.id, bozza, Date.now(), fuso());
+        if (r.ok) {
+          // «Salva» torna a Oggi con «Modifiche salvate», senza «Annulla» (S1, handoff §3 n. 28): da Oggi c'erano il
+          // Dettaglio e la Modifica sopra
+          lascia({ id: modifica.blocco.id, testo: t('modificheSalvate') });
+          return sfondo ? navigate(-2) : navigate('/', { replace: true });
+        }
+        throw new Error('modifica');
+      }
       const r = await createActivity(appDb, bozza, Date.now(), fuso());
       if (r.ok) {
         // Oggi mostra «… creato» con «Annulla», che toglie l'attività appena creata (G5)
@@ -491,27 +562,40 @@ export function Create() {
         <header className={s.testa}>
           <h1 id="crea-titolo" className={s.titoloPannello}>
             <span className={s.puntoTipo} />
-            {t('nuovaAttivita')}
+            {t(modifica ? 'modificaAttivita' : 'nuovaAttivita')}
           </h1>
         </header>
       </div>
 
       <div className={s.corpo}>
-        <div className={s.tipi} role="group" aria-label={t('tipo')}>
-          {TIPI.map(({ tipo: k, chiave, Icona }) => (
-            <button
-              key={k}
-              type="button"
-              className={s.tipo}
-              data-tipo={k}
-              aria-pressed={k === tipo}
-              onClick={() => set({ tipo: k })}
-            >
-              <Icona size={14} className={s.iconaTipo} />
-              {t(chiave)}
-            </button>
-          ))}
-        </div>
+        {modifica ? (
+          <div className={s.tipoFisso}>
+            <span className={s.badge}>{t(TIPI.find((x) => x.tipo === tipo)!.chiave)}</span>
+            <span className={s.notaTipo}>{t('tipoNonCambia')}</span>
+          </div>
+        ) : (
+          <div className={s.tipi} role="group" aria-label={t('tipo')}>
+            {TIPI.map(({ tipo: k, chiave, Icona }) => (
+              <button
+                key={k}
+                type="button"
+                className={s.tipo}
+                data-tipo={k}
+                aria-pressed={k === tipo}
+                onClick={() => set({ tipo: k })}
+              >
+                <Icona size={14} className={s.iconaTipo} />
+                {t(chiave)}
+              </button>
+            ))}
+          </div>
+        )}
+        {modifica && ricorrente && (
+          <span className={s.notaModifica}>
+            <Repeat size={13} className={s.iconaNota} />
+            {t('modificheFuture')}
+          </span>
+        )}
 
         <input
           className={s.titolo}
@@ -880,7 +964,7 @@ export function Create() {
           {t('annulla')}
         </button>
         <button type="button" className={s.cta} disabled={!pronta || inCorso} onClick={() => void crea()}>
-          {t(CTA[tipo])}
+          {t(modifica ? 'salva' : CTA[tipo])}
         </button>
       </footer>
     </dialog>

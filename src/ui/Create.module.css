@@ -2,8 +2,8 @@
    pannello di 440 a destra da 1024 px. Il colore del tipo vive nell'alone, nei pallini, nei glifi e nella CTA;
    la selezione è bianca piena (DESIGN.md). Solo token: gli scarti fuori scala del mock (6, 10, 14 px) vanno al token
    più vicino. Restano misure del mock senza token (alone 360, interruttore 44×26 con pomello 22, badge 22, bordo
-   1,5 della casella) e la CTA pronta usa `--shadow-primary-soft` perché `--shadow-primary-cat` ha il segnaposto
-   `<fill>`: elenco in docs/03_HANDOFF_DESIGN_CODE.md §10. */
+   1,5 della casella, interlinea 24 del titolo; in Modifica padding 7 del badge del tipo, interlinee 14 e 16): elenco
+   in docs/03_HANDOFF_DESIGN_CODE.md §10. La CTA pronta ha `--shadow-primary-cat`, risolto per tipo in styles/global.css. */
 /* I colori del tipo (--fill, --ink, …) arrivano da `data-tipo` sul pannello e sui bottoni del tipo (styles/global.css) */
 .pannello {
   position: fixed;
@@ -57,6 +57,8 @@
 .testa {
   position: relative;
   flex: none;
+  box-sizing: border-box;
+  min-height: var(--size-touch);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -68,7 +70,7 @@
   align-items: center;
   gap: var(--space-2);
   margin: 0;
-  font: 600 var(--text-xl) / var(--leading-tight) var(--font-ui);
+  font: 600 var(--text-xl) / 24px var(--font-ui);
 }
 
 .puntoTipo {
@@ -853,7 +855,7 @@
   background: var(--fill);
   color: var(--color-selected-ink);
   letter-spacing: var(--tracking-body);
-  box-shadow: var(--shadow-primary-soft);
+  box-shadow: var(--shadow-primary-cat);
   transition:
     opacity var(--dur-layout) var(--ease-out),
     background var(--dur-cta) var(--ease-standard),
@@ -895,4 +897,40 @@
   .maniglia {
     display: none;
   }
+}
+
+/* Modifica (S4 `mode=edit`): al posto dei quattro tipi il badge del tipo con «Il tipo non si cambia dopo la creazione»;
+   per routine e studio la nota sulle occorrenze future. Restano letterali le misure del mock fuori dalla scala dei
+   token: padding 7 del badge, interlinee 14 e 16, margine 1 dell'icona */
+.tipoFisso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: calc(-1 * var(--space-2));
+}
+
+.badge {
+  composes: badge from './Today.module.css';
+  padding-inline: 7px;
+}
+
+.notaTipo {
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.notaModifica {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: calc(-1 * var(--space-2));
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.iconaNota {
+  flex: none;
+  margin-top: 1px;
 }

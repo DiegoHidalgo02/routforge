@@ -795,3 +795,14 @@
   color: var(--color-text-2);
   font: var(--text-sm) / 16px var(--font-ui);
 }
+
+/* Matita «Modifica» e cestino a destra della testata (S5): gap 2 del mock, fuori dalla scala dei token */
+.azioniTesta {
+  display: flex;
+  gap: 2px;
+}
+
+.icona:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}

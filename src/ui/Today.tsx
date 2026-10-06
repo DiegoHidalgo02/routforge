@@ -198,7 +198,7 @@ export function Today() {
   };
 
   // Toast con «Annulla» per 5 s dopo la spunta dalla lista (§3, A7)
-  const [avviso, setAvviso] = useState<{ id: string; testo: string; annulla: () => void }>();
+  const [avviso, setAvviso] = useState<{ id: string; testo: string; annulla?: () => void }>();
   const timerToast = useRef<ReturnType<typeof setTimeout>>(undefined);
   const annullaToast = useRef<HTMLButtonElement>(null);
   useEffect(() => () => clearTimeout(timerToast.current), []);
@@ -225,20 +225,23 @@ export function Today() {
       },
     });
   };
-  // Gli avvisi lasciati da Crea (G5): «Todo creato · …» con «Annulla», che toglie l'attività creata
+  // Gli avvisi lasciati da Crea (G5): «Todo creato · …» con «Annulla», che toglie l'attività creata; dalla Modifica
+  // «Modifiche salvate», senza
   useEffect(
     () =>
-      ascolta((a) => {
+      ascolta(({ id, testo, annulla }) => {
         clearTimeout(timerToast.current);
         timerToast.current = setTimeout(() => setAvviso(undefined), ANNULLA_MS);
         setAvviso({
-          id: a.id,
-          testo: a.testo,
-          annulla: () => {
-            clearTimeout(timerToast.current);
-            setAvviso(undefined);
-            void a.annulla().catch(() => undefined);
-          },
+          id,
+          testo,
+          ...(annulla && {
+            annulla: () => {
+              clearTimeout(timerToast.current);
+              setAvviso(undefined);
+              void annulla().catch(() => undefined);
+            },
+          }),
         });
       }),
     [],
@@ -501,9 +504,11 @@ export function Today() {
         {avviso && (
           <div className={s.toast}>
             <span className={s.testoToast}>{avviso.testo}</span>
-            <button ref={annullaToast} type="button" className={s.annullaToast} onClick={avviso.annulla}>
-              {t('annullaAzione')}
-            </button>
+            {avviso.annulla && (
+              <button ref={annullaToast} type="button" className={s.annullaToast} onClick={avviso.annulla}>
+                {t('annullaAzione')}
+              </button>
+            )}
           </div>
         )}
       </div>

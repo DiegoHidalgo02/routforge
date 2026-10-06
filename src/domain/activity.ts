@@ -8,10 +8,13 @@
  * definizione (routine, routine di studio) pronti da salvare. I campi che la variante scelta non usa si scartano
  * (priorità di un todo con orario, promemoria di un todo senza orario, anticipi di un evento tutto il giorno); i valori
  * fuori dai limiti sono errori (D-CREA-1). Le occorrenze delle routine le genera T-011; gli id (anche delle fasi) li dà il servizio.
+ * Modifica (T-042; FUNZ §4, MECC §4–§7, SCENARI A3, B5): le righe del form portano la spunta della voce e l'id della fase
+ * (`VoceBozza`); `editBlock`, `recurrenceTerm`.
  */
 import { isDayKey, shiftPeriod } from './calendar';
+import { enterGroup } from './ordering';
 import { endOfLocalDay, localInstant, minutes } from './time';
-import type { Blocco, Orizzonte, Priorita, Promemoria, Ricorrenza } from './types';
+import type { Blocco, FaseTemplate, Orizzonte, Priorita, Promemoria, Ricorrenza } from './types';
 
 /** Ancora dei todo senza orario: 12:00–23:59 del loro giorno (§1), anche quando rotolano (§6). */
 export const ANCORA_TODO = '12:00';
@@ -53,6 +56,12 @@ export const TITOLO_STUDIO = 'Studio';
 /** Fine di una ricorrenza: `null` = mai; altrimenti dopo N giorni/settimane/mesi (§2). */
 export type Termine = null | { n: number; unita: 'giorni' | 'settimane' | 'mesi' };
 
+/**
+ * Una voce della checklist o una fase come arriva dal form: il testo o, in Modifica, il testo con ciò che la riga porta
+ * con sé, la spunta della voce (§4, A3) o l'id della fase (§5, B5: id stabili a rinomine e riordini).
+ */
+export type VoceBozza = string | { testo: string; fatta?: boolean; id?: string };
+
 interface BozzaComune {
   titolo: string;
   note: string;
@@ -68,7 +77,7 @@ export type BozzaAttivita =
       orario: { inizio: string; durata: number } | null;
       orizzonte: Orizzonte;
       priorita: Priorita;
-      checklist: string[];
+      checklist: VoceBozza[];
       corsoId: string | null;
     })
   | (BozzaComune & {
@@ -77,7 +86,7 @@ export type BozzaAttivita =
       /** `null` = tutto il giorno (§2). */
       orario: { inizio: string; fine: string } | null;
       luogo: string;
-      fasi: string[];
+      fasi: VoceBozza[];
     })
   | (BozzaComune & {
       tipo: 'routine';
@@ -87,7 +96,7 @@ export type BozzaAttivita =
       fine: string | null;
       dataInizio: string;
       termine: Termine;
-      fasi: string[];
+      fasi: VoceBozza[];
     })
   | (BozzaComune & {
       tipo: 'studio';
@@ -115,11 +124,14 @@ export type ErroreAttivita =
 export type NuovoBlocco = Omit<Blocco, 'id' | 'fasi'>;
 export type NuovaRicorrenza = Omit<Ricorrenza, 'id' | 'fasi' | 'fuso'>;
 
-/** Esito: gli errori, oppure il blocco o la definizione con le etichette delle fasi (gli id li dà il servizio). */
+/** Una fase validata: l'etichetta e, in Modifica, il suo id (i nuovi li dà il servizio). */
+export type FaseValida = { etichetta: string; id?: string };
+
+/** Esito: gli errori, oppure il blocco o la definizione con le fasi. */
 export type Validazione =
   | { ok: false; errori: ErroreAttivita[] }
-  | { ok: true; fasi: string[]; blocco: NuovoBlocco; ricorrenza?: undefined }
-  | { ok: true; fasi: string[]; ricorrenza: NuovaRicorrenza; blocco?: undefined };
+  | { ok: true; fasi: FaseValida[]; blocco: NuovoBlocco; ricorrenza?: undefined }
+  | { ok: true; fasi: FaseValida[]; ricorrenza: NuovaRicorrenza; blocco?: undefined };
 
 const ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -149,7 +161,15 @@ export function wallDuration(inizio: string, fine: string): number | null {
 export const endsNextDay = (inizio: string, fine: string): boolean =>
   ORARIO.test(inizio) && ORARIO.test(fine) && fine <= inizio;
 
-const pulite = (voci: readonly string[]): string[] => voci.map((v) => v.trim()).filter((v) => v !== '');
+/** Le righe non vuote, con il testo senza spazi ai bordi (§4, §5). */
+const pulite = (voci: readonly VoceBozza[]) =>
+  voci
+    .map((v) => (typeof v === 'string' ? { testo: v } : v))
+    .map((v) => ({ ...v, testo: v.testo.trim() }))
+    .filter((v) => v.testo !== '');
+
+const fasiValide = (voci: readonly VoceBozza[]): FaseValida[] =>
+  pulite(voci).map(({ testo, id }) => (id === undefined ? { etichetta: testo } : { etichetta: testo, id }));
 
 function checkReminder(p: Promemoria, conOrario: boolean, errori: ErroreAttivita[]): Promemoria {
   // Evento tutto il giorno: un solo trigger alle 08:00 del giorno (§13.2), gli anticipi non valgono → Auto (D-CREA-1)
@@ -195,7 +215,7 @@ export function validateActivity(b: BozzaAttivita): Validazione {
     if (b.orario && !(GRADINI_DURATA as readonly number[]).includes(b.orario.durata)) errori.push('durata');
     const checklist = pulite(b.checklist);
     if (checklist.length > MAX_VOCI_CHECKLIST) errori.push('checklist_voci');
-    if (checklist.some((v) => v.length > MAX_CARATTERI_VOCE)) errori.push('checklist_testo');
+    if (checklist.some((v) => v.testo.length > MAX_CARATTERI_VOCE)) errori.push('checklist_testo');
     const promemoria = conOrario ? checkReminder(b.promemoria, true, errori) : ({ modo: 'auto' } as const);
     if (errori.length > 0 || inizio === null) return { ok: false, errori };
     return {
@@ -212,7 +232,7 @@ export function validateActivity(b: BozzaAttivita): Validazione {
         conOrario,
         orizzonte: b.orizzonte,
         ...(conOrario ? {} : { priorita: b.priorita }),
-        checklist: checklist.map((testo) => ({ testo, fatta: false })),
+        checklist: checklist.map(({ testo, fatta }) => ({ testo, fatta: fatta ?? false })),
         corsoId: b.corsoId,
         promemoria,
       },
@@ -231,7 +251,7 @@ export function validateActivity(b: BozzaAttivita): Validazione {
     if (errori.length > 0 || inizio === null || fine === null) return { ok: false, errori };
     return {
       ok: true,
-      fasi: pulite(b.fasi),
+      fasi: fasiValide(b.fasi),
       blocco: {
         tipo: 'evento',
         stato: 'programmato',
@@ -251,7 +271,7 @@ export function validateActivity(b: BozzaAttivita): Validazione {
   if (errori.length > 0) return { ok: false, errori };
   return {
     ok: true,
-    fasi: b.tipo === 'routine' ? pulite(b.fasi) : [],
+    fasi: b.tipo === 'routine' ? fasiValide(b.fasi) : [],
     ricorrenza: {
       tipo: b.tipo,
       titolo: titolo === '' ? TITOLO_STUDIO : titolo,
@@ -262,4 +282,44 @@ export function validateActivity(b: BozzaAttivita): Validazione {
       promemoria,
     },
   };
+}
+
+/**
+ * Il termine che porta da `dataInizio` all'ultimo giorno `dataFine`, per il form della Modifica (T-042): l'unità più
+ * grande che ci arriva esatta; `null` = mai, anche per una fine prima dell'inizio, che nessun termine dà (solo con dati
+ * esterni: un «Salva» la toglie, D-MOD-1).
+ */
+export function recurrenceTerm(dataInizio: string, dataFine: string | null): Termine {
+  if (dataFine === null) return null;
+  for (const unita of ['mesi', 'settimane', 'giorni'] as const)
+    for (let n = 1; ; n++) {
+      const ultimo = recurrenceLastDay(dataInizio, { n, unita });
+      if (ultimo === dataFine) return { n, unita };
+      if (ultimo > dataFine) break;
+    }
+  return null;
+}
+
+/**
+ * Il todo o l'evento dopo una Modifica (FUNZ §4): i campi nuovi con lo stato, le chiusure e le marcature di prima. Le voci
+ * della checklist arrivano dal form con la loro spunta e la lista non tocca lo stato (§4, A3); il corso del todo, che il
+ * form non mostra, resta. Un todo che cambia orario o lo perde perde anche l'orario originale (D-HOR-1); uno senza
+ * orario che cambia giorno o priorità, o perde l'orario, va in fondo al suo gruppo (§6, D-RIORD-1). `fasi`: quelle
+ * dell'evento, con i loro id.
+ */
+export function editBlock(prima: Blocco, nuovo: NuovoBlocco, fasi: FaseTemplate[], now: number): Blocco {
+  const todo = nuovo.tipo === 'todo';
+  const b: Blocco = {
+    ...prima,
+    ...nuovo,
+    stato: prima.stato,
+    ...(todo && { corsoId: prima.corsoId ?? null }),
+    ...(nuovo.tipo === 'evento' && { fasi }),
+    ...(todo && (nuovo.inizio !== prima.inizio || nuovo.conOrario !== prima.conOrario) && { orarioOriginale: null }),
+  };
+  const nuovoGruppo =
+    todo &&
+    !b.conOrario &&
+    (prima.conOrario || prima.inizio !== b.inizio || (prima.priorita ?? 'normale') !== (b.priorita ?? 'normale'));
+  return nuovoGruppo ? enterGroup(b, now) : b;
 }

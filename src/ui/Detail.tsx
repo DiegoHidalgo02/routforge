@@ -24,6 +24,7 @@ import {
   Repeat,
   SquareCheckBig,
   StickyNote,
+  Pencil,
   Trash2,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -611,15 +612,26 @@ export function Detail() {
         <button type="button" className={s.icona} aria-label={t('chiudi')} onClick={chiudi}>
           <ChevronLeft size={18} />
         </button>
-        <button
-          type="button"
-          className={`${s.icona} ${s.cestino}`}
-          aria-label={t('elimina')}
-          disabled={sparito}
-          onClick={elimina}
-        >
-          <Trash2 size={17} />
-        </button>
+        <div className={s.azioniTesta}>
+          <button
+            type="button"
+            className={s.icona}
+            aria-label={t('modifica')}
+            disabled={sparito}
+            onClick={() => void navigate(`/attivita/${id}/modifica`, { state: sfondo ? { sfondo } : null })}
+          >
+            <Pencil size={17} />
+          </button>
+          <button
+            type="button"
+            className={`${s.icona} ${s.cestino}`}
+            aria-label={t('elimina')}
+            disabled={sparito}
+            onClick={elimina}
+          >
+            <Trash2 size={17} />
+          </button>
+        </div>
       </header>
 
       <div className={s.corpo} inert={sheetAperta}>

@@ -174,7 +174,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     **Bloccante**. T-050.
 23. Todo senza orario: l'etichetta «Promemoria» resta senza contenuto (la spec dice «solo digest»). **Bloccante**
     (domanda: residuo del mock?). T-050.
-24. Data di un evento in Modifica fuori da oggi … oggi + 6: non definita. **Bloccante**. T-042.
+24. Data di un evento in Modifica fuori da oggi … oggi + 6: non definita. **Bloccante**. T-042 (provvisorio: resta la
+    sua, una nuova si sceglie fra oggi e oggi + 6, D-MOD-1).
 25. Dettaglio: routine persa oggi (Fatta o Saltata fino alle 23:59), fasi «nulle» e «saltate» a blocco chiuso, meta
     per gli altri orizzonti e priorità, motivo della CTA spenta: non disegnati. **Bloccante** (aspetto e testi). T-054.
 26. Routine completata senza «Riapri» (ce l'ha solo il todo). Decisione: il design; D-DETT-1 da riconfermare (§2). T-054.
@@ -277,6 +278,11 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     l'unità aperta mostra concetto core e modulo, non ancora le sezioni dell'«Unità inline» del mock; dopo «Elimina»
     il pannello si chiude allo scadere del toast (n. 27, provvisorio). Nel foglio di eliminazione «solo questa
     occorrenza» invece di «l'occorrenza di oggi» del mock, che sbaglia su un'occorrenza di un altro giorno.
+63. Modifica (T-042, D-MOD-1): la matita del Dettaglio apre il foglio di Crea in modifica sopra lo stesso sfondo;
+    «Annulla» torna al Dettaglio (il mock non lo disegna), «Salva» a Oggi con «Modifiche salvate» senza «Annulla»
+    (n. 28). La data fuori da oggi … oggi + 6 resta la sua (n. 24, provvisorio). Nel pacchetto «Il tipo non si cambia
+    dopo la creazione» è in text-3, che `tokens.css` esclude per il testo informativo (3,2:1 a 12 px): l'app segue il
+    mock, da decidere.
 
 ## 4. Mappa schermata → design → task
 

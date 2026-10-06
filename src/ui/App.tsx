@@ -21,6 +21,7 @@ function Rotte() {
           <Route index element={<Today />} />
           <Route path="crea" element={<Create />} />
           <Route path="attivita/:id" element={<Detail />} />
+          <Route path="attivita/:id/modifica" element={<Create />} />
           <Route path="statistiche" element={<Section titolo="statistiche" />} />
           <Route path="corsi" element={<Courses />} />
           <Route path="sessione/setup" element={<SessionSetup />} />
@@ -36,6 +37,7 @@ function Rotte() {
         <Routes>
           <Route path="crea" element={<Create />} />
           <Route path="attivita/:id" element={<Detail />} />
+          <Route path="attivita/:id/modifica" element={<Create />} />
         </Routes>
       )}
     </>

@@ -1,9 +1,10 @@
 // Avvisi che una schermata lascia a quella sotto di lei quando si chiude (Crea → Oggi, SCENARI G5: «Todo creato · …» con
-// «Annulla»): uno alla volta; se nessuno ascolta ancora, aspetta il primo che arriva.
+// «Annulla»; Modifica → Oggi, «Modifiche salvate» senza): uno alla volta; se nessuno ascolta ancora, aspetta il primo
+// che arriva.
 export interface Avviso {
   id: string;
   testo: string;
-  annulla: () => Promise<unknown>;
+  annulla?: () => Promise<unknown>;
 }
 
 let inAttesa: Avviso | null = null;
