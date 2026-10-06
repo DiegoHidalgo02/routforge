@@ -1,9 +1,12 @@
 // Menu del logo utente (S1 Oggi Mobile «menu», FUNZ §1): Corsi, Esiti da registrare, Account e sincronizzazione,
 // Impostazioni (D-DESIGN-1 n. 16: la Diagnostica si apre da Impostazioni). Popover nativo: si chiude toccando fuori o
-// con Esc. L'intestazione con nome, email e stato della sync e il badge degli esiti entrano con T-033 e T-022.
+// con Esc. «Esiti da registrare» ha il contatore degli esiti nuovi (T-022, CONTROLLI); l'intestazione con nome, email e
+// stato della sync entra con T-033.
 import { Bell, BookOpen, RefreshCw, Settings } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { NavLink } from 'react-router';
+import { appDb, watch } from '../app/db';
+import { readInbox } from '../app/inbox';
 import { t, type Chiave } from './i18n';
 import { Logomark } from './Logomark';
 import s from './ProfileMenu.module.css';
@@ -19,6 +22,8 @@ const VOCI: { to: string; chiave: Chiave; Icona: typeof Bell }[] = [
 export function ProfileMenu({ variante }: { variante: 'logo' | 'riga' }) {
   const id = useId();
   const menu = useRef<HTMLElement>(null);
+  const [nuove, setNuove] = useState(0);
+  useEffect(() => watch(() => readInbox(appDb, Date.now()).then((x) => x.nuove), setNuove), []);
   return (
     <>
       {variante === 'logo' ? (
@@ -44,6 +49,7 @@ export function ProfileMenu({ variante }: { variante: 'logo' | 'riga' }) {
           <NavLink key={to} to={to} className={s.voce} onClick={() => menu.current?.hidePopover()}>
             <Icona size={18} />
             {t(chiave)}
+            {to === '/notifiche' && nuove > 0 && <span className={s.contatore}>{nuove}</span>}
           </NavLink>
         ))}
       </nav>

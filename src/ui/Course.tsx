@@ -2,8 +2,9 @@
 // studio del corso, puntatore e moduli a fisarmonica (il primo aperto) con le unità e la verifica; i bloccati hanno il
 // lucchetto. Il modulo (S11 Modulo, `/corsi/:corso/moduli/:n`): meta, obiettivi, unità che si aprono sul materiale,
 // criteri Go/No-Go da spuntare, progetto, «Riprendi da». L'unità (S12, `/corsi/:corso/unita/:unita`): stato, ultima
-// sessione, concetto core, sezioni con le risorse, la sessione sull'unità. Restano ad altri task il cestino del corso
-// (T-037), «Chiedi all'AI» (T-026), i materiali tuoi e la pratica generata (T-024, T-027).
+// sessione, concetto core, sezioni con le risorse, la sessione sull'unità. Il cestino del corso apre la conferma con
+// ciò che sparisce ed elimina a cascata (T-037, H3). Restano ad altri task «Chiedi all'AI» (T-026), i materiali tuoi e
+// la pratica generata (T-024, T-027).
 import {
   ArrowUpRight,
   Book,
@@ -23,15 +24,19 @@ import {
   Repeat,
   SquarePlay,
   Target,
+  Trash2,
 } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import {
+  courseCascade,
+  deleteCourse,
   readCourse,
   readModule,
   readUnit,
   readUnitMaterial,
   setCriterion,
+  type CascataCorso,
   type MaterialeUnita,
   type VistaCorso,
   type VistaModulo,
@@ -66,18 +71,26 @@ export function Course() {
   const navigate = useNavigate();
   const primaSchermata = useLocation().key === 'default';
   const [v, setV] = useState<VistaCorso | null>();
-  // Moduli aperti: all'inizio il primo (S11)
-  const [aperti, setAperti] = useState<ReadonlySet<number>>(() => new Set([0]));
+  // Moduli aperti: all'inizio il primo (S11), qualunque sia il suo numero
+  const [scelti, setAperti] = useState<ReadonlySet<number> | null>(null);
+  // La conferma dell'eliminazione con i numeri letti all'apertura (S11 `confirmDelete`)
+  const [cascata, setCascata] = useState<CascataCorso | null>(null);
+  const [eliminato, setEliminato] = useState(false);
   useEffect(() => watch(() => readCourse(appDb, corso), setV), [corso]);
   if (v === undefined) return null;
-  if (v === null) return <Navigate to="/corsi" replace />;
+  if (v === null || eliminato) return <Navigate to="/corsi" replace />;
+  const chiediElimina = () => void courseCascade(appDb, corso).then(setCascata);
+  const elimina = () =>
+    void deleteCourse(appDb, corso, Date.now())
+      .then(() => setEliminato(true))
+      .catch(() => setCascata(null));
   const { scheda: c } = v;
-  const apri = (n: number) =>
-    setAperti((x) => {
-      const y = new Set(x);
-      if (!y.delete(n)) y.add(n);
-      return y;
-    });
+  const aperti = scelti ?? new Set(v.moduli.slice(0, 1).map((m) => m.numero));
+  const apri = (n: number) => {
+    const y = new Set(aperti);
+    if (!y.delete(n)) y.add(n);
+    setAperti(y);
+  };
 
   return (
     <div className={s.pagina}>
@@ -90,8 +103,19 @@ export function Course() {
         >
           <ChevronLeft size={18} />
         </button>
+        <button
+          type="button"
+          className={`${s.icona} ${s.cestino}`}
+          aria-label={t('eliminaCorso')}
+          onClick={chiediElimina}
+        >
+          <Trash2 size={17} />
+        </button>
       </header>
       <SessionBannerSlot />
+      {cascata && (
+        <ConfermaElimina titolo={c.titolo} cascata={cascata} onAnnulla={() => setCascata(null)} onElimina={elimina} />
+      )}
 
       <div className={s.corpo}>
         <div className={s.intestazione}>
@@ -167,7 +191,7 @@ export function Course() {
                     <span className={s.titoloModulo}>{m.titolo}</span>
                     <span className={s.subModulo}>
                       {bloccato
-                        ? t('bloccatoGoNoGo', { n: m.numero - 1 })
+                        ? t('bloccatoGoNoGo', { n: m.precedente ?? 0 })
                         : [frase(m.tipo), m.finestraIndicativa].filter(Boolean).join(' · ')}
                     </span>
                   </span>
@@ -373,13 +397,9 @@ export function Module() {
   const { modulo: m, unita } = v;
   const delModulo = unita.some((u) => u.id === v.puntatore?.id) ? v.puntatore : null;
   const apertaOra = aperta === undefined ? (delModulo?.id ?? null) : aperta;
-  const fatte = unita.filter((u) => u.stato === 'completata').length;
-  const pct = unita.length ? Math.round((fatte / unita.length) * 100) : 0;
+  const { fatte, pct, go, cta } = v;
   const link = unita.reduce((x, u) => x + u.link, 0);
   const ok = m.criteri.filter((c) => c.fatto).length;
-  const go = m.criteri.length > 0 && ok === m.criteri.length;
-  // La CTA: l'unità del puntatore se è qui, altrimenti la prima non completata del modulo
-  const prossima = delModulo ?? unita.find((u) => u.stato !== 'completata' && u.stato !== 'saltata') ?? null;
   const trasversali = m.trasversali.split('(')[0]?.trim();
   return (
     <div className={s.pagina}>
@@ -563,10 +583,10 @@ export function Module() {
           </section>
         )}
 
-        {prossima && (
-          <Link to={`/sessione/setup?unita=${encodeURIComponent(prossima.id)}`} className={s.cta}>
+        {cta && (
+          <Link to={`/sessione/setup?unita=${encodeURIComponent(cta.id)}`} className={s.cta}>
             <Play size={14} fill="currentColor" />
-            {t(fatte > 0 ? 'riprendiDa' : 'iniziaDa')} <span className={s.num}>{prossima.numero}</span>
+            {t(cta.riprendi ? 'riprendiDa' : 'iniziaDa')} <span className={s.num}>{cta.numero}</span>
           </Link>
         )}
       </div>
@@ -654,5 +674,48 @@ export function Unit() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/**
+ * «Eliminare «…»?» (S11 Corso, conferma; MECC §16, H3): ciò che sparisce con i suoi numeri, la nota sulle sessioni, «Annulla»
+ * ed «Elimina corso». Dialog modale nativo: Esc chiude come «Annulla».
+ */
+function ConfermaElimina(p: { titolo: string; cascata: CascataCorso; onAnnulla: () => void; onElimina: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => ref.current?.showModal(), []);
+  const c = p.cascata;
+  const righe: [Chiave, Record<string, number>][] = [
+    ['cascataRoutine', { n: c.routine, occ: c.occorrenze }],
+    ['cascataMateriali', { n: c.materiali }],
+    ['cascataMazzi', { mazzi: c.mazzi, carte: c.carte }],
+    ['cascataPratiche', { n: c.pratiche }],
+    ['cascataConversazioni', { n: c.conversazioni }],
+    ['cascataCodice', { n: c.fileCodice }],
+  ];
+  return (
+    <dialog ref={ref} className={s.foglio} aria-labelledby="elimina-titolo" onClose={p.onAnnulla}>
+      <div className={s.contenutoFoglio}>
+        <span className={s.maniglia} aria-hidden />
+        <span id="elimina-titolo" className={s.titoloFoglio}>
+          {t('eliminareTitolo', { titolo: p.titolo })}
+        </span>
+        <span className={s.testoFoglio}>{t('sparisconoCorso')}</span>
+        <span className={s.griglia}>
+          {righe.map(([k, v]) => (
+            <span key={k}>{cifre(t(k, v))}</span>
+          ))}
+        </span>
+        <span className={s.notaFoglio}>{t('cascataNota')}</span>
+        <span className={s.azioniFoglio}>
+          <button type="button" className={s.annulla} onClick={p.onAnnulla}>
+            {t('annulla')}
+          </button>
+          <button type="button" className={s.pericolo} onClick={p.onElimina}>
+            {t('eliminaCorso')}
+          </button>
+        </span>
+      </div>
+    </dialog>
   );
 }

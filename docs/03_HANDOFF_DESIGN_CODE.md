@@ -194,7 +194,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 33. VideoCard offline o in errore; PDF da «scaricare» in S13 `pdf-scan` (la spec non ha PDF remoti); evidenziazione
     della citazione senza token. **Bloccante**. T-024.
 34. Eliminazione del corso: nessun toast, «corso corrente → successivo» senza resa, «log fasi» assente dall'elenco
-    (MECC §16 lo include: si aggiunge). **Bloccante** minore. T-037.
+    (MECC §16 lo include: si aggiunge). **Bloccante** minore. T-037 (applicata: dopo «Elimina corso» si torna all'elenco
+    senza toast; il log fasi è nella cascata ma non nel foglio, perché le routine di studio non hanno fasi e la riga
+    direbbe sempre 0; un «corso corrente» non c'è nello stato dell'app, D-CASCATA-1).
 35. Widget: «max 6 + N» e «3 todo alta priorità» non sono più in MECC §21 (allineato `docs/00_SINTESI.md`). T-023.
 
 **S19, S20, S22** (tavole 06, 07, 09)
@@ -324,6 +326,11 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     ha il badge dello stato sulla riga del modulo (il mock lo disegna solo sulla riga del puntatore). I criteri «auto»
     non mostrano «ultimo 6/10» finché non c'è il quiz (T-027). Su desktop restano da fare l'elenco a 320 accanto al
     corso e la seconda colonna dell'unità (materiali tuoi e pratica, T-024 e T-027).
+72. Notifiche S21 (T-022): il contatore conta gli esiti diventati pendenti dopo l'ultimo «Segna tutte lette» (CONTROLLI:
+    «svuota il contatore, le pendenti restano»); le azioni secondarie aprono S15 in recupero, S12 o il Dettaglio senza
+    togliere la riga (il mock la toglie, la spec la tiene finché non c'è l'esito); «Ieri · gestite» descrive l'avviso
+    dal suo trigger («avviso 15 min prima», «3 todo senza orario»), perché il registro non sa come è stato gestito
+    («completato · 1 fase saltata → todo creato» del mock).
 
 ## 4. Mappa schermata → design → task
 

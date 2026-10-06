@@ -1,21 +1,22 @@
 /**
  * Elenco dei corsi per Profilo → Corsi (S10; FUNZ §9.1, §9.3). Criterio: SCENARI H1 (corso salvato). Il materiale di
  * un'unità per la sessione e la pagina dell'unità (`readUnitMaterial`, FORMATO §4). Il corso con i moduli (`readCourse`, S11),
- * il modulo con la verifica e la spunta dei criteri Go/No-Go (`readModule`, `setCriterion`), l'unità (`readUnit`, S12).
+ * il modulo con la verifica e la spunta dei criteri Go/No-Go (`readModule`, `setCriterion`), l'unità (`readUnit`, S12),
+ * l'eliminazione a cascata (`courseCascade`, `deleteCourse`; MECC §16, H3, T-037).
  *
  * I numeri si contano dalle righe salvate, non dai mock: il corso di esempio è 2 moduli · 13 unità (D-SAMPLE-1).
  * `esempio` dà il badge «Esempio» (D-IMPORT-1). Ordine: dal più vecchio import al più recente.
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, list, listBy, save } from '../data/repository';
+import { get, inTransaction, list, listBy, remove, save, saveBlock } from '../data/repository';
 import {
   sectionTitle,
   type ModuloImportato,
   type RisorsaImportata,
   type SezioneImportata,
 } from '../domain/course/parser';
-import { criteriaMet, sortedUnits, statiModuli } from '../domain/pointer';
-import { courseDefaultUnit } from '../domain/session';
+import { criteriaMet, currentUnit, sortedUnits, statiModuli } from '../domain/pointer';
+import { STATI_UNITA_PENDENTI } from '../domain/types';
 import { sessionMinutes } from '../domain/outcome';
 import type { Esito, StatoModulo, StatoUnita } from '../domain/types';
 import { recomputePointer } from './pointer';
@@ -45,7 +46,8 @@ export async function courseCards(db: RoutForgeDb): Promise<SchedaCorso[]> {
       const percorso = moduli
         .filter((m) => m.corsoId === id)
         .map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
-      const p = sue.find((u) => u.id === courseDefaultUnit(sue, percorso));
+      const c = currentUnit(sue, percorso);
+      const p = c && sue.find((u) => u.id === c.id);
       return {
         id,
         titolo,
@@ -112,6 +114,8 @@ export interface VistaCorso {
     tipo: string;
     finestraIndicativa: string;
     stato: StatoModulo;
+    /** Il numero del modulo precedente nell'ordine, quello il cui Go/No-Go lo sblocca; `null` per il primo. */
+    precedente: number | null;
     unita: { id: string; numero: string; titolo: string; stato: StatoUnita }[];
     /** «Verifica del modulo» (S11): domande, esercizi, criteri Go/No-Go soddisfatti sul totale, progetto. */
     domande: number;
@@ -132,8 +136,9 @@ export async function readCourse(db: RoutForgeDb, corsoId: string): Promise<Vist
   const percorso = moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
   const stati = statiModuli(percorso);
   const ordinate = sortedUnits(unita);
-  const proposta = courseDefaultUnit(ordinate, percorso);
-  const u = ordinate.find((x) => x.id === proposta);
+  // L'unità corrente (MECC §11): prima pendente nei moduli aperti; a percorso bloccato nessuna (D-PTR-1)
+  const corrente = currentUnit(ordinate, percorso);
+  const u = corrente && ordinate.find((x) => x.id === corrente.id);
   const r = ricorrenze.filter((x) => x.tipo === 'studio').sort((a, b) => a.createdAt - b.createdAt)[0];
   const completate = unita.filter((x) => x.stato === 'completata').length;
   const puntatore = u ? { id: u.id, numero: u.numero, titolo: u.titolo } : null;
@@ -154,9 +159,10 @@ export async function readCourse(db: RoutForgeDb, corsoId: string): Promise<Vist
     puntatore,
     moduli: moduli
       .sort((a, b) => a.numero - b.numero)
-      .map((m) => ({
+      .map((m, i, tutti) => ({
         id: m.id,
         numero: m.numero,
+        precedente: tutti[i - 1]?.numero ?? null,
         nn: m.nn,
         titolo: m.titolo,
         tipo: m.tipo,
@@ -203,6 +209,15 @@ export interface VistaModulo {
   /** Le unità con quante sezioni e quanti link hanno (S11 Modulo: «4 sezioni · 5 link»). */
   unita: (VistaCorso['moduli'][number]['unita'][number] & { sezioni: number; link: number })[];
   puntatore: VistaCorso['puntatore'];
+  fatte: number;
+  pct: number;
+  /** Tutti i criteri Go/No-Go sono sì (`criteriaMet`): il modulo successivo si apre. */
+  go: boolean;
+  /**
+   * La CTA (S11 Modulo «Riprendi da 0.7» / «Inizia da 1.1»): l'unità del puntatore se è qui, altrimenti la prima pendente
+   * del modulo; «Riprendi» se una del modulo è fatta o se quella è parziale (come S12). `null` a modulo finito.
+   */
+  cta: { id: string; numero: string; riprendi: boolean } | null;
 }
 
 export async function readModule(db: RoutForgeDb, corsoId: string, numero: number): Promise<VistaModulo | null> {
@@ -215,9 +230,18 @@ export async function readModule(db: RoutForgeDb, corsoId: string, numero: numbe
     listBy(db, 'sezioni', 'corsoId', corsoId),
     listBy(db, 'risorse', 'corsoId', corsoId),
   ]);
+  const fatte = m.unita.filter((u) => u.stato === 'completata').length;
+  const prossima =
+    m.unita.find((u) => u.id === v.puntatore?.id) ?? m.unita.find((u) => STATI_UNITA_PENDENTI.has(u.stato));
   return {
     corso: { id: v.scheda.id, titolo: v.scheda.titolo },
     modulo: { ...modulo, stato: m.stato },
+    fatte,
+    pct: m.unita.length ? Math.round((fatte / m.unita.length) * 100) : 0,
+    go: criteriaMet(riga.criteri),
+    cta: prossima
+      ? { id: prossima.id, numero: prossima.numero, riprendi: fatte > 0 || prossima.stato === 'parziale' }
+      : null,
     unita: m.unita.map((u) => {
       const sue = new Set(sezioni.filter((x) => x.unitaId === u.id).map((x) => x.id));
       return { ...u, sezioni: sue.size, link: risorse.filter((r) => sue.has(r.sezioneId)).length };
@@ -286,9 +310,132 @@ export async function readUnit(db: RoutForgeDb, unitaId: string): Promise<VistaU
       ? {
           avvio: ultima.s.avvio,
           minuti: ultima.minuti,
-          esito: ultima.s.unitaId === unitaId ? (ultima.s.esito?.esito ?? null) : null,
+          esito: ultima.s.unitaId === unitaId && ultima.s.esito?.contaNelPiano ? ultima.s.esito.esito : null,
         }
       : null,
     materiale,
   };
+}
+
+/**
+ * Che cosa sparisce con il corso (MECC §16, SCENARI H3; D-CASCATA-1), i record per tabella: il corso con moduli, unità,
+ * sezioni e risorse; le routine di studio del corso con tutte le loro occorrenze (qualunque corso abbiano adesso, anche
+ * quelle di oggi con le notifiche armate, che la riconciliazione cancella da sé, T-019) e gli altri blocchi di studio del
+ * corso senza routine (retroattivi); mazzi e carte, quiz e pratiche, materiali con i loro file, file di codice delle
+ * unità. Un blocco del corso che appartiene a una routine che resta (senza corso, o che ha cambiato corso) e un blocco
+ * che non è di studio si staccano dal corso invece di sparire: eliminarli farebbe ricreare lo slot al ciclo. Le sessioni
+ * restano nelle statistiche. Le conversazioni entrano con il loro ambito (T-026).
+ */
+async function courseRecords(db: RoutForgeDb, corsoId: string) {
+  const [moduli, unita, sezioni, risorse, ricorrenze, delCorso] = await Promise.all([
+    listBy(db, 'moduli', 'corsoId', corsoId),
+    listBy(db, 'unita', 'corsoId', corsoId),
+    listBy(db, 'sezioni', 'corsoId', corsoId),
+    listBy(db, 'risorse', 'corsoId', corsoId),
+    listBy(db, 'ricorrenze', 'corsoId', corsoId),
+    listBy(db, 'blocchi', 'corsoId', corsoId),
+  ]);
+  const routineVia = new Set(ricorrenze.map((r) => r.id));
+  const delleRoutine = (await Promise.all(ricorrenze.map((r) => listBy(db, 'blocchi', 'ricorrenzaId', r.id)))).flat();
+  const tutti = new Map([...delCorso, ...delleRoutine].map((b) => [b.id, b]));
+  const blocchi = [...tutti.values()].filter((b) =>
+    b.ricorrenzaId ? routineVia.has(b.ricorrenzaId) : b.tipo === 'studio',
+  );
+  const staccare = [...tutti.values()].filter((b) => !blocchi.includes(b));
+  const perUnita = <K extends 'mazzi' | 'pratiche' | 'materiali' | 'fileCodice'>(nome: K) =>
+    Promise.all(unita.map((u) => listBy(db, nome, 'unitaId', u.id))).then((x) => x.flat());
+  const [mazzi, pratiche, materiali, fileCodice] = await Promise.all([
+    perUnita('mazzi'),
+    perUnita('pratiche'),
+    perUnita('materiali'),
+    perUnita('fileCodice'),
+  ]);
+  const [carte, binari, log] = await Promise.all([
+    Promise.all(mazzi.map((m) => listBy(db, 'carte', 'mazzoId', m.id))).then((x) => x.flat()),
+    Promise.all(materiali.map((m) => listBy(db, 'materialiBinari', 'materialeId', m.id))).then((x) => x.flat()),
+    Promise.all(ricorrenze.map((r) => listBy(db, 'logFasi', 'ricorrenzaId', r.id))).then((x) => x.flat()),
+  ]);
+  return {
+    moduli,
+    unita,
+    sezioni,
+    risorse,
+    ricorrenze,
+    blocchi,
+    staccare,
+    mazzi,
+    carte,
+    pratiche,
+    materiali,
+    binari,
+    fileCodice,
+    log,
+  };
+}
+
+/** I numeri del foglio «Eliminare …?» (S11): routine e occorrenze, materiali, mazzi e carte, pratiche, file di codice. */
+export interface CascataCorso {
+  routine: number;
+  occorrenze: number;
+  materiali: number;
+  mazzi: number;
+  carte: number;
+  pratiche: number;
+  conversazioni: number;
+  fileCodice: number;
+}
+
+export async function courseCascade(db: RoutForgeDb, corsoId: string): Promise<CascataCorso> {
+  const r = await courseRecords(db, corsoId);
+  return {
+    routine: r.ricorrenze.length,
+    occorrenze: r.blocchi.length,
+    materiali: r.materiali.length,
+    mazzi: r.mazzi.length,
+    carte: r.carte.length,
+    pratiche: r.pratiche.length,
+    conversazioni: 0,
+    fileCodice: r.fileCodice.length,
+  };
+}
+
+/** Elimina il corso a cascata in una transazione (MECC §16, H3): tombstone per ogni record, nessun orfano (T-037). */
+export async function deleteCourse(db: RoutForgeDb, corsoId: string, now: number): Promise<void> {
+  const tabelle = [
+    'corsi',
+    'moduli',
+    'unita',
+    'sezioni',
+    'risorse',
+    'ricorrenze',
+    'blocchi',
+    'logFasi',
+    'mazzi',
+    'carte',
+    'pratiche',
+    'materiali',
+    'materialiBinari',
+    'fileCodice',
+  ] as const;
+  await inTransaction(db, tabelle, async () => {
+    const r = await courseRecords(db, corsoId);
+    const via = async <K extends (typeof tabelle)[number]>(nome: K, righe: readonly { id: string }[]) => {
+      for (const x of righe) await remove(db, nome, x.id, now);
+    };
+    await via('carte', r.carte);
+    await via('mazzi', r.mazzi);
+    await via('pratiche', r.pratiche);
+    await via('materialiBinari', r.binari);
+    await via('materiali', r.materiali);
+    await via('fileCodice', r.fileCodice);
+    await via('logFasi', r.log);
+    await via('blocchi', r.blocchi);
+    for (const b of r.staccare) await saveBlock(db, { ...b, corsoId: null, unitaId: null }, now, b.fuso);
+    await via('ricorrenze', r.ricorrenze);
+    await via('risorse', r.risorse);
+    await via('sezioni', r.sezioni);
+    await via('unita', r.unita);
+    await via('moduli', r.moduli);
+    await remove(db, 'corsi', corsoId, now);
+  });
 }

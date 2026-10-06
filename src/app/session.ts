@@ -216,9 +216,17 @@ function close(
     const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
     if (piano.esito?.contaNelPiano) {
       const { minuti, perUnita } = sessionMinutes(chiusa.riepilogo);
-      const blocco = b ?? retroactiveBlock(s.avvio, now, s.unitaId, s.corsoId);
+      // Il blocco retroattivo solo sull'unità ancora viva: il corso può essere stato eliminato durante la sessione
+      // (T-037, D-CASCATA-1), e un blocco su un'unità sparita sarebbe un orfano in calendario e nelle statistiche
+      const u = !b && s.unitaId ? await get(db, 'unita', s.unitaId) : undefined;
+      const blocco = b ?? retroactiveBlock(s.avvio, now, u?.id ?? null, u?.corsoId ?? null);
       const dati = piano.esito;
-      await writeOutcome(db, { blocco, unitaId: s.unitaId, minuti, minutiPerUnita: perUnita, dati }, now, fuso);
+      await writeOutcome(
+        db,
+        { blocco, unitaId: b ? s.unitaId : (u?.id ?? null), minuti, minutiPerUnita: perUnita, dati },
+        now,
+        fuso,
+      );
     } else if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
     await remove(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA, now);
     return chiusa;

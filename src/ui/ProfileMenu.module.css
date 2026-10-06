@@ -139,3 +139,16 @@
 .voce svg {
   color: var(--color-text-2);
 }
+
+/* Contatore degli esiti nuovi su «Esiti da registrare» (T-022) */
+.contatore {
+  height: var(--size-badge);
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-sm) var(--font-num);
+}
