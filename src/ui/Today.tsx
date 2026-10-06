@@ -30,7 +30,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
   type MouseEvent,
   type PointerEvent,
@@ -63,6 +62,7 @@ import { localDayKey, localInstant } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
 import { centro, Coriandoli } from './Coriandoli';
+import { eDesktop, useDesktop } from './desktop';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
@@ -135,13 +135,6 @@ let scattato = false;
 type Verso = 'avanti' | 'indietro';
 type Sfondo = { sfondo: Location };
 /** Da 1024 px la giornata segue l'ordine desktop (D-UI-1). */
-const DESKTOP = '(min-width: 1024px)';
-const seguiDesktop = (cambia: () => void) => {
-  const m = window.matchMedia(DESKTOP);
-  m.addEventListener('change', cambia);
-  return () => m.removeEventListener('change', cambia);
-};
-const eDesktop = () => window.matchMedia(DESKTOP).matches;
 
 const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat(lingua, o).format(localInstant(giorno, '00:00'));
@@ -675,7 +668,7 @@ function Giornata({
   const now = useMinuto();
   const navigate = useNavigate();
   // Su desktop la fascia senza orario va in coda anche nell'ordine del fuoco (MECC §24, D-DESIGN-1 n. 3)
-  const desktop = useSyncExternalStore(seguiDesktop, eDesktop);
+  const desktop = useDesktop();
   // Card Adesso (MECC §14): la scelta fra i blocchi di ieri, oggi e domani, ricalcolata a ogni minuto; cresce a hero
   // dopo lo scatto dell'ora, una volta per apertura, subito su desktop o con la riduzione delle animazioni
   const oggi = localDayKey(now);

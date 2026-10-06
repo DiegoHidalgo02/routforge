@@ -92,7 +92,8 @@ export function Course() {
       <header className={s.testa}>
         <button
           type="button"
-          className={s.icona}
+          // Su desktop l'elenco dei corsi è accanto: S10 Desktop non ha l'indietro del corso
+          className={`${s.icona} ${s.indietroCorso}`}
           aria-label={t('indietro')}
           onClick={() => (primaSchermata ? navigate('/corsi') : navigate(-1))}
         >
@@ -683,53 +684,60 @@ export function Unit() {
     </span>
   );
   return (
-    <div className={s.pagina}>
+    <div className={s.pagina} data-larga>
       <Indietro altrimenti={`/corsi/${encodeURIComponent(corso)}/moduli/${v.modulo.numero}`} />
       <SessionBannerSlot />
       <div className={s.corpo}>
-        <div className={s.intestazione}>
-          <span className={s.eyebrowPrimary}>
-            {t('modulo')} <span className={s.num}>{v.modulo.nn}</span> · {t('unita')}{' '}
-            <span className={s.num}>{u.numero}</span>
-          </span>
-          <h1 className={s.titolo}>{u.titolo}</h1>
-          <span className={s.righe}>
-            <span className={s.riga}>
-              <Layers size={14} className={s.iconaRiga} />
-              <span className={s.testoRiga}>{v.modulo.titolo}</span>
-              {!v.puntatore && badge}
-            </span>
-            {v.puntatore && (
-              <span className={s.riga} data-tono="primary">
-                <Target size={14} className={s.iconaRiga} />
-                <span className={s.testoRiga}>{t('prossimaDalPuntatore')}</span>
-                {badge}
+        {/* S12 `wide`: da 1024 il materiale del corso a sinistra e una colonna di 320 con video, «Tuoi» e codice */}
+        <div className={s.colonneUnita}>
+          <div className={s.principaleUnita}>
+            <div className={s.intestazione}>
+              <span className={s.eyebrowPrimary}>
+                {t('modulo')} <span className={s.num}>{v.modulo.nn}</span> · {t('unita')}{' '}
+                <span className={s.num}>{u.numero}</span>
               </span>
-            )}
-            <span className={s.riga}>
-              <Clock size={14} className={s.iconaRiga} />
-              <span className={s.testoRiga}>
-                {ultima ? (
-                  <>
-                    {t('ultimaSessione')} ·{' '}
-                    <span className={s.num}>
-                      {fmtUltima.format(ultima.avvio)} · {durataBreve(ultima.minuti)}
-                    </span>
-                    {ultima.esito && ` · ${t('esitoBreve', { esito: t(ESITO[ultima.esito]) })}`}
-                  </>
-                ) : (
-                  t('nessunaSessione')
+              <h1 className={s.titolo}>{u.titolo}</h1>
+              <span className={s.righe}>
+                <span className={s.riga}>
+                  <Layers size={14} className={s.iconaRiga} />
+                  <span className={s.testoRiga}>{v.modulo.titolo}</span>
+                  {!v.puntatore && badge}
+                </span>
+                {v.puntatore && (
+                  <span className={s.riga} data-tono="primary">
+                    <Target size={14} className={s.iconaRiga} />
+                    <span className={s.testoRiga}>{t('prossimaDalPuntatore')}</span>
+                    {badge}
+                  </span>
                 )}
+                <span className={s.riga}>
+                  <Clock size={14} className={s.iconaRiga} />
+                  <span className={s.testoRiga}>
+                    {ultima ? (
+                      <>
+                        {t('ultimaSessione')} ·{' '}
+                        <span className={s.num}>
+                          {fmtUltima.format(ultima.avvio)} · {durataBreve(ultima.minuti)}
+                        </span>
+                        {ultima.esito && ` · ${t('esitoBreve', { esito: t(ESITO[ultima.esito]) })}`}
+                      </>
+                    ) : (
+                      t('nessunaSessione')
+                    )}
+                  </span>
+                </span>
               </span>
-            </span>
-          </span>
+            </div>
+            <div className={s.materiale}>
+              <Sezioni m={v.materiale} conStato />
+            </div>
+          </div>
+          <div className={s.latoUnita}>
+            <VideoStudio key={u.id} m={v.materiale} />
+            <TuoiMateriali corsoId={corso} unitaId={u.id} />
+            <CodiceUnita corsoId={corso} unitaId={u.id} />
+          </div>
         </div>
-        <div className={s.materiale}>
-          <Sezioni m={v.materiale} conStato />
-        </div>
-        <VideoStudio key={u.id} m={v.materiale} />
-        <TuoiMateriali corsoId={corso} unitaId={u.id} />
-        <CodiceUnita corsoId={corso} unitaId={u.id} />
         <Link to={`/sessione/setup?unita=${encodeURIComponent(u.id)}`} className={s.cta}>
           <Play size={14} fill="currentColor" />
           {t(

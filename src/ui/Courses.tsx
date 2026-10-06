@@ -3,13 +3,14 @@
 // nello ZIP manca 00_struttura (D-PARSE-1); avvisi al massimo 5. La card apre il corso (S11, T-053) e dice la
 // «Prossima» unità del puntatore; l'avanzamento dell'import non si mostra: la lettura è sincrona.
 import { GraduationCap, SlidersVertical, Target, TriangleAlert, Upload } from 'lucide-react';
-import { Link } from 'react-router';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Link, Navigate, NavLink, useOutlet } from 'react-router';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
 import { ErroreImportCorso, type CodiceAvviso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { useDesktop } from './desktop';
 import { t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
 import { SessionBannerSlot } from './Session';
@@ -49,8 +50,11 @@ const errore = (file: string, e: unknown): Esito => ({
   file: e instanceof ErroreImportCorso ? file : null,
 });
 
-/** Testata di S10 (Profilo / Corsi): logo del profilo su mobile, titolo con i numeri dei corsi, Impostazioni. */
-function Testa({ schede }: { schede: SchedaCorso[] | undefined }) {
+/**
+ * Testata di S10 (Profilo / Corsi): logo del profilo su mobile, titolo con i numeri dei corsi, Impostazioni; su desktop
+ * al posto di Impostazioni «Importa ZIP» (S10 Desktop r. 47-48).
+ */
+function Testa({ schede, importa }: { schede: SchedaCorso[] | undefined; importa?: ReactNode }) {
   const completate = schede?.reduce((n, c) => n + c.completate, 0) ?? 0;
   return (
     <>
@@ -67,9 +71,10 @@ function Testa({ schede }: { schede: SchedaCorso[] | undefined }) {
             </span>
           )}
         </span>
-        <Link to="/impostazioni" className={s.impostazioni} aria-label={t('impostazioni')}>
+        <Link to="/impostazioni" className={`${s.impostazioni} ${s.soloMobile}`} aria-label={t('impostazioni')}>
           <SlidersVertical size={17} />
         </Link>
+        {importa}
       </header>
       <SessionBannerSlot />
     </>
@@ -130,7 +135,10 @@ export function Courses() {
   if (schede.length === 0 && !esito)
     return (
       <>
-        <Testa schede={schede} />
+        {/* Su desktop lo stato vuoto è solo il blocco, centrato (S10 Desktop r. 34-43) */}
+        <div className={s.soloMobile}>
+          <Testa schede={schede} />
+        </div>
         <div className={s.vuoto}>
           <span className={s.iconaVuoto}>
             <GraduationCap size={24} />
@@ -155,7 +163,15 @@ export function Courses() {
 
   return (
     <>
-      <Testa schede={schede} />
+      <Testa
+        schede={schede}
+        importa={
+          <button type="button" className={`${s.pill} ${s.soloDesktop}`} onClick={scegli}>
+            <Upload size={14} />
+            {t('importaZip')}
+          </button>
+        }
+      />
       <div className={s.elenco}>
         <div className={s.gruppo}>
           <span className={s.etichetta}>
@@ -244,7 +260,8 @@ export function Courses() {
         )}
 
         {schede.map((c) => (
-          <Link key={c.id} to={`/corsi/${c.id}`} className={`${s.card} ${s.cardCorso}`}>
+          // Su desktop la card del corso aperto (anche dentro un suo modulo o unità) è quella selezionata (aria-current)
+          <NavLink key={c.id} to={`/corsi/${c.id}`} className={`${s.card} ${s.cardCorso}`}>
             <div className={s.intestazione}>
               <span className={s.colonna}>
                 <h2 className={s.titoloCorso}>{c.titolo}</h2>
@@ -270,9 +287,32 @@ export function Courses() {
                 </span>
               </span>
             )}
-          </Link>
+          </NavLink>
         ))}
       </div>
     </>
+  );
+}
+
+/**
+ * Corsi su desktop (S10 Corsi Desktop, handoff n. 71): l'elenco in una colonna di 320 e accanto il corso, il modulo o
+ * l'unità, ognuno col suo scorrimento; all'apertura il primo corso, senza corsi lo stato vuoto da solo. Su mobile resta
+ * una pagina alla volta.
+ */
+export function CorsiColonne() {
+  const desktop = useDesktop();
+  const figlio = useOutlet();
+  const [schede, setSchede] = useState<SchedaCorso[]>();
+  useEffect(() => watch(() => courseCards(appDb), setSchede), []);
+  if (!desktop) return figlio ?? <Courses />;
+  const primo = schede?.[0];
+  if (!figlio) return primo ? <Navigate to={`/corsi/${encodeURIComponent(primo.id)}`} replace /> : <Courses />;
+  return (
+    <div className={s.colonne}>
+      <div className={s.colonnaElenco}>
+        <Courses />
+      </div>
+      <div className={s.colonnaPannello}>{figlio}</div>
+    </div>
   );
 }

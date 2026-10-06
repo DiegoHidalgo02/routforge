@@ -57,7 +57,12 @@ export function Shell() {
           </NavLink>
         </div>
       </aside>
-      <main className={s.main} data-piena={sessione || undefined}>
+      <main
+        className={s.main}
+        data-piena={sessione || undefined}
+        // Corso, modulo e unità accanto all'elenco: su desktop le colonne hanno margini e scorrimento propri
+        data-colonne={location.pathname.startsWith('/corsi/') || undefined}
+      >
         {/* Il banner della sessione lo mette ogni schermata sotto la sua intestazione (SessionBannerSlot) */}
         <Outlet />
       </main>

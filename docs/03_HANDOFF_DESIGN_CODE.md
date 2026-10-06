@@ -327,8 +327,15 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     all'AI» non c'è finché manca il client (T-026). Le «trasversali» del modulo si mostrano fino alla prima parentesi:
     il mock toglie anche «SOLO due — », una regola scritta solo per M0. Un'unità che non è la prossima del puntatore
     ha il badge dello stato sulla riga del modulo (il mock lo disegna solo sulla riga del puntatore). I criteri «auto»
-    non mostrano «ultimo 6/10» finché non c'è il quiz (T-027). Su desktop restano da fare l'elenco a 320 accanto al
-    corso e la seconda colonna dell'unità (materiali tuoi e pratica, T-024 e T-027).
+    non mostrano «ultimo 6/10» finché non c'è il quiz (T-027). Su desktop (06/10/2026) l'elenco a 320 sta accanto a
+    corso, modulo e unità, ognuno col suo scorrimento (all'apertura il primo corso, il corso senza indietro), e l'unità
+    ha la seconda colonna di 320 con video, «Tuoi» e codice (la pratica con T-027) quando il pannello ha almeno 640 di
+    contenuto (container query: a 1280 circa 300 + 320 come la tavola 04, a 1024 ne ha 400 e resta una colonna); barra
+    indietro/cestino ferma in cima al pannello, barre di scorrimento nascoste, corso e modulo in 760 padding compreso,
+    «Importa ZIP» nella testata dell'elenco, stato vuoto senza testata (rilievi di design-checker). Scelte: l'indietro
+    del corso, che il mock disegna senza effetto, qui non c'è; la conferma «Elimina corso» resta il dialog modale nativo
+    sulla finestra (S11 la ancora al pannello); la CTA chiude la pagina, larga al più
+    320, invece del piede fisso del mock; modulo e unità entrano senza `rf-in`.
 72. Notifiche S21 (T-022): il contatore conta gli esiti diventati pendenti dopo l'ultimo «Segna tutte lette» (CONTROLLI:
     «svuota il contatore, le pendenti restano»); le azioni secondarie aprono S15 in recupero, S12 o il Dettaglio senza
     togliere la riga (il mock la toglie, la spec la tiene finché non c'è l'esito); «Ieri · gestite» descrive l'avviso
@@ -340,9 +347,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     non arriva (proposta: «Non ancora importato»).
 74. Corsi e Notifiche, rilievi di design-checker (dopo T-053 e T-022): su mobile corso, modulo e unità sono un pannello
     surface da bordo a bordo con margini 20 ed entrata `rf-slide` (la pagina annulla i margini della shell; su desktop
-    resta nei margini finché non c'è l'elenco a 320, n. 71). La VideoCard di S12 (FORMATO §3, CONTROLLI) mostra il
+    sta nel pannello accanto all'elenco a 320, n. 71). La VideoCard di S12 (FORMATO §3, CONTROLLI) mostra il
     primo link YouTube della sezione Studio: il player `youtube-nocookie`, in un iframe sandbox, si carica solo da
-    «Riproduci»; su desktop sta sotto le sezioni finché manca la seconda colonna (n. 71). Da verificare con T-021 e
+    «Riproduci»; su desktop sta in cima alla seconda colonna (n. 71). Da verificare con T-021 e
     T-036 che YouTube accetti l'origine dell'app nativa (chiede il referrer). Al passaggio il titolo dell'unità diventa
     primary come chiede lo `style-hover` del mock, che nel mock non si vede perché il titolo ha il colore in linea; le
     righe di «Ieri» restano a opacità .75 senza token (`--opacity-*` non ha quel valore).
@@ -372,8 +379,7 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     pagine») non serve perché i PDF sono sul dispositivo; la nota si legge come testo, senza interpretare il markdown.
     Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s; nella pagina dell'unità un cestino accanto a
     ogni riga di «Tuoi», con lo stesso «Annulla» (scelta dell'utente 06/10/2026, D-MAT-1: il mock non ha l'azione).
-    **Da decidere**: la lettura della nota. Su desktop la colonna da 320
-    dell'unità (VideoCard, Tuoi, File di codice, Pratica) arriva con la seconda colonna (n. 71).
+    **Da decidere**: la lettura della nota. Su desktop «Tuoi» sta nella colonna da 320 dell'unità (n. 71).
 78. File di codice (T-025, D-CODE-1): blocco di S12 come il mock (albero in surface-2, esclusi in text-3, nota,
     pill «File o ZIP di progetto»); senza file restano la nota e la pill. Una cartella tecnica esclusa è una riga sola.
     CONTROLLI dice «max 500 file», S12 «max 500 KB per file»: vale S12 (§17). I caricamenti si eliminano da Impostazioni

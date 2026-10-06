@@ -6,7 +6,7 @@ import { MotionConfig } from 'motion/react';
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, type Location } from 'react-router';
 import { Course, Module, Unit } from './Course';
-import { Courses } from './Courses';
+import { CorsiColonne } from './Courses';
 import { Create } from './Create';
 import { Detail } from './Detail';
 import { MaterialsSpace, MaterialViewer } from './Materials';
@@ -32,10 +32,12 @@ function Rotte() {
           <Route path="attivita/:id" element={<Detail />} />
           <Route path="attivita/:id/modifica" element={<Create />} />
           <Route path="statistiche" element={<Stats />} />
-          <Route path="corsi" element={<Courses />} />
-          <Route path="corsi/:corso" element={<Course />} />
-          <Route path="corsi/:corso/moduli/:n" element={<Module />} />
-          <Route path="corsi/:corso/unita/:unita" element={<Unit />} />
+          {/* Su desktop elenco e pannello affiancati (S10 Corsi Desktop); su mobile una pagina alla volta */}
+          <Route path="corsi" element={<CorsiColonne />}>
+            <Route path=":corso" element={<Course />} />
+            <Route path=":corso/moduli/:n" element={<Module />} />
+            <Route path=":corso/unita/:unita" element={<Unit />} />
+          </Route>
           <Route path="sessione/setup" element={<SessionSetup />} />
           <Route path="sessione" element={<ActiveSession />} />
           <Route path="notifiche" element={<Notifications />} />

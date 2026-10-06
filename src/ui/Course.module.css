@@ -38,9 +38,15 @@
     animation: none;
   }
 
-  /* I margini li dà la shell: qui solo l'allineamento dell'indietro al bordo */
+  /* Accanto all'elenco (S10 Desktop) la barra resta ferma in cima al pannello mentre il resto scorre: indietro e
+     cestino a 8 dai bordi e dalla cima, il contenuto 8 più sotto (S11 Corso r. 22-26, S11 Modulo e S12 r. 22-27) */
   .testa {
-    margin: calc(-1 * var(--space-3)) 0 0 calc(-1 * var(--space-2));
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    margin: 0 calc(var(--space-2) - var(--space-8)) var(--space-2);
+    padding-top: var(--space-2);
+    background: var(--color-surface);
   }
 }
 
@@ -1028,5 +1034,53 @@ a.progetto:hover {
 @media (prefers-reduced-motion: reduce) {
   .foglio {
     animation: none;
+  }
+}
+
+/* S12 Unità: una colonna sola nell'ordine del mock finché il pannello dei corsi non ha posto; con 640 di contenuto
+   (S12 `wide`; tavola 04 a 1280: circa 300 + 320) la seconda colonna di 320 con video, «Tuoi» e file di codice, in
+   cima e a 32 dal materiale: a 1024 il pannello accanto all'elenco ne ha 400. Accanto all'elenco dei corsi (S10 Desktop)
+   corso e modulo stanno in 760 padding compreso (S11 `wide`, `border-box`), l'unità con la sua seconda colonna in 1080;
+   il corso non ha l'indietro e la CTA resta larga al più 320, a sinistra (il piede fisso del mock non c'è: la CTA chiude
+   la pagina) */
+.colonneUnita,
+.principaleUnita,
+.latoUnita {
+  display: contents;
+}
+
+@container (min-width: 640px) {
+  .colonneUnita {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .principaleUnita,
+  .latoUnita {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .corpo {
+    max-width: calc(760px - 2 * var(--space-8));
+  }
+
+  .pagina[data-larga] .corpo {
+    max-width: 1080px;
+  }
+
+  .indietroCorso {
+    visibility: hidden;
+  }
+
+  .cta {
+    width: 100%;
+    max-width: 320px;
+    align-self: flex-start;
   }
 }

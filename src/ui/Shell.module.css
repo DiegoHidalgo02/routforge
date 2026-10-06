@@ -99,6 +99,11 @@
     padding: 0;
   }
 
+  .main[data-colonne] {
+    padding: 0;
+    overflow: hidden;
+  }
+
   .bottomNav {
     display: none;
   }

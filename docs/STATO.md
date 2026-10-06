@@ -5,7 +5,7 @@
 **Data**: 2026-10-06 · **Passo corrente** (CONTESTO §6): 5 — Notifiche: modello, digest, posticipi e one-shot fatti (T-019, T-020, T-045), adapter nativi in T-021 · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` (typecheck su due tsconfig, lint, formato, 766 test in 67 file); sulla macchina satura i test girano con `--maxWorkers=2`
 
 ## Fatto
-- **Nuovo design, 05–06/10/2026**: T-048, T-049, T-044, T-040, T-050, T-056, T-054, T-042, T-055, T-053, T-037 (D-CASCATA-1, punto 3 da confermare), T-022, T-031, T-041 (un esempio importato prima va reimportato), T-029 (S20 come il design, D-STATS-1 n. 12), T-032 (D-IMPOST-1), T-024 (D-MAT-1, cestino su «Tuoi»), T-025 (D-CODE-1, riga del codice nella chiusura di S15); celebrazioni con Motion (spunta disegnata, chiusura della riga, coriandoli; «Sempre» vale per Motion); PDF col visore del sistema su Android (D-MAT-2: Capacitor inizializzato, plugin locale `VisorePdf`). Dettagli nelle righe di `docs/TASKS.md`.
+- **Nuovo design, 05–06/10/2026**: T-048, T-049, T-044, T-040, T-050, T-056, T-054, T-042, T-055, T-053, T-037 (D-CASCATA-1, punto 3 da confermare), T-022, T-031, T-041 (un esempio importato prima va reimportato), T-029 (S20 come il design, D-STATS-1 n. 12), T-032 (D-IMPOST-1), T-024 (D-MAT-1, cestino su «Tuoi»), T-025 (D-CODE-1, riga del codice nella chiusura di S15); celebrazioni con Motion (spunta disegnata, chiusura della riga, coriandoli; «Sempre» vale per Motion); PDF col visore del sistema su Android (D-MAT-2: Capacitor inizializzato, plugin locale `VisorePdf`); Corsi su desktop a due colonne (elenco a 320 e pannello, unità con la colonna di 320; handoff n. 71). Dettagli nelle righe di `docs/TASKS.md`.
 - **05/10/2026**: T-052 primo incremento; import e verifica del nuovo design (D-DESIGN-3, D-DESIGN-4: `claude-design/`, `docs/spec/` = `spec/` del pacchetto, 60 scenari; `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`). **04/10**: pulizia (D-DESIGN-2, vecchio export in `3c60512`). **Fino al 02/10**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
 
 ## In corso
@@ -43,10 +43,11 @@
 - Nuovo design importato il 05/10/2026 (D-DESIGN-3): le differenze fra le spec del 30/09 e quelle del pacchetto sono assorbite dalla spec (richiesta dell'utente); le divergenze fra il codice attuale e il design sono in `docs/03_HANDOFF_DESIGN_CODE.md` §2 (undici voci, con i task). Le 38 del vecchio export restano nella storia git (`3c60512`). Le prossime, per schermata, si annotano nell'handoff.
 
 ## Prossimo task
-- **Nuovo design**: desktop a due colonne dei Corsi e dell'unità (handoff n. 71, 77). T-030 Backup aspetta il CP4 per D-BACKUP-1 (chiave AI nel file di backup).
+- **T-030 Backup** aspetta il CP4 per D-BACKUP-1 (chiave AI nel file di backup): è il prossimo task del piano del 06/10.
 - Domande per l'utente aperte dalla verifica: le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 (le principali nel report del 05/10: riduzione animazioni, chiave Gemini solo sul dispositivo, «Inizia» o «Avvia sessione», categoria nel sub delle card); ognuna ferma solo il task che la tocca.
 - Backlog fuori dal design: **T-021** (adapter nativi, Opus 5.5; CP3 deciso) resta il primo `aperto` in ordine di file per `/task next`.
 
 ## Checkpoint in attesa
+- CHECKPOINT: CP4 per T-030 (06/10/2026) — D-BACKUP-1: la chiave Gemini nel file di backup va esclusa, cifrata con una frase scelta dall'utente o lasciata con un avviso all'esportazione? Senza risposta T-030 resta fermo (`docs/06_SUPERVISIONE.md`: nessun default).
 - **CP3 Nativo deciso dall'utente il 02/10/2026** (D-NATIVO-1): Android (T-021, T-023) e iOS (T-036). I prossimi: CP4 prima di T-033, CP5 prima di T-026.
 - **CP2 approvato il 06/10/2026** (D-DESIGN-5): S1 Oggi sul nuovo design; i bloccanti di S1 (handoff §3 n. 2, 9–13, 15, 16, 18) restano aperti con le scelte provvisorie.
