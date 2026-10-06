@@ -37,7 +37,7 @@ const SOTTO: Partial<Record<VoceIeri['trigger'], Chiave>> = {
 };
 const sottotitolo = (v: VoceIeri): string =>
   v.trigger === 'pre'
-    ? t('avvisoPrima', { durata: v.anticipo < 60 ? `${v.anticipo} min` : durata(v.anticipo) })
+    ? t('avvisoPrima', { durata: v.anticipo < 60 ? `${v.anticipo} ${t('minutiUnita')}` : durata(v.anticipo) })
     : v.trigger === 'digest'
       ? t('avvisoDigest', { n: v.todo ?? 0 })
       : t(SOTTO[v.trigger] ?? 'avvisoInizio');
@@ -94,19 +94,21 @@ export function Notifications() {
     return (
       <li key={e.id} className={s.esito} data-tipo="studio">
         <span className={s.testaEsito}>
-          <span className={s.titoloEsito}>
-            {e.titolo || t('tipoStudio')}
-            {e.unita && (
-              <>
-                {' '}
-                · {t('unita')} <span className={s.num}>{e.unita.numero}</span>
-              </>
-            )}
+          <span className={s.testiEsito}>
+            <span className={s.titoloEsito}>
+              {e.titolo || t('tipoStudio')}
+              {e.unita && (
+                <>
+                  {' '}
+                  · {t('unita')} <span className={s.num}>{e.unita.numero}</span>
+                </>
+              )}
+            </span>
+            <span className={s.meta}>
+              <span className={s.num}>{quando}</span> · {t(motivo)}
+            </span>
           </span>
           <span className={s.badge}>{t('tipoStudio')}</span>
-        </span>
-        <span className={s.meta}>
-          <span className={s.num}>{quando}</span> · {t(motivo)}
         </span>
         <span className={s.azioni}>
           <Link to={secondaria.a} className={s.secondaria}>
@@ -135,8 +137,10 @@ export function Notifications() {
         >
           <ChevronLeft size={18} />
         </button>
-        <h1 className={s.titolo}>{t('notifiche')}</h1>
-        {v.nuove > 0 && <span className={s.contatore}>{v.nuove}</span>}
+        <span className={s.titoli}>
+          <h1 className={s.titolo}>{t('notifiche')}</h1>
+          {v.nuove > 0 && <span className={s.contatore}>{v.nuove}</span>}
+        </span>
         <button type="button" className={s.lette} onClick={() => void markAllRead(appDb, Date.now())}>
           {t('segnaTutteLette')}
         </button>
@@ -173,7 +177,7 @@ export function Notifications() {
       )}
 
       {v.ieri.length > 0 && (
-        <section className={s.sezione}>
+        <section className={s.sezioneIeri}>
           <span className={s.etichettaSezione}>
             <span>{t('ieri')}</span>
             <span className={s.conteggio}>{t('gestite')}</span>

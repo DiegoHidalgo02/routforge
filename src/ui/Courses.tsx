@@ -31,7 +31,8 @@ type Esito =
   | { tipo: 'errore'; file: string | null }
   | ({ tipo: 'avvisi' } & Avvisi);
 
-const durata = (min: number) => t('durata', { h: Math.floor(min / 60), m: String(min % 60).padStart(2, '0') });
+/** Tempo dedicato «11h 40m», uguale in S10 e S11. */
+export const durata = (min: number) => t('durata', { h: Math.floor(min / 60), m: String(min % 60).padStart(2, '0') });
 /** Le cifre di un testo nel font dei numeri (S10: «5 moduli · 13 unità · 11h 40m»). */
 const cifre = (testo: string) =>
   testo.split(/(\d[\d:.,]*)/).map((x, i) =>
@@ -263,7 +264,7 @@ export function Courses() {
             </div>
             {c.prossima && (
               <span className={s.prossima}>
-                <Target size={14} className={s.iconaProssima} />
+                <Target size={13} className={s.iconaProssima} />
                 <span className={s.testoProssima}>
                   {t('prossima')} · <span className={s.num}>{c.prossima.numero}</span> {c.prossima.titolo}
                 </span>

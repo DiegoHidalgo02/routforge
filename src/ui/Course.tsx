@@ -17,14 +17,16 @@ import {
   Clock,
   Code,
   Globe,
+  GraduationCap,
   Layers,
   List,
   Lock,
   Play,
-  Repeat,
+  SquareCheckBig,
   SquarePlay,
   Target,
   Trash2,
+  Video,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
@@ -45,6 +47,7 @@ import {
 import { appDb, watch } from '../app/db';
 import { local } from '../domain/time';
 import type { Esito, StatoUnita } from '../domain/types';
+import { durata as durataCorso } from './Courses';
 import { durata as durataBreve, fuso, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './Session';
@@ -54,17 +57,6 @@ const fmtGiornoBreve = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
 const fmtImport = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 /** «CONSOLIDAMENTO» del file → «Consolidamento» (S11). */
 const frase = (x: string) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase();
-/** Le cifre di un testo nel font dei numeri. */
-const cifre = (testo: string) =>
-  testo.split(/(\d[\d:.,–/]*)/).map((x, i) =>
-    i % 2 ? (
-      <span key={i} className={s.num}>
-        {x}
-      </span>
-    ) : (
-      x
-    ),
-  );
 
 export function Course() {
   const { corso = '' } = useParams();
@@ -85,6 +77,8 @@ export function Course() {
       .then(() => setEliminato(true))
       .catch(() => setCascata(null));
   const { scheda: c } = v;
+  // «Corso · importato il 16 set»: la data intera nel font dei numeri
+  const [primaData, dopoData = ''] = t('corsoImportatoIl').split('{data}');
   const aperti = scelti ?? new Set(v.moduli.slice(0, 1).map((m) => m.numero));
   const apri = (n: number) => {
     const y = new Set(aperti);
@@ -119,7 +113,11 @@ export function Course() {
 
       <div className={s.corpo}>
         <div className={s.intestazione}>
-          <span className={s.eyebrow}>{cifre(t('corsoImportatoIl', { data: fmtImport.format(v.importatoIl) }))}</span>
+          <span className={s.eyebrow}>
+            {primaData}
+            <span className={s.num}>{fmtImport.format(v.importatoIl)}</span>
+            {dopoData}
+          </span>
           <h1 className={s.titolo}>{c.titolo}</h1>
           <span className={s.progresso}>
             <span className={s.binario} aria-hidden>
@@ -131,7 +129,7 @@ export function Course() {
                 fatte: c.completate,
                 unita: c.unita,
                 pct: c.pct,
-                tempo: durataBreve(c.minuti),
+                tempo: durataCorso(c.minuti),
               })}
             </span>
           </span>
@@ -139,7 +137,7 @@ export function Course() {
             <span className={s.righe}>
               {v.routine && (
                 <span className={s.riga} data-tono="primary">
-                  <Repeat size={14} className={s.iconaRiga} />
+                  <GraduationCap size={14} className={s.iconaRiga} />
                   <span>
                     {t('routineDiStudio')} ·{' '}
                     <span className={s.num}>
@@ -271,6 +269,10 @@ export function Course() {
                         </Link>
                       )}
                     </div>
+                    <Link to={modulo} className={s.apri}>
+                      {t('apriModulo')} <span className={s.num}>{m.nn}</span>
+                      <ChevronRight size={14} />
+                    </Link>
                   </div>
                 )}
               </div>
@@ -334,7 +336,7 @@ function Sezioni({ m, conStato }: { m: MaterialeUnita; conStato?: boolean }) {
         </div>
       )}
       {m.sezioni.map((x) => (
-        <div key={x.id} className={s.blocco}>
+        <div key={x.id} className={s.blocco} data-sezione>
           <span className={s.testaSezione}>
             <span className={s.badgeSezione}>{t(BADGE_SEZIONE[x.tipo])}</span>
             <span className={s.intestazioneSezione}>{x.intestazione}</span>
@@ -344,16 +346,20 @@ function Sezioni({ m, conStato }: { m: MaterialeUnita; conStato?: boolean }) {
               </span>
             )}
           </span>
-          {x.risorse.map((r, i) => (
-            <a key={i} className={s.link} href={r.url} target="_blank" rel="noopener noreferrer">
-              <IconaLink host={r.host} youtube={r.youtube} />
-              <span className={s.testiLink}>
-                <span className={s.titoloLink}>{r.titolo}</span>
-                <span className={s.hostLink}>{r.host}</span>
-              </span>
-              <ArrowUpRight size={14} className={s.freccia} />
-            </a>
-          ))}
+          {x.risorse.length > 0 && (
+            <div className={s.risorse}>
+              {x.risorse.map((r, i) => (
+                <a key={i} className={s.link} href={r.url} target="_blank" rel="noopener noreferrer">
+                  <IconaLink host={r.host} youtube={r.youtube} />
+                  <span className={s.testiLink}>
+                    <span className={s.titoloLink}>{r.titolo}</span>
+                    <span className={s.hostLink}>{r.host}</span>
+                  </span>
+                  <ArrowUpRight size={14} className={s.freccia} />
+                </a>
+              ))}
+            </div>
+          )}
           {x.descrizione && <p className={s.descrizione}>{x.descrizione}</p>}
         </div>
       ))}
@@ -418,7 +424,7 @@ export function Module() {
             </span>
             <span className={s.numeri}>{t('corsoProgresso', { fatte, unita: unita.length, pct })}</span>
           </span>
-          <span className={s.righe}>
+          <span className={s.righe} data-a-capo>
             {m.tipo && (
               <span className={s.riga}>
                 <Layers size={14} className={s.iconaRiga} />
@@ -517,7 +523,10 @@ export function Module() {
         {m.criteri.length > 0 && (
           <section className={s.sezione}>
             <span className={s.etichettaSezione}>
-              <span className={s.etichetta}>{t('criteriGoNoGo')}</span>
+              <span className={s.etichetta}>
+                <SquareCheckBig size={14} />
+                {t('criteriGoNoGo')}
+              </span>
               <span className={s.contoCriteri} data-tono={go ? 'successo' : 'avviso'}>
                 {ok} / {m.criteri.length}
                 {go && ` · ${t('go')}`}
@@ -554,7 +563,9 @@ export function Module() {
               {m.noGo && (
                 <>
                   {' '}
-                  <span className={s.noGo}>{t('noGo')}</span> {m.noGo}
+                  <span className={s.noGo}>
+                    {t('noGo')} {m.noGo}
+                  </span>
                 </>
               )}
             </span>
@@ -608,6 +619,55 @@ const ESITO: Record<Esito, Chiave> = {
   salta: 'esitoSalta',
 };
 const fmtUltima = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
+
+/** L'id del video (11 caratteri) dall'URL del file del corso: l'indirizzo del player lo costruisce l'app, mai il file. */
+const ID_YOUTUBE = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/i;
+
+/**
+ * VideoCard (S12; FORMATO §3, CONTROLLI): il primo video YouTube della sezione Studio, che si riproduce qui e non nel
+ * browser. Il player si carica solo dopo «Riproduci»; offline mostra l'errore del browser dentro il riquadro.
+ */
+function VideoStudio({ m }: { m: MaterialeUnita }) {
+  const [avviato, setAvviato] = useState(false);
+  const r = m.sezioni.find((x) => x.tipo === 'studio')?.risorse.find((x) => x.youtube);
+  const id = r && ID_YOUTUBE.exec(r.url)?.[1];
+  if (!r || !id) return null;
+  return (
+    <section className={s.sezione}>
+      <span className={s.etichettaSezione}>
+        <span className={s.etichetta}>
+          <Video size={14} />
+          {t('videoSezioneStudio')}
+        </span>
+        <span className={s.conteggio}>{t('incorporato')}</span>
+      </span>
+      <div className={s.video}>
+        {avviato ? (
+          <iframe
+            className={s.player}
+            src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`}
+            title={r.titolo}
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            sandbox="allow-scripts allow-same-origin allow-presentation"
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <span className={s.anteprima}>
+            <button type="button" className={s.riproduci} aria-label={t('riproduci')} onClick={() => setAvviato(true)}>
+              <Play size={18} fill="currentColor" className={s.iconaPlay} />
+            </button>
+          </span>
+        )}
+        <span className={s.piedeVideo}>
+          <span className={s.titoloVideo}>{r.titolo}</span>
+          <span className={s.hostLink}>{t('videoQui')}</span>
+        </span>
+      </div>
+    </section>
+  );
+}
 
 export function Unit() {
   const { corso = '', unita = '' } = useParams();
@@ -663,9 +723,10 @@ export function Unit() {
             </span>
           </span>
         </div>
-        <div className={s.sezione}>
+        <div className={s.materiale}>
           <Sezioni m={v.materiale} conStato />
         </div>
+        <VideoStudio key={u.id} m={v.materiale} />
         <Link to={`/sessione/setup?unita=${encodeURIComponent(u.id)}`} className={s.cta}>
           <Play size={14} fill="currentColor" />
           {t(
@@ -697,14 +758,22 @@ function ConfermaElimina(p: { titolo: string; cascata: CascataCorso; onAnnulla: 
     <dialog ref={ref} className={s.foglio} aria-labelledby="elimina-titolo" onClose={p.onAnnulla}>
       <div className={s.contenutoFoglio}>
         <span className={s.maniglia} aria-hidden />
-        <span id="elimina-titolo" className={s.titoloFoglio}>
-          {t('eliminareTitolo', { titolo: p.titolo })}
+        <span className={s.testiFoglio}>
+          <span id="elimina-titolo" className={s.titoloFoglio}>
+            {t('eliminareTitolo', { titolo: p.titolo })}
+          </span>
+          <span className={s.testoFoglio}>{t('sparisconoCorso')}</span>
         </span>
-        <span className={s.testoFoglio}>{t('sparisconoCorso')}</span>
         <span className={s.griglia}>
-          {righe.map(([k, v]) => (
-            <span key={k}>{cifre(t(k, v))}</span>
-          ))}
+          {righe.map(([k, v]) => {
+            // «Routine di studio · 1 · 34 occorrenze»: dopo l'etichetta, i valori nel font dei numeri
+            const [etichetta, ...valori] = t(k, v).split(' · ');
+            return (
+              <span key={k}>
+                {etichetta} · <span className={s.num}>{valori.join(' · ')}</span>
+              </span>
+            );
+          })}
         </span>
         <span className={s.notaFoglio}>{t('cascataNota')}</span>
         <span className={s.azioniFoglio}>

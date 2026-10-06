@@ -335,6 +335,14 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     («Bloccato · Go/No-Go di M1» e la nota sullo sblocco). **Da decidere**: un segnaposto resta bloccato anche col
     modulo precedente passato, perché non ha file; il mock non disegna quel caso e il testo promette uno sblocco che
     non arriva (proposta: «Non ancora importato»).
+74. Corsi e Notifiche, rilievi di design-checker (dopo T-053 e T-022): su mobile corso, modulo e unità sono un pannello
+    surface da bordo a bordo con margini 20 ed entrata `rf-slide` (la pagina annulla i margini della shell; su desktop
+    resta nei margini finché non c'è l'elenco a 320, n. 71). La VideoCard di S12 (FORMATO §3, CONTROLLI) mostra il
+    primo link YouTube della sezione Studio: il player `youtube-nocookie`, in un iframe sandbox, si carica solo da
+    «Riproduci»; su desktop sta sotto le sezioni finché manca la seconda colonna (n. 71). Da verificare con T-021 e
+    T-036 che YouTube accetti l'origine dell'app nativa (chiede il referrer). Al passaggio il titolo dell'unità diventa
+    primary come chiede lo `style-hover` del mock, che nel mock non si vede perché il titolo ha il colore in linea; le
+    righe di «Ieri» restano a opacità .75 senza token (`--opacity-*` non ha quel valore).
 
 ## 4. Mappa schermata → design → task
 

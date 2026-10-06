@@ -1,5 +1,6 @@
 /* Notifiche (S21). Restano letterali le misure del mock senza token: accento 3 a sinistra, pallino 8, icona 56,
-   testo largo al più 280, interlinee 14 · 16 · 18 · 20 · 24. */
+   testo largo al più 280, interlinee 14 · 16 · 18 · 20 · 24, gap 3 · 6 · 10 · 14, padding 6 del contatore e 48 del
+   vuoto, righe di ieri alte 48 a opacità .75. */
 .pagina {
   display: flex;
   flex-direction: column;
@@ -15,6 +16,15 @@
 .testa {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+}
+
+/* Titolo e contatore a 8 l'uno dall'altro; «Segna tutte lette» in fondo alla riga */
+.titoli {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
 }
 
@@ -23,31 +33,41 @@
 }
 
 .titolo {
+  min-width: 0;
+  overflow: hidden;
   margin: 0;
   font: 600 var(--text-xl-2) / 24px var(--font-ui);
   letter-spacing: var(--tracking-title);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contatore {
   height: var(--size-badge);
+  min-width: var(--size-badge);
+  box-sizing: border-box;
+  flex: none;
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--space-2);
+  justify-content: center;
+  padding: 0 6px;
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   color: var(--color-primary);
-  font: 600 var(--text-sm) var(--font-num);
+  font: 600 var(--text-xs) / var(--size-badge) var(--font-num);
 }
 
+/* Pill da 32 con l'area di tocco 44 */
 .lette {
-  min-height: var(--size-control-sm);
-  margin-left: auto;
+  position: relative;
+  min-height: var(--size-chip);
+  flex: none;
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text);
-  font: 600 var(--text-base) var(--font-ui);
+  font: 500 var(--text-sm) var(--font-ui);
   cursor: pointer;
 }
 
@@ -55,10 +75,21 @@
   background: var(--color-surface-2);
 }
 
+.lette::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--size-chip) - var(--size-touch)) / 2) 0;
+}
+
 .sezione {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.sezioneIeri {
+  composes: sezione;
+  gap: 6px;
 }
 
 .etichettaSezione {
@@ -85,30 +116,40 @@
 }
 
 .esiti {
-  gap: var(--space-2);
+  gap: 10px;
 }
 
 /* Card dell'esito con l'accento del tipo a sinistra (--fill, --soft, --ink da `data-tipo`, styles/global.css) */
 .esito {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 10px;
   padding: var(--space-3) var(--space-card-inner);
   border: 1px solid var(--color-border);
   border-left: 3px solid var(--fill);
-  border-radius: var(--radius-control-lg);
+  border-radius: var(--radius-card);
   background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
+/* Titolo e meta a 3 l'uno dall'altro, col badge accanto */
 .testaEsito {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-2);
+  gap: 10px;
+}
+
+.testiEsito {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .titoloEsito {
-  font: 600 var(--text-lg) / 20px var(--font-ui);
+  font: 600 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .badge {
@@ -137,18 +178,31 @@
   gap: var(--space-2);
 }
 
+/* Azioni alte 36 con l'area di tocco 44 */
 .secondaria,
 .primaria {
-  min-height: var(--size-chip);
+  position: relative;
+  min-height: var(--size-control-sm);
   display: inline-flex;
   align-items: center;
   padding: 0 var(--space-card-inner);
   border-radius: var(--radius-control);
   font: 600 var(--text-base) var(--font-ui);
   text-decoration: none;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.secondaria::after,
+.primaria::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--size-control-sm) - var(--size-touch)) / 2) 0;
 }
 
 .secondaria {
+  padding: 0 var(--space-3);
   color: var(--color-text-2);
 }
 
@@ -167,13 +221,18 @@
   background: var(--color-primary-hover);
 }
 
+.primaria:active {
+  transform: scale(var(--scale-press));
+  background: var(--color-primary-active);
+}
+
 /* «Tutto in ordine» */
 .vuoto {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-6) 0;
+  gap: 14px;
+  padding: 48px var(--space-4);
   text-align: center;
 }
 
@@ -211,12 +270,12 @@
 
 /* «Ieri · gestite»: righe con il pallino del tipo e l'ora */
 .rigaIeri {
-  min-height: var(--size-touch);
+  min-height: 48px;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border);
+  opacity: 0.75;
 }
 
 .pallino {
@@ -232,12 +291,12 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .titoloIeri {
   overflow: hidden;
-  font: 500 var(--text-md) / 18px var(--font-ui);
+  font: 500 var(--text-base) / 18px var(--font-ui);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -1,19 +1,47 @@
 /* Il corso (S11 «Corso → moduli»). Restano letterali le misure del mock fuori dalla scala dei token: icone tonde 40,
    interlinee 14 · 18 · 28, numero del modulo largo 20 e dell'unità 28, binario 3, padding 7 del badge, rotazione del
    chevron in 200 ms. */
+
+/* Su mobile corso, modulo e unità sono un pannello surface da bordo a bordo, 16 sotto la cima e fino in fondo, con
+   margini 20 ed entrata rf-slide (S10 Corsi Mobile): si annullano i margini della shell (`.main`) e si ridanno quelli
+   del mock. Su desktop la pagina resta nei margini della shell. */
 .pagina {
+  min-height: calc(100dvh - env(safe-area-inset-top) - var(--space-4));
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  margin: calc(-1 * var(--space-1)) calc(-1 * max(var(--space-page), env(safe-area-inset-right)))
+    calc(-1 * (var(--size-nav-pill) + var(--space-6) + var(--space-8) + env(safe-area-inset-bottom)))
+    calc(-1 * max(var(--space-page), env(safe-area-inset-left)));
+  padding: 0 max(var(--space-5), env(safe-area-inset-right))
+    calc(var(--size-nav-pill) + var(--space-6) + var(--space-8) + env(safe-area-inset-bottom))
+    max(var(--space-5), env(safe-area-inset-left));
+  background: var(--color-surface);
   color: var(--color-text);
+  animation: global(rf-slide) var(--dur-layout) var(--ease-standard);
 }
 
-/* I margini della pagina li dà la shell (`.main`): qui solo l'allineamento dell'indietro al bordo */
+/* Barra in alto del pannello: indietro e cestino a 8 dai bordi, 8 sotto la cima */
 .testa {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: calc(-1 * var(--space-3)) 0 0 calc(-1 * var(--space-2));
+  margin: var(--space-2) calc(-1 * var(--space-3)) 0;
+}
+
+@media (min-width: 1024px) {
+  .pagina {
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    animation: none;
+  }
+
+  /* I margini li dà la shell: qui solo l'allineamento dell'indietro al bordo */
+  .testa {
+    margin: calc(-1 * var(--space-3)) 0 0 calc(-1 * var(--space-2));
+  }
 }
 
 .icona {
@@ -107,7 +135,7 @@
 
 .riga {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
   color: var(--color-text-2);
   font: 500 var(--text-base) / 18px var(--font-ui);
@@ -119,6 +147,14 @@
 
 .iconaRiga {
   flex: none;
+}
+
+/* S11 Modulo: righe che vanno a capo, icona sulla prima riga di testo */
+.righe[data-a-capo] .riga {
+  align-items: flex-start;
+}
+
+.righe[data-a-capo] .iconaRiga {
   margin-top: 2px;
 }
 
@@ -150,8 +186,8 @@
   font: 500 var(--text-sm) / 14px var(--font-num);
 }
 
+/* Senza ritaglio, che taglierebbe l'anello del fuoco della testa: il raggio lo prendono i figli di bordo */
 .modulo {
-  overflow: hidden;
   border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
 }
@@ -169,6 +205,7 @@
   gap: var(--space-3);
   padding: 10px 14px 10px var(--space-3);
   border: 0;
+  border-radius: inherit;
   background: transparent;
   color: var(--color-text);
   text-align: left;
@@ -182,6 +219,11 @@
 
 .testaModulo:disabled {
   cursor: default;
+}
+
+.testaModulo[aria-expanded='true'] {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .nn {
@@ -201,6 +243,7 @@
 
 .titoloModulo {
   font: 600 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .modulo[data-bloccato] .titoloModulo {
@@ -270,12 +313,16 @@
 .titoloUnita {
   flex: 1;
   min-width: 0;
-  padding: var(--space-2) 0;
   font: 500 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .rigaUnita[data-fatta] .titoloUnita {
   color: var(--color-text-2);
+}
+
+.rigaUnita:hover .titoloUnita {
+  color: var(--color-primary);
 }
 
 .spunta {
@@ -329,6 +376,16 @@
   border-top: 1px solid var(--color-border);
 }
 
+.rigaVerifica:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.rigaVerifica:last-child {
+  border-bottom-right-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
 .rigaVerifica:hover {
   background: var(--color-surface-hover);
 }
@@ -339,7 +396,6 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: var(--space-2) 0;
 }
 
 .titoloVerifica {
@@ -349,6 +405,7 @@
 .metaVerifica {
   color: var(--color-text-2);
   font: var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .valore {
@@ -463,8 +520,22 @@
   text-wrap: pretty;
 }
 
-.sezione > .blocco .concetto {
+/* S12: concetto core e sezioni a 24 l'una dall'altra, sezioni a gap 10, concetto 15/22 in un riquadro surface-2 da 12 */
+.materiale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.materiale > [data-sezione] {
+  gap: 10px;
+}
+
+.materiale .concetto {
+  padding: var(--space-card-inner) var(--space-4);
+  border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
+  font: 500 var(--text-lg) / 22px var(--font-ui);
 }
 
 .testaSezione {
@@ -472,7 +543,7 @@
   align-items: center;
   gap: var(--space-2);
   color: var(--color-text-2);
-  font: var(--text-sm) / 14px var(--font-ui);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
 }
 
 .badgeSezione {
@@ -489,7 +560,7 @@
   text-transform: uppercase;
 }
 
-.sezione > .blocco .badgeSezione {
+.materiale .badgeSezione {
   background: var(--color-surface-2);
 }
 
@@ -527,11 +598,25 @@
   transition: background var(--dur-feedback) var(--ease-out);
 }
 
-.sezione > .blocco .link {
+/* Le risorse di una sezione: a 6 in S11 Modulo, a 8 e alte 48 in S12 */
+.risorse {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.materiale .risorse {
+  gap: var(--space-2);
+}
+
+.materiale .link {
+  min-height: 48px;
+  border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
 }
 
 .link:hover,
+.materiale .link:hover,
 a.progetto:hover {
   background: var(--color-surface-hover);
 }
@@ -573,12 +658,14 @@ a.progetto:hover {
   text-wrap: pretty;
 }
 
+/* «Apri l'unità» e «Apri il modulo»: alti 40 con l'area di tocco 44 */
 .apri {
+  position: relative;
   min-height: 40px;
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   padding: 0 var(--space-card-inner);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
@@ -590,6 +677,12 @@ a.progetto:hover {
 
 .apri:hover {
   background: var(--color-surface-3);
+}
+
+.apri::after {
+  content: '';
+  position: absolute;
+  inset: calc((40px - var(--size-touch)) / 2) 0;
 }
 
 /* Criteri Go/No-Go: caselle da 20, piene in success; gli automatici col badge «auto» e senza tocco */
@@ -605,8 +698,8 @@ a.progetto:hover {
   color: var(--color-warning);
 }
 
+/* Senza ritaglio, che taglierebbe l'anello del fuoco: il raggio lo prendono il primo e l'ultimo criterio */
 .criteri {
-  overflow: hidden;
   border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
 }
@@ -629,6 +722,16 @@ a.progetto:hover {
 
 .criterio + .criterio {
   border-top: 1px solid var(--color-border);
+}
+
+.criterio:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.criterio:last-child {
+  border-bottom-right-radius: inherit;
+  border-bottom-left-radius: inherit;
 }
 
 .criterio:hover {
@@ -752,10 +855,73 @@ a.progetto:hover {
   color: var(--color-text-3);
 }
 
+/* VideoCard (S12): anteprima 16:9 col play 48 primary, poi il player; padding 10 del piede e play spostato di 2 per
+   centrarlo all'occhio, come il mock. Il secondo colore del gradiente (#1A1F28) è il valore di surface-month-1. */
+.video {
+  overflow: hidden;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.anteprima {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, var(--color-surface-hover), var(--color-surface-month-1));
+}
+
+.riproduci {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-primary);
+  color: var(--color-bg);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.riproduci:hover {
+  background: var(--color-primary-hover);
+}
+
+.iconaPlay {
+  margin-left: 2px;
+}
+
+.player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
+  border: 0;
+}
+
+.piedeVideo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px var(--space-3);
+}
+
+.titoloVideo {
+  font: 600 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
+}
+
 /* ---- Eliminazione del corso (S11 conferma, T-037): cestino in danger al passaggio, foglio dal basso sul velo ---- */
 .cestino:hover {
   background: var(--color-danger-soft);
   color: var(--color-danger-ink);
+}
+
+/* I controlli distruttivi hanno l'anello danger (DESIGN.md), sopra quello globale */
+.icona.cestino:focus-visible,
+.azioniFoglio .pericolo:focus-visible {
+  box-shadow: var(--ring-focus-danger);
 }
 
 .foglio {
@@ -794,6 +960,12 @@ a.progetto:hover {
   background: var(--color-border-strong);
 }
 
+.testiFoglio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
 .titoloFoglio {
   font: 600 var(--text-xl) / 24px var(--font-ui);
   text-wrap: pretty;
@@ -802,6 +974,7 @@ a.progetto:hover {
 .testoFoglio {
   color: var(--color-text-2);
   font: var(--text-base) / 18px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .griglia {
@@ -823,6 +996,7 @@ a.progetto:hover {
 .azioniFoglio {
   display: flex;
   gap: var(--space-2);
+  padding-top: var(--space-1);
 }
 
 .annulla,
