@@ -6,7 +6,7 @@ import { list } from '../data/repository';
 import { local } from '../domain/time';
 import { importSampleCourse } from './courseImport';
 import { createActivity } from './activities';
-import { readCourse, readUnitMaterial } from './courses';
+import { readCourse, readModule, readUnitMaterial, setCriterion } from './courses';
 
 let db: RoutForgeDb;
 let n = 0;
@@ -74,5 +74,29 @@ describe('Corso → moduli — FUNZ §9.3, MECCANISMI §11', () => {
     );
     expect((await readCourse(db, id))?.routine).toEqual({ giorni: [1, 3, 5], orarioInizio: '16:00' });
     expect(await readCourse(db, 'nessuno')).toBeNull();
+  });
+});
+
+describe('Modulo e criteri Go/No-Go — MECCANISMI §11, §16', () => {
+  it('il modulo con la verifica; i criteri manuali si spuntano, gli automatici no; tutti sì → il successivo si apre', async () => {
+    const now = local(2026, 9, 22, 9, 0);
+    await importSampleCourse(db, now);
+    const id = (await list(db, 'corsi'))[0]!.id;
+    const m0 = await readModule(db, id, 0);
+    expect(m0?.modulo).toMatchObject({ numero: 0, stato: 'aperto' });
+    expect(m0?.modulo.obiettivi.length).toBeGreaterThan(0);
+    expect(m0?.unita).toHaveLength(9);
+    expect(m0?.unita.find((u) => u.numero === '0.7')).toMatchObject({ sezioni: 4, link: 4 });
+    const criteri = m0!.modulo.criteri;
+    const auto = criteri.findIndex((c) => c.auto);
+    if (auto >= 0) {
+      await setCriterion(db, m0!.modulo.id, auto, true, now, 'Europe/Rome');
+      expect((await readModule(db, id, 0))?.modulo.criteri[auto]?.fatto).toBe(false);
+    }
+    for (const [i, c] of criteri.entries())
+      if (!c.auto) await setCriterion(db, m0!.modulo.id, i, true, now, 'Europe/Rome');
+    expect((await readModule(db, id, 0))?.modulo.criteri.filter((c) => !c.auto).every((c) => c.fatto)).toBe(true);
+    expect((await readModule(db, id, 1))?.modulo.stato).toBe(auto >= 0 ? 'bloccato' : 'aperto');
+    expect(await readModule(db, id, 9)).toBeNull();
   });
 });

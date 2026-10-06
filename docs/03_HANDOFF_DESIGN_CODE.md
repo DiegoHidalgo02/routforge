@@ -317,6 +317,13 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     «Lascia fuori» senza bordo. Restano letterali le misure del mock senza token, elencate in Session.module.css.
     **Da decidere**: il Materiale senza concetto né sezioni o durante la lettura non ha uno stato disegnato (oggi è
     vuoto); nella sessione su desktop il mock non ha la voce «Oggi» nella sidebar, la shell sì.
+71. Corsi, S11 Modulo e S12 (T-053): la CTA («Riprendi da 0.7», «Inizia sessione») sta in fondo alla pagina, non
+    fissa, perché su mobile c'è la barra in basso della shell; porta al setup di S15 sull'unità (CONTROLLI). «Chiedi
+    all'AI» non c'è finché manca il client (T-026). Le «trasversali» del modulo si mostrano fino alla prima parentesi:
+    il mock toglie anche «SOLO due — », una regola scritta solo per M0. Un'unità che non è la prossima del puntatore
+    ha il badge dello stato sulla riga del modulo (il mock lo disegna solo sulla riga del puntatore). I criteri «auto»
+    non mostrano «ultimo 6/10» finché non c'è il quiz (T-027). Su desktop restano da fare l'elenco a 320 accanto al
+    corso e la seconda colonna dell'unità (materiali tuoi e pratica, T-024 e T-027).
 
 ## 4. Mappa schermata → design → task
 

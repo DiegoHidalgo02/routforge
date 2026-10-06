@@ -380,3 +380,374 @@
     transition: none;
   }
 }
+
+/* ---- S11 Modulo e S12 Unità. Restano letterali le misure del mock senza token: puntino 4 con margine 7, gap 18,
+   casella 20 con raggio 6, link alti 44 e 48, interlinee 12 · 14 · 16 · 18 · 20 · 21. ---- */
+.eyebrowPrimary {
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 12px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.testoRiga {
+  flex: 1;
+  min-width: 0;
+}
+
+.obiettivi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-card-inner);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.elencoObiettivi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.elencoObiettivi > li {
+  position: relative;
+  padding-left: var(--space-4);
+}
+
+.elencoObiettivi > li::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.elencoObiettivi strong {
+  font-weight: 600;
+}
+
+.titoloModulo[data-fatta] {
+  color: var(--color-text-2);
+}
+
+/* Unità aperta nel modulo e sezioni di S12: concetto core con l'accento, sezioni con badge, link che aprono la risorsa */
+.unitaAperta {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 2px 14px 14px;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.concetto {
+  margin: 0;
+  padding: var(--space-3) var(--space-card-inner);
+  border-left: var(--size-accent-bar) solid var(--color-primary);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  font: 500 var(--text-md) / var(--leading-body) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.sezione > .blocco .concetto {
+  background: var(--color-surface-2);
+}
+
+.testaSezione {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: var(--text-sm) / 14px var(--font-ui);
+}
+
+.badgeSezione {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: var(--radius-chip-cite);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.sezione > .blocco .badgeSezione {
+  background: var(--color-surface-2);
+}
+
+.intestazioneSezione {
+  flex: 1;
+  min-width: 0;
+}
+
+.statoSezione {
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.statoSezione[data-stato='fatta'] {
+  color: var(--color-success);
+}
+
+.statoSezione[data-stato='in_corso'] {
+  color: var(--color-primary);
+}
+
+.link,
+.progetto {
+  min-height: var(--size-touch);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.sezione > .blocco .link {
+  background: var(--color-surface-2);
+}
+
+.link:hover,
+a.progetto:hover {
+  background: var(--color-surface-hover);
+}
+
+.progetto {
+  min-height: 48px;
+  padding: 10px var(--space-card-inner);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.iconaLink {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.testiLink {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.titoloLink {
+  font: 500 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.hostLink {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.descrizione {
+  margin: 0;
+  font: var(--text-md) / var(--leading-body) var(--font-ui);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+}
+
+.apri {
+  min-height: 40px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+  text-decoration: none;
+}
+
+.apri:hover {
+  background: var(--color-surface-3);
+}
+
+/* Criteri Go/No-Go: caselle da 20, piene in success; gli automatici col badge «auto» e senza tocco */
+.contoCriteri {
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.contoCriteri[data-tono='successo'] {
+  color: var(--color-success);
+}
+
+.contoCriteri[data-tono='avviso'] {
+  color: var(--color-warning);
+}
+
+.criteri {
+  overflow: hidden;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.criterio {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-card-inner);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.criterio + .criterio {
+  border-top: 1px solid var(--color-border);
+}
+
+.criterio:hover {
+  background: var(--color-surface-hover);
+}
+
+.criterio[aria-disabled='true'] {
+  cursor: default;
+}
+
+.casella {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-chip-cite);
+  color: var(--color-bg);
+}
+
+.criterio[aria-checked='true'] .casella {
+  border-color: var(--color-success);
+  background: var(--color-success);
+}
+
+.testiCriterio {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.testoCriterio {
+  font: 500 var(--text-md) / 20px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.criterio[aria-checked='true'] .testoCriterio {
+  color: var(--color-text-2);
+}
+
+.metaCriterio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.badgeAuto {
+  composes: badgeProssima;
+}
+
+.noGo {
+  color: var(--color-text-2);
+}
+
+/* CTA in fondo alla pagina (S11 Modulo «Riprendi da», S12 sessione sull'unità): primary 44 a tutta larghezza */
+.cta {
+  min-height: var(--size-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-primary);
+  color: var(--color-bg);
+  font: 600 var(--text-md) var(--font-ui);
+  letter-spacing: var(--tracking-body);
+  text-decoration: none;
+  transition:
+    background var(--dur-feedback) var(--ease-out),
+    transform var(--dur-feedback) var(--ease-out);
+}
+
+.cta:hover {
+  background: var(--color-primary-hover);
+}
+
+.cta:active {
+  transform: scale(var(--scale-press));
+  background: var(--color-primary-active);
+}
+
+/* Stato dell'unità (S12): badge nei colori dello stato */
+.badgeStato {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.badgeStato[data-stato='parziale'] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* «da rivedere» nei colori del mock: fondo routine-soft, testo warning (tokens.css non ha un warning-soft) */
+.badgeStato[data-stato='da_rivedere'] {
+  background: var(--color-cat-routine-soft);
+  color: var(--color-warning);
+}
+
+.badgeStato[data-stato='completata'] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.badgeStato[data-stato='saltata'] {
+  color: var(--color-text-3);
+}
