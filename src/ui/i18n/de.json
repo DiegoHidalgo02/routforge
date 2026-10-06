@@ -704,5 +704,7 @@
   "persiSera": "nach 18 Uhr",
   "persiNotte": "vor 6 Uhr",
   "sessioniBrevi": "{n} Sitz.",
-  "eliminaMateriale": "{titolo} löschen"
+  "eliminaMateriale": "{titolo} löschen",
+  "caricaCodiceProdotto": "Geschriebenen Code hochladen",
+  "fileOZipPerAi": "Dateien oder ZIP, für die KI"
 }

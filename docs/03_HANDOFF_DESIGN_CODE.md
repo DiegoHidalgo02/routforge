@@ -301,7 +301,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     per la libera solo la seconda frase (n. 48, applicata).
 66. Sessione su desktop (T-055): Materiale a sinistra e AI · Note in una colonna di 400 a destra, come S15 Desktop;
     nella sessione la carta della sidebar non offre «Riprendi». Debrief: «Abbandona» centrato sotto i bottoni, con «il
-    blocco torna programmato» solo se c'è un blocco (n. 47); la riga «Carica il codice prodotto» arriva con T-025.
+    blocco torna programmato» solo se c'è un blocco (n. 47); la riga «Carica il codice prodotto» c'è solo con un'unità
+    (n. 78).
 67. Sessione, ritocchi (T-055): testata del timer in tempo extra su `--color-surface-overrun`; «Abbandona» oltre soglia
     col testo del mock («… oltre il 65 %: si chiude con esito Continua», n. 47); card dell'unità del setup con «dal
     puntatore» anche sull'unità della routine e «6 / 13 unità» del corso; origine «Recupero · occorrenza di … saltata
@@ -365,7 +366,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     vuole pendenti e voci nel registro distinti.
 77. Materiali (T-024, D-MAT-1): «Tuoi» in S12 come il mock (contatore e righe compaiono col primo materiale); la
     riga di un link come la ResourceRow delle sezioni e quella di un PDF senza testo («senza testo, non usato
-    dall'AI») non sono disegnate. Visualizzatore S13 con le pagine disegnate da pdf.js; la barra della pagina sta in
+    dall'AI») non sono disegnate. Su Android il PDF si apre col visore del sistema e S13 resta il ripiego (richiesta
+    dell'utente 06/10/2026, D-MAT-2). Visualizzatore S13 con le pagine disegnate da pdf.js; la barra della pagina sta in
     alto sotto la testata (in basso la coprirebbe la barra della shell); lo stato `pdf-scan` del mock («Apri le
     pagine») non serve perché i PDF sono sul dispositivo; la nota si legge come testo, senza interpretare il markdown.
     Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s; nella pagina dell'unità un cestino accanto a
@@ -375,7 +377,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 78. File di codice (T-025, D-CODE-1): blocco di S12 come il mock (albero in surface-2, esclusi in text-3, nota,
     pill «File o ZIP di progetto»); senza file restano la nota e la pill. Una cartella tecnica esclusa è una riga sola.
     CONTROLLI dice «max 500 file», S12 «max 500 KB per file»: vale S12 (§17). I caricamenti si eliminano da Impostazioni
-    → Spazio dei materiali. **Da fare**: la riga «Carica il codice prodotto» della chiusura di S15 (n. 66).
+    → Spazio dei materiali. La riga «Carica il codice prodotto» della chiusura di S15 carica nei «Tuoi» dell'unità e
+    poi dice «N file · M esclusi» in text-2; senza unità non compare (D-CODE-1 punto 11).
 
 ## 4. Mappa schermata → design → task
 

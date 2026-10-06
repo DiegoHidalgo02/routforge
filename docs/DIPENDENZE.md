@@ -27,6 +27,8 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `vite`, `@vitejs/plugin-react` | dev | `npm run dev`, `npm run build` (`vite.config.ts`), T-006; l'import `?raw` del corso di esempio (T-005). Vite resta alla 7 (Vitest 3 accetta fino alla 7: la 8 con Vitest 5, task dedicato), quindi `@vitejs/plugin-react` 5 (la 6 richiede Vite 8) | build, CSS Modules nativi, un solo Vite condiviso con Vitest | D-STACK-1 |
 | `react-router` | runtime | `src/ui/App.tsx` (rotte della shell), T-006 | rotte delle sezioni (FUNZ §1) e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
 | `lucide-react` | runtime | `src/ui`, T-006 | icone Lucide, tratto 1.75, come nel vecchio design: gli stessi glifi senza copiare i tracciati a mano | D-STACK-1 |
+| `@capacitor/core`, `@capacitor/android`, `@capacitor/filesystem` | runtime | `src/platform/pdfAndroid.ts` e il progetto `android/` (`cap init`, `cap add android`), T-021 in parte | shell nativa Android (CONTESTO §3); il PDF scritto nella cache dell'app e aperto col visore del sistema dal plugin locale `VisorePdf` (D-MAT-2) | D-STACK-1, D-MAT-2 |
+| `@capacitor/cli` | dev | `npx cap sync android` dopo `npm run build`; `capacitor.config.ts` | copia della build web e dei plugin nel progetto Android | D-STACK-1 |
 | `motion` | runtime | `src/ui` (`MotionConfig` in `App.tsx`, spunta disegnata e coriandoli), T-032 | le animazioni seguono Impostazioni → Animazioni anche contro la riduzione del sistema («Sempre»), che nel CSS di `tokens.css` è imposta con `!important`; celebrazioni di FUNZ §23 (scelta dell'utente, 06/10/2026: «per animazioni usiamo Framer Motion») | D-TOOLS-1, D-IMPOST-1 |
 | `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | runtime | `src/main.tsx`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
 | `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | dev | `eslint.config.js`, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3). `jsx-a11y` 6.10.2 dichiara ESLint fino alla 9: `overrides` in `package.json` gli passa ESLint 10 (il suo codice non usa le API rimosse dalla 10, verificato in T-006); l'override si toglie quando il plugin dichiara la 10 | D-LINT-1, D-STACK-1 |
@@ -37,7 +39,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `vite-plugin-pwa` | prevista | dev, web installabile (manifest e service worker), T-035: nome e icona arrivano con CP6 | PWA sulla stessa build di Vite | D-STACK-1 |
-| `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/filesystem`, `@capacitor/haptics` | prevista | `src/platform`, T-021 (prima capacità nativa: `cap init`, `cap add android` dopo CP3) e T-035 | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
+| `@capacitor/app`, `@capacitor/local-notifications`, `@capacitor/haptics` | prevista | `src/platform`, T-021 e T-035 (Capacitor è già inizializzato, D-MAT-2) | shell nativa Android/iOS e capacità richieste da CONTESTO §3 | D-STACK-1 |
 | `@capacitor-community/keep-awake` | prevista | `src/platform`, T-021 (schermo acceso durante la sessione, MECC §10.4; sul web Wake Lock API, T-017) | lo schermo non si spegne durante la sessione | D-STACK-1 |
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |
 | `@google/genai` | prevista | `src/platform` (client AI), T-026 | fornitore Gemini scelto dalle spec | D-AI-1 |

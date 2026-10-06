@@ -22,6 +22,7 @@ import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
 import { webNotifications } from './platform/notifications';
 import { webPdf } from './platform/pdf';
+import { androidPdfViewer } from './platform/pdfAndroid';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
 import { testiNotifica } from './ui/notificationTexts';
@@ -31,8 +32,9 @@ document.documentElement.lang = lingua;
 configureSessionDevice({ schermo: webScreenAwake, nonDisturbare: webDoNotDisturb });
 // L'orologio degli eventi della Diagnostica (T-032)
 configureDiagnostics(webClock);
-// Lettore dei PDF dei materiali (MECC §17, D-MAT-1): pdf.js, caricato solo al primo PDF
-configurePdf(webPdf);
+// Lettore dei PDF dei materiali (MECC §17, D-MAT-1): pdf.js, caricato solo al primo PDF; su Android il PDF si guarda
+// col visore del sistema (D-MAT-2)
+configurePdf(webPdf, androidPdfViewer);
 
 const radice = document.getElementById('root');
 if (radice)

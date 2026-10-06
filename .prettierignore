@@ -15,3 +15,5 @@ package-lock.json
 .vscode
 # Cache del hook di design del plugin impeccable: riscritta a ogni scansione, non è codice del progetto
 .impeccable
+# Progetto Android di Capacitor (D-MAT-2): Gradle e Java, generato da `npx cap add android`
+android

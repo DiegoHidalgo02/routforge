@@ -308,6 +308,7 @@
 .fantasma::after,
 .secondario::after,
 .elimina::after,
+.caricaCodice::after,
 .iconaBottone::after {
   content: '';
   position: absolute;
@@ -612,4 +613,46 @@
 
 .annullaToast {
   composes: annullaToast from './Today.module.css';
+}
+
+/* «Carica il codice prodotto» della chiusura della sessione (S15): riga tratteggiata in surface, testo text-2, la
+   nota in text-3; al passaggio bordo border-strong e testo bianco */
+.caricaCodice {
+  position: relative;
+  width: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  font: 500 var(--text-base) var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.caricaCodice:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.iconaCarica {
+  flex: none;
+}
+
+.testoCarica {
+  flex: 1;
+}
+
+.notaCarica {
+  color: var(--color-text-3);
+}
+
+/* Dopo il caricamento il conteggio è un'informazione: text-2 (text-3 non è mai testo informativo) */
+.notaCarica[data-esito] {
+  color: var(--color-text-2);
 }

@@ -12,7 +12,9 @@ import {
   addPdf,
   configurePdf,
   deleteMaterial,
+  hasSystemPdfViewer,
   materialsSpace,
+  openPdfInSystem,
   readMaterials,
   readPdf,
   restoreMaterial,
@@ -28,8 +30,8 @@ beforeEach(() => {
 afterEach(() => db.delete());
 
 /** Lettore finto: il primo byte dice che PDF è (1 testuale, 2 scansionato, altro illeggibile). */
-configurePdf({
-  leggi: (dati) =>
+const lettore = {
+  leggi: (dati: Uint8Array) =>
     Promise.resolve(
       dati[0] === 1
         ? { pagine: 2, testi: ['Event loop', 'Microtask'] }
@@ -38,7 +40,8 @@ configurePdf({
           : null,
     ),
   pagina: () => Promise.resolve(new Uint8Array([137])),
-});
+};
+configurePdf(lettore);
 const file = (nome: string, tipo: number, byte = 3 * MB) => {
   const dati = new Uint8Array(byte);
   dati[0] = tipo;
@@ -97,5 +100,34 @@ describe('Materiali — MECCANISMI §17, SCENARI H2', () => {
     const spostata = await get(db, 'materiali', nota.id);
     const n07 = (await list(db, 'unita')).find((u) => u.corsoId === nuovo.id && u.numero === '0.7')!;
     expect(spostata).toMatchObject({ corsoId: nuovo.id, unitaId: n07.id });
+  });
+});
+
+describe('PDF col visore del sistema — MECCANISMI §17, D-MAT-2', () => {
+  it('su Android il PDF va al visore col suo nome; senza visore, senza binario, se non si apre o se lancia, false (ripiego su S13)', async () => {
+    const aperti: [number, string][] = [];
+    let riesce: boolean | 'lancia' = true;
+    configurePdf(lettore, {
+      apri: (dati, nome) => {
+        aperti.push([dati.byteLength, nome]);
+        return riesce === 'lancia' ? Promise.reject(new Error('ponte')) : Promise.resolve(riesce);
+      },
+    });
+    try {
+      expect(hasSystemPdfViewer()).toBe(true);
+      const r = await addPdf(db, posto, file('Registro.pdf', 1, 10), ADESSO);
+      if (r.esito !== 'aggiunto') throw new Error('aggiunto');
+      expect(await openPdfInSystem(db, r.materiale.id)).toBe(true);
+      expect(aperti).toEqual([[10, 'Registro.pdf']]);
+      riesce = false;
+      expect(await openPdfInSystem(db, r.materiale.id)).toBe(false);
+      riesce = 'lancia';
+      expect(await openPdfInSystem(db, r.materiale.id)).toBe(false);
+      expect(await openPdfInSystem(db, 'nessuno')).toBe(false);
+    } finally {
+      configurePdf(lettore);
+    }
+    expect(hasSystemPdfViewer()).toBe(false);
+    expect(await openPdfInSystem(db, 'nessuno')).toBe(false);
   });
 });

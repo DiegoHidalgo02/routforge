@@ -15,12 +15,36 @@ import {
   type Materiale,
 } from '../domain/materials';
 import { codeUploads } from './codeFiles';
-import type { LettorePdf } from './ports/pdf';
+import { logError } from './diagnostics';
+import type { LettorePdf, VisorePdf } from './ports/pdf';
 
 let lettore: LettorePdf = { leggi: () => Promise.resolve(null), pagina: () => Promise.resolve(null) };
+let visore: VisorePdf | null = null;
 
-export function configurePdf(l: LettorePdf): void {
+/** Il lettore (pdf.js) e, dove c'è, il visore del sistema (Android, D-MAT-2). */
+export function configurePdf(l: LettorePdf, v: VisorePdf | null = null): void {
   lettore = l;
+  visore = v;
+}
+
+/** C'è un visore del sistema: il PDF si apre lì e non nel visualizzatore web (S13). */
+export const hasSystemPdfViewer = (): boolean => visore !== null;
+
+/**
+ * Apre il PDF col visore del sistema (D-MAT-2); `false` senza visore, senza binario o se non si apre: allora la UI
+ * ripiega sul visualizzatore di S13, e un'apertura fallita va in Diagnostica (INV-16).
+ */
+export async function openPdfInSystem(db: RoutForgeDb, id: string): Promise<boolean> {
+  if (!visore) return false;
+  try {
+    const [m, dati] = await Promise.all([get(db, 'materiali', id), readPdf(db, id)]);
+    if (!m || !dati) return false;
+    if (await visore.apri(dati, m.titolo)) return true;
+    logError('materiali', new Error('PDF non aperto dal visore del sistema'));
+  } catch (e) {
+    logError('materiali', e);
+  }
+  return false;
 }
 
 /** Dove sta un materiale: il corso e l'unità. */

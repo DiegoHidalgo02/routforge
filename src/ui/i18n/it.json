@@ -704,5 +704,7 @@
   "persiSera": "dopo le 18",
   "persiNotte": "prima delle 6",
   "sessioniBrevi": "{n} sess.",
-  "eliminaMateriale": "Elimina {titolo}"
+  "eliminaMateriale": "Elimina {titolo}",
+  "caricaCodiceProdotto": "Carica il codice prodotto",
+  "fileOZipPerAi": "file o ZIP, per l'AI"
 }

@@ -159,10 +159,12 @@ resta fuori dal dominio.
 # T-006 (fatto): UI web
 npm i react react-dom react-router lucide-react @fontsource/manrope @fontsource/ibm-plex-mono
 npm i -D @types/react @types/react-dom vite@7 @vitejs/plugin-react@5 eslint-plugin-react-hooks eslint-plugin-jsx-a11y
-# T-021 (prima capacità nativa, dopo CP3)
-npm i @capacitor/core @capacitor/android @capacitor/app @capacitor/local-notifications @capacitor/filesystem @capacitor/haptics
+# Capacitor (fatto il 06/10/2026 per il PDF col visore del sistema, D-MAT-2): core, android, filesystem, cli
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
-npx cap add android            # richiede Android Studio; iOS richiede un Mac
+npx cap add android            # progetto in android/, versionato; iOS richiede un Mac
+npm run build && npx cap sync android && (cd android && ./gradlew assembleDebug)   # APK di debug
+# T-021: il resto dei plugin
+npm i @capacitor/app @capacitor/local-notifications @capacitor/haptics
 # T-035: PWA installabile (manifest con nome e icona di CP6)
 npm i -D vite-plugin-pwa
 ```

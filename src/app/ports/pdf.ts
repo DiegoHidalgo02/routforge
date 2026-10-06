@@ -9,3 +9,11 @@ export interface LettorePdf {
   /** La pagina `numero` (da 1) come immagine PNG larga `larghezza` pixel. */
   pagina(dati: Uint8Array, numero: number, larghezza: number): Promise<Uint8Array | null>;
 }
+
+/**
+ * Visore del sistema (D-MAT-2): su Android il PDF si apre con l'app dei PDF del dispositivo, senza la WebView. Adapter
+ * in `src/platform/pdfAndroid.ts`; sul web non c'è. Non lancia: `false` se il PDF non si apre.
+ */
+export interface VisorePdf {
+  apri(dati: Uint8Array, nome: string): Promise<boolean>;
+}

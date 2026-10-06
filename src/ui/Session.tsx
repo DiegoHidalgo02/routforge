@@ -79,6 +79,7 @@ import type { Blocco, Esito } from '../domain/types';
 import { useMinuto, useSecondo } from './clock';
 import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
+import { CaricaCodice } from './Materials';
 import s from './Session.module.css';
 
 /** L'istante del clic (fuori dal render: `react-hooks/purity`). */
@@ -911,6 +912,8 @@ export function ActiveSession() {
             onAnnulla={() => setFoglio(false)}
             inCorso={inChiusura}
             onRegistra={registra}
+            // Il codice va nei «Tuoi» dell'unità studiata: senza unità non c'è dove allegarlo (CONTROLLI S15)
+            codice={vista.unita && <CaricaCodice corsoId={vista.unita.corsoId} unitaId={vista.unita.id} />}
           >
             <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={abbandona}>
               {conEsito
@@ -963,6 +966,8 @@ export function SchedaEsito(p: {
   compatta?: ReactNode;
   /** Minuti per unità come li accredita l'esito (`sessionMinutes`): con un'altra unità il riquadro (S15, D3). */
   perUnita?: Record<string, number>;
+  /** La riga «Carica il codice prodotto» della chiusura della sessione (S15), sopra i bottoni. */
+  codice?: ReactNode;
 }) {
   const ingressi = useIngressi(null);
   const [esito, setEsito] = useState<Esito | null>(null);
@@ -1091,6 +1096,7 @@ export function SchedaEsito(p: {
           <span className={s.knob} />
         </button>
       )}
+      {p.codice}
       <div className={s.foglioAzioni}>
         <button type="button" className={s.continua} onClick={p.onAnnulla}>
           {t(p.annulla)}

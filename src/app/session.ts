@@ -65,8 +65,8 @@ export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
 /** Ciò che mostrano il timer e il banner «Sessione in corso» (S15, S1). */
 export interface VistaSessione {
   sessione: SessioneAttiva;
-  /** L'unità su cui va il tempo adesso, cambi d'unità compresi (§10.3). */
-  unita: { titolo: string; numero: string; moduloNumero: number } | null;
+  /** L'unità su cui va il tempo adesso, cambi d'unità compresi (§10.3); il codice prodotto va nei suoi «Tuoi» (S15). */
+  unita: { id: string; corsoId: string; titolo: string; numero: string; moduloNumero: number } | null;
   /** Orario d'inizio del blocco, per «routine 16:00». */
   orario: string | null;
 }
@@ -79,7 +79,9 @@ export async function readSessionView(db: RoutForgeDb): Promise<VistaSessione | 
   const b = s.bloccoId ? await get(db, 'blocchi', s.bloccoId) : undefined;
   return {
     sessione: s,
-    unita: u ? { titolo: u.titolo, numero: u.numero, moduloNumero: u.moduloNumero } : null,
+    unita: u
+      ? { id: u.id, corsoId: u.corsoId, titolo: u.titolo, numero: u.numero, moduloNumero: u.moduloNumero }
+      : null,
     orario: b?.orarioInizio ?? null,
   };
 }

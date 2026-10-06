@@ -9,7 +9,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['node_modules/', 'dist/', 'coverage/', 'claude-design/']),
+  globalIgnores(['node_modules/', 'dist/', 'coverage/', 'claude-design/', 'android/']),
   js.configs.recommended,
   tseslint.configs.recommended,
   {

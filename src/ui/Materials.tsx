@@ -26,7 +26,9 @@ import {
   addNote,
   addPdf,
   deleteMaterial,
+  hasSystemPdfViewer,
   materialsSpace,
+  openPdfInSystem,
   readMaterial,
   readMaterials,
   readPdf,
@@ -91,6 +93,7 @@ function useAnnulla() {
 }
 
 function Riga({ m }: { m: RigaMateriale }) {
+  const navigate = useNavigate();
   if (m.tipo === 'link')
     return (
       <a className={s.riga} href={m.url} target="_blank" rel="noopener noreferrer">
@@ -102,8 +105,20 @@ function Riga({ m }: { m: RigaMateriale }) {
         <ArrowUpRight size={14} className={s.freccia} />
       </a>
     );
+  const vista = `/materiali/${encodeURIComponent(m.id)}`;
   return (
-    <Link className={s.riga} to={`/materiali/${encodeURIComponent(m.id)}`}>
+    <Link
+      className={s.riga}
+      to={vista}
+      onClick={(e) => {
+        // Su Android il PDF si apre col visore del sistema; se non si apre, il visualizzatore di S13 (D-MAT-2)
+        if (m.tipo !== 'pdf' || !hasSystemPdfViewer()) return;
+        e.preventDefault();
+        void openPdfInSystem(appDb, m.id).then((aperto) => {
+          if (!aperto) void navigate(vista);
+        });
+      }}
+    >
       {m.tipo === 'nota' ? <StickyNote size={16} className={s.icona} /> : <FileText size={16} className={s.icona} />}
       <span className={s.testi}>
         {m.tipo === 'nota' ? (
@@ -332,12 +347,11 @@ const dimensioneFine = (byte: number) =>
  * «File di codice» (S12, T-025; MECC §17): l'albero dei file caricati con gli esclusi, i contatori e la pill per file o
  * ZIP. Il contenuto non si mostra: serve solo all'AI.
  */
-export function CodiceUnita({ corsoId, unitaId }: { corsoId: string; unitaId: string }) {
-  const [v, setV] = useState<Awaited<ReturnType<typeof readCode>>>();
+/** Il caricamento di file o ZIP nei «Tuoi» di un'unità; un errore resta sulla riga e va in Diagnostica (INV-16). */
+function useCaricaCodice(corsoId: string, unitaId: string) {
   const [lavoro, setLavoro] = useState(false);
   const [errore, setErrore] = useState(false);
-  const scelta = useRef<HTMLInputElement>(null);
-  useEffect(() => watch(() => readCode(appDb, unitaId), setV), [unitaId]);
+  const [esito, setEsito] = useState<{ file: number; esclusi: number }>();
   const carica = async (lista: FileList | null) => {
     if (!lista?.length) return;
     setLavoro(true);
@@ -348,7 +362,7 @@ export function CodiceUnita({ corsoId, unitaId }: { corsoId: string; unitaId: st
         byte: f.size,
         leggi: async () => new Uint8Array(await f.arrayBuffer()),
       }));
-      await uploadCode(appDb, { corsoId, unitaId }, scelti, adesso());
+      setEsito(await uploadCode(appDb, { corsoId, unitaId }, scelti, adesso()));
       setErrore(false);
     } catch (e) {
       logError('materiali', e);
@@ -357,6 +371,57 @@ export function CodiceUnita({ corsoId, unitaId }: { corsoId: string; unitaId: st
       setLavoro(false);
     }
   };
+  return { carica, lavoro, errore, esito };
+}
+
+/**
+ * «Carica il codice prodotto · file o ZIP, per l'AI» della chiusura della sessione (S15, CONTROLLI): il codice va nei
+ * «Tuoi» dell'unità studiata; dopo il caricamento la riga dice quanti file sono entrati.
+ */
+export function CaricaCodice({ corsoId, unitaId }: { corsoId: string; unitaId: string }) {
+  const { carica, lavoro, errore, esito } = useCaricaCodice(corsoId, unitaId);
+  const scelta = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <button
+        type="button"
+        className={s.caricaCodice}
+        disabled={lavoro}
+        aria-busy={lavoro}
+        onClick={() => scelta.current?.click()}
+      >
+        <Code size={14} className={s.iconaCarica} />
+        <span className={s.testoCarica}>
+          {t('caricaCodiceProdotto')}{' '}
+          <span className={s.notaCarica} data-esito={esito ? '' : undefined}>
+            · {esito ? t('contatoreCodice', { n: esito.file, m: esito.esclusi }) : t('fileOZipPerAi')}
+          </span>
+        </span>
+      </button>
+      {errore && (
+        <span className={s.nota} role="alert">
+          {t('nonSalvato')}
+        </span>
+      )}
+      <input
+        ref={scelta}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          void carica(e.currentTarget.files);
+          e.currentTarget.value = '';
+        }}
+      />
+    </>
+  );
+}
+
+export function CodiceUnita({ corsoId, unitaId }: { corsoId: string; unitaId: string }) {
+  const [v, setV] = useState<Awaited<ReturnType<typeof readCode>>>();
+  const { carica, lavoro, errore } = useCaricaCodice(corsoId, unitaId);
+  const scelta = useRef<HTMLInputElement>(null);
+  useEffect(() => watch(() => readCode(appDb, unitaId), setV), [unitaId]);
   const pieno = v && v.righe.length > 0;
   return (
     <section className={s.tuoi}>
@@ -464,6 +529,8 @@ export function MaterialViewer() {
   const [m, setM] = useState<Vista>();
   const [dati, setDati] = useState<Uint8Array | null>(null);
   const [corrente, setCorrente] = useState(1);
+  // Su Android senza un'app per i PDF (il caso che porta qui) il bottone dell'app esterna non servirebbe a nulla
+  const [senzaVisore, setSenzaVisore] = useState(false);
   useEffect(() => watch(() => readMaterial(appDb, id), setM), [id]);
   useEffect(() => void readPdf(appDb, id).then(setDati), [id]);
   if (m === undefined) return null;
@@ -481,6 +548,11 @@ export function MaterialViewer() {
       : [t('notaBreve')]),
   ].join(' · ');
   const esterna = () => {
+    // Su Android il blob non esce dalla WebView: il visore del sistema (D-MAT-2)
+    if (hasSystemPdfViewer())
+      return void openPdfInSystem(appDb, id).then((aperto) => {
+        if (!aperto) setSenzaVisore(true);
+      });
     if (!dati) return;
     const url = URL.createObjectURL(new Blob([dati.slice()], { type: 'application/pdf' }));
     window.open(url, '_blank', 'noopener');
@@ -503,7 +575,7 @@ export function MaterialViewer() {
             <h1 className={s.nome}>{m.titolo}</h1>
             <span className={s.sotto}>{meta}</span>
           </span>
-          {m.tipo === 'pdf' && (
+          {m.tipo === 'pdf' && !senzaVisore && (
             <button
               type="button"
               className={s.iconaBottone}
