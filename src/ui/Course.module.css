@@ -1,0 +1,382 @@
+/* Il corso (S11 «Corso → moduli»). Restano letterali le misure del mock fuori dalla scala dei token: icone tonde 40,
+   interlinee 14 · 18 · 28, numero del modulo largo 20 e dell'unità 28, binario 3, padding 7 del badge, rotazione del
+   chevron in 200 ms. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  color: var(--color-text);
+}
+
+/* I margini della pagina li dà la shell (`.main`): qui solo l'allineamento dell'indietro al bordo */
+.testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: calc(-1 * var(--space-3)) 0 0 calc(-1 * var(--space-2));
+}
+
+.icona {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.icona:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.icona::after {
+  content: '';
+  position: absolute;
+  inset: calc((40px - var(--size-touch)) / 2);
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-top: var(--space-2);
+}
+
+.num {
+  font-family: var(--font-num);
+  font-weight: 500;
+}
+
+.intestazione {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.eyebrow {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.titolo {
+  margin: 0;
+  font: 600 var(--text-3xl) / 28px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+  text-wrap: pretty;
+}
+
+.progresso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.binario {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-3);
+}
+
+.binario > span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.numeri {
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.righe {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.riga {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.riga[data-tono='primary'] {
+  color: var(--color-primary);
+}
+
+.iconaRiga {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Moduli a fisarmonica: card surface-2 a 8 di distanza, testa da 56, i bloccati a opacità .6 col lucchetto */
+.sezione {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card-gap);
+}
+
+.etichettaSezione {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.etichetta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.conteggio {
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) / 14px var(--font-num);
+}
+
+.modulo {
+  overflow: hidden;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.modulo[data-bloccato] {
+  opacity: var(--opacity-locked);
+}
+
+.testaModulo {
+  width: 100%;
+  min-height: 56px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px 10px var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.testaModulo:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.testaModulo:disabled {
+  cursor: default;
+}
+
+.nn {
+  width: 20px;
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.titoliModulo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.titoloModulo {
+  font: 600 var(--text-md) / 18px var(--font-ui);
+}
+
+.modulo[data-bloccato] .titoloModulo {
+  color: var(--color-text-2);
+}
+
+.subModulo {
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) / 14px var(--font-ui);
+}
+
+.contoModulo {
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.contoModulo[data-fatto] {
+  color: var(--color-success);
+}
+
+.chevron,
+.lucchetto {
+  flex: none;
+  color: var(--color-text-3);
+}
+
+.chevron {
+  transition: transform 200ms var(--ease-out);
+}
+
+.testaModulo[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+.corpoModulo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 14px var(--space-3);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.unita {
+  display: flex;
+  flex-direction: column;
+}
+
+.rigaUnita {
+  min-height: var(--size-touch);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.numeroUnita {
+  width: 28px;
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.titoloUnita {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) 0;
+  font: 500 var(--text-md) / 18px var(--font-ui);
+}
+
+.rigaUnita[data-fatta] .titoloUnita {
+  color: var(--color-text-2);
+}
+
+.spunta {
+  flex: none;
+  color: var(--color-success);
+}
+
+.badgeProssima {
+  height: var(--size-badge);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.cerchio {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+/* «Verifica del modulo»: riquadro surface con righe da 44 che aprono il modulo alla sezione */
+.verifica {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.rigaVerifica {
+  min-height: var(--size-touch);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.rigaVerifica + .rigaVerifica {
+  border-top: 1px solid var(--color-border);
+}
+
+.rigaVerifica:hover {
+  background: var(--color-surface-hover);
+}
+
+.testiVerifica {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-2) 0;
+}
+
+.titoloVerifica {
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.metaVerifica {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.valore {
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.valore[data-tono='successo'] {
+  color: var(--color-success);
+}
+
+.valore[data-tono='avviso'] {
+  color: var(--color-warning);
+}
+
+.freccia {
+  flex: none;
+  color: var(--color-text-3);
+}
+
+.nota {
+  color: var(--color-text-3);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

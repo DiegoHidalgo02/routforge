@@ -5,7 +5,8 @@ import { openDb, type RoutForgeDb } from '../data/db';
 import { list } from '../data/repository';
 import { local } from '../domain/time';
 import { importSampleCourse } from './courseImport';
-import { readUnitMaterial } from './courses';
+import { createActivity } from './activities';
+import { readCourse, readUnitMaterial } from './courses';
 
 let db: RoutForgeDb;
 let n = 0;
@@ -36,5 +37,42 @@ describe('Materiale dell’unità — FORMATO_CORSO §4', () => {
     ]);
     expect(m?.sezioni[1]?.risorse[0]?.youtube).toBe(true);
     expect(await readUnitMaterial(db, 'nessuna')).toBeNull();
+  });
+});
+
+describe('Corso → moduli — FUNZ §9.3, MECCANISMI §11', () => {
+  it('corso di esempio: moduli in ordine con lo stato e le unità, puntatore sulla prima unità aperta, routine del corso', async () => {
+    const now = local(2026, 9, 22, 9, 0);
+    await importSampleCourse(db, now);
+    const id = (await list(db, 'corsi'))[0]!.id;
+    const prima = await readCourse(db, id);
+    expect(prima?.scheda).toMatchObject({ moduli: 2, unita: 13, completate: 0, pct: 0 });
+    expect(prima?.moduli.map((m) => [m.numero, m.stato, m.unita.length])).toEqual([
+      [0, 'aperto', 9],
+      [1, 'bloccato', 4],
+    ]);
+    expect(prima?.puntatore?.numero).toBe('0.1');
+    expect(prima?.moduli[0]).toMatchObject({ domande: 10, criteri: { fatti: 0, totali: 7 } });
+    expect(prima?.moduli[0]?.progetto).toContain('Task Tracker');
+    expect(prima?.routine).toBeNull();
+    await createActivity(
+      db,
+      {
+        tipo: 'studio',
+        titolo: '',
+        note: '',
+        promemoria: { modo: 'auto' },
+        corsoId: id,
+        giorni: [1, 3, 5],
+        inizio: '16:00',
+        fine: '16:45',
+        dataInizio: '2026-09-22',
+        termine: null,
+      },
+      now,
+      'Europe/Rome',
+    );
+    expect((await readCourse(db, id))?.routine).toEqual({ giorni: [1, 3, 5], orarioInizio: '16:00' });
+    expect(await readCourse(db, 'nessuno')).toBeNull();
   });
 });

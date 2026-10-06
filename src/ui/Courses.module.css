@@ -372,3 +372,95 @@
     max-width: 360px;
   }
 }
+
+/* Card del corso che apre il corso (S10 → S11) e la riga «Prossima · 0.7 …» in primary su una riga */
+.cardCorso {
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color var(--dur-feedback) var(--ease-out);
+}
+
+.cardCorso:hover {
+  border-color: var(--color-border-strong);
+}
+
+.num {
+  font-family: var(--font-num);
+  font-weight: 500;
+}
+
+.prossima {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-primary);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.iconaProssima {
+  flex: none;
+}
+
+.testoProssima {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Testata di S10: logo del profilo 40 (solo mobile), titolo 20 con il sottotitolo, Impostazioni tonda 36 */
+.testa {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.titoli {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.titoloPagina {
+  margin: 0;
+  font: 600 var(--text-xl-2) / 24px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+}
+
+.sottotitolo {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}
+
+.impostazioni {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.impostazioni:hover {
+  background: var(--color-surface-3);
+}
+
+.impostazioni::after {
+  content: '';
+  position: absolute;
+  inset: calc((36px - var(--size-touch)) / 2);
+  border-radius: inherit;
+}
+
+@media (min-width: 1024px) {
+  .soloMobile {
+    display: none;
+  }
+}

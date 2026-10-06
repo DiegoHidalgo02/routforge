@@ -3,6 +3,7 @@
 // dialog; aperto da un collegamento diretto si apre sopra la shell. Lo stesso vale per il Dettaglio (`/attivita/:id`).
 import { LucideProvider } from 'lucide-react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, type Location } from 'react-router';
+import { Course } from './Course';
 import { Courses } from './Courses';
 import { Create } from './Create';
 import { Detail } from './Detail';
@@ -24,6 +25,7 @@ function Rotte() {
           <Route path="attivita/:id/modifica" element={<Create />} />
           <Route path="statistiche" element={<Section titolo="statistiche" />} />
           <Route path="corsi" element={<Courses />} />
+          <Route path="corsi/:corso" element={<Course />} />
           <Route path="sessione/setup" element={<SessionSetup />} />
           <Route path="sessione" element={<ActiveSession />} />
           <Route path="notifiche" element={<Section titolo="notifiche" indietro />} />

@@ -306,6 +306,12 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 68. Debrief multi-materia (T-055, D3): il riquadro «Minuti per unità · l'esito resta sulla pianificata» compare quando
     la sessione ha dato minuti a un'unità diversa dalla pianificata, in qualunque modalità (il mock lo lega al
     pomodoro); i minuti escludono le pause dei segmenti, come il riepilogo.
+69. Corsi (T-053, primo incremento): S10 con la testata del mock (logo del profilo al posto dell'avatar con
+    l'iniziale, che arriva con l'account di T-033; sottotitolo «1 corso · N unità completate»; Impostazioni) e card che
+    apre il corso con «Prossima · 0.7 …» dal puntatore; la sezione «Account e sincronizzazione» arriva con T-033. S11
+    Corso su `/corsi/:corso`: avanzamento, routine di studio del corso, puntatore, moduli a fisarmonica con unità e
+    verifica del modulo, moduli bloccati col lucchetto. Il cestino («Elimina corso») arriva con T-037. Il cerchio
+    dell'unità da fare è in border-strong come nel mock (claude-design/CLAUDE.md vorrebbe text-3): da decidere.
 
 ## 4. Mappa schermata → design → task
 

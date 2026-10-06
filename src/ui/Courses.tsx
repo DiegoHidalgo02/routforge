@@ -1,8 +1,9 @@
 // Profilo → Corsi (S10 Corsi Mobile/Desktop; FUNZ §9.1, MECC §16). Senza corsi: «Carica esempio» e «Importa ZIP»;
 // con corsi: elenco con badge «Esempio» e numeri contati dalle righe salvate (D-SAMPLE-1). Titolo chiesto solo se
-// nello ZIP manca 00_struttura (D-PARSE-1); avvisi al massimo 5. Dettaglio del corso (S11) e «Prossima» con il
-// puntatore arrivano con il loro task; l'avanzamento dell'import non si mostra: la lettura è sincrona.
-import { GraduationCap, TriangleAlert, Upload } from 'lucide-react';
+// nello ZIP manca 00_struttura (D-PARSE-1); avvisi al massimo 5. La card apre il corso (S11, T-053) e dice la
+// «Prossima» unità del puntatore; l'avanzamento dell'import non si mostra: la lettura è sincrona.
+import { GraduationCap, SlidersVertical, Target, TriangleAlert, Upload } from 'lucide-react';
+import { Link } from 'react-router';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
 import { ErroreImportCorso } from '../domain/course/parser';
@@ -10,7 +11,8 @@ import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { t } from './i18n';
-import { Section } from './Section';
+import { ProfileMenu } from './ProfileMenu';
+import { SessionBannerSlot } from './Session';
 import s from './Courses.module.css';
 
 type Avvisi = Awaited<ReturnType<typeof importZip>>;
@@ -21,10 +23,48 @@ type Esito =
   | ({ tipo: 'avvisi' } & Avvisi);
 
 const durata = (min: number) => t('durata', { h: Math.floor(min / 60), m: String(min % 60).padStart(2, '0') });
+/** Le cifre di un testo nel font dei numeri (S10: «5 moduli · 13 unità · 11h 40m»). */
+const cifre = (testo: string) =>
+  testo.split(/(\d[\d:.,]*)/).map((x, i) =>
+    i % 2 ? (
+      <span key={i} className={s.num}>
+        {x}
+      </span>
+    ) : (
+      x
+    ),
+  );
 const errore = (file: string, e: unknown): Esito => ({
   tipo: 'errore',
   file: e instanceof ErroreImportCorso ? file : null,
 });
+
+/** Testata di S10 (Profilo / Corsi): logo del profilo su mobile, titolo con i numeri dei corsi, Impostazioni. */
+function Testa({ schede }: { schede: SchedaCorso[] | undefined }) {
+  const completate = schede?.reduce((n, c) => n + c.completate, 0) ?? 0;
+  return (
+    <>
+      <header className={s.testa}>
+        <span className={s.soloMobile}>
+          <ProfileMenu variante="logo" />
+        </span>
+        <span className={s.titoli}>
+          <h1 className={s.titoloPagina}>{t('corsi')}</h1>
+          {schede && schede.length > 0 && (
+            <span className={s.sottotitolo}>
+              {t(schede.length === 1 ? 'unCorso' : 'nCorsi', { n: schede.length })} ·{' '}
+              {t('unitaCompletateN', { n: completate })}
+            </span>
+          )}
+        </span>
+        <Link to="/impostazioni" className={s.impostazioni} aria-label={t('impostazioni')}>
+          <SlidersVertical size={17} />
+        </Link>
+      </header>
+      <SessionBannerSlot />
+    </>
+  );
+}
 
 export function Courses() {
   const [schede, setSchede] = useState<SchedaCorso[]>();
@@ -75,12 +115,12 @@ export function Courses() {
     />
   );
 
-  if (!schede) return <Section titolo="corsi" />;
+  if (!schede) return <Testa schede={schede} />;
 
   if (schede.length === 0 && !esito)
     return (
       <>
-        <Section titolo="corsi" />
+        <Testa schede={schede} />
         <div className={s.vuoto}>
           <span className={s.iconaVuoto}>
             <GraduationCap size={24} />
@@ -105,7 +145,7 @@ export function Courses() {
 
   return (
     <>
-      <Section titolo="corsi" />
+      <Testa schede={schede} />
       <div className={s.elenco}>
         <div className={s.gruppo}>
           <span className={s.etichetta}>
@@ -194,14 +234,14 @@ export function Courses() {
         )}
 
         {schede.map((c) => (
-          <article key={c.id} className={s.card}>
+          <Link key={c.id} to={`/corsi/${c.id}`} className={`${s.card} ${s.cardCorso}`}>
             <div className={s.intestazione}>
               <span className={s.colonna}>
                 <h2 className={s.titoloCorso}>{c.titolo}</h2>
                 <span className={s.cardTesto}>
-                  {t('corsoNumeri', { moduli: c.moduli, unita: c.unita })}
+                  {cifre(t('corsoNumeri', { moduli: c.moduli, unita: c.unita }))}
                   {/* Il tempo dedicato solo su mobile: S10 Desktop non lo mostra (D-DESIGN-1 n. 18) */}
-                  <span className={s.tempo}>{t('corsoTempo', { tempo: durata(c.minuti) })}</span>
+                  <span className={s.tempo}>{cifre(t('corsoTempo', { tempo: durata(c.minuti) }))}</span>
                 </span>
               </span>
               {c.esempio && <span className={s.badge}>{t('esempio')}</span>}
@@ -212,7 +252,15 @@ export function Courses() {
                 {t('corsoProgresso', { fatte: c.completate, unita: c.unita, pct: c.pct })}
               </span>
             </div>
-          </article>
+            {c.prossima && (
+              <span className={s.prossima}>
+                <Target size={14} className={s.iconaProssima} />
+                <span className={s.testoProssima}>
+                  {t('prossima')} · <span className={s.num}>{c.prossima.numero}</span> {c.prossima.titolo}
+                </span>
+              </span>
+            )}
+          </Link>
         ))}
       </div>
     </>
