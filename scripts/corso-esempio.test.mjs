@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { COURSE } from '../src/data/sample-course/course-data.js';
+import { SEGNAPOSTO_ESEMPIO } from '../src/app/courseImport.ts';
 import { parseCourse } from '../src/domain/course/parser.ts';
 import { local } from '../src/domain/time.ts';
 
@@ -21,8 +22,8 @@ const risorsa = ({ title, url, host }) => ({ titolo: title, url, host });
 
 /**
  * Forma attesa del corso con i nomi del dominio (D-NAMING-1), confrontata come sottoinsieme dell'output del parser
- * (`toMatchObject`: id, stati, soglie e flag YouTube del parser non contano; `file`, `importedOn`, `locked` — i
- * segnaposto M2–M4 senza file — li aggiunge T-041). Nessuna differenza annotata: dove il fixture si discostava dalle
+ * (`toMatchObject`: id, stati, soglie e flag YouTube del parser non contano; `file` e `importedOn` no; `locked` — i
+ * segnaposto M2–M4 senza file — si confronta a parte con `SEGNAPOSTO_ESEMPIO`, che l'import passa al parser, T-041). Nessuna differenza annotata: dove il fixture si discostava dalle
  * regole di FORMATO §2–§3 (intestazione, finestra, intro, test di fit) vince il fixture (D-DESIGN-1).
  */
 function attesoDalFixture(fixture) {
@@ -89,5 +90,16 @@ describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-
 
   it('il corso letto dal parser coincide con course-data.js', () => {
     expect(corso).toMatchObject(attesoDalFixture(COURSE));
+  });
+
+  it('i segnaposto dell’import sono `locked` del fixture: moduli bloccati con solo numero e titolo, 5 moduli · 13 unità (T-041)', () => {
+    const conSegnaposto = parseCourse(files, { ...opzioni, segnaposto: SEGNAPOSTO_ESEMPIO }).corso;
+    expect(conSegnaposto.moduli).toHaveLength(5);
+    expect(conSegnaposto.numeroUnita).toBe(13);
+    expect(
+      conSegnaposto.moduli
+        .filter((m) => m.segnaposto)
+        .map(({ numero, nn, titolo, stato, unita }) => ({ numero, nn, titolo, stato, unita })),
+    ).toEqual(COURSE.locked.map((l) => ({ numero: l.n, nn: l.nn, titolo: l.title, stato: 'bloccato', unita: [] })));
   });
 });

@@ -52,6 +52,13 @@ export async function importZip(db: RoutForgeDb, zip: Uint8Array, now: number, t
   return { corso, avvisi: avvisi.slice(0, MAX_WARNINGS_SHOWN), totaleAvvisi: avvisi.length };
 }
 
+/** I moduli M2–M4 del corso di esempio, senza file: segnaposto bloccati (FORMATO §5, `locked` di course-data.js, T-041). */
+export const SEGNAPOSTO_ESEMPIO = [
+  { numero: 2, titolo: 'Testing con Vitest' },
+  { numero: 3, titolo: 'Fondamenti di Computer Science' },
+  { numero: 4, titolo: 'TypeScript' },
+];
+
 /** Corso di esempio incluso: M0 + M1 dell'export del design, senza file struttura (FORMATO §5, D-SAMPLE-1). */
 const ESEMPIO: FileCorso[] = [
   { name: 'M0-Riattivazione_JavaScript.md', content: m0 },
@@ -61,7 +68,12 @@ const ESEMPIO: FileCorso[] = [
 /** Carica il corso di esempio: come ogni import crea un corso nuovo (MECC §16), marcato come esempio. */
 export async function importSampleCourse(db: RoutForgeDb, now: number): Promise<RisultatoImportCorso> {
   // Il titolo lo fissa FORMATO §5: non si chiede all'utente (D-SAMPLE-1).
-  const r = parseCourse(ESEMPIO, { corsoId: newId(), now, titolo: 'Syllabus Software Engineer 2026' });
+  const r = parseCourse(ESEMPIO, {
+    corsoId: newId(),
+    now,
+    titolo: 'Syllabus Software Engineer 2026',
+    segnaposto: SEGNAPOSTO_ESEMPIO,
+  });
   await saveCourse(db, r.corso, now, true);
   return r;
 }

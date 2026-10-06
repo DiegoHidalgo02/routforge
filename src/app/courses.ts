@@ -4,7 +4,7 @@
  * il modulo con la verifica e la spunta dei criteri Go/No-Go (`readModule`, `setCriterion`), l'unità (`readUnit`, S12),
  * l'eliminazione a cascata (`courseCascade`, `deleteCourse`; MECC §16, H3, T-037).
  *
- * I numeri si contano dalle righe salvate, non dai mock: il corso di esempio è 2 moduli · 13 unità (D-SAMPLE-1).
+ * I numeri si contano dalle righe salvate, non dai mock: il corso di esempio è 5 moduli (M2–M4 segnaposto, T-041) · 13 unità (D-SAMPLE-1).
  * `esempio` dà il badge «Esempio» (D-IMPORT-1). Ordine: dal più vecchio import al più recente.
  */
 import type { RoutForgeDb } from '../data/db';
@@ -15,7 +15,7 @@ import {
   type RisorsaImportata,
   type SezioneImportata,
 } from '../domain/course/parser';
-import { criteriaMet, currentUnit, sortedUnits, statiModuli } from '../domain/pointer';
+import { criteriaMet, currentUnit, modulePath, sortedUnits, statiModuli } from '../domain/pointer';
 import { STATI_UNITA_PENDENTI } from '../domain/types';
 import { sessionMinutes } from '../domain/outcome';
 import type { Esito, StatoModulo, StatoUnita } from '../domain/types';
@@ -43,9 +43,7 @@ export async function courseCards(db: RoutForgeDb): Promise<SchedaCorso[]> {
     .map(({ id, titolo, esempio }) => {
       const sue = sortedUnits(unita.filter((u) => u.corsoId === id));
       const completate = sue.filter((u) => u.stato === 'completata').length;
-      const percorso = moduli
-        .filter((m) => m.corsoId === id)
-        .map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
+      const percorso = moduli.filter((m) => m.corsoId === id).map(modulePath);
       const c = currentUnit(sue, percorso);
       const p = c && sue.find((u) => u.id === c.id);
       return {
@@ -133,7 +131,7 @@ export async function readCourse(db: RoutForgeDb, corsoId: string): Promise<Vist
     listBy(db, 'unita', 'corsoId', corsoId),
     listBy(db, 'ricorrenze', 'corsoId', corsoId),
   ]);
-  const percorso = moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
+  const percorso = moduli.map(modulePath);
   const stati = statiModuli(percorso);
   const ordinate = sortedUnits(unita);
   // L'unità corrente (MECC §11): prima pendente nei moduli aperti; a percorso bloccato nessuna (D-PTR-1)

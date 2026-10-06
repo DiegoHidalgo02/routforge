@@ -1,6 +1,6 @@
 /**
  * Esiti e puntatore dell'unità.
- * Fonti: RoutForge_MECCANISMI.md §11; RoutForge_FORMATO_CORSO.md §4 (moduli bloccati).
+ * Fonti: RoutForge_MECCANISMI.md §11; RoutForge_FORMATO_CORSO.md §4 (moduli bloccati) e §5 (segnaposto, T-041).
  * Criteri: SCENARI C1 (puntatore iniziale), C3 (Completata / Indietro / Salta), C2 (progresso).
  *
  * Puntatore: unità in ordine modulo → unità; pendenti = non_iniziata / parziale / da_rivedere;
@@ -40,6 +40,8 @@ export interface ModuloPercorso {
   numero: number;
   /** true se tutti i criteri Go/No-Go del modulo sono "sì" (vacuamente vero senza criteri). */
   criteriSoddisfatti: boolean;
+  /** Modulo segnaposto senza file (FORMATO §5): sempre bloccato (T-041). */
+  segnaposto?: boolean;
 }
 
 export interface BloccoStudioFuturo {
@@ -61,17 +63,30 @@ export function sortedUnits<U extends UnitaPercorso>(units: readonly U[]): U[] {
 /**
  * Stato di ogni modulo (FORMATO_CORSO §4) — UNICA implementazione della regola, usata anche dal parser.
  * Il primo modulo è sempre aperto; un modulo è `bloccato` finché il precedente non è `passato`
- * (tutti i criteri Go/No-Go a sì; senza criteri è passato); la chiusura si propaga in avanti.
+ * (tutti i criteri Go/No-Go a sì; senza criteri è passato); la chiusura si propaga in avanti. Un segnaposto (FORMATO §5:
+ * M2–M4 del corso di esempio, senza file) è sempre bloccato e blocca i successivi (T-041).
  */
 export function statiModuli(moduli: readonly ModuloPercorso[]): Map<number, StatoModulo> {
   const stati = new Map<number, StatoModulo>();
   let precedentePassato = true; // il primo modulo è sempre aperto
   for (const m of [...moduli].sort((a, b) => a.numero - b.numero)) {
-    stati.set(m.numero, !precedentePassato ? 'bloccato' : m.criteriSoddisfatti ? 'passato' : 'aperto');
-    precedentePassato = precedentePassato && m.criteriSoddisfatti;
+    const bloccato: boolean = !precedentePassato || m.segnaposto === true;
+    stati.set(m.numero, bloccato ? 'bloccato' : m.criteriSoddisfatti ? 'passato' : 'aperto');
+    precedentePassato = !bloccato && m.criteriSoddisfatti;
   }
   return stati;
 }
+
+/** Il modulo come lo legge la regola degli stati: numero, criteri Go/No-Go soddisfatti, segnaposto (T-041). */
+export const modulePath = (m: {
+  numero: number;
+  criteri: readonly { fatto: boolean }[];
+  segnaposto?: boolean;
+}): ModuloPercorso => ({
+  numero: m.numero,
+  criteriSoddisfatti: criteriaMet(m.criteri),
+  segnaposto: m.segnaposto === true,
+});
 
 /** Predicato "modulo aperto" per il puntatore. Senza moduli dichiarati, tutto è aperto. */
 export function openModules(modules: readonly ModuloPercorso[] | undefined): (numero: number) => boolean {
@@ -119,12 +134,12 @@ export function assignPointer(
  */
 export function pointerPlan(
   unita: readonly UnitaPercorso[],
-  moduli: readonly { numero: number; criteri: readonly { fatto: boolean }[] }[],
+  moduli: readonly { numero: number; criteri: readonly { fatto: boolean }[]; segnaposto?: boolean }[],
   blocchi: readonly BloccoPuntatore[],
   now: number,
 ): Map<string, string | null> {
   const futuri = blocchi.filter((b) => b.tipo === 'studio' && b.stato === 'programmato' && b.inizio > now);
-  const percorso = moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
+  const percorso = moduli.map(modulePath);
   const piano = new Map<string, string | null>();
   const attuale = new Map(futuri.map((b) => [b.id, b.unitaId ?? null]));
   for (const [id, unitaId] of assignPointer(unita, futuri, percorso))

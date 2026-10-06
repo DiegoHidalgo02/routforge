@@ -4,6 +4,7 @@ import {
   assignPointer,
   criteriaMet,
   currentUnit,
+  modulePath,
   partialProgress,
   pointerPlan,
   previousUnitInPath,
@@ -205,5 +206,17 @@ describe('Puntatore — SCENARI C1 (piano sui blocchi del corso, MECCANISMI §11
       ['b2', '1.2'],
       ['b4', null],
     ]);
+  });
+});
+
+describe('Moduli segnaposto — FORMATO_CORSO §5 (T-041)', () => {
+  it('un segnaposto è sempre bloccato e blocca i successivi, anche col precedente passato', () => {
+    const stati = statiModuli([
+      modulePath({ numero: 0, criteri: [{ fatto: true }] }),
+      modulePath({ numero: 1, criteri: [{ fatto: true }] }),
+      modulePath({ numero: 2, criteri: [], segnaposto: true }),
+      modulePath({ numero: 3, criteri: [] }),
+    ]);
+    expect([...stati.values()]).toEqual(['passato', 'passato', 'bloccato', 'bloccato']);
   });
 });

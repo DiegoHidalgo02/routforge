@@ -1,6 +1,6 @@
 /**
  * Parser del corso importabile: markdown → Corso → Moduli → Unità → Sezioni → Risorse.
- * Fonti: RoutForge_FORMATO_CORSO.md §1–§4; RoutForge_MECCANISMI.md §16. Criterio: SCENARI H1.
+ * Fonti: RoutForge_FORMATO_CORSO.md §1–§4 e §5 (segnaposto, T-041); RoutForge_MECCANISMI.md §16. Criterio: SCENARI H1.
  *
  * Funzione pura: riceve i file già estratti (nome + contenuto). La lettura dello ZIP è del layer
  * applicativo (T-003). Gli identificatori sono deterministici a partire da `corsoId`.
@@ -17,7 +17,7 @@
  * saltato con un avviso, come un'intestazione illeggibile: il primo vince, nessuna rinumerazione automatica.
  */
 import type { StatoUnita, StatoModulo } from '../types';
-import { criteriaMet, statiModuli } from '../pointer';
+import { modulePath, statiModuli } from '../pointer';
 
 // ------------------------------------------------------------------ tipi di output (FORMATO §4)
 
@@ -88,6 +88,8 @@ export interface ModuloImportato {
   testDiFit: { testo: string; risorse: RisorsaImportata[] } | null;
   markdown: string;
   stato: StatoModulo;
+  /** Modulo senza file, con solo numero e titolo (FORMATO §5, corso di esempio): sempre bloccato (T-041). */
+  segnaposto?: boolean;
 }
 
 export interface CorsoImportato {
@@ -130,6 +132,8 @@ export interface OpzioniImport {
   now: number;
   /** Titolo chiesto all'utente quando manca il file struttura. */
   titolo?: string | undefined;
+  /** Moduli segnaposto senza file (FORMATO §5): il corso di esempio ha M2–M4 con solo numero e titolo (T-041). */
+  segnaposto?: readonly { numero: number; titolo: string }[];
 }
 
 export class ErroreImportCorso extends Error {}
@@ -598,6 +602,33 @@ const isStructureFile = (f: { name: string }): boolean => /\.md$/i.test(f.name) 
 export const hasStructureFile = (files: readonly { name: string }[]): boolean =>
   files.some((f) => isStructureFile({ name: fileNameOf(f.name) }));
 
+/** Un modulo segnaposto (FORMATO §5): numero e titolo, nessuna unità né criterio, sempre bloccato. */
+function placeholderModule(corsoId: string, numero: number, titolo: string): ModuloImportato {
+  return {
+    id: `${corsoId}:M${numero}`,
+    numero,
+    nn: String(numero).padStart(2, '0'),
+    titolo,
+    tipo: '',
+    prerequisiti: '',
+    finestraIndicativa: '',
+    trasversali: '',
+    intro: '',
+    obiettivi: [],
+    unita: [],
+    domande: [],
+    esercizi: [],
+    criteri: [],
+    noGo: '',
+    riassunto: '',
+    progetto: null,
+    testDiFit: null,
+    markdown: '',
+    stato: 'bloccato',
+    segnaposto: true,
+  };
+}
+
 /**
  * Importa un corso da un elenco di file. Solo i `.md` vengono letti; i percorsi sono appiattiti al nome;
  * serve almeno un file modulo, altrimenti `ErroreImportCorso`. Ogni chiamata produce un corso nuovo.
@@ -646,7 +677,11 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   if (moduli.length === 0) throw new ErroreImportCorso('Nessun modulo con intestazione valida');
 
   // Stati dei moduli: stessa regola del puntatore (pointer.ts → statiModuli), nessuna copia locale.
-  const stati = statiModuli(moduli.map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) })));
+  // Segnaposto senza file (FORMATO §5): solo numero e titolo, mai sopra un modulo letto da un file
+  for (const x of opts.segnaposto ?? [])
+    if (!numeriModuloVisti.has(x.numero)) moduli.push(placeholderModule(opts.corsoId, x.numero, x.titolo));
+  moduli.sort((a, b) => a.numero - b.numero);
+  const stati = statiModuli(moduli.map(modulePath));
   for (const m of moduli) m.stato = stati.get(m.numero) ?? 'bloccato';
   const firstOpen = moduli.find((m) => m.stato !== 'bloccato');
   const unitaCorrenteId = firstOpen?.unita[0]?.id ?? null;

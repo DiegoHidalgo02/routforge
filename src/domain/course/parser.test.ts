@@ -402,6 +402,33 @@ describe("Puntatore all'import e stati dei moduli — FORMATO_CORSO §4", () => 
   });
 });
 
+describe('Moduli segnaposto — FORMATO_CORSO §5 (T-041)', () => {
+  it('un segnaposto col numero di un modulo letto dal file si scarta; gli altri entrano bloccati e senza unità', () => {
+    const { corso } = parseCourse(
+      [
+        { name: 'M1-Tooling_Moderno.md', content: M1 },
+        { name: 'M3-Backend.md', content: M3 },
+      ],
+      {
+        ...opts,
+        segnaposto: [
+          { numero: 1, titolo: 'Doppione' },
+          { numero: 2, titolo: 'Testing' },
+        ],
+      },
+    );
+    expect(
+      corso.moduli.map(({ numero, titolo, segnaposto, stato }) => ({ numero, titolo, segnaposto, stato })),
+    ).toEqual([
+      { numero: 1, titolo: 'Tooling Moderno', segnaposto: undefined, stato: 'aperto' },
+      { numero: 2, titolo: 'Testing', segnaposto: true, stato: 'bloccato' },
+      { numero: 3, titolo: 'Backend', segnaposto: undefined, stato: 'bloccato' },
+    ]);
+    expect(corso.moduli[1]?.unita).toEqual([]);
+    expect(corso.numeroUnita).toBe(3);
+  });
+});
+
 describe('Vocabolario unico — unità importate e puntatore (D-NAMING-1)', () => {
   it("un'unità importata è già un'UnitaPercorso: il puntatore la usa senza conversioni", () => {
     const { corso } = parseCourse([{ name: 'M1-Tooling_Moderno.md', content: M1 }], opts);

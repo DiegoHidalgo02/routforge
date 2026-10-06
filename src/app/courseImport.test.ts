@@ -94,14 +94,22 @@ describe('Corso di esempio — FUNZ §1, §9.1; FORMATO_CORSO §5 (D-SAMPLE-1)',
   });
   afterEach(() => db.delete());
 
-  it('si importa senza avvisi e si salva: «Syllabus Software Engineer 2026», 2 moduli · 13 unità, marcato come esempio', async () => {
+  it('si importa senza avvisi e si salva: «Syllabus Software Engineer 2026», 5 moduli (M2–M4 segnaposto bloccati) · 13 unità, marcato come esempio', async () => {
     const { corso, avvisi } = await importSampleCourse(db, T0);
     expect(avvisi).toEqual([]);
     expect(await list(db, 'corsi')).toMatchObject([
       { id: corso.id, titolo: 'Syllabus Software Engineer 2026', importatoIl: T0, esempio: true },
     ]);
-    // La card «Esempio» conta le righe salvate: 2 moduli · 13 unità, non i numeri dei mock (2 · 2)
-    expect((await delCorso('moduli', corso.id)).map((m) => m.numero).sort()).toEqual([0, 1]);
+    // La card «Esempio» conta le righe salvate: 5 moduli · 13 unità (FORMATO §5); i segnaposto senza unità e bloccati
+    const moduli = (await delCorso('moduli', corso.id)).sort((a, b) => a.numero - b.numero);
+    expect(moduli.map((m) => [m.numero, m.titolo, m.segnaposto === true])).toEqual([
+      [0, corso.moduli[0]!.titolo, false],
+      [1, corso.moduli[1]!.titolo, false],
+      [2, 'Testing con Vitest', true],
+      [3, 'Fondamenti di Computer Science', true],
+      [4, 'TypeScript', true],
+    ]);
+    expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato', 'bloccato', 'bloccato', 'bloccato']);
     expect(await delCorso('unita', corso.id)).toHaveLength(13);
   });
 
@@ -120,13 +128,13 @@ describe('Corso di esempio — FUNZ §1, §9.1; FORMATO_CORSO §5 (D-SAMPLE-1)',
     }
   });
 
-  it('la scheda del corso di esempio (S10): badge «Esempio», 2 moduli · 13 unità contati dalle righe salvate', async () => {
+  it('la scheda del corso di esempio (S10): badge «Esempio», 5 moduli · 13 unità contati dalle righe salvate', async () => {
     await importSampleCourse(db, T0);
     expect(await courseCards(db)).toMatchObject([
       {
         titolo: 'Syllabus Software Engineer 2026',
         esempio: true,
-        moduli: 2,
+        moduli: 5,
         unita: 13,
         completate: 0,
         pct: 0,

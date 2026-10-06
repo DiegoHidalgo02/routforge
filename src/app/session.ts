@@ -11,7 +11,7 @@
 import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, list, remove, save, saveBlock } from '../data/repository';
 import { retroactiveBlock, sessionMinutes, type DatiEsito } from '../domain/outcome';
-import { criteriaMet, sortedUnits } from '../domain/pointer';
+import { modulePath, sortedUnits } from '../domain/pointer';
 import {
   anticipatedBlock,
   courseDefaultUnit,
@@ -117,9 +117,7 @@ export async function setupInputs(db: RoutForgeDb, bloccoId: string | null): Pro
       .sort((a, b) => a.importatoIl - b.importatoIl)
       .map((c) => {
         const sue = sortedUnits(unita.filter((u) => u.corsoId === c.id));
-        const percorso = moduli
-          .filter((m) => m.corsoId === c.id)
-          .map((m) => ({ numero: m.numero, criteriSoddisfatti: criteriaMet(m.criteri) }));
+        const percorso = moduli.filter((m) => m.corsoId === c.id).map(modulePath);
         return {
           id: c.id,
           titolo: c.titolo,

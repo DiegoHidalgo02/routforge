@@ -57,10 +57,13 @@ describe('Corso → moduli — FUNZ §9.3, MECCANISMI §11', () => {
     await importSampleCourse(db, now);
     const id = (await list(db, 'corsi'))[0]!.id;
     const prima = await readCourse(db, id);
-    expect(prima?.scheda).toMatchObject({ moduli: 2, unita: 13, completate: 0, pct: 0 });
+    expect(prima?.scheda).toMatchObject({ moduli: 5, unita: 13, completate: 0, pct: 0 });
     expect(prima?.moduli.map((m) => [m.numero, m.stato, m.unita.length])).toEqual([
       [0, 'aperto', 9],
       [1, 'bloccato', 4],
+      [2, 'bloccato', 0],
+      [3, 'bloccato', 0],
+      [4, 'bloccato', 0],
     ]);
     expect(prima?.puntatore?.numero).toBe('0.1');
     expect(prima?.moduli[0]).toMatchObject({ domande: 10, criteri: { fatti: 0, totali: 7 } });
@@ -241,7 +244,7 @@ describe('Puntatore, esito e moduli nelle pagine dei corsi — MECCANISMI §11, 
     const now = local(2026, 9, 22, 9, 0);
     await importSampleCourse(db, now);
     const id = (await list(db, 'corsi'))[0]!.id;
-    expect((await readCourse(db, id))?.moduli.map((m) => m.precedente)).toEqual([null, 0]);
+    expect((await readCourse(db, id))?.moduli.map((m) => m.precedente)).toEqual([null, 0, 1, 2, 3]);
     for (const u of await list(db, 'unita'))
       if (u.moduloNumero === 0) await save(db, 'unita', { ...u, stato: 'completata' }, now);
     expect((await readCourse(db, id))?.puntatore).toBeNull();

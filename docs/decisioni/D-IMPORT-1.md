@@ -49,5 +49,5 @@ D-SAMPLE-1).
 ## Verifica
 
 - `src/data/repository.test.ts`, «Albero del corso»: forma di ogni riga, id delle risorse, tutto o niente.
-- `src/app/courseImport.test.ts`, «Corso di esempio»: nessun avviso, 2 moduli · 13 unità, `esempio`, secondo import =
+- `src/app/courseImport.test.ts`, «Corso di esempio»: nessun avviso, 5 moduli (M2–M4 segnaposto bloccati, T-041) · 13 unità, `esempio`, secondo import =
   corso nuovo che lascia intatto il primo.

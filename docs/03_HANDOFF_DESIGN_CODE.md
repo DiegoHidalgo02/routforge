@@ -331,6 +331,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     togliere la riga (il mock la toglie, la spec la tiene finché non c'è l'esito); «Ieri · gestite» descrive l'avviso
     dal suo trigger («avviso 15 min prima», «3 todo senza orario»), perché il registro non sa come è stato gestito
     («completato · 1 fase saltata → todo creato» del mock).
+73. Corso di esempio con i segnaposto M2–M4 (T-041, FORMATO §5): in S11 sono righe bloccate col testo del mock
+    («Bloccato · Go/No-Go di M1» e la nota sullo sblocco). **Da decidere**: un segnaposto resta bloccato anche col
+    modulo precedente passato, perché non ha file; il mock non disegna quel caso e il testo promette uno sblocco che
+    non arriva (proposta: «Non ancora importato»).
 
 ## 4. Mappa schermata → design → task
 
