@@ -312,6 +312,11 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     Corso su `/corsi/:corso`: avanzamento, routine di studio del corso, puntatore, moduli a fisarmonica con unità e
     verifica del modulo, moduli bloccati col lucchetto. Il cestino («Elimina corso») arriva con T-037. Il cerchio
     dell'unità da fare è in border-strong come nel mock (claude-design/CLAUDE.md vorrebbe text-3): da decidere.
+70. Sessione, rilievi di design-checker (T-055): durate e «6 / 13 unità» in mono, icone come il mock (bersaglio,
+    righe, libro, chiave), testo al 200 % con altezze minime e righe che vanno a capo, schede larghe almeno 44,
+    «Lascia fuori» senza bordo. Restano letterali le misure del mock senza token, elencate in Session.module.css.
+    **Da decidere**: il Materiale senza concetto né sezioni o durante la lettura non ha uno stato disegnato (oggi è
+    vuoto); nella sessione su desktop il mock non ha la voce «Oggi» nella sidebar, la shell sì.
 
 ## 4. Mappa schermata → design → task
 

@@ -223,7 +223,8 @@
 }
 
 /* Cifre delle durate e di «Inizia · 45 min» in font-num, col peso del contenitore (dopo `.chip`, che ha `font:`) */
-.cifre {
+.cifre,
+.chip.cifre {
   font-family: var(--font-num);
 }
 
@@ -674,7 +675,7 @@
   flex-direction: column;
   gap: var(--space-2);
   margin: var(--space-3) var(--space-5) 0;
-  padding: var(--space-3) 14px;
+  padding: var(--space-3) var(--space-card-inner);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
@@ -698,6 +699,7 @@
 
 .azioniNonVerificato {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-2);
 }
@@ -705,10 +707,10 @@
 .lasciaFuori,
 .contaStudio {
   position: relative;
-  height: var(--size-chip);
+  min-height: var(--size-chip);
   padding: 0 var(--space-3);
-  border: 1px solid transparent;
-  border-radius: 9px;
+  border: 0;
+  border-radius: var(--radius-control-sm);
   background: transparent;
   color: var(--color-text-2);
   font: 600 var(--text-sm) var(--font-ui);
@@ -716,7 +718,7 @@
 }
 
 .contaStudio {
-  border-color: var(--color-border);
+  border: 1px solid var(--color-border);
   color: var(--color-text);
 }
 
@@ -1340,19 +1342,26 @@
   }
 }
 
-/* Schede sotto il timer (S15 `tab`): pill 32, la scelta bianca piena; il contenuto scorre sotto, largo al più 720 */
+/* Schede sotto il timer (S15 `tab`): pill 32, la scelta bianca piena; il contenuto scorre sotto, largo al più 720.
+   Restano letterali le misure del mock senza token (handoff §3 n. 70): gap 6, padding 7 dei badge, interlinee 14 · 16 ·
+   18 · 20 · 22, padding 28 in fondo, riga della risorsa 48, icona 56, margine 60, area delle note 160, testo 300,
+   colonna 400, contenuto 720 */
 .schede {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: var(--space-3) var(--space-5) 0;
 }
 
 .scheda {
   position: relative;
-  height: var(--size-chip);
+  min-width: var(--size-touch);
+  min-height: var(--size-chip);
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 0 var(--space-card-inner);
   border: 1px solid var(--color-border);
@@ -1435,7 +1444,7 @@
 
 .concettoCore {
   margin: 0;
-  padding: 14px var(--space-4);
+  padding: var(--space-card-inner) var(--space-4);
   border-left: var(--size-accent-bar) solid var(--color-primary);
   border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
@@ -1445,6 +1454,7 @@
 
 .badgeSezione {
   height: var(--size-badge);
+  flex: none;
   display: inline-flex;
   align-items: center;
   padding: 0 7px;
@@ -1484,6 +1494,7 @@
 
 .titoloRisorsa {
   font: 500 var(--text-md) / 18px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .hostRisorsa {
@@ -1530,7 +1541,7 @@
   min-height: 160px;
   box-sizing: border-box;
   resize: none;
-  padding: var(--space-3) 14px;
+  padding: var(--space-3) var(--space-card-inner);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control-lg);
   background: var(--color-surface-2);
@@ -1588,7 +1599,7 @@
 }
 
 .secondario {
-  height: var(--size-control);
+  min-height: var(--size-control);
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -1642,7 +1653,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 14px var(--space-6) 0;
+    padding: var(--space-card-inner) var(--space-6) 0;
     color: var(--color-text-2);
     font: 500 var(--text-sm) / 14px var(--font-ui);
   }

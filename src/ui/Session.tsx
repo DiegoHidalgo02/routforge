@@ -8,15 +8,14 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  BookOpen,
+  AlignLeft,
+  Book,
   Check,
   ChevronDown,
   ChevronLeft,
   CircleAlert,
   Clock,
-  Crosshair,
-  KeyRound,
-  ListIcon,
+  Key,
   Lock,
   Pause,
   Play,
@@ -24,6 +23,7 @@ import {
   Repeat,
   SkipForward,
   SlidersVertical,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -252,7 +252,7 @@ export function SessionSetup() {
         <div className={s.gruppo}>
           <div className={s.intestazione}>
             <span className={s.etichetta}>
-              <Crosshair size={14} />
+              <Target size={14} />
               {t(titoloUnita)}
             </span>
             {bloccata !== null ? (
@@ -328,7 +328,7 @@ export function SessionSetup() {
 
         <div className={s.gruppo}>
           <span className={s.etichetta}>
-            <ListIcon size={14} />
+            <AlignLeft size={14} />
             {t('modalita')}
           </span>
           <div className={s.chips}>
@@ -403,12 +403,12 @@ function SchedaUnita(p: {
       {/* Il corso con le unità fatte sul totale (S15 «6 / 13 unità») */}
       <span className={s.unitaCorso}>
         {corso.titolo} ·{' '}
-        {cifre(
-          t('unitaDelModulo', {
+        <span className={s.num}>
+          {t('unitaDelModulo', {
             fatte: corso.unita.filter((x) => x.stato === 'completata').length,
             totali: corso.unita.length,
-          }),
-        )}
+          })}
+        </span>
       </span>
     </button>
   );
@@ -1132,7 +1132,7 @@ function Riga(p: { etichetta: string; valore: string; puntatore?: boolean; piu?:
       {p.etichetta}
       <span className={s.rigaValore} data-puntatore={p.puntatore || undefined}>
         {p.valore}
-        {p.piu && <span className={s.piuUno}>+1</span>}
+        {p.piu && <span className={s.piuUno}>{t('piuUno')}</span>}
       </span>
     </span>
   );
@@ -1178,7 +1178,7 @@ function Schede({ unitaId, note }: { unitaId: string | null; note: string }) {
       <div className={s.colonne} data-materiale={materiale}>
         <div className={s.colonnaMateriale}>
           <span className={s.etichettaColonna}>
-            <BookOpen size={14} />
+            <Book size={14} />
             {t('materiale')}
           </span>
           <div className={s.contenutoScheda}>
@@ -1298,7 +1298,7 @@ function SenzaChiave() {
   return (
     <div className={s.senzaChiave}>
       <span className={s.iconaChiave}>
-        <KeyRound size={24} />
+        <Key size={24} />
       </span>
       <span className={s.testiChiave}>
         <span className={s.titoloChiave}>{t('chiaveGeminiTitolo')}</span>
