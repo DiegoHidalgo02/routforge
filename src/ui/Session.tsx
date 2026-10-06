@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -26,7 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, NavLink, useNavigate, useSearchParams } from 'react-router';
 import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { readStreak } from '../app/outcome';
@@ -445,7 +446,7 @@ export function SessionBanner({ vista, variante }: { vista: VistaSessione; varia
   const titolo = vista.unita?.titolo ?? t('sessioneDiStudio');
   if (variante === 'sidebar')
     return (
-      <Link to="/sessione" className={s.bannerSidebar}>
+      <NavLink to="/sessione" end className={s.bannerSidebar}>
         <span className={s.bannerEtichetta}>
           <span className={s.pallino} />
           {t('sessioneInCorso')}
@@ -455,7 +456,7 @@ export function SessionBanner({ vista, variante }: { vista: VistaSessione; varia
           <span className={s.bannerAzione}>{t('riprendi')}</span>
         </span>
         <span className={s.bannerTitolo}>{titolo}</span>
-      </Link>
+      </NavLink>
     );
   return (
     <div className={s.banner}>
@@ -881,7 +882,9 @@ export function ActiveSession() {
             onRegistra={registra}
           >
             <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={abbandona}>
-              {conEsito ? t('chiudiComeContinua', { pct: focusPercent(sx, now) ?? 0 }) : t('abbandonaSessione')}
+              {conEsito
+                ? t('chiudiComeContinua', { pct: focusPercent(sx, now) ?? 0 })
+                : t(sx.bloccoId ? 'abbandonaBlocco' : 'abbandonaSessione')}
             </button>
           </SchedaEsito>
         </Foglio>
@@ -1035,7 +1038,6 @@ export function SchedaEsito(p: {
           <span className={s.knob} />
         </button>
       )}
-      {p.children}
       <div className={s.foglioAzioni}>
         <button type="button" className={s.continua} onClick={p.onAnnulla}>
           {t(p.annulla)}
@@ -1044,6 +1046,7 @@ export function SchedaEsito(p: {
           {t('registraEsito')}
         </button>
       </div>
+      {p.children}
     </>
   );
 }
@@ -1082,9 +1085,8 @@ function Riga(p: { etichetta: string; valore: string; puntatore?: boolean; piu?:
   );
 }
 
-type Scheda = 'materiale' | 'ai' | 'note';
-const SCHEDE: { id: Scheda; chiave: Chiave }[] = [
-  { id: 'materiale', chiave: 'materiale' },
+type Lato = 'ai' | 'note';
+const LATI: { id: Lato; chiave: Chiave }[] = [
   { id: 'ai', chiave: 'ai' },
   { id: 'note', chiave: 'note' },
 ];
@@ -1097,36 +1099,51 @@ const SEZIONE: Record<TipoSezione, Chiave> = {
 
 /**
  * Le schede sotto il timer (S15 `tab`, FUNZ §11.2): il Materiale dell'unità studiata adesso, l'AI (senza client né chiave
- * ancora: lo stato «Serve la chiave API Gemini» di S19, T-026) e le Note della sessione. Il conteggio «2» della scheda AI
- * del mock non dice che cosa conti: non c'è (handoff §3 n. 65).
+ * ancora: lo stato «Serve la chiave API Gemini» di S19, T-026) e le Note della sessione. Su mobile tre schede; da 1024 px
+ * il Materiale a sinistra e AI · Note a destra (S15 Desktop). Ogni pannello è montato una volta sola: due campi delle
+ * note si sovrascriverebbero. Il conteggio «2» della scheda AI del mock non dice che cosa conti: non c'è (handoff n. 65).
  */
 function Schede({ unitaId, note }: { unitaId: string | null; note: string }) {
-  const [scheda, setScheda] = useState<Scheda>('materiale');
+  const [materiale, setMateriale] = useState(true);
+  const [lato, setLato] = useState<Lato>('ai');
+  const scheda = (premuta: boolean, chiave: Chiave, onClick: () => void) => (
+    <button key={chiave} type="button" className={s.scheda} aria-pressed={premuta} onClick={onClick}>
+      {t(chiave)}
+    </button>
+  );
   return (
     <>
       <div className={s.schede} role="group" aria-label={t('schede')}>
-        {SCHEDE.map(({ id, chiave }) => (
-          <button
-            key={id}
-            type="button"
-            className={s.scheda}
-            aria-pressed={scheda === id}
-            onClick={() => setScheda(id)}
-          >
-            {t(chiave)}
-          </button>
-        ))}
-      </div>
-      <div key={scheda} className={s.contenutoScheda} data-scheda={scheda}>
-        {scheda === 'note' ? (
-          <Note note={note} />
-        ) : scheda === 'ai' ? (
-          <SenzaChiave />
-        ) : unitaId ? (
-          <Materiale unitaId={unitaId} />
-        ) : (
-          <span className={s.vuotoScheda}>{t('nessunaUnitaAssegnata')}</span>
+        {scheda(materiale, 'materiale', () => setMateriale(true))}
+        {LATI.map(({ id, chiave }) =>
+          scheda(!materiale && lato === id, chiave, () => {
+            setMateriale(false);
+            setLato(id);
+          }),
         )}
+      </div>
+      <div className={s.colonne} data-materiale={materiale}>
+        <div className={s.colonnaMateriale}>
+          <span className={s.etichettaColonna}>
+            <BookOpen size={14} />
+            {t('materiale')}
+          </span>
+          <div className={s.contenutoScheda}>
+            {unitaId ? (
+              <Materiale unitaId={unitaId} />
+            ) : (
+              <span className={s.vuotoScheda}>{t('nessunaUnitaAssegnata')}</span>
+            )}
+          </div>
+        </div>
+        <div className={s.colonnaLato}>
+          <div className={s.schedeLato} role="group" aria-label={t('schede')}>
+            {LATI.map(({ id, chiave }) => scheda(lato === id, chiave, () => setLato(id)))}
+          </div>
+          <div key={lato} className={s.contenutoScheda} data-scheda={lato}>
+            {lato === 'note' ? <Note note={note} /> : <SenzaChiave />}
+          </div>
+        </div>
       </div>
     </>
   );

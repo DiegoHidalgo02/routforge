@@ -295,6 +295,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     come nel mock. Intervallo non verificato con «Lascia fuori» e «Conta come studio» (n. 40, applicata). Fine: «Giorni
     di fila» con «+1» solo se la chiusura ha fatto crescere la streak; «La card su Oggi è spuntata» solo con un blocco,
     per la libera solo la seconda frase (n. 48, applicata).
+66. Sessione su desktop (T-055): Materiale a sinistra e AI · Note in una colonna di 400 a destra, come S15 Desktop;
+    nella sessione la carta della sidebar non offre «Riprendi». Debrief: «Abbandona» centrato sotto i bottoni, con «il
+    blocco torna programmato» solo se c'è un blocco (n. 47); la riga «Carica il codice prodotto» arriva con T-025.
 
 ## 4. Mappa schermata → design → task
 

@@ -350,6 +350,7 @@
   "extraBreve": "tiempo extra +{min} min",
   "continuaStudiare": "Seguir estudiando",
   "abbandonaSessione": "Abandonar · sin resultado",
+  "abbandonaBlocco": "Abandonar · sin resultado, el bloque vuelve a programado",
   "chiudiComeContinua": "Cerrar como Continuar ({pct}%)",
   "esitoAutomaticoTesto": "Has estudiado el {pct}% de lo planificado: la sesión se ha cerrado antes del final con el resultado Continuar.",
   "esitoCompletata": "Completada",

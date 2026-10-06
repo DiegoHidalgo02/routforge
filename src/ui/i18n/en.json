@@ -350,6 +350,7 @@
   "extraBreve": "extra time +{min} min",
   "continuaStudiare": "Keep studying",
   "abbandonaSessione": "Abandon · no outcome",
+  "abbandonaBlocco": "Abandon · no outcome, the block goes back to scheduled",
   "chiudiComeContinua": "Close as Continue ({pct}%)",
   "esitoAutomaticoTesto": "You studied {pct}% of the plan: the session closed early with the outcome Continue.",
   "esitoCompletata": "Completed",

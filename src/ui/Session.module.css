@@ -246,8 +246,10 @@
 }
 
 /* Interruttore e knob come in Crea; qui alto 44, acceso in primary (nessun tipo di attività) e disattivabile */
+/* L'interruttore di Crea prende il colore da `--fill`: qui è primary (S15 «Conta nel piano») */
 .interruttore {
   composes: interruttore from './Create.module.css';
+  --fill: var(--color-primary);
   min-height: var(--size-control);
   font: 500 var(--text-md) / 18px var(--font-ui);
 }
@@ -936,12 +938,26 @@
   background: var(--color-danger-soft);
 }
 
+/* «Abbandona» centrato sotto i bottoni, in text-2 (S15 debrief); margine −8 e padding 10 del mock */
 .abbandonaLink {
-  align-self: flex-start;
-  min-height: var(--size-touch);
-  padding: 0;
-  color: var(--color-danger-ink);
-  font-size: var(--text-base);
+  position: relative;
+  align-self: center;
+  min-height: var(--size-chip);
+  margin-top: calc(-1 * var(--space-2));
+  padding: 0 10px;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-ui);
+  text-wrap: pretty;
+}
+
+.abbandonaLink::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.abbandonaLink:hover {
+  color: var(--color-text);
 }
 
 /* Esiti dello sheet S16: griglia 2×2 di card su surface, scelta = bianca con testo scuro */
@@ -1351,6 +1367,24 @@
   font-weight: 600;
 }
 
+/* Colonne: su mobile una sola, il Materiale o AI · Note secondo la scheda; da 1024 px Materiale | 400 di AI · Note */
+.colonne,
+.colonnaMateriale,
+.colonnaLato {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.colonne[data-materiale='true'] > .colonnaLato,
+.colonne[data-materiale='false'] > .colonnaMateriale,
+.etichettaColonna,
+.schedeLato {
+  display: none;
+}
+
 .contenutoScheda {
   flex: 1;
   min-height: 0;
@@ -1579,4 +1613,48 @@
   background: var(--color-success-soft);
   color: var(--color-success);
   font: 600 var(--text-xs) / 20px var(--font-num);
+}
+
+@media (min-width: 1024px) {
+  .schede {
+    display: none;
+  }
+
+  .colonne {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+
+  .colonne[data-materiale] > .colonnaMateriale,
+  .colonne[data-materiale] > .colonnaLato {
+    display: flex;
+  }
+
+  .colonnaMateriale {
+    border-right: 1px solid var(--color-border);
+  }
+
+  .etichettaColonna {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 14px var(--space-6) 0;
+    color: var(--color-text-2);
+    font: 500 var(--text-sm) / 14px var(--font-ui);
+  }
+
+  .schedeLato {
+    display: flex;
+    gap: 6px;
+    padding: var(--space-3) var(--space-5) 0;
+  }
+
+  .colonnaMateriale > .contenutoScheda {
+    padding-inline: var(--space-6);
+  }
+}
+
+/* Nella sessione la carta della sidebar non offre «Riprendi»: ci si è già (S15 Desktop) */
+.bannerSidebar[aria-current='page'] .bannerAzione {
+  display: none;
 }

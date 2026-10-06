@@ -350,6 +350,7 @@
   "extraBreve": "Zusatzzeit +{min} Min.",
   "continuaStudiare": "Weiterlernen",
   "abbandonaSessione": "Abbrechen · ohne Ergebnis",
+  "abbandonaBlocco": "Abbrechen · kein Ergebnis, der Block ist wieder geplant",
   "chiudiComeContinua": "Als „Weiter“ beenden ({pct}%)",
   "esitoAutomaticoTesto": "Du hast {pct}% des Geplanten gelernt: die Sitzung wurde vorzeitig mit dem Ergebnis „Weiter“ beendet.",
   "esitoCompletata": "Abgeschlossen",
