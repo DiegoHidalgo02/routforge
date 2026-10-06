@@ -107,8 +107,21 @@ export interface FileCorso {
   content: string;
 }
 
+/** Il tipo di un avviso di lettura: la UI lo traduce con i suoi parametri (T-031, D-I18N-2). */
+export type CodiceAvviso =
+  | 'unita_illeggibile'
+  | 'unita_sezioni'
+  | 'modulo_senza_intestazione'
+  | 'modulo_senza_tipo'
+  | 'modulo_senza_prerequisiti'
+  | 'unita_duplicata'
+  | 'modulo_duplicato';
+
 export interface AvvisoImport {
   file: string;
+  codice: CodiceAvviso;
+  parametri: Record<string, string | number>;
+  /** Il testo in italiano, per i test e la diagnostica. */
   messaggio: string;
 }
 
@@ -303,7 +316,12 @@ function parseUnit(
 ): UnitaImportata | null {
   const h = UNIT_HEADER.exec(headerLine);
   if (!h) {
-    warnings.push({ file, messaggio: `unità con intestazione non leggibile saltata: "${headerLine.trim()}"` });
+    warnings.push({
+      file,
+      codice: 'unita_illeggibile',
+      parametri: { intestazione: headerLine.trim() },
+      messaggio: `unità con intestazione non leggibile saltata: "${headerLine.trim()}"`,
+    });
     return null;
   }
   const numero = `${h[1]}.${h[2]}`;
@@ -324,7 +342,12 @@ function parseUnit(
   }
   const ordered = SECTION_ORDER.filter((k) => sezioni.has(k)).map((k) => sezioni.get(k)!);
   if (ordered.length < 4) {
-    warnings.push({ file, messaggio: `unità ${numero} importata con ${ordered.length} sezioni` });
+    warnings.push({
+      file,
+      codice: 'unita_sezioni',
+      parametri: { numero, n: ordered.length },
+      messaggio: `unità ${numero} importata con ${ordered.length} sezioni`,
+    });
   }
   return {
     id,
@@ -436,7 +459,12 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
   const lines = file.content.split(/\r?\n/);
   const headerIndex = lines.findIndex((l) => MODULE_HEADER.test(l));
   if (headerIndex < 0) {
-    warnings.push({ file: name, messaggio: 'intestazione di modulo mancante, file saltato' });
+    warnings.push({
+      file: name,
+      codice: 'modulo_senza_intestazione',
+      parametri: {},
+      messaggio: 'intestazione di modulo mancante, file saltato',
+    });
     return { modulo: null, avvisi: warnings };
   }
   const header = MODULE_HEADER.exec(lines[headerIndex]!)!;
@@ -461,8 +489,20 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       if (intro.length > 0) introChiusa = true;
     } else if (!introChiusa && !isSeparator(line)) intro.push(stripBold(line)); // solo il primo paragrafo
   }
-  if (!fields.tipo) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Tipo" mancante` });
-  if (!fields.prerequisiti) warnings.push({ file: name, messaggio: `modulo ${numero}: campo "Prerequisiti" mancante` });
+  if (!fields.tipo)
+    warnings.push({
+      file: name,
+      codice: 'modulo_senza_tipo',
+      parametri: { numero },
+      messaggio: `modulo ${numero}: campo "Tipo" mancante`,
+    });
+  if (!fields.prerequisiti)
+    warnings.push({
+      file: name,
+      codice: 'modulo_senza_prerequisiti',
+      parametri: { numero },
+      messaggio: `modulo ${numero}: campo "Prerequisiti" mancante`,
+    });
 
   const unita: UnitaImportata[] = [];
   const numeriUnitaVisti = new Set<string>();
@@ -479,7 +519,12 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
       const u = parseUnit(id, numero, unita.length + 1, chunk.headerLine, chunk.lines, name, warnings);
       if (u && numeriUnitaVisti.has(u.numero)) {
         // Unità X.Y duplicata nello stesso file (D-PARSE-3): saltata come un'intestazione illeggibile.
-        warnings.push({ file: name, messaggio: `unità ${u.numero}: numero duplicato, saltata` });
+        warnings.push({
+          file: name,
+          codice: 'unita_duplicata',
+          parametri: { numero: u.numero },
+          messaggio: `unità ${u.numero}: numero duplicato, saltata`,
+        });
       } else if (u) {
         numeriUnitaVisti.add(u.numero);
         unita.push(u);
@@ -587,7 +632,12 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
     if (!r.modulo) continue;
     if (numeriModuloVisti.has(r.modulo.numero)) {
       // Numero di modulo duplicato fra file diversi (D-PARSE-3): saltato come un'intestazione illeggibile.
-      warnings.push({ file: file.name, messaggio: `modulo ${r.modulo.numero}: numero duplicato, file saltato` });
+      warnings.push({
+        file: file.name,
+        codice: 'modulo_duplicato',
+        parametri: { numero: r.modulo.numero },
+        messaggio: `modulo ${r.modulo.numero}: numero duplicato, file saltato`,
+      });
       continue;
     }
     numeriModuloVisti.add(r.modulo.numero);

@@ -6,16 +6,25 @@ import { GraduationCap, SlidersVertical, Target, TriangleAlert, Upload } from 'l
 import { Link } from 'react-router';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
-import { ErroreImportCorso } from '../domain/course/parser';
+import { ErroreImportCorso, type CodiceAvviso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
-import { t } from './i18n';
+import { t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
 import { SessionBannerSlot } from './Session';
 import s from './Courses.module.css';
 
 type Avvisi = Awaited<ReturnType<typeof importZip>>;
+const AVVISO: Record<CodiceAvviso, Chiave> = {
+  unita_illeggibile: 'avvisoUnitaIlleggibile',
+  unita_sezioni: 'avvisoUnitaSezioni',
+  modulo_senza_intestazione: 'avvisoModuloSenzaIntestazione',
+  modulo_senza_tipo: 'avvisoModuloSenzaTipo',
+  modulo_senza_prerequisiti: 'avvisoModuloSenzaPrerequisiti',
+  unita_duplicata: 'avvisoUnitaDuplicata',
+  modulo_duplicato: 'avvisoModuloDuplicato',
+};
 // `file` null: l'errore non viene dallo ZIP ma dal salvataggio
 type Esito =
   | { tipo: 'titolo'; file: string; zip: Uint8Array }
@@ -217,11 +226,11 @@ export function Courses() {
                 </span>
               </span>
             </div>
-            {/* I messaggi del parser sono in italiano fino a T-031 (D-I18N-2) */}
+            {/* Gli avvisi del parser si traducono dal loro codice (T-031, D-I18N-2) */}
             <ul className={s.avvisi}>
               {esito.avvisi.map((a, i) => (
                 <li key={i}>
-                  <span className={s.file}>{a.file}</span>: {a.messaggio}
+                  <span className={s.file}>{a.file}</span>: {t(AVVISO[a.codice], a.parametri)}
                 </li>
               ))}
             </ul>
