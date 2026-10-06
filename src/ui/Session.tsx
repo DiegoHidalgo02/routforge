@@ -867,6 +867,11 @@ export function SchedaEsito(p: {
   inCorso: boolean;
   onRegistra: (dati: DatiEsito, puntatore: string | null) => void;
   children?: ReactNode;
+  /**
+   * Variante del foglio aperto dal cerchio di Oggi (S1 `sheet=esito`): la testa la dà il chiamante, niente confidenza
+   * né nota, e i sottotitoli di Indietro e Salta nominano l'unità («La 0.6 torna da rivedere», TESTI).
+   */
+  compatta?: ReactNode;
 }) {
   const ingressi = useIngressi(null);
   const [esito, setEsito] = useState<Esito | null>(null);
@@ -880,8 +885,12 @@ export function SchedaEsito(p: {
     ? {
         completata: h.successiva ? t('puntatorePassaA', { n: numero(h.successiva) }) : t('puntatoreAvanza'),
         continua: t('restaSulla', { n: materia.unita.numero }),
-        indietro: h.precedente ? t('ripetiLa', { n: numero(h.precedente) }) : t('ripetiQuesta'),
-        salta: t('passaOltre'),
+        indietro: p.compatta
+          ? t('tornaDaRivedere', { n: h.precedente ? numero(h.precedente) : materia.unita.numero })
+          : h.precedente
+            ? t('ripetiLa', { n: numero(h.precedente) })
+            : t('ripetiQuesta'),
+        salta: p.compatta ? t('escePercorso', { n: materia.unita.numero }) : t('passaOltre'),
       }
     : { completata: null, continua: null, indietro: null, salta: null };
   const contaVale = p.conta === null || conta;
@@ -894,23 +903,25 @@ export function SchedaEsito(p: {
 
   return (
     <>
-      <div className={s.foglioTesta}>
-        <span id={p.titoloId} className={s.foglioTitolo}>
-          {t('comeAndata')}
-        </span>
-        <span className={s.foglioNota}>
-          <span className={s.num}>
-            {p.minuti} {t('minutiUnita')}
+      {p.compatta ?? (
+        <div className={s.foglioTesta}>
+          <span id={p.titoloId} className={s.foglioTitolo}>
+            {t('comeAndata')}
           </span>
-          {materia && (
-            <>
-              {' '}
-              · {t('unita')} <span className={s.num}>{materia.unita.numero}</span>
-            </>
-          )}
-          {p.extra > 0 && ` · ${t('extraBreve', { min: p.extra })}`}
-        </span>
-      </div>
+          <span className={s.foglioNota}>
+            <span className={s.num}>
+              {p.minuti} {t('minutiUnita')}
+            </span>
+            {materia && (
+              <>
+                {' '}
+                · {t('unita')} <span className={s.num}>{materia.unita.numero}</span>
+              </>
+            )}
+            {p.extra > 0 && ` · ${t('extraBreve', { min: p.extra })}`}
+          </span>
+        </div>
+      )}
       <div className={s.esiti}>
         {ESITI.map(({ id, chiave, Icona }) => (
           <button key={id} type="button" className={s.esito} aria-pressed={esito === id} onClick={() => setEsito(id)}>
@@ -922,7 +933,7 @@ export function SchedaEsito(p: {
           </button>
         ))}
       </div>
-      {p.confidenza && (
+      {p.confidenza && !p.compatta && (
         <div className={s.gruppoEsito}>
           <span className={s.intestazione}>
             <span className={s.etichetta}>{t('quantoSicuro')}</span>
@@ -943,13 +954,15 @@ export function SchedaEsito(p: {
           </span>
         </div>
       )}
-      <textarea
-        className={s.notaEsito}
-        placeholder={t('notaSessione')}
-        aria-label={t('notaSessione')}
-        value={nota}
-        onChange={(e) => setNota(e.target.value)}
-      />
+      {!p.compatta && (
+        <textarea
+          className={s.notaEsito}
+          placeholder={t('notaSessione')}
+          aria-label={t('notaSessione')}
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+        />
+      )}
       {p.conta && (
         <button
           type="button"

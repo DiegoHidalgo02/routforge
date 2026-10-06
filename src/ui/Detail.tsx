@@ -405,12 +405,12 @@ export function Detail() {
       );
     });
   };
+  const rimaste = voci.filter((v) => !v.fatta).length;
+  const conteggio = (n: number, una: Chiave, molte: Chiave) => (n === 1 ? t(una) : t(molte, { n }));
   // Scadenza del todo derivato (D-DETT-2): giorno dell'attività da cui nasce, mai prima di oggi
   const giornoDerivato = localInstant(inheritedDay(b.inizio, now), '00:00');
-  const orizzonteTodo = b.orizzonte ?? 'giorno';
-  const scadenzaResiduo = t(orizzonteTodo === 'giorno' ? 'soloIl' : 'rotolaFino', {
-    data: fmtData.format(horizonLastDay(giornoDerivato, orizzonteTodo)),
-  });
+  // Il follow-up nasce nel giorno dell'evento, mai prima di oggi: «oggi» o la data (S5)
+  const quandoFollowUp = sameLocalDay(giornoDerivato, now) ? t('oggiMinuscolo') : fmtData.format(giornoDerivato);
   const conferma = () =>
     void act(async () => {
       const ok = await completeBlock(appDb, id, ora(), fuso, [...saltate]);
@@ -741,12 +741,30 @@ export function Detail() {
                 confidenza={Boolean(b.unitaId)}
                 annulla="annulla"
                 onAnnulla={chiudiFoglio}
+                compatta={
+                  soloFoglio && (
+                    <div className={s.testiSheet}>
+                      <span className={`${s.occhiello} ${s.occhielloTipo}`}>{t('registraEsito')}</span>
+                      <span id="sheet-titolo" className={s.titoloSheet}>
+                        {titolo}
+                      </span>
+                      <span className={s.sottotitoloSheet}>
+                        {t('senzaSessioneDurata', { n: plannedMinutes(b, 'completata') })}
+                      </span>
+                    </div>
+                  )
+                }
                 inCorso={false}
                 onRegistra={registraEsito}
               />
             ) : vista === 'revisione' ? (
               <>
                 <div className={s.testiSheet}>
+                  {soloFoglio && (
+                    <span className={`${s.occhiello} ${s.occhielloTipo}`}>
+                      {t(tipo === 'routine' ? 'segnaFatta' : 'completaEvento')}
+                    </span>
+                  )}
                   <span id="sheet-titolo" className={s.titoloSheet}>
                     {t('revisioneFasi')}
                   </span>
@@ -773,7 +791,8 @@ export function Detail() {
                   })}
                 </div>
                 <span className={s.riepilogo}>
-                  {t('riepilogoFasi', { fatte: template.length - saltate.size, saltate: saltate.size })}
+                  {conteggio(template.length - saltate.size, 'fasiFatta', 'fasiFatte')} ·{' '}
+                  {conteggio(saltate.size, 'fasiSaltata', 'fasiSaltate')}
                 </span>
                 <div className={s.azioniSheet}>
                   <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={chiudiFoglio}>
@@ -810,9 +829,11 @@ export function Detail() {
                     </button>
                   ))}
                   <span className={s.metaFollowUp}>
-                    {saltateTemplate.length > 1 &&
-                      `${t('selezionate', { n: scelte.size, totale: saltateTemplate.length })} · `}
-                    {t('soloIl', { data: fmtData.format(giornoDerivato) })}
+                    {saltateTemplate.length > 1
+                      ? `${t('selezionate', { n: scelte.size, totale: saltateTemplate.length })} · ${quandoFollowUp}`
+                      : maiuscola(quandoFollowUp)}
+                    {' · '}
+                    {t('metaFollowUp')}
                   </span>
                 </div>
                 <div className={s.azioniSheet}>
@@ -832,10 +853,13 @@ export function Detail() {
             ) : (
               <>
                 <div className={s.testiSheet}>
+                  <span className={`${s.occhiello} ${s.occhielloTipo}`}>{t('segnaFatto')}</span>
                   <span id="sheet-titolo" className={s.titoloSheet}>
-                    {t('residuoTitolo', { n: voci.length - fatte })}
+                    {rimaste === 1 ? t('residuoTitoloUna') : t('residuoTitolo', { n: rimaste })}
                   </span>
-                  <span className={s.sottotitoloSheet}>{t('residuoTesto')}</span>
+                  <span className={s.sottotitoloSheet}>
+                    {soloFoglio ? t('residuoTestoTitolo', { titolo }) : t('residuoTesto')}
+                  </span>
                 </div>
                 <div className={s.fasi}>
                   {voci
@@ -846,11 +870,13 @@ export function Detail() {
                         <span className={s.testoFollowUp}>{v.testo}</span>
                       </div>
                     ))}
-                  <span className={s.metaFollowUp}>{scadenzaResiduo}</span>
+                  <span className={s.metaFollowUp}>
+                    {rimaste === 1 ? t('metaResiduoUna') : t('metaResiduo', { n: rimaste })}
+                  </span>
                 </div>
                 <div className={s.azioniSheet}>
                   <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={soloFatto}>
-                    {t('nonOra')}
+                    {t('tutteFatte')}
                   </button>
                   <button type="button" className={`${s.azione} ${s.ctaTodo}`} onClick={creaResiduo}>
                     {t('creaResiduo')}

@@ -501,6 +501,11 @@
   text-transform: uppercase;
 }
 
+/* Eyebrow dei fogli nell'ink del tipo («Segna come fatto», «Registra esito», S1 e S5) */
+.occhielloTipo {
+  color: var(--ink);
+}
+
 .titoloSheet {
   font: 600 var(--text-xl) / var(--leading-tight) var(--font-ui);
 }
