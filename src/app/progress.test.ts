@@ -56,3 +56,10 @@ describe('Il tuo progresso oggi — FUNZIONALITA §2 (servizio)', () => {
     ]);
   });
 });
+
+describe('Settimana del progresso — FUNZIONALITA §23 (T-032)', () => {
+  it('dal lunedì la settimana di domenica 27 parte il 21; dalla domenica parte il 27', async () => {
+    expect([...(await progressInputs(db, '2026-09-27')).settimana.keys()][0]).toBe('2026-09-21');
+    expect([...(await progressInputs(db, '2026-09-27', 0)).settimana.keys()][0]).toBe('2026-09-27');
+  });
+});

@@ -11,6 +11,7 @@ import { GIORNI_MAPPA, SOGLIA_PUNTUALITA, type Periodo } from '../domain/stats';
 import type { TipoBlocco } from '../domain/types';
 import { durata, SETTIMANA, TIPO } from './format';
 import { lingua, t, type Chiave } from './i18n';
+import { useSettings } from './preferenze';
 import { Section } from './Section';
 import s from './Stats.module.css';
 
@@ -57,12 +58,12 @@ const decimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
 const giornoSettimana = (g: number, weekday: 'long' | 'narrow') =>
   new Intl.DateTimeFormat(lingua, { weekday }).format(new Date(2026, 8, 20 + g));
 
-/** Valore di una StatCard: cifre e segno nel font dei numeri, lettere e unità piccole in text-2 («38h 20m», «−4 min»). */
+/** Valore di una StatCard: cifre, segno e spazi nel font dei numeri, lettere e unità piccole in text-2 («38h 20m», «−4 min»). */
 function Valore({ testo, unita }: { testo: string; unita?: string }) {
   return (
     <span className={s.valore}>
       {/\d/.test(testo)
-        ? testo.split(/([+−]?\d+)/).map((x, i) =>
+        ? testo.split(/([+−]?\d+|\s+)/).map((x, i) =>
             i % 2 ? (
               x
             ) : x ? (
@@ -186,7 +187,7 @@ function Overview({ p }: { p: Panoramica }) {
             <div key={tipo} className={s.riga} data-tipo={tipo}>
               <span className={s.nomeRiga}>
                 <span className={s.pallino} />
-                <span className={s.ellissi}>{t(nome)}</span>
+                <span className={s.nomeTipo}>{t(nome)}</span>
               </span>
               {x === null ? (
                 <SenzaDati />
@@ -483,8 +484,8 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
               <span className={s.numeroUnita}>{u.numero}</span>
               <span className={s.ellissi}>{u.titolo}</span>
               <span className={s.metaUnita} data-fatta={u.completata || undefined}>
-                {u.completata && <Check size={14} strokeWidth={2.25} />}
                 {minuti(u.minuti)}
+                {u.completata && <Check size={14} strokeWidth={2.25} />}
               </span>
             </div>
           ))
@@ -526,7 +527,11 @@ export function Stats() {
   const [scheda, setScheda] = useState<Scheda>('panoramica');
   const [periodo, setPeriodo] = useState<Periodo>(90);
   const [v, setV] = useState<Statistiche>();
-  useEffect(() => watch(() => readStats(appDb, periodo, Date.now()), setV), [periodo]);
+  const { inizioSettimana } = useSettings();
+  useEffect(
+    () => watch(() => readStats(appDb, periodo, Date.now(), inizioSettimana), setV),
+    [periodo, inizioSettimana],
+  );
 
   return (
     <div className={s.pagina}>

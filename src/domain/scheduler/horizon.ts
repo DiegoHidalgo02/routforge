@@ -8,6 +8,7 @@
  * `rollPlan` restituisce i todo da riscrivere a oggi con i nuovi istanti; giorno locale e ora di parete li ricalcola
  * `saveBlock`. Il «non fatto» è la marcatura dei persi (`shouldMarkLost` in `lost.ts`), applicata dal ciclo (T-013).
  */
+import type { InizioSettimana } from '../settings';
 import { ANCORA_TODO } from '../activity';
 import { isRollingTodo } from '../lost';
 import { enterGroup } from '../ordering';
@@ -35,8 +36,8 @@ export interface PianoSpostamento<B extends BloccoAncorato> {
 export const lateNoticeDue = (b: Blocco): boolean => b.tipo === 'todo' && b.ritardoIl == null;
 
 /** Rotola a oggi (§6): todo `programmato`, orizzonte ≠ giorno, giorno di parete passato, ancora entro l'orizzonte. */
-const rolls = (b: BloccoAncorato, now: number): boolean =>
-  b.stato === 'programmato' && b.giornoLocale < localDayKey(now) && isRollingTodo(b, now);
+const rolls = (b: BloccoAncorato, now: number, inizioSettimana: InizioSettimana): boolean =>
+  b.stato === 'programmato' && b.giornoLocale < localDayKey(now) && isRollingTodo(b, now, inizioSettimana);
 
 /**
  * Inizio dello slot libero di durata `d` (§6): (1) l'orario originale (quello scelto dall'utente, `orarioOriginale`,
@@ -69,7 +70,11 @@ function freeSlot(
  * con orario e durata `programmati` o `in_corso` che toccano la finestra di oggi, anche di ieri, e i todo già collocati
  * da questo piano: si collocano nell'ordine d'inizio (D-HOR-1).
  */
-export function rollPlan<B extends BloccoAncorato>(blocchi: readonly B[], now: number): PianoSpostamento<B> {
+export function rollPlan<B extends BloccoAncorato>(
+  blocchi: readonly B[],
+  now: number,
+  inizioSettimana: InizioSettimana = 1,
+): PianoSpostamento<B> {
   const oggi = localDayKey(now);
   const finestra = [localInstant(oggi, FINESTRA_SLOT.inizio), localInstant(oggi, FINESTRA_SLOT.fine)] as const;
   const occupati: (readonly [number, number])[] = [];
@@ -81,12 +86,14 @@ export function rollPlan<B extends BloccoAncorato>(blocchi: readonly B[], now: n
       b.fine > b.inizio &&
       b.inizio < finestra[1] &&
       b.fine > finestra[0] &&
-      !rolls(b, now)
+      !rolls(b, now, inizioSettimana)
     )
       occupati.push([b.inizio, b.fine]);
 
   const piano: PianoSpostamento<B> = { spostati: [], avvisi: [] };
-  const candidati = blocchi.filter((b) => rolls(b, now)).sort((a, b) => a.inizio - b.inizio || (a.id < b.id ? -1 : 1));
+  const candidati = blocchi
+    .filter((b) => rolls(b, now, inizioSettimana))
+    .sort((a, b) => a.inizio - b.inizio || (a.id < b.id ? -1 : 1));
   for (const t of candidati) {
     const avviso = lateNoticeDue(t);
     const spostato: B = { ...t, ...(avviso && { ritardoIl: now }) };

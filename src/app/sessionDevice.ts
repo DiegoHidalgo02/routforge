@@ -3,6 +3,7 @@
  * porte di `ports/device.ts`. Gli adapter li inietta il punto di composizione (`src/main.tsx`), come il database di
  * `db.ts`; prima, e nei test che non li danno, non fanno nulla. Un adapter che fallisce non arriva alla UI (INV-16).
  */
+import { logError } from './diagnostics';
 import type { DoNotDisturb, ScreenAwake } from './ports/device';
 
 let schermo: ScreenAwake = { keep: () => () => undefined };
@@ -12,11 +13,12 @@ export function configureSessionDevice(porte: { schermo: ScreenAwake; nonDisturb
   ({ schermo, nonDisturbare } = porte);
 }
 
-/** Un errore della piattaforma resta qui (alla Diagnostica, T-032), mai alla UI (INV-16). */
+/** Un errore della piattaforma va in Diagnostica (T-032), mai alla UI (INV-16). */
 function safe<T>(fn: () => T, fallback: T): T {
   try {
     return fn();
-  } catch {
+  } catch (e) {
+    logError('dispositivo', e);
     return fallback;
   }
 }
@@ -32,6 +34,9 @@ export function keepScreenOn(): () => void {
 
 /** Non Disturbare per l'iperfocus: `true` se è attivo; senza permesso l'iperfocus vale comunque (§10.4). */
 export const enableDoNotDisturb = (): Promise<boolean> =>
-  safe(() => nonDisturbare.enable(), Promise.resolve(false)).catch(() => false);
+  safe(() => nonDisturbare.enable(), Promise.resolve(false)).catch((e: unknown) => {
+    logError('dispositivo', e);
+    return false;
+  });
 
 export const disableDoNotDisturb = (): void => safe(() => nonDisturbare.disable(), undefined);

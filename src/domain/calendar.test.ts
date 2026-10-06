@@ -122,3 +122,20 @@ describe('Giorno dall’indirizzo — D-CAL-1', () => {
     expect(isDayKey('')).toBe(false);
   });
 });
+
+describe('Inizio settimana — FUNZIONALITA §23 (T-032)', () => {
+  it('dalla domenica la settimana va da domenica a sabato e la griglia del mese parte di domenica', () => {
+    expect(weekOf('2026-10-01', 0)).toEqual([
+      '2026-09-27',
+      '2026-09-28',
+      '2026-09-29',
+      '2026-09-30',
+      '2026-10-01',
+      '2026-10-02',
+      '2026-10-03',
+    ]);
+    expect(weekOf('2026-09-27', 0)[0]).toBe('2026-09-27');
+    expect(monthGrid('2026-10-15', 0)[0]?.giorno).toBe('2026-09-27');
+    expect(monthGrid('2026-10-15', 0).at(-1)?.giorno).toBe('2026-10-31');
+  });
+});

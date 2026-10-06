@@ -13,6 +13,7 @@
  * - Finestra: scatti in [now, now + 14 giorni locali]; si arma solo ciò che scatta almeno 5 s dopo (`reconcilePlan`).
  * - Chiave `trigger:anticipo:bloccoId`, id nativo FNV-1a a 32 bit con segno, collisioni risolte con +1.
  */
+import type { InizioSettimana } from '../settings';
 import { MAX_ANTICIPO_SVEGLIA } from '../activity';
 import { lostNotificationDue, recoveryDeadline } from '../lost';
 import type { SessioneAttiva } from '../session';
@@ -267,10 +268,11 @@ export function digestNotification(
   blocchi: readonly BloccoNotifiche[],
   imp: ImpostazioniNotifiche,
   now: number,
+  inizioSettimana: InizioSettimana = 1,
 ): NotificaPianificata | null {
   if (!imp.generale || !imp.perTipo.todo.attivo) return null;
   const istante = nextDigestInstant(now, imp.digest.orario);
-  const digest = digestContent(blocchi, istante);
+  const digest = digestContent(blocchi, istante, inizioSettimana);
   if (!digest) return null;
   const chiave = notificationKey('digest', 0, localDayKey(istante));
   return voceSenzaBlocco(chiave, istante, 'digest', 'todo', { silenzioso: imp.perTipo.todo.silenzioso, digest });
@@ -294,6 +296,8 @@ export function desiredSet(
     titoloSessione: string;
     /** Chiave → istante del tocco «Posticipa» (`preferenze.posticipi`, D-NOTIF-2). */
     posticipi?: Readonly<Record<string, number>>;
+    /** Primo giorno della settimana (Impostazioni, FUNZ §23): la fine dell'orizzonte dei todo nel digest. */
+    inizioSettimana?: InizioSettimana;
   },
   now: number,
 ): NotificaPianificata[] {
@@ -302,7 +306,7 @@ export function desiredSet(
   const tutte = input.blocchi.flatMap((b) =>
     blockNotifications(b, b.ricorrenzaId ? definizioni.get(b.ricorrenzaId) : undefined, imp),
   );
-  const digest = digestNotification(input.blocchi, imp, now);
+  const digest = digestNotification(input.blocchi, imp, now, input.inizioSettimana);
   if (digest) tutte.push(digest);
   const sessione = sessionNotification(input.sessione, input.titoloSessione, imp);
   if (sessione) tutte.push(sessione);

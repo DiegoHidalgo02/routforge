@@ -11,6 +11,10 @@ export type Celebrazioni = 'sobria' | 'piena' | 'off';
 /** Primo giorno della settimana come `getDay()`: 1 = lunedì, 0 = domenica. */
 export type InizioSettimana = 0 | 1;
 
+/** Giorni dal primo giorno della settimana (0–6) per un giorno della settimana come `getDay()` (FUNZ §23). */
+export const weekOffset = (giornoSettimana: number, inizio: InizioSettimana): number =>
+  (giornoSettimana - inizio + 7) % 7;
+
 export interface Impostazioni {
   animazioni: Animazioni;
   celebrazioni: Celebrazioni;

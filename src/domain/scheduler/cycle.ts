@@ -11,6 +11,7 @@
  * (`lateNoticeDue`): qui si compongono soltanto.
  */
 import { isOrphan, lostNotificationDue, shouldMarkLost } from '../lost';
+import type { InizioSettimana } from '../settings';
 import type { Blocco } from '../types';
 import { lateNoticeDue } from './horizon';
 
@@ -40,10 +41,11 @@ export interface PianoPersi<B extends Blocco> {
 export function lostPlan<B extends Blocco & { giornoLocale?: string }>(
   blocchi: readonly B[],
   now: number,
+  inizioSettimana: InizioSettimana = 1,
 ): PianoPersi<B> {
   const piano: PianoPersi<B> = { persi: [], avvisiRitardo: [], avvisiPerso: [] };
   for (const b of blocchi) {
-    if (!shouldMarkLost(b, now)) continue;
+    if (!shouldMarkLost(b, now, inizioSettimana)) continue;
     const ritardo = lateNoticeDue(b);
     piano.persi.push({ ...b, stato: 'perso', persoIl: now, ...(ritardo && { ritardoIl: now }) });
     if (ritardo) piano.avvisiRitardo.push(b.id);

@@ -18,12 +18,14 @@ import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 import { MINUTE } from '../domain/time';
 import { registerOpening } from './absence';
+import { logError } from './diagnostics';
 import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
 import type { Clock } from './ports/clock';
 import type { NotificationService } from './notifications';
 import { generateOccurrences } from './recurrences';
 import { readActiveSession } from './session';
+import { readSettings } from './settings';
 
 /**
  * Ciò che il ciclo consegna ai passi successivi: gli id avvisati adesso (la riconciliazione li deriva dalle marcature,
@@ -50,7 +52,10 @@ function leggibile(r: Ricorrenza, now: number): boolean {
 }
 
 /** Esegue il ciclo adesso; `fuso` è quello corrente del dispositivo (D-TIME-2). Senza cambiamenti non scrive nulla. */
-export function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<AvvisiCiclo> {
+export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<AvvisiCiclo> {
+  // L'inizio settimana (FUNZ §23) si legge prima della transazione: letto dentro, dopo la generazione delle occorrenze,
+  // la transazione si chiudeva in anticipo (PrematureCommitError nei test, T-032)
+  const { inizioSettimana } = await readSettings(db);
   return inTransaction(db, TABELLE_CICLO, async () => {
     // 0. Riancoraggio (D-TIME-2): i blocchi di oggi e futuri calcolati in un altro fuso, prima di estendere e giudicare
     for (const b of reanchor(await listBy(db, 'blocchi', 'stato', 'programmato'), fuso, now))
@@ -63,15 +68,15 @@ export function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<Av
       if (leggibile(r, now)) await generateOccurrences(db, r, now, fuso);
       else ricorrenzeSaltate.push(r.id);
     }
-    // 2. Spostamento dei todo (§6)
-    const spostati = await rollTodos(db, now, fuso);
+    // 2. Spostamento dei todo (§6); la fine dell'orizzonte «settimana» segue l'inizio settimana
+    const spostati = await rollTodos(db, now, fuso, inizioSettimana);
     // 3. Reset degli orfani (§8): tornano `programmati` e il passo 4 li giudica
     // Il blocco che la sessione attiva punta (`preferenze.sessioneAttiva`, scritta da `app/session.ts`, D-SCHED-1)
     const attivo = (await readActiveSession(db))?.bloccoId ?? null;
     for (const b of orphanPlan(await listBy(db, 'blocchi', 'stato', 'in_corso'), attivo, now))
       await saveBlock(db, b, now, fuso);
     // 4. Marcatura dei persi (§8; il todo «non fatto», §6)
-    const persi = lostPlan(await listBy(db, 'blocchi', 'stato', 'programmato'), now);
+    const persi = lostPlan(await listBy(db, 'blocchi', 'stato', 'programmato'), now, inizioSettimana);
     for (const b of persi.persi) await saveBlock(db, b, now, fuso);
     // Puntatore dopo la generazione e la marcatura persa (§11), per ogni corso a ogni ciclo (FUNZ §8; D-SCHED-1)
     for (const c of await list(db, 'corsi')) await recomputePointer(db, c.id, now, fuso);
@@ -96,13 +101,15 @@ export function createScheduler(
   notifiche?: Pick<NotificationService, 'reconcile'>,
 ): SchedulerService {
   // Due cicli insieme si serializzano da soli: IndexedDB esegue una transazione di scrittura alla volta sulle stesse
-  // tabelle (§7). Un errore non arriva al chiamante e non ferma i successivi; la Diagnostica è di T-032 (D-SCHED-1 n. 8).
+  // tabelle (§7). Un errore non arriva al chiamante e non ferma i successivi: va in Diagnostica (T-032, D-SCHED-1 n. 8),
+  // con le ricorrenze che non si leggono.
   // Dopo la transazione, riuscita o no (i dati restano consistenti), la riconciliazione delle notifiche con lo stesso
   // istante (§13.3, D-NOTIF-1 n. 6)
   const run = async (): Promise<AvvisiCiclo | undefined> => {
     const now = clock.now();
-    const esito = await runCycle(db, now, clock.fuso()).catch(() => undefined);
-    await notifiche?.reconcile(now).catch(() => undefined);
+    const esito = await runCycle(db, now, clock.fuso()).catch((e: unknown) => void logError('ciclo', e));
+    if (esito?.ricorrenzeSaltate.length) logError('ciclo', esito.ricorrenzeSaltate.join(', '), 'ricorrenze_non_lette');
+    await notifiche?.reconcile(now).catch((e: unknown) => logError('notifiche', e));
     return esito;
   };
   return {
@@ -114,7 +121,7 @@ export function createScheduler(
         const now = clock.now();
         void run()
           .then((esito) => (esito ? registerOpening(db, now) : undefined))
-          .catch(() => undefined);
+          .catch((e: unknown) => logError('ciclo', e));
       };
       apri();
       // Creazione, modifica ed eliminazione di routine scrivono `ricorrenze`; la prima emissione è l'avvio, già eseguito

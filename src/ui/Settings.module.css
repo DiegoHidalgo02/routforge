@@ -325,6 +325,191 @@ label.riga:hover {
   background: var(--color-surface-2);
 }
 
+/* Diagnostica (S22 `diagnostics`): riquadri a due colonne (pallino, etichetta, valore 15/20 nel colore del pallino,
+   meta), spazio locale, registro degli eventi alto 44; letterali del mock: padding 12 · 14, gap 6 · 8 · 14 · 2, 36. */
+.sonda {
+  position: fixed;
+  visibility: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.riquadro {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3) var(--space-card-inner);
+}
+
+.testaRiquadro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.valoreRiquadro {
+  overflow-wrap: anywhere;
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+}
+
+.metaRiquadro {
+  overflow-wrap: anywhere;
+  color: var(--color-text-3);
+  font: 400 var(--text-sm) / 16px var(--font-num);
+}
+
+.riquadro[data-tinta='successo'] .pallinoStato {
+  background: var(--color-success);
+}
+
+.riquadro[data-tinta='successo'] .valoreRiquadro {
+  color: var(--color-success);
+}
+
+.riquadro[data-tinta='avviso'] .pallinoStato {
+  background: var(--color-warning);
+}
+
+.riquadro[data-tinta='avviso'] .valoreRiquadro {
+  color: var(--color-warning);
+}
+
+.spazio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-card-inner);
+}
+
+.barraSpazio {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+}
+
+.barraSpazio > span:first-child {
+  background: var(--color-primary);
+}
+
+.barraSpazio > span:last-child {
+  background: var(--color-data-2);
+}
+
+.legendaSpazio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) 14px;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) var(--font-ui);
+}
+
+.legendaSpazio > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendaSpazio > .contorno {
+  margin-left: auto;
+}
+
+.quadratino {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-xs);
+  background: var(--color-data-2);
+}
+
+.quadratino[data-dati] {
+  background: var(--color-primary);
+}
+
+.evento {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-card-inner);
+}
+
+.evento + .evento {
+  border-top: 1px solid var(--color-border);
+}
+
+.oraEvento {
+  flex: none;
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.messaggio {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 var(--text-base) / 18px var(--font-ui);
+}
+
+.tag {
+  flex: none;
+  color: var(--color-warning);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.azioni {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.secondario,
+.fantasma {
+  position: relative;
+  height: 36px;
+  padding: 0 var(--space-card-inner);
+  border-radius: var(--radius-control);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+}
+
+.secondario {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.fantasma {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.secondario:hover,
+.fantasma:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Area di tocco 44 per i bottoni da 36 */
+.secondario::before,
+.fantasma::before {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
 /* Desktop da 1024 px (D-UI-1): la colonna del mock è larga al più 640 */
 @media (min-width: 1024px) {
   .pagina {

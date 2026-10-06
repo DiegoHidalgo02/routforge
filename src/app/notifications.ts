@@ -26,7 +26,9 @@ import { addLocalDays, localDayKey } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 import type { Clock } from './ports/clock';
 import type { Notifications } from './ports/notifications';
+import { logError, logReconcile } from './diagnostics';
 import { readActiveSession } from './session';
+import { readSettings } from './settings';
 
 /** Riga di `preferenze` delle impostazioni delle notifiche (§13.1, §13.5); la UI è di T-032. */
 export const CHIAVE_IMPOSTAZIONI_NOTIFICHE = 'notifiche';
@@ -57,6 +59,19 @@ const leggibili = (v: unknown): v is ImpostazioniNotifiche => {
 export async function readNotificationSettings(db: RoutForgeDb): Promise<ImpostazioniNotifiche> {
   const v = (await get(db, 'preferenze', CHIAVE_IMPOSTAZIONI_NOTIFICHE))?.valore;
   return leggibili(v) ? v : IMPOSTAZIONI_NOTIFICHE_DEFAULT;
+}
+
+/** Cambia le impostazioni delle notifiche a partire da quelle salvate (o dai default di §13.1; Impostazioni, T-032). */
+export function editNotificationSettings(
+  db: RoutForgeDb,
+  modifica: (v: ImpostazioniNotifiche) => ImpostazioniNotifiche,
+  now: number,
+): Promise<void> {
+  return inTransaction(db, ['preferenze'], async () => {
+    const valore = modifica(await readNotificationSettings(db));
+    // Un valore illeggibile riporterebbe tutto ai default alla lettura: non si salva
+    if (leggibili(valore)) await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore }, now);
+  });
 }
 
 const posticipiLeggibili = (v: unknown): v is Record<string, number> =>
@@ -125,7 +140,10 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
 
   async function esegui(now: number): Promise<void> {
     try {
-      const desiderate = desiredSet(await readInputs(db, now), now);
+      // L'inizio settimana (FUNZ §23) si legge qui e non negli ingressi osservati: dentro la query live la lettura
+      // farebbe perdere a Dexie le successive; un suo cambio arriva con la riconciliazione del ciclo seguente
+      const { inizioSettimana } = await readSettings(db);
+      const desiderate = desiredSet({ ...(await readInputs(db, now)), inizioSettimana }, now);
       const piano = reconcilePlan(desiderate, await list(db, 'registroNotifiche'), prima, now);
       if (piano.daCancellare.length > 0) await porta.cancel(piano.daCancellare);
       if (piano.daTogliere.length > 0) await purge(db, 'registroNotifiche', piano.daTogliere);
@@ -142,12 +160,16 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
         });
       }
       prima = false;
-    } catch {
-      // Registro com'era: la prossima riconciliazione riprova; la Diagnostica è di T-032 (D-NOTIF-1 n. 12)
+      logReconcile(now, null);
+    } catch (e) {
+      // Registro com'era: la prossima riconciliazione riprova; l'errore va in Diagnostica (T-032, D-NOTIF-1 n. 12)
+      logReconcile(now, e);
     }
   }
 
-  const reconcile = (now: number): Promise<void> => (coda = coda.then(() => esegui(now)));
+  // La coda non resta mai rigettata: un errore imprevisto non ferma le riconciliazioni successive (INV-16)
+  const reconcile = (now: number): Promise<void> =>
+    (coda = coda.then(() => esegui(now)).catch((e: unknown) => logError('notifiche', e)));
   return {
     reconcile,
     start: () =>
@@ -161,8 +183,9 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
         permessoChiesto = true;
         await porta.requestPermission();
         await porta.schedule([{ ...testNotification(now), idNativo: nativeId(CHIAVE_PROVA) }]);
-      } catch {
-        // Nessuna eccezione verso la UI (INV-16)
+      } catch (e) {
+        // Nessuna eccezione verso la UI (INV-16): l'errore va in Diagnostica
+        logError('notifiche', e);
       }
     },
   };

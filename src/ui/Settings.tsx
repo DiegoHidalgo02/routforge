@@ -5,18 +5,20 @@
 // il permesso col gesto (D-NOTIF-2 n. 6). Informazioni con la versione della build. Account, AI, backup, materiali ed
 // eliminazione dei dati arrivano coi loro task (T-033, T-026, T-030, T-024).
 import { ChevronRight, VolumeX } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { appDb, watch } from '../app/db';
+import { readDiagnostics, type Diagnostica } from '../app/diagnostics';
 import { readInbox } from '../app/inbox';
-import { readNotificationSettings, sendTestNotification } from '../app/notifications';
-import { editNotificationSettings, saveSettings } from '../app/settings';
+import { editNotificationSettings, readNotificationSettings, sendTestNotification } from '../app/notifications';
+import { saveSettings } from '../app/settings';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
 import type { Impostazioni } from '../domain/settings';
 import type { TipoBlocco } from '../domain/types';
+import { useMinuto } from './clock';
 import { maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
-import { useSettings } from './preferenze';
+import { animazioniRidotte, useSettings } from './preferenze';
 import { Section } from './Section';
 import s from './Settings.module.css';
 
@@ -362,6 +364,215 @@ export function About() {
             <span className={s.valore}>{__VERSIONE__}</span>
           </div>
         </Gruppo>
+      </div>
+    </div>
+  );
+}
+
+type Tinta = 'successo' | 'avviso' | 'neutro';
+interface Riquadro {
+  etichetta: string;
+  valore: string;
+  meta: string;
+  tinta: Tinta;
+}
+interface Spazio {
+  dati: number;
+  cache: number;
+  persistente: boolean;
+}
+
+const decimali = new Intl.NumberFormat(lingua, { maximumFractionDigits: 2 });
+const unDecimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
+const memoria = (byte: number) =>
+  byte >= 1e9
+    ? `${unDecimale.format(byte / 1e9)} GB`
+    : byte >= 1e6
+      ? `${unDecimale.format(byte / 1e6)} MB`
+      : `${unDecimale.format(byte / 1e3)} KB`;
+const ora = (istante: number) =>
+  new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' }).format(istante);
+const SORGENTE = {
+  ciclo: 'sorgenteCiclo',
+  notifiche: 'sorgenteNotifiche',
+  dispositivo: 'sorgenteDispositivo',
+} as const;
+/** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
+const testoEvento = (e: Diagnostica['eventi'][number]) =>
+  e.codice === 'ricorrenze_non_lette' ? t('ricorrenzeNonLette', { id: e.messaggio }) : e.messaggio;
+
+/** Spazio del browser (FUNZ §24): dati dell'app e cache; il dettaglio per categoria c'è solo dove il browser lo dà. */
+async function misuraSpazio(): Promise<Spazio | null> {
+  if (!navigator.storage?.estimate) return null;
+  const s: StorageEstimate & { usageDetails?: Record<string, number> } = await navigator.storage.estimate();
+  const cache = s.usageDetails?.caches ?? 0;
+  return { dati: (s.usage ?? 0) - cache, cache, persistente: (await navigator.storage.persisted?.()) ?? false };
+}
+
+/** Svuota cache (FUNZ §24): solo la cache dell'app web, mai i dati dell'utente. */
+async function svuotaCache(): Promise<void> {
+  if ('caches' in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+}
+
+/** Reinstalla PWA (MECC §23): deregistra il service worker e ricarica. */
+async function reinstalla(): Promise<void> {
+  const registrazioni = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+  await Promise.all(registrazioni.map((r) => r.unregister()));
+  location.reload();
+}
+
+/**
+ * Diagnostica (S22 `diagnostics`; FUNZ §24, MECC §23): permessi, coda e riconciliazione delle notifiche, account, scala
+ * del testo e animazioni, margini dello schermo; spazio locale con «Svuota cache»; gli ultimi errori dei servizi
+ * (`app/diagnostics.ts`); rapporto copiabile e «Reinstalla PWA». Sul web allarmi precisi e Non Disturbare non esistono.
+ */
+export function Diagnostics() {
+  const [d, setD] = useState<Diagnostica>();
+  const [notifiche, setNotifiche] = useState<ImpostazioniNotifiche>();
+  const [spazio, setSpazio] = useState<Spazio | null>(null);
+  const [schermo, setSchermo] = useState({ scala: 1, margini: '0 · 0 · 0 · 0' });
+  const [copiata, setCopiata] = useState(false);
+  const sonda = useRef<HTMLDivElement>(null);
+  // Gli eventi e la riconciliazione stanno in memoria: oltre alle scritture sul registro, si rileggono a ogni minuto
+  const minuto = useMinuto();
+  useEffect(() => watch(() => readDiagnostics(appDb, Date.now()), setD), [minuto]);
+  useEffect(() => watch(() => readNotificationSettings(appDb), setNotifiche), []);
+  useEffect(() => void misuraSpazio().then(setSpazio), []);
+  useEffect(() => {
+    const c = sonda.current && getComputedStyle(sonda.current);
+    if (!c) return;
+    setSchermo({
+      scala: parseFloat(getComputedStyle(document.documentElement).fontSize) / 16,
+      margini: [c.paddingTop, c.paddingRight, c.paddingBottom, c.paddingLeft]
+        .map((x) => Math.round(parseFloat(x)))
+        .join(' · '),
+    });
+  }, []);
+  const permesso = leggiPermesso();
+  const attivi = notifiche ? Object.values(notifiche.perTipo).filter((x) => x.attivo).length : 0;
+  const errore = d?.riconciliazione?.errore;
+  const riquadri: Riquadro[] = [
+    {
+      etichetta: t('permessoNotificheBreve'),
+      valore: t(
+        permesso === 'granted'
+          ? 'concesso'
+          : permesso === 'denied'
+            ? 'negato'
+            : permesso
+              ? 'daChiedere'
+              : 'nonDisponibile',
+      ),
+      meta: !notifiche?.generale || attivi === 0 ? t('notificheSpente') : t('tipiAttivi', { n: attivi }),
+      tinta: permesso === 'granted' ? 'successo' : permesso === 'denied' ? 'avviso' : 'neutro',
+    },
+    { etichetta: t('allarmiPrecisi'), valore: t('nonDisponibile'), meta: t('comeNotifiche'), tinta: 'neutro' },
+    { etichetta: t('nonDisturbare'), valore: t('nonDisponibile'), meta: t('iperfocus'), tinta: 'neutro' },
+    {
+      etichetta: t('codaNotifiche'),
+      valore: t('armate', { n: d?.armate ?? 0 }),
+      meta: d?.prossima ? t('prossimaOra', { ora: ora(d.prossima) }) : t('nessunaInCoda'),
+      tinta: 'neutro',
+    },
+    {
+      etichetta: t('riconciliazione'),
+      valore: d?.riconciliazione ? ora(d.riconciliazione.istante) : '—',
+      meta: errore ?? t('nessunErrore'),
+      tinta: errore ? 'avviso' : d?.riconciliazione ? 'successo' : 'neutro',
+    },
+    { etichetta: t('gruppoAccount'), valore: t('nonAttivo'), meta: '—', tinta: 'neutro' },
+    {
+      etichetta: t('scalaTesto'),
+      valore: `${decimali.format(schermo.scala)}×`,
+      meta: t(animazioniRidotte() ? 'animazioniRidotteMeta' : 'animazioniOn'),
+      tinta: 'neutro',
+    },
+    { etichetta: t('margini'), valore: schermo.margini, meta: t('px'), tinta: 'neutro' },
+  ];
+  const totale = spazio ? spazio.dati + spazio.cache : 0;
+  const copia = () => {
+    const righe = [
+      ...riquadri.map((r) => `${r.etichetta}: ${r.valore} · ${r.meta}`),
+      spazio &&
+        `${t('spazioLocale')}: ${t('datiSpazio', { spazio: memoria(spazio.dati) })} · ${t('cacheSpazio', {
+          spazio: memoria(spazio.cache),
+        })} · ${t(spazio.persistente ? 'persistente' : 'nonPersistente')}`,
+      `${t('versione')}: ${__VERSIONE__}`,
+      ...(d?.eventi ?? []).map((e) => `${ora(e.istante)} · ${t(SORGENTE[e.sorgente])} · ${testoEvento(e)}`),
+    ];
+    void navigator.clipboard?.writeText(righe.filter(Boolean).join('\n')).then(() => setCopiata(true));
+  };
+
+  return (
+    <div className={s.pagina}>
+      <Section titolo="diagnostica" indietro sottotitolo={t('impostazioni')} />
+      <div className={s.sonda} ref={sonda} aria-hidden />
+      <div className={s.viste}>
+        <div className={s.griglia}>
+          {riquadri.map((r) => (
+            <div key={r.etichetta} className={`${s.card} ${s.riquadro}`} data-tinta={r.tinta}>
+              <span className={s.testaRiquadro}>
+                <span className={s.pallinoStato} />
+                {r.etichetta}
+              </span>
+              <span className={s.valoreRiquadro}>{r.valore}</span>
+              <span className={s.metaRiquadro}>{r.meta}</span>
+            </div>
+          ))}
+        </div>
+        {spazio && (
+          <Gruppo titolo={t('spazioLocale')}>
+            <div className={s.spazio}>
+              <span className={s.barraSpazio} aria-hidden>
+                <span style={{ width: `${totale ? (spazio.dati / totale) * 100 : 0}%` }} />
+                <span style={{ width: `${totale ? (spazio.cache / totale) * 100 : 0}%` }} />
+              </span>
+              <div className={s.legendaSpazio}>
+                <span>
+                  <span className={s.quadratino} data-dati />
+                  {t('datiSpazio', { spazio: memoria(spazio.dati) })}
+                </span>
+                <span>
+                  <span className={s.quadratino} />
+                  {t('cacheSpazio', { spazio: memoria(spazio.cache) })}
+                </span>
+                <span className={s.metaRiquadro}>{t(spazio.persistente ? 'persistente' : 'nonPersistente')}</span>
+                <button
+                  type="button"
+                  className={s.contorno}
+                  onClick={() => void svuotaCache().then(misuraSpazio).then(setSpazio)}
+                >
+                  {t('svuotaCache')}
+                </button>
+              </div>
+            </div>
+          </Gruppo>
+        )}
+        <Gruppo titolo={t('registroEventi')}>
+          {d?.eventi.length ? (
+            d.eventi.map((e, i) => (
+              <div key={i} className={s.evento}>
+                <span className={s.oraEvento}>{ora(e.istante)}</span>
+                <span className={s.messaggio}>
+                  {t(SORGENTE[e.sorgente])} · {testoEvento(e)}
+                </span>
+                <span className={s.tag}>{t('errore')}</span>
+              </div>
+            ))
+          ) : (
+            <div className={s.evento}>
+              <span className={s.messaggio}>{t('nessunEvento')}</span>
+            </div>
+          )}
+        </Gruppo>
+        <div className={s.azioni}>
+          <button type="button" className={s.secondario} onClick={copia}>
+            {t(copiata ? 'copiata' : 'copiaDiagnostica')}
+          </button>
+          <button type="button" className={s.fantasma} onClick={() => void reinstalla()}>
+            {t('reinstallaPwa')}
+          </button>
+        </div>
       </div>
     </div>
   );

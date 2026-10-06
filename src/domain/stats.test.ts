@@ -85,6 +85,8 @@ describe('Periodo e focus — MECCANISMI §20', () => {
     expect(barre.at(-1)).toEqual({ settimana: local(2026, 9, 21), minuti: 90 });
     expect(barre.at(-2)).toEqual({ settimana: local(2026, 9, 14), minuti: 45 });
     expect(sessionCount(s, r)).toEqual({ numero: 3, media: 45 });
+    // Con la settimana dalla domenica (Impostazioni, FUNZ §23) l'ultima barra parte il 20
+    expect(weeklyFocus(s, [], r, 0).at(-1)).toEqual({ settimana: local(2026, 9, 20), minuti: 90 });
     // Senza sessioni le barre hanno lo stesso ripiego del totale: i minuti dei blocchi di studio
     expect(weeklyFocus([], [blocco({ minuti: 40 })], r).at(-1)).toEqual({ settimana: local(2026, 9, 21), minuti: 40 });
   });

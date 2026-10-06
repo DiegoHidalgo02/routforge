@@ -6,10 +6,12 @@
  * Funzioni pure sui dati che il servizio legge: blocchi, sessioni chiuse, log e template delle fasi. Periodo 7 · 30 · 90
  * giorni o «tutto»: i blocchi del periodo hanno l'inizio nel periodo, le sessioni l'avvio. «Completati» = stato
  * `completato` (disciplina, tasso dei persi); «completati/parziali» = `completato` o `parziale` (giorni con attività,
- * mappa, fasce, costanza per giorno). La durata media di una sessione è il suo focus; le settimane iniziano il lunedì.
+ * mappa, fasce, costanza per giorno). La durata media di una sessione è il suo focus; le settimane iniziano il lunedì, o
+ * la domenica se così dicono le Impostazioni (FUNZ §23, `inizioSettimana`).
  */
 import { recoveryDeadline } from './lost';
 import type { DatiEsito } from './outcome';
+import { weekOffset, type InizioSettimana } from './settings';
 import { addLocalDays, localDayKey, localInstant, localTimeKey, localWeekday, MINUTE, startOfLocalDay } from './time';
 import { plannedMs, type SessioneChiusa } from './timer';
 import type { Blocco, FaseLog, FaseTemplate, Ricorrenza, TipoBlocco } from './types';
@@ -75,18 +77,23 @@ export function focusMinutes(
   );
 }
 
-/** Il lunedì della settimana dell'istante, a mezzanotte locale. */
-const lunedi = (t: number) => startOfLocalDay(addLocalDays(t, -((localWeekday(t) + 6) % 7)));
+/** Il primo giorno della settimana dell'istante, a mezzanotte locale. */
+const primoGiorno = (t: number, inizio: InizioSettimana) =>
+  startOfLocalDay(addLocalDays(t, -weekOffset(localWeekday(t), inizio)));
 
 /**
  * Le barre per settimana di §20, dalla settimana più vecchia del periodo (con «tutto», da quella del primo dato): inizio
  * della settimana e somma dei valori `[istante, valore]` che vi cadono.
  */
-function perWeek(voci: readonly (readonly [number, number])[], r: Intervallo): { settimana: number; valore: number }[] {
+function perWeek(
+  voci: readonly (readonly [number, number])[],
+  r: Intervallo,
+  inizio: InizioSettimana,
+): { settimana: number; valore: number }[] {
   const nel = voci.filter(([t]) => dentro(t, r));
   const prima = r.da > 0 ? r.da : Math.min(r.a - 1, ...nel.map(([t]) => t));
   const barre: { settimana: number; valore: number }[] = [];
-  for (let w = lunedi(prima); w < r.a; w = startOfLocalDay(addLocalDays(w, 7))) {
+  for (let w = primoGiorno(prima, inizio); w < r.a; w = startOfLocalDay(addLocalDays(w, 7))) {
     const fine = startOfLocalDay(addLocalDays(w, 7));
     barre.push({
       settimana: w,
@@ -104,11 +111,12 @@ export function weeklyFocus(
   sessioni: readonly SessioneStatistica[],
   blocchi: readonly Pick<Blocco, 'tipo' | 'inizio' | 'minuti'>[],
   r: Intervallo,
+  inizio: InizioSettimana = 1,
 ): { settimana: number; minuti: number }[] {
   const voci: (readonly [number, number])[] = sessioni.length
     ? sessioni.map((s) => [s.avvio, s.riepilogo.focus / MINUTE])
     : blocchi.filter((b) => b.tipo === 'studio').map((b) => [b.inizio, b.minuti ?? 0]);
-  return perWeek(voci, r).map((b) => ({ settimana: b.settimana, minuti: Math.round(b.valore) }));
+  return perWeek(voci, r, inizio).map((b) => ({ settimana: b.settimana, minuti: Math.round(b.valore) }));
 }
 
 /** Sessioni concluse del periodo e focus medio in minuti (§20). */
@@ -212,6 +220,7 @@ export function studyStats(
   blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'fine' | 'minutiRitardo' | 'minutiAnticipo'>[],
   sessioni: readonly SessioneStatistica[],
   r: Intervallo,
+  inizio: InizioSettimana = 1,
 ) {
   const studi = blocchi.filter((b) => b.tipo === 'studio' && dentro(b.inizio, r));
   const nel = sessioni.filter((s) => dentro(s.avvio, r));
@@ -238,6 +247,7 @@ export function studyStats(
   const settimane = perWeek(
     nel.map((s) => [s.avvio, 1]),
     r,
+    inizio,
   ).map((b) => ({ settimana: b.settimana, numero: b.valore }));
   return {
     esiti: {
@@ -340,6 +350,7 @@ export function behaviourStats(
   ricorrenze: readonly Pick<Ricorrenza, 'id' | 'titolo' | 'fasi'>[],
   periodo: Periodo,
   now: number,
+  inizio: InizioSettimana = 1,
 ) {
   const r = periodRange(periodo, now);
   const nel = blocchi.filter((b) => dentro(b.inizio, r));
@@ -354,7 +365,7 @@ export function behaviourStats(
 
   const settimane = periodo === 'tutto' ? 12 : Math.min(12, Math.max(4, Math.floor(periodo / 7)));
   const attivi = new Set(blocchi.filter(fatto).map((b) => localDayKey(b.inizio)));
-  const da = startOfLocalDay(addLocalDays(lunedi(now), -7 * settimane));
+  const da = startOfLocalDay(addLocalDays(primoGiorno(now, inizio), -7 * settimane));
   const costanza = [0, 0, 0, 0, 0, 0, 0];
   for (let i = 0; i < 7 * settimane; i++) {
     const g = addLocalDays(da, i);
@@ -412,6 +423,7 @@ export function behaviourStats(
       settimane: perWeek(
         persi.map((b) => [b.inizio, 1]),
         r,
+        inizio,
       ).map((b) => ({ settimana: b.settimana, numero: b.valore })),
       giorno: piu((b) => localWeekday(b.inizio)),
       tipo: piu((b) => b.tipo),

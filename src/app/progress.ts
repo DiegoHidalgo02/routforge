@@ -10,12 +10,13 @@ import { shiftPeriod, weekOf } from '../domain/calendar';
 import { upcomingDays } from '../domain/progress';
 import { localInstant } from '../domain/time';
 import { calendarDays, type BloccoCalendario } from './calendar';
+import type { InizioSettimana } from '../domain/settings';
 
 /** Quanti giorni dopo oggi si guardano per «Prossime attività». */
 export const GIORNI_PROSSIMI = 28;
 
 export interface IngressiProgresso {
-  /** I giorni della settimana di oggi, da lunedì, con i loro blocchi. */
+  /** I giorni della settimana di oggi, dal primo giorno (lunedì, o domenica: FUNZ §23), con i loro blocchi. */
   settimana: Map<string, BloccoCalendario[]>;
   /** Focus delle sessioni avviate oggi e ieri (ms). */
   focusOggi: number;
@@ -31,11 +32,18 @@ async function focusOf(db: RoutForgeDb, giorno: string): Promise<number> {
   return (await sessionsBetween(db, da, a)).reduce((somma, s) => somma + s.riepilogo.focus, 0);
 }
 
-/** Gli ingressi del progresso per il giorno locale `oggi` ("YYYY-MM-DD"). */
-export async function progressInputs(db: RoutForgeDb, oggi: string): Promise<IngressiProgresso> {
+/**
+ * Gli ingressi del progresso per il giorno locale `oggi`; la settimana parte da `inizioSettimana` (FUNZ §23), che la
+ * schermata passa: letto qui dentro, la query live di Dexie smetterebbe di seguire le letture successive.
+ */
+export async function progressInputs(
+  db: RoutForgeDb,
+  oggi: string,
+  inizioSettimana: InizioSettimana = 1,
+): Promise<IngressiProgresso> {
   const avanti = Array.from({ length: GIORNI_PROSSIMI }, (_, i) => shiftPeriod(oggi, 'giorno', i + 1));
   const [settimana, futuro, focusOggi, focusIeri] = await Promise.all([
-    calendarDays(db, weekOf(oggi)),
+    calendarDays(db, weekOf(oggi, inizioSettimana)),
     calendarDays(db, avanti),
     focusOf(db, oggi),
     focusOf(db, shiftPeriod(oggi, 'giorno', -1)),

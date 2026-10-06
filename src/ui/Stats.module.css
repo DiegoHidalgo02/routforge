@@ -1,7 +1,8 @@
 /* Statistiche (S20 Statistiche Panel, Shell Mobile e Desktop). Restano letterali le misure del mock fuori dalla scala dei
    token: tab alti 34, segmenti 22 con binario di 2 e passo 1, gap 10 · 6 · 3 · 2, grafici alti 48 · 80 · 64 · 44 · 56,
    binari 6 e 8, colonne 96/40 e 32/72, righe da 28 e 40, mappa al più 120, quadrati 10, vuoto 56 · 48 · 280, interlinee
-   16 · 20 · 22 · 24 · 30, larghezza 980 su desktop e i due aloni delle barre migliori. */
+   16 · 20 · 22 · 24 · 30, riga della scheda 2, raggio 4 delle barre delle fasce, larghezza 980 su desktop e i due aloni
+   delle barre migliori. */
 .pagina {
   display: flex;
   flex-direction: column;
@@ -31,7 +32,7 @@
 .scheda {
   position: relative;
   flex: none;
-  height: 34px;
+  min-height: 34px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -68,7 +69,7 @@
 .segmento::before {
   content: '';
   position: absolute;
-  inset: calc((100% - var(--size-touch)) / 2) 0;
+  inset: calc((100% - var(--size-touch)) / 2) min(0px, calc((100% - var(--size-touch)) / 2));
 }
 
 .periodo {
@@ -83,7 +84,7 @@
 
 .segmento {
   position: relative;
-  height: 22px;
+  min-height: 22px;
   padding: 0 var(--space-2);
   border: 0;
   border-radius: var(--radius-chip-cite);
@@ -93,6 +94,11 @@
   white-space: nowrap;
   cursor: pointer;
   transition: background var(--dur-feedback) var(--ease-out);
+}
+
+/* L'anello del fuoco sopra la pillola bianca accanto */
+.segmento:focus-visible {
+  z-index: 1;
 }
 
 .segmento[aria-pressed='true'] {
@@ -154,10 +160,10 @@
   font: 500 var(--text-base) / 16px var(--font-ui);
 }
 
+/* Su una riga al 100 %; col testo ingrandito va a capo dentro la card */
 .valore {
   font: 600 var(--text-stat) / 30px var(--font-num);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .unita {
@@ -204,15 +210,18 @@
 }
 
 /* Barre verticali: focus per settimana (data-2, l'ultima primary), persi (text-3; a zero surface-2), sessioni */
+/* Una barra per settimana del periodo, mai più larga che con le 12 del mock: con poche settimane stanno a destra */
 .barre {
   display: flex;
   align-items: flex-end;
+  justify-content: flex-end;
   gap: 3px;
 }
 
 .barre > span {
   flex: 1;
   min-width: 0;
+  max-width: calc((100% - 11 * 3px) / 12);
   border-radius: var(--radius-xs);
   background: var(--color-data-2);
 }
@@ -250,7 +259,7 @@
 /* Righe con barra orizzontale: disciplina per tipo, fasi saltate */
 .riga {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px 40px;
+  grid-template-columns: minmax(0, 1fr) 96px minmax(40px, max-content);
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -260,6 +269,12 @@
 .riga > .senzaDati {
   grid-column: 2 / -1;
   text-align: right;
+}
+
+/* Il nome del tipo va a capo invece di finire coi puntini (testo ingrandito) */
+.nomeTipo {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .nomeRiga {
@@ -390,7 +405,7 @@
 .barraFascia {
   width: 100%;
   min-height: 3px;
-  border-radius: 4px 4px 2px 2px;
+  border-radius: 4px 4px var(--radius-xs) var(--radius-xs);
   background: var(--color-data-2);
 }
 
@@ -476,8 +491,10 @@
 }
 
 .etichettaVoce {
+  overflow-wrap: anywhere;
   color: var(--color-text-2);
   font: 400 var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
 }
 
 .rigaRoutine {
@@ -532,7 +549,7 @@
 
 .rigaUnita {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) 72px;
+  grid-template-columns: minmax(32px, max-content) minmax(0, 1fr) minmax(72px, max-content);
   align-items: center;
   gap: 10px;
   min-height: 28px;
@@ -589,6 +606,14 @@
   margin: 0;
   color: var(--color-text-2);
   font: 400 var(--text-md) / 20px var(--font-ui);
+  text-wrap: pretty;
+}
+
+/* Sotto i 340 px le quattro schede stanno su una riga (S20: «Tab a sottolineatura su una riga sola») */
+@media (max-width: 339px) {
+  .schede {
+    column-gap: var(--space-2);
+  }
 }
 
 /* Desktop da 1024 px (D-UI-1): tre colonne, la Disciplina e la Puntualità a un terzo, larghezza al più 980 */

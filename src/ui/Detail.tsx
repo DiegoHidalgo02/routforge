@@ -55,6 +55,7 @@ import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
 import type { StatoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
 import { durata, fmtData, fuso as fusoCorrente, maiuscola, SETTIMANA, TIPO, titolo as titoloDi } from './format';
+import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
 import { lascia, type Tono } from './avvisi';
@@ -266,7 +267,9 @@ export function Detail() {
       testo:
         orizzonte === 'giorno'
           ? maiuscola(fmtGiorno.format(b.inizio))
-          : t('entroIl', { data: fmtGiorno.format(horizonLastDay(b.inizio, orizzonte)) }),
+          : t('entroIl', {
+              data: fmtGiorno.format(horizonLastDay(b.inizio, orizzonte, impostazioni().inizioSettimana)),
+            }),
     });
     if (b.conOrario) meta.push({ Icona: Clock, tono: 'num', testo: orari });
     else if (b.priorita) meta.push({ Icona: Flag, testo: t(PRIORITA[b.priorita]) });

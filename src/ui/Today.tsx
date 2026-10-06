@@ -58,6 +58,7 @@ import { heroBlock, isLiveBlock } from '../domain/nowBlock';
 import { dayClosed, isDone } from '../domain/progress';
 import { canReorder, reorderGroup, sortDayDesktop } from '../domain/ordering';
 import type { AvvisoAssenza } from '../domain/scheduler/absence';
+import type { InizioSettimana } from '../domain/settings';
 import { localDayKey, localInstant } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
@@ -66,7 +67,7 @@ import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
 import { ascolta, type Tono } from './avvisi';
-import { animazioniRidotte, impostazioni, vibra } from './preferenze';
+import { animazioniRidotte, impostazioni, useSettings, vibra } from './preferenze';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
@@ -123,9 +124,9 @@ const intervallo = (da: string, a: string) =>
   );
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
 const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
-/** Il periodo che una vista mostra per un giorno: il giorno, il lunedì della settimana o il mese. */
-const periodoDi = (vista: Vista, giorno: string) =>
-  vista === 'mese' ? giorno.slice(0, 7) : vista === 'settimana' ? (weekOf(giorno)[0] ?? giorno) : giorno;
+/** Il periodo che una vista mostra per un giorno: il giorno, il primo giorno della settimana o il mese. */
+const periodoDi = (vista: Vista, giorno: string, inizio: InizioSettimana) =>
+  vista === 'mese' ? giorno.slice(0, 7) : vista === 'settimana' ? (weekOf(giorno, inizio)[0] ?? giorno) : giorno;
 
 /** «Annulla» del toast della spunta resta 5 s (A7), come il toast del Dettaglio. */
 const ANNULLA_MS = 5000;
@@ -146,8 +147,10 @@ export function Today() {
   const vista = VISTE.find((v) => v === parametri.get('vista')) ?? 'giorno';
   const scelto = parametri.get('giorno') ?? '';
   const giorno = isDayKey(scelto) ? scelto : oggi;
-  const settimana = weekOf(giorno);
-  const griglia = vista === 'mese' ? monthGrid(giorno) : null;
+  // La settimana del calendario parte dal giorno scelto nelle Impostazioni (FUNZ §23)
+  const { inizioSettimana } = useSettings();
+  const settimana = weekOf(giorno, inizioSettimana);
+  const griglia = vista === 'mese' ? monthGrid(giorno, inizioSettimana) : null;
   const giorni = griglia ? griglia.map((c) => c.giorno) : settimana;
   const chiave = giorni.join();
 
@@ -164,8 +167,8 @@ export function Today() {
   // «Il tuo progresso oggi» e «Prossime attività» (FUNZ §2): solo nella vista Giorno, sempre su oggi
   const [progresso, setProgresso] = useState<IngressiProgresso>();
   useEffect(
-    () => (vista === 'giorno' ? watch(() => progressInputs(appDb, oggi), setProgresso) : undefined),
-    [vista, oggi],
+    () => (vista === 'giorno' ? watch(() => progressInputs(appDb, oggi, inizioSettimana), setProgresso) : undefined),
+    [vista, oggi, inizioSettimana],
   );
   const pronto = periodo?.chiave === chiave;
 
@@ -180,7 +183,7 @@ export function Today() {
 
   // Il contenuto del periodo si rimonta quando il periodo cambia (chiave) ed entra dal lato dello scorrimento
   const [verso, setVerso] = useState<Verso>();
-  const chiavePeriodo = `${vista}:${periodoDi(vista, giorno)}`;
+  const chiavePeriodo = `${vista}:${periodoDi(vista, giorno, inizioSettimana)}`;
   const vai = (p: { vista?: Vista; giorno?: string }, direzione?: Verso) => {
     const v = p.vista ?? vista;
     const g = p.giorno ?? giorno;

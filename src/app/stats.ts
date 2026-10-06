@@ -24,6 +24,7 @@ import {
 } from '../domain/stats';
 import { courseCards, type SchedaCorso } from './courses';
 import { readStreak } from './outcome';
+import type { InizioSettimana } from '../domain/settings';
 
 export interface Panoramica {
   focus: number;
@@ -41,7 +42,8 @@ export interface Panoramica {
 /** Le ultime unità studiate nel periodo mostrate in Studio (S20 «Ultime unità»). */
 export const ULTIME_UNITA = 6;
 
-export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number) {
+/** `inizioSettimana` (FUNZ §23) lo passa la schermata: letto qui dentro, la query live smetterebbe di seguire i dati. */
+export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number, inizioSettimana: InizioSettimana = 1) {
   const [blocchi, sessioni, logFasi, ricorrenze, unita, attuale, corsi] = await Promise.all([
     list(db, 'blocchi'),
     list(db, 'sessioni'),
@@ -53,12 +55,12 @@ export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number) 
   ]);
   const r = periodRange(periodo, now);
   const p = previousRange(periodo, now);
-  const studio = studyStats(blocchi, sessioni, r);
+  const studio = studyStats(blocchi, sessioni, r, inizioSettimana);
   const perId = new Map(unita.map((u) => [u.id, u]));
   const panoramica: Panoramica = {
     focus: focusMinutes(sessioni, blocchi, r),
     focusPrima: p ? focusMinutes(sessioni, blocchi, p) : null,
-    barre: weeklyFocus(sessioni, blocchi, r),
+    barre: weeklyFocus(sessioni, blocchi, r, inizioSettimana),
     costanza: { attuale, record: longestStreak(blocchi, attuale) },
     sessioni: sessionCount(sessioni, r),
     disciplina: discipline(blocchi, r),
@@ -70,7 +72,7 @@ export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number) 
     /** Ancora nessuna sessione e nessun blocco giudicato, in tutto (S20 `empty`: «dopo la prima sessione…»). */
     vuoto: statsEmpty(sessioni, blocchi),
     panoramica,
-    comportamenti: behaviourStats(blocchi, sessioni, logFasi, ricorrenze, periodo, now),
+    comportamenti: behaviourStats(blocchi, sessioni, logFasi, ricorrenze, periodo, now, inizioSettimana),
     trigger: triggerResponse(blocchi, r, now),
     studio: {
       ...studio,

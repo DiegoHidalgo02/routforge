@@ -351,14 +351,18 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     scarto con segno («−4 min»), §20 tiene separati ritardo medio e anticipo medio; la frase dei persi dice tasso, giorno e tipo di §20 al posto di «Quasi tutti il venerdì dopo le 18»
     (la fascia oraria non è in §20); il Focus di Studio ha i minuti grandi come nella Panoramica (il mock li scrive
     piccoli); le «Ultime unità» mostrano sempre i minuti (il mock scrive «2 sess.» per una non finita, senza regola); la
-    mappa di calore ha oggi nell'ultima cella e le righe non sono giorni della settimana; i ritardi oltre 5', i salti delle
+    mappa di calore ha oggi nell'ultima cella e le righe non sono giorni della settimana; le barre per settimana sono
+    una per settimana del periodo (il mock ne disegna sempre 12), mai più larghe che con 12 e allineate a destra; i ritardi oltre 5', i salti delle
     fasi per settimana e la media della costanza non sono mostrati. Pratica senza dati fino a T-027 e T-028.
 76. Impostazioni S22 (T-032, D-IMPOST-1): radice e Notifiche come il mock, Informazioni con la versione della build.
     **Da decidere**: la vista di Animazioni, Celebrazioni, Feedback aptico e Inizio settimana (oggi il selettore del
     sistema); il sottotitolo della radice («Alex», il nome dell'account, con T-033); «Sempre» delle animazioni contro la
     regola `!important` di tokens.css; il pallino di «Routine di studio» primary nel mock (qui il colore del tipo, come
     nel resto dell'app); la barra in basso nelle viste interne (il mock la mostra solo sulla radice); l'orario del
-    digest senza controllo.
+    digest senza controllo. Diagnostica come il mock con i valori del web (allarmi precisi e Non Disturbare «Non
+    disponibile», account «Non attivo»); il registro mostra solo gli errori dei servizi, «Spazio locale» divide dati e
+    cache dove il browser lo dice; «Coda notifiche» è un valore solo (armate e prossima, come il mock) dove MECC §23
+    vuole pendenti e voci nel registro distinti.
 
 ## 4. Mappa schermata → design → task
 

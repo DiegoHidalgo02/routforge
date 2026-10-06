@@ -3,8 +3,10 @@
  * Fonte: FUNZIONALITA §2 (viste Giorno/Settimana/Mese, scorrere lateralmente), MECCANISMI §24 (Settimana/Mese: per ogni
  * giorno conteggio e tipo dei blocchi). Scenari: nessuno diretto (A5 è l'ordine del giorno, in `ordering.ts`).
  *
- * I giorni sono chiavi locali "YYYY-MM-DD" (time.ts); la settimana inizia di lunedì (D-CAL-1).
+ * I giorni sono chiavi locali "YYYY-MM-DD" (time.ts); la settimana inizia di lunedì (D-CAL-1), o di domenica se così
+ * dicono le Impostazioni (FUNZ §23).
  */
+import { weekOffset, type InizioSettimana } from './settings';
 import { addLocalDays, localDayKey, localInstant } from './time';
 import type { Blocco, TipoBlocco } from './types';
 
@@ -23,17 +25,20 @@ export const isDayKey = (x: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(x) &&
 
 const addDays = (giorno: string, n: number): string => localDayKey(addLocalDays(dayStart(giorno), n));
 
-/** I sette giorni, da lunedì a domenica, della settimana che contiene `giorno`. */
-export function weekOf(giorno: string): string[] {
-  const lunedi = addDays(giorno, -((new Date(dayStart(giorno)).getDay() + 6) % 7));
-  return Array.from({ length: 7 }, (_, i) => addDays(lunedi, i));
+/** I sette giorni della settimana che contiene `giorno`, dal suo primo giorno (lunedì, o domenica: FUNZ §23). */
+export function weekOf(giorno: string, inizioSettimana: InizioSettimana = 1): string[] {
+  const primo = addDays(giorno, -weekOffset(new Date(dayStart(giorno)).getDay(), inizioSettimana));
+  return Array.from({ length: 7 }, (_, i) => addDays(primo, i));
 }
 
-/** Celle della griglia del mese di `giorno`: settimane intere da lunedì, 35 o 42 celle. */
-export function monthGrid(giorno: string): { giorno: string; delMese: boolean }[] {
+/** Celle della griglia del mese di `giorno`: settimane intere dal primo giorno della settimana, 35 o 42 celle. */
+export function monthGrid(
+  giorno: string,
+  inizioSettimana: InizioSettimana = 1,
+): { giorno: string; delMese: boolean }[] {
   const mese = giorno.slice(0, 7);
-  const primo = weekOf(`${mese}-01`)[0] ?? giorno;
-  const ultimo = weekOf(addDays(shiftPeriod(`${mese}-01`, 'mese', 1), -1))[6] ?? giorno;
+  const primo = weekOf(`${mese}-01`, inizioSettimana)[0] ?? giorno;
+  const ultimo = weekOf(addDays(shiftPeriod(`${mese}-01`, 'mese', 1), -1), inizioSettimana)[6] ?? giorno;
   const celle: { giorno: string; delMese: boolean }[] = [];
   for (let g = primo; g <= ultimo; g = addDays(g, 1)) celle.push({ giorno: g, delMese: g.startsWith(mese) });
   return celle;

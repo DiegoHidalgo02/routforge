@@ -12,6 +12,7 @@ import './ui/styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
+import { configureDiagnostics } from './app/diagnostics';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
 import { startHeartbeat } from './app/session';
@@ -26,6 +27,8 @@ import { testiNotifica } from './ui/notificationTexts';
 document.documentElement.lang = lingua;
 // Schermo acceso e Non Disturbare della sessione (MECC §10.4): adapter web; i nativi con T-021.
 configureSessionDevice({ schermo: webScreenAwake, nonDisturbare: webDoNotDisturb });
+// L'orologio degli eventi della Diagnostica (T-032)
+configureDiagnostics(webClock);
 
 const radice = document.getElementById('root');
 if (radice)

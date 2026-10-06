@@ -135,6 +135,9 @@ describe('Todo — SCENARI A1 / A2 (orizzonte)', () => {
     const tue = local(2026, 9, 22, 10, 0);
     expect(localDayKey(horizonLastDay(tue, 'giorno'))).toBe('2026-09-22');
     expect(localDayKey(horizonLastDay(tue, 'settimana'))).toBe('2026-09-27');
+    // Settimana dalla domenica (Impostazioni, FUNZ §23): l'orizzonte finisce il sabato
+    expect(localDayKey(horizonLastDay(tue, 'settimana', 0))).toBe('2026-09-26');
+    expect(localDayKey(horizonLastDay(local(2026, 9, 27, 10), 'settimana', 0))).toBe('2026-10-03');
     expect(localDayKey(horizonLastDay(tue, 'mese'))).toBe('2026-09-30');
     expect(localDayKey(horizonLastDay(local(2026, 9, 27, 10, 0), 'settimana'))).toBe('2026-09-27'); // domenica resta domenica
   });

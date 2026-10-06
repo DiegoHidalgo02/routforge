@@ -9,13 +9,20 @@ import type { RoutForgeDb } from '../data/db';
 import { blocksBetween, inTransaction, saveBlock } from '../data/repository';
 import { shiftPeriod } from '../domain/calendar';
 import { GIORNI_INDIETRO, rollPlan } from '../domain/scheduler/horizon';
+import type { InizioSettimana } from '../domain/settings';
 import { localDayKey } from '../domain/time';
 
 /** Sposta a oggi i todo con l'orizzonte non ancora scaduto (§6); `fuso` è quello corrente del dispositivo (D-TIME-2). */
-export async function rollTodos(db: RoutForgeDb, now: number, fuso: string): Promise<string[]> {
+export async function rollTodos(
+  db: RoutForgeDb,
+  now: number,
+  fuso: string,
+  inizioSettimana: InizioSettimana = 1,
+): Promise<string[]> {
   const oggi = localDayKey(now);
   return inTransaction(db, ['blocchi'], async () => {
-    const piano = rollPlan(await blocksBetween(db, shiftPeriod(oggi, 'giorno', -GIORNI_INDIETRO), oggi), now);
+    const blocchi = await blocksBetween(db, shiftPeriod(oggi, 'giorno', -GIORNI_INDIETRO), oggi);
+    const piano = rollPlan(blocchi, now, inizioSettimana);
     for (const b of piano.spostati) await saveBlock(db, b, now, fuso);
     return piano.avvisi;
   });

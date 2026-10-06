@@ -12,7 +12,7 @@ import { Notifications } from './Notifications';
 import { t } from './i18n';
 import { watchSettings } from './preferenze';
 import { Section } from './Section';
-import { About, NotificationSettings, Settings } from './Settings';
+import { About, Diagnostics, NotificationSettings, Settings } from './Settings';
 import { ActiveSession, SessionSetup } from './Session';
 import { Stats } from './Stats';
 import { Shell } from './Shell';
@@ -53,10 +53,7 @@ function Rotte() {
             element={<Section titolo="spazioMateriali" indietro sottotitolo={t('impostazioni')} />}
           />
           <Route path="account" element={<Section titolo="account" indietro sottotitolo={t('impostazioni')} />} />
-          <Route
-            path="diagnostica"
-            element={<Section titolo="diagnostica" indietro sottotitolo={t('impostazioni')} />}
-          />
+          <Route path="diagnostica" element={<Diagnostics />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

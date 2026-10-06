@@ -59,6 +59,7 @@ import { local, localDayKey, localInstant } from '../domain/time';
 import type { Orizzonte, Priorita } from '../domain/types';
 import { lascia } from './avvisi';
 import { durata, fmtData, fuso, SETTIMANA } from './format';
+import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
 
@@ -713,7 +714,9 @@ function Foglio({ modifica }: { modifica?: DettaglioAttivita }) {
               <Etichetta Icona={CalendarDays}>{t('orizzonte')}</Etichetta>
               <span className={`${s.meta} ${s.num}`}>
                 {t(f.orizzonte === 'giorno' ? 'soloIl' : 'rotolaFino', {
-                  data: fmtData.format(horizonLastDay(localInstant(f.giorno, '00:00'), f.orizzonte)),
+                  data: fmtData.format(
+                    horizonLastDay(localInstant(f.giorno, '00:00'), f.orizzonte, impostazioni().inizioSettimana),
+                  ),
                 })}
               </span>
             </div>

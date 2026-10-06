@@ -5,6 +5,7 @@
  * contenuto a ogni riconciliazione. Criteri: SCENARI A4. Decisione: D-NOTIF-2 (arretrato = todo di un giorno passato
  * che rotolerà, o già rotolato, riconoscibile da `ritardoIl`; titoli nell'ordine della fascia senza orario, §6).
  */
+import type { InizioSettimana } from '../settings';
 import { isRollingTodo } from '../lost';
 import { sortDay } from '../ordering';
 import { addLocalDays, localDayKey, localInstant } from '../time';
@@ -38,6 +39,7 @@ export function nextDigestInstant(now: number, orario: string): number {
 export function digestContent(
   blocchi: readonly (Blocco & { giornoLocale?: string })[],
   istante: number,
+  inizioSettimana: InizioSettimana = 1,
 ): DigestNotifica | null {
   const giorno = localDayKey(istante);
   const inclusi: { blocco: Blocco; arretrato: boolean }[] = [];
@@ -45,7 +47,7 @@ export function digestContent(
     if (b.tipo !== 'todo' || b.conOrario || b.stato !== 'programmato') continue;
     const suo = b.giornoLocale ?? localDayKey(b.inizio);
     if (suo === giorno) inclusi.push({ blocco: b, arretrato: b.ritardoIl != null });
-    else if (suo < giorno && isRollingTodo(b, istante)) inclusi.push({ blocco: b, arretrato: true });
+    else if (suo < giorno && isRollingTodo(b, istante, inizioSettimana)) inclusi.push({ blocco: b, arretrato: true });
   }
   if (inclusi.length === 0) return null;
   return {

@@ -9,6 +9,7 @@
  * - Scadenza di recupero = fine − 50% della durata (senza durata: inizio + 30').
  */
 import { addLocalDays, endOfLocalDay, HOUR, localInstant, minutes, sameLocalDay, startOfLocalDay } from './time';
+import { weekOffset, type InizioSettimana } from './settings';
 import type { Blocco } from './types';
 
 export const LOST_GRACE_MS = minutes(30);
@@ -20,19 +21,23 @@ export function effectiveEnd(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'
 
 /**
  * Ultimo giorno incluso dell'orizzonte di un todo (§6):
- * giorno → data scelta; settimana → domenica della settimana; mese → ultimo giorno del mese.
+ * giorno → data scelta; settimana → ultimo giorno della settimana (la domenica, il sabato se la settimana inizia di
+ * domenica: Impostazioni, FUNZ §23); mese → ultimo giorno del mese.
  * Ritorna 00:00 locale di quel giorno.
  */
-export function horizonLastDay(start: number, horizon: NonNullable<Blocco['orizzonte']>): number {
+export function horizonLastDay(
+  start: number,
+  horizon: NonNullable<Blocco['orizzonte']>,
+  inizioSettimana: InizioSettimana = 1,
+): number {
   const day0 = startOfLocalDay(start);
   const d = new Date(day0);
   switch (horizon) {
     case 'giorno':
       return day0;
     case 'settimana': {
-      // getDay(): 0 = domenica … 6 = sabato → giorni mancanti alla domenica
-      const toSunday = (7 - d.getDay()) % 7;
-      return addLocalDays(day0, toSunday);
+      // Giorni mancanti all'ultimo giorno della settimana
+      return addLocalDays(day0, 6 - weekOffset(d.getDay(), inizioSettimana));
     }
     case 'mese':
       return new Date(d.getFullYear(), d.getMonth() + 1, 0).getTime();
@@ -45,15 +50,23 @@ export function horizonLastDay(start: number, horizon: NonNullable<Blocco['orizz
  * passato restano quelli di prima e possono cadere in un altro giorno (D-TIME-2); mezzogiorno è dentro il giorno anche
  * con l'ora legale.
  */
-export function todoWithinHorizon(block: Blocco & { giornoLocale?: string }, now: number): boolean {
+export function todoWithinHorizon(
+  block: Blocco & { giornoLocale?: string },
+  now: number,
+  inizioSettimana: InizioSettimana = 1,
+): boolean {
   const horizon = block.orizzonte ?? 'giorno';
   const giorno = block.giornoLocale ? localInstant(block.giornoLocale, '12:00') : block.inizio;
-  return startOfLocalDay(now) <= horizonLastDay(giorno, horizon);
+  return startOfLocalDay(now) <= horizonLastDay(giorno, horizon, inizioSettimana);
 }
 
 /** Todo con orizzonte settimana o mese ancora aperto (§6): rotola a oggi invece di diventare «non fatto». */
-export const isRollingTodo = (block: Blocco & { giornoLocale?: string }, now: number): boolean =>
-  block.tipo === 'todo' && (block.orizzonte ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now);
+export const isRollingTodo = (
+  block: Blocco & { giornoLocale?: string },
+  now: number,
+  inizioSettimana: InizioSettimana = 1,
+): boolean =>
+  block.tipo === 'todo' && (block.orizzonte ?? 'giorno') !== 'giorno' && todoWithinHorizon(block, now, inizioSettimana);
 
 /**
  * Il blocco va marcato `perso` adesso? (§8 marcatura; §6 per i todo)
@@ -61,10 +74,14 @@ export const isRollingTodo = (block: Blocco & { giornoLocale?: string }, now: nu
  * - todo con orizzonte ≠ giorno e ancora entro l'orizzonte: no (rotola invece, §6);
  * - altrimenti: `programmato` e adesso > fine effettiva + 30'.
  */
-export function shouldMarkLost(block: Blocco & { giornoLocale?: string }, now: number): boolean {
+export function shouldMarkLost(
+  block: Blocco & { giornoLocale?: string },
+  now: number,
+  inizioSettimana: InizioSettimana = 1,
+): boolean {
   if (block.stato !== 'programmato') return false;
   if (block.tipo === 'evento') return false;
-  if (isRollingTodo(block, now)) return false;
+  if (isRollingTodo(block, now, inizioSettimana)) return false;
   return now > effectiveEnd(block) + LOST_GRACE_MS;
 }
 

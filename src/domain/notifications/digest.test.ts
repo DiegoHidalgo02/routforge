@@ -82,3 +82,11 @@ describe('Digest — MECCANISMI §13.5, SCENARI A4', () => {
     expect(digestContent(blocchi, domani)).toEqual({ totale: 2, arretrati: 1, titoli: ['Spesa', 'Domani'] });
   });
 });
+
+describe('Digest con la settimana dalla domenica — FUNZIONALITA §23 (T-032)', () => {
+  it('domenica il todo della settimana di mercoledì è arretrato col lunedì, fuori orizzonte con la domenica', () => {
+    const settimanale = todo({ id: 's', titolo: 'Spesa', orizzonte: 'settimana', inizio: local(2026, 9, 23, 12) });
+    expect(digestContent([settimanale], ieri(8))?.arretrati).toBe(1);
+    expect(digestContent([settimanale], ieri(8), 0)).toBeNull();
+  });
+});
