@@ -5,3 +5,6 @@
 *.pdf binary
 *.png binary
 *.jpg binary
+# Gli script batch di Windows (gradlew.bat di Capacitor, D-MAT-2) vogliono CRLF: con LF le etichette di cmd si rompono
+*.bat text eol=crlf
+*.jar binary
