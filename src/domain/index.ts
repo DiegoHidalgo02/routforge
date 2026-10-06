@@ -26,3 +26,4 @@ export * from './timer';
 export * from './outcome';
 export * from './notifications/desiredSet';
 export * from './notifications/digest';
+export * from './stats';

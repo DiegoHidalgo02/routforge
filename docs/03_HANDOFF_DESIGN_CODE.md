@@ -204,7 +204,7 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     LINK e PDF e il loro tocco, markdown delle risposte. **Bloccante**. T-026.
 37. Statistiche: tasso dei persi, costanza settimanale, % per fascia, soglie della heatmap, formato del delta, periodo
     «tutto», tessere che seguono il periodo; il Focus di Studio non coincide con la Panoramica (cifra del mock).
-    **Bloccante**. T-029.
+    **Bloccante**. T-029: scelte provvisorie in D-STATS-1 e n. 75.
 38. Impostazioni: orario del digest, scelte di Animazioni, Celebrazioni, Aptico, Inizio settimana e Lingua delle
     risposte, vista Informazioni, nome dell'account, errori di accesso e di sincronizzazione. **Bloccante**. T-032, T-033.
 39. Tavola 06 «Bug Hunter · soluzione» monta il secondo tentativo, non lo stato risolto: da correggere nel design;
@@ -343,6 +343,15 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     T-036 che YouTube accetti l'origine dell'app nativa (chiede il referrer). Al passaggio il titolo dell'unità diventa
     primary come chiede lo `style-hover` del mock, che nel mock non si vede perché il titolo ha il colore in linea; le
     righe di «Ieri» restano a opacità .75 senza token (`--opacity-*` non ha quel valore).
+75. Statistiche S20 (T-029, D-STATS-1): quattro schede e periodo (90 all'apertura); vuoto del mock senza alcuna
+    sessione né blocco giudicato, altrimenti «nessun dato nel periodo» sulla riga (TESTI). **Da decidere**: «Costanza per
+    giorno» del mock prende il posto della costanza settimanale (giorni attivi a settimana, con la media) e dei «minuti
+    per giorno della settimana» di §20 (D-DESIGN-1: vince il design, la spec va allineata); la Puntualità del mock è uno
+    scarto con segno («−4 min»), §20 tiene separati ritardo medio e anticipo medio; la frase dei persi dice tasso, giorno e tipo di §20 al posto di «Quasi tutti il venerdì dopo le 18»
+    (la fascia oraria non è in §20); il Focus di Studio ha i minuti grandi come nella Panoramica (il mock li scrive
+    piccoli); le «Ultime unità» mostrano sempre i minuti (il mock scrive «2 sess.» per una non finita, senza regola); la
+    mappa di calore ha oggi nell'ultima cella e le righe non sono giorni della settimana; i ritardi oltre 5', i salti delle
+    fasi per settimana e la media della costanza non sono mostrati. Pratica senza dati fino a T-027 e T-028.
 
 ## 4. Mappa schermata → design → task
 

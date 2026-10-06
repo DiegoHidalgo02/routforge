@@ -73,7 +73,7 @@ export const excludeInterval = (s: SessioneAttiva, da: number): SessioneAttiva =
 });
 
 /** Durata pianificata in ms (§10.2): fine − avvio se ancorata all'orologio, altrimenti la durata; `null` col cronometro. */
-const plannedMs = (s: SessioneAttiva): number | null =>
+export const plannedMs = (s: Pick<SessioneAttiva, 'durata' | 'fine' | 'avvio'>): number | null =>
   s.durata === null ? null : s.fine !== null ? s.fine - s.avvio : s.durata * MINUTE;
 
 export const isPaused = (s: SessioneAttiva): boolean => s.pause.some((p) => p.fine === null);

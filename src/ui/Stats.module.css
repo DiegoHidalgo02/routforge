@@ -1,0 +1,607 @@
+/* Statistiche (S20 Statistiche Panel, Shell Mobile e Desktop). Restano letterali le misure del mock fuori dalla scala dei
+   token: tab alti 34, segmenti 22 con binario di 2 e passo 1, gap 10 · 6 · 3 · 2, grafici alti 48 · 80 · 64 · 44 · 56,
+   binari 6 e 8, colonne 96/40 e 32/72, righe da 28 e 40, mappa al più 120, quadrati 10, vuoto 56 · 48 · 280, interlinee
+   16 · 20 · 22 · 24 · 30, larghezza 980 su desktop e i due aloni delle barre migliori. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--color-text);
+}
+
+/* Il banner della sessione sotto il titolo (S20 Shell Mobile): 12 dal titolo, 20 dal pannello */
+.pagina > header + :not(.pannello) {
+  margin: calc(-1 * var(--space-2)) 0 0;
+}
+
+.pannello {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.schede {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  column-gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.scheda {
+  position: relative;
+  flex: none;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-2);
+  font: 500 var(--text-base) var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scheda:hover,
+.scheda[aria-selected='true'] {
+  color: var(--color-text);
+}
+
+.scheda[aria-selected='true'] {
+  font-weight: 600;
+}
+
+/* Riga di 2 px della scheda scelta, sopra la linea dell'elenco */
+.scheda::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+.scheda[aria-selected='true']::after {
+  background: var(--color-text);
+}
+
+/* Area di tocco 44 anche se la scheda è alta 34 e il segmento 22 */
+.scheda::before,
+.segmento::before {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.periodo {
+  display: flex;
+  align-self: flex-end;
+  gap: 1px;
+  margin-top: calc(-1 * var(--space-1));
+  padding: 2px;
+  border-radius: var(--radius-segment);
+  background: var(--color-surface-2);
+}
+
+.segmento {
+  position: relative;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-chip-cite);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.segmento[aria-pressed='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+}
+
+.contenuto {
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.larga,
+.largaMobile {
+  grid-column: 1 / -1;
+}
+
+.kpi {
+  gap: var(--space-1);
+}
+
+.corsi,
+.fasce {
+  gap: var(--space-3);
+}
+
+.senzaDurata {
+  gap: 6px;
+}
+
+.testaCard {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.etichetta {
+  margin: 0;
+  color: var(--color-text-2);
+  font: 500 var(--text-base) / 16px var(--font-ui);
+}
+
+.valore {
+  font: 600 var(--text-stat) / 30px var(--font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unita {
+  color: var(--color-text-2);
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+.meta {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 16px var(--font-num);
+}
+
+.meta[data-positivo] {
+  color: var(--color-success);
+}
+
+.meta[data-primario] {
+  color: var(--color-primary);
+}
+
+.senzaDati {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.conteggio {
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-num);
+  white-space: nowrap;
+}
+
+.numero {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ellissi {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Barre verticali: focus per settimana (data-2, l'ultima primary), persi (text-3; a zero surface-2), sessioni */
+.barre {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.barre > span {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--color-data-2);
+}
+
+.barreFocus {
+  height: 48px;
+}
+
+/* Alone del mock: la geometria di --glow-data con il primary al 70 % */
+.barre > [data-colore='ultima'] {
+  background: var(--color-primary);
+  box-shadow: 0 0 8px 1px rgb(110 150 242 / 0.7);
+}
+
+.barrePersi {
+  height: 44px;
+}
+
+.barrePersi > span {
+  background: var(--color-surface-2);
+}
+
+.barrePersi > [data-colore='perso'] {
+  background: var(--color-text-3);
+}
+
+.barreSessioni {
+  height: 56px;
+}
+
+.barreSessioni > span {
+  background: var(--color-primary);
+}
+
+/* Righe con barra orizzontale: disciplina per tipo, fasi saltate */
+.riga {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 40px;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+.riga > .senzaDati {
+  grid-column: 2 / -1;
+  text-align: right;
+}
+
+.nomeRiga {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pallino {
+  flex: none;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.binario,
+.binarioSottile,
+.binarioSpesso {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-data-0);
+}
+
+.binario {
+  height: 6px;
+}
+
+.binarioSottile {
+  height: var(--size-accent-bar);
+  background: var(--color-border);
+}
+
+.binarioSpesso {
+  height: 8px;
+}
+
+.binario > span,
+.binarioSottile > span,
+.binarioSpesso > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.binario[data-colore='perso'] > span {
+  background: var(--color-text-3);
+}
+
+.padre {
+  color: var(--color-text-3);
+}
+
+/* Mappa di calore: 12 colonne × 7 righe riempite per colonne, l'ultima cella è oggi */
+.mappa {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 3px;
+  aspect-ratio: 12 / 7;
+  max-height: 120px;
+}
+
+.mappa > span {
+  border-radius: var(--radius-xs);
+}
+
+.legenda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-3);
+  font: 400 var(--text-xs) var(--font-ui);
+}
+
+.legenda > span {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+}
+
+.corso {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rigaCorso {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+/* Focus per fascia: quota sopra la barra, la fascia migliore in primary con l'alone del mock */
+.colonneFasce,
+.etichetteFasce {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.colonneFasce {
+  height: 80px;
+  align-items: end;
+}
+
+.fascia {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.quota,
+.etichetteFasce {
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) var(--font-num);
+  text-align: center;
+}
+
+.barraFascia {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 4px 4px 2px 2px;
+  background: var(--color-data-2);
+}
+
+.fascia[data-migliore] .quota {
+  color: var(--color-primary);
+}
+
+.fascia[data-migliore] .barraFascia {
+  background: var(--color-primary);
+  box-shadow: 0 0 10px 2px rgb(110 150 242 / 0.6);
+}
+
+/* Costanza per giorno: sotto metà delle settimane in border-strong */
+.giorni,
+.etichetteGiorni {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.giorni {
+  height: 64px;
+  align-items: end;
+}
+
+.giorni > span {
+  border-radius: var(--radius-accent);
+  background: var(--color-border-strong);
+}
+
+.giorni > [data-pieno] {
+  background: var(--color-primary);
+}
+
+.etichetteGiorni {
+  color: var(--color-text-3);
+  font: 600 var(--text-2xs) var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-align: center;
+}
+
+.totale {
+  font: 600 var(--text-lg) var(--font-num);
+}
+
+.frase {
+  margin: 0;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
+}
+
+/* Valori in colonna: verifica di metà durata (3) e focus sul pianificato (6) */
+.tre,
+.sei {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sei {
+  padding-top: 2px;
+}
+
+.voce {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.valoreVoce {
+  font: 600 var(--text-xl-2) / 24px var(--font-num);
+}
+
+.unitaVoce {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-ui);
+}
+
+.valoreSei {
+  font: 600 var(--text-xl) / 22px var(--font-num);
+}
+
+.etichettaVoce {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.rigaRoutine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.rigaRoutine + .rigaRoutine {
+  border-top: 1px solid var(--color-border);
+}
+
+.titoloRoutine {
+  flex: 1;
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+/* Esiti: barra impilata senza binario e legenda */
+.impilata {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+}
+
+.legendaEsiti {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) var(--font-ui);
+}
+
+.legendaEsiti > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quadratino {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-xs);
+}
+
+.numeroChiaro {
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.rigaUnita {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  font: 500 var(--text-base) var(--font-ui);
+}
+
+.numeroUnita {
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.metaUnita {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  white-space: nowrap;
+}
+
+.metaUnita[data-fatta] {
+  color: var(--color-success);
+}
+
+.vuoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 48px var(--space-4);
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.iconaVuoto {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+.titoloVuoto {
+  margin: 0;
+  font: 600 var(--text-xl) / 24px var(--font-ui);
+}
+
+.testoVuoto {
+  max-width: 280px;
+  margin: 0;
+  color: var(--color-text-2);
+  font: 400 var(--text-md) / 20px var(--font-ui);
+}
+
+/* Desktop da 1024 px (D-UI-1): tre colonne, la Disciplina e la Puntualità a un terzo, larghezza al più 980 */
+@media (min-width: 1024px) {
+  .pagina {
+    max-width: 980px;
+  }
+
+  .griglia {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .largaMobile {
+    grid-column: auto;
+  }
+}

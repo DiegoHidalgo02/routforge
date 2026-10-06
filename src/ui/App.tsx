@@ -10,6 +10,7 @@ import { Detail } from './Detail';
 import { Notifications } from './Notifications';
 import { Section } from './Section';
 import { ActiveSession, SessionSetup } from './Session';
+import { Stats } from './Stats';
 import { Shell } from './Shell';
 import { Today } from './Today';
 
@@ -24,7 +25,7 @@ function Rotte() {
           <Route path="crea" element={<Create />} />
           <Route path="attivita/:id" element={<Detail />} />
           <Route path="attivita/:id/modifica" element={<Create />} />
-          <Route path="statistiche" element={<Section titolo="statistiche" />} />
+          <Route path="statistiche" element={<Stats />} />
           <Route path="corsi" element={<Courses />} />
           <Route path="corsi/:corso" element={<Course />} />
           <Route path="corsi/:corso/moduli/:n" element={<Module />} />
