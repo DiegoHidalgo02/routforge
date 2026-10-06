@@ -39,7 +39,7 @@ import {
   type DettaglioAttivita,
 } from '../app/completion';
 import { appDb, watch } from '../app/db';
-import { registerOutcome } from '../app/outcome';
+import { registerOutcome, registerOutcomeUndoable } from '../app/outcome';
 import { readActiveSession } from '../app/session';
 import { inheritedDay } from '../domain/checklist';
 import { canRegisterOutcome, plannedMinutes, type DatiEsito } from '../domain/outcome';
@@ -53,6 +53,7 @@ import { useMinuto } from './clock';
 import { durata, fmtData, fuso as fusoCorrente, maiuscola, SETTIMANA, TIPO, titolo as titoloDi } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
+import { lascia } from './avvisi';
 import { SchedaEsito, useStudyAction } from './Session';
 
 const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bassa: 'prioritaRigaBassa' } as const;
@@ -91,6 +92,13 @@ const AZIONE_STUDIO: Record<AzioneStudio, Chiave> = {
   ripasso: 'ripassoLibera',
 };
 /** Esito dello studio nella OutcomeRow di S5 (§11), per stato del blocco. */
+/** Il nome dell'esito nel messaggio di Oggi («Esito registrato · … · Continua», TESTI). */
+const NOME_ESITO: Record<DatiEsito['esito'], Chiave> = {
+  completata: 'esitoCompletata',
+  continua: 'esitoContinua',
+  indietro: 'esitoIndietro',
+  salta: 'esitoSalta',
+};
 const ESITO_STUDIO: Partial<Record<StatoBlocco, Chiave>> = {
   completato: 'esitoCompletata',
   parziale: 'esitoContinua',
@@ -134,6 +142,9 @@ export function Detail() {
   // la sheet si apre al primo caricamento solo se il blocco è ancora a quel passo, e lo stato della rotta si consuma
   // subito, così ricaricare o tornare avanti non la riapre su un blocco già chiuso
   const passoDaOggi = useRef(vistaDaOggi);
+  // Dal cerchio il foglio sta da solo sopra Oggi, senza il pannello (S1 `sheet`, T-056): annullarlo chiude, confermarlo
+  // torna a Oggi con il messaggio e «Annulla». Se una scrittura fallisce si mostra il pannello, con l'errore
+  const [soloFoglio, setSoloFoglio] = useState(() => vistaDaOggi !== undefined);
   const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
   const dialogo = useRef<HTMLDialogElement>(null);
   const [d, setD] = useState<DettaglioAttivita>();
@@ -198,6 +209,7 @@ export function Detail() {
       clearTimeout(timer.current);
       setToast(null);
       setErrore(true);
+      setSoloFoglio(false);
     }
   };
   const mostraToast = (
@@ -334,8 +346,20 @@ export function Detail() {
   // Una spunta rifiutata dal servizio (finestra chiusa nel frattempo, §3) si segnala come le eccezioni
   const esegui = (fn: () => Promise<boolean>) =>
     void act(async () => {
-      if (!(await fn())) setErrore(true);
+      if (!(await fn())) fallita();
     });
+  const fallita = () => {
+    setErrore(true);
+    setSoloFoglio(false);
+    setVista('dettaglio');
+  };
+  // Annullare il foglio: torna al pannello, o a Oggi se il foglio è arrivato dal cerchio
+  const chiudiFoglio = () => (soloFoglio ? chiudi() : setVista('dettaglio'));
+  // Confermare il foglio arrivato dal cerchio: Oggi mostra il messaggio con «Annulla» per 5 s (S1, T-056)
+  const torna = (testo: string, annulla: () => Promise<unknown>) => {
+    lascia({ id, testo, annulla });
+    chiudi();
+  };
   // Spunta (§3): con fasi si passa dalla revisione a inversione (§5) e si scrive solo al Conferma; con voci rimaste si
   // sceglie se creare il todo (D-DETT-2). La regola è la stessa della spunta diretta dal cerchio (`directCheckStep`)
   const fatta = () => {
@@ -349,15 +373,27 @@ export function Detail() {
   };
   // «Non ora» nella sheet delle voci rimaste: segna fatto e basta (tutte le voci spuntate, S5)
   const soloFatto = () => {
-    setVista('dettaglio');
-    esegui(() => completeBlock(appDb, id, ora(), fuso));
+    const prima = d;
+    if (!soloFoglio) {
+      setVista('dettaglio');
+      return esegui(() => completeBlock(appDb, id, ora(), fuso));
+    }
+    void act(async () => {
+      if (!(await completeBlock(appDb, id, ora(), fuso))) return fallita();
+      torna(t('fattoTutteVoci'), () => restoreBlock(appDb, prima, ora(), fuso));
+    });
   };
   const creaResiduo = () => {
     const prima = d;
     void act(async () => {
       const nuovo = await completeWithLeftover(appDb, id, ora(), fuso);
+      if (!nuovo) return fallita();
+      if (soloFoglio)
+        return torna(t('completatoVociNuovoTodo', { n: voci.length - fatte }), async () => {
+          await deleteBlock(appDb, nuovo, ora(), fuso);
+          await restoreBlock(appDb, prima, ora(), fuso);
+        });
       setVista('dettaglio');
-      if (!nuovo) return setErrore(true);
       mostraToast(
         t('todoCreato', { titolo }),
         async () => {
@@ -378,19 +414,32 @@ export function Detail() {
   const conferma = () =>
     void act(async () => {
       const ok = await completeBlock(appDb, id, ora(), fuso, [...saltate]);
-      if (!ok) setErrore(true);
-      if (ok && tipo === 'evento' && saltate.size > 0) {
+      if (!ok) return fallita();
+      if (tipo === 'evento' && saltate.size > 0) {
         setScelte(new Set(saltate));
         setVista('followup');
-      } else setVista('dettaglio');
+      } else if (soloFoglio)
+        torna(
+          tipo === 'routine'
+            ? t('esitoFattaFasi', { fatte: template.length - saltate.size, totale: template.length })
+            : t('toastEventoCompletato', { titolo }),
+          () => reopenBlock(appDb, id, ora(), fuso),
+        );
+      else setVista('dettaglio');
     });
   const creaFollowUp = () =>
     void act(async () => {
       const etichette = template.filter((f) => scelte.has(f.id)).map((f) => f.etichetta);
       const ids = await createFollowUps(appDb, id, etichette, ora(), fuso);
+      const testo =
+        ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length });
+      if (soloFoglio)
+        return torna(testo, async () => {
+          for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
+        });
       setVista('dettaglio');
       mostraToast(
-        ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length }),
+        testo,
         async () => {
           for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
           setVista('followup');
@@ -400,10 +449,23 @@ export function Detail() {
     });
   const registraEsito = ({ esito, confidenza, nota }: DatiEsito) =>
     void act(async () => {
+      if (soloFoglio) {
+        // Dal cerchio (C10): «Esito registrato · … · Continua» con «Annulla», che rimette tutto com'era
+        const annulla = await registerOutcomeUndoable(appDb, id, { esito, confidenza, nota }, ora(), fuso);
+        if (!annulla) return fallita();
+        return torna(t('esitoRegistratoToast', { titolo, esito: t(NOME_ESITO[esito]) }), () => annulla(ora()));
+      }
       const ok = await registerOutcome(appDb, id, { esito, confidenza, nota }, ora(), fuso);
       setVista('dettaglio');
       if (!ok) setErrore(true);
     });
+  // «Non ora» dopo un evento completato con fasi saltate: dal cerchio torna a Oggi con il completamento e «Annulla»
+  const nonOraFollowUp = () =>
+    soloFoglio
+      ? torna(saltate.size === 1 ? t('esitoCompletatoSaltata') : t('esitoCompletatoSaltate', { n: saltate.size }), () =>
+          reopenBlock(appDb, id, ora(), fuso),
+        )
+      : setVista('dettaglio');
   const elimina = () => {
     const prima = d;
     mostraToast(t('eliminata', { titolo }), () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
@@ -514,9 +576,10 @@ export function Detail() {
       data-tipo={tipo}
       aria-label={t('dettaglio')}
       onClose={chiudi}
+      data-solo-foglio={soloFoglio || undefined}
       onCancel={(e) => {
-        // Esc con una sheet aperta chiude solo la sheet, come il velo
-        if (sheetAperta) {
+        // Esc con una sheet aperta chiude solo la sheet, come il velo; dal cerchio chiude tutto e torna a Oggi
+        if (sheetAperta && !soloFoglio) {
           e.preventDefault();
           setVista('dettaglio');
         }
@@ -655,12 +718,12 @@ export function Detail() {
             type="button"
             className={s.sfondoVelo}
             aria-label={t(vista === 'followup' ? 'nonOra' : 'annulla')}
-            onClick={() => setVista('dettaglio')}
+            onClick={vista === 'followup' ? nonOraFollowUp : chiudiFoglio}
           />
           <div
             ref={sheet}
             className={s.sheet}
-            data-subito={subito || undefined}
+            data-subito={(subito && !soloFoglio) || undefined}
             role="dialog"
             aria-labelledby="sheet-titolo"
             tabIndex={-1}
@@ -677,7 +740,7 @@ export function Detail() {
                 contaIniziale
                 confidenza={Boolean(b.unitaId)}
                 annulla="annulla"
-                onAnnulla={() => setVista('dettaglio')}
+                onAnnulla={chiudiFoglio}
                 inCorso={false}
                 onRegistra={registraEsito}
               />
@@ -713,7 +776,7 @@ export function Detail() {
                   {t('riepilogoFasi', { fatte: template.length - saltate.size, saltate: saltate.size })}
                 </span>
                 <div className={s.azioniSheet}>
-                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={() => setVista('dettaglio')}>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={chiudiFoglio}>
                     {t('annulla')}
                   </button>
                   <button type="button" className={`${s.azione} ${s.primaria}`} onClick={conferma}>
@@ -753,7 +816,7 @@ export function Detail() {
                   </span>
                 </div>
                 <div className={s.azioniSheet}>
-                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={() => setVista('dettaglio')}>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={nonOraFollowUp}>
                     {t('nonOra')}
                   </button>
                   <button

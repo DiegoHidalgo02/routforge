@@ -7,7 +7,8 @@ import type { DatiEsito } from '../domain/outcome';
 import type { SceltaSessione } from '../domain/session';
 import { local } from '../domain/time';
 import type { Blocco, Esito, StatoUnita } from '../domain/types';
-import { readStreak, registerOutcome } from './outcome';
+import { readStreak, registerOutcome, registerOutcomeUndoable } from './outcome';
+import { recomputePointer } from './pointer';
 import { runCycle } from './scheduler';
 import { endSession, readActiveSession, startSession } from './session';
 
@@ -151,6 +152,63 @@ describe('Esito su blocco perso — SCENARI C6', () => {
     expect(await registerOutcome(db, 's1', dati, oggi(10, 5), FUSO)).toBe(false);
     expect(await registerOutcome(db, 'nessuno', dati, oggi(10, 5), FUSO)).toBe(false);
     expect(await statoUnita('u11')).toBe('non_iniziata');
+  });
+});
+
+describe('Annulla dell’esito dal cerchio — SCENARI C10 (servizio)', () => {
+  it('«Completata» alle 10:20 su 09:00–10:00: «Annulla» rimette blocco, unità, streak e puntatore com’erano', async () => {
+    await studio('s1');
+    await studio('d1', { inizio: domani(9), fine: domani(10), unitaId: null });
+    await recomputePointer(db, 'c1', oggi(10, 20), FUSO);
+    const prima = { blocco: await get(db, 'blocchi', 's1'), unita: await get(db, 'unita', 'u11') };
+    expect((await get(db, 'blocchi', 'd1'))?.unitaId).toBe('u11');
+    const annulla = await registerOutcomeUndoable(
+      db,
+      's1',
+      { esito: 'completata', confidenza: 4, nota: '' },
+      oggi(10, 20),
+      FUSO,
+    );
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'completato', minuti: 60 });
+    expect([await statoUnita('u11'), (await get(db, 'blocchi', 'd1'))?.unitaId]).toEqual(['completata', 'u12']);
+    expect(await readStreak(db, oggi(10, 20))).toBe(1);
+
+    await annulla?.(oggi(10, 21));
+    const [b, u] = [await get(db, 'blocchi', 's1'), await get(db, 'unita', 'u11')];
+    expect([b?.stato, b?.minuti, b?.chiusoIl]).toEqual([
+      prima.blocco?.stato,
+      prima.blocco?.minuti,
+      prima.blocco?.chiusoIl,
+    ]);
+    expect([u?.stato, u?.minuti, u?.progresso]).toEqual([
+      prima.unita?.stato,
+      prima.unita?.minuti,
+      prima.unita?.progresso,
+    ]);
+    expect(await readStreak(db, oggi(10, 21))).toBe(0);
+    expect((await get(db, 'blocchi', 'd1'))?.unitaId).toBe('u11');
+  });
+
+  it('non registrabile: nessun annulla e nessuna scrittura; dopo un’altra scrittura sul blocco l’annulla non tocca nulla', async () => {
+    await studio('s1');
+    expect(
+      await registerOutcomeUndoable(db, 's1', { esito: 'continua', confidenza: null, nota: '' }, oggi(9, 30), FUSO),
+    ).toBeNull();
+    const annulla = await registerOutcomeUndoable(
+      db,
+      's1',
+      { esito: 'completata', confidenza: 4, nota: '' },
+      oggi(10, 20),
+      FUSO,
+    );
+    const riscritto = await saveBlock(
+      db,
+      { ...(await get(db, 'blocchi', 's1'))!, notaEsito: 'dopo' },
+      oggi(10, 22),
+      FUSO,
+    );
+    await annulla?.(oggi(10, 23));
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'completato', notaEsito: riscritto.notaEsito });
   });
 });
 

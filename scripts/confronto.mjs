@@ -31,7 +31,7 @@ const arg = (nome, predefinito = '') => {
 const tavola = arg('--tavola');
 const stato = arg('--stato').toLowerCase();
 const rotta = arg('--app');
-const clic = arg('--clic');
+const clic = process.argv.flatMap((x, i, a) => (x === '--clic' && a[i + 1] ? [a[i + 1]] : []));
 const out = resolve(RADICE, arg('--out', 'coverage/confronto'));
 const sessione = process.argv.includes('--sessione');
 const [ore, minuti] = arg('--ora', '16:08').split(':').map(Number);
@@ -58,7 +58,14 @@ const GIORNATA = [
   { tipo: 'routine', stato: 'completato', titolo: 'Palestra', da: [14, 30], a: [15, 30] },
   ADESSO[adesso] ?? ADESSO.studio,
   { tipo: 'todo', titolo: 'Leggere 20 pagine', da: [19, 0], a: [19, 30], checklist: voci(2, 5) },
-  { tipo: 'todo', titolo: 'Prepara la valigia', da: [12, 0], conOrario: false, priorita: 'alta' },
+  {
+    tipo: 'todo',
+    titolo: 'Prepara la valigia',
+    da: [12, 0],
+    conOrario: false,
+    priorita: 'alta',
+    checklist: voci(3, 7),
+  },
   { tipo: 'todo', titolo: 'Prenota il treno', da: [12, 0], conOrario: false, priorita: 'alta' },
   { tipo: 'todo', titolo: 'Chiama Marco', da: [12, 0], conOrario: false, priorita: 'normale' },
   // «Prossime attività» del mock: giovedì 24 e venerdì 25
@@ -279,12 +286,12 @@ try {
       await sleep(1500);
     };
     await ferma();
-    // --clic: un tocco su un elemento dell'app (es. «+» per il foglio Crea), poi di nuovo l'attesa
-    if (clic) {
+    // --clic: un tocco su un elemento dell'app (es. «+» per il foglio Crea), poi di nuovo l'attesa; anche più volte, in ordine
+    for (const sel of clic) {
       const trovato = await js(
-        `(() => { const el = document.querySelector(${JSON.stringify(clic)}); el?.click(); return !!el; })()`,
+        `(() => { const el = document.querySelector(${JSON.stringify(sel)}); el?.click(); return !!el; })()`,
       );
-      if (!trovato) throw new Error(`--clic: nessun elemento per ${clic}`);
+      if (!trovato) throw new Error(`--clic: nessun elemento per ${sel}`);
       await ferma();
     }
     const fotoApp = await foto(`${nome}-app.png`);

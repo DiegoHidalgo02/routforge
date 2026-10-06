@@ -3,10 +3,11 @@
  * streak e puntatore in una transazione. Le regole stanno in `domain/outcome.ts`, `domain/pointer.ts` e
  * `domain/streak.ts`; qui si leggono e si scrivono le righe. La chiusura del timer (`endSession`) chiama `writeOutcome`
  * nella sua transazione; «Registra esito» senza sessione è `registerOutcome`. La streak si persiste qui, in
- * `preferenze.streak`, e si legge con `currentStreak` (D-SCHED-1). Criteri: SCENARI C2, C3, C6, C7, C9. D-ESITO-1.
+ * `preferenze.streak`, e si legge con `currentStreak` (D-SCHED-1). Dal cerchio di Oggi l'esito ha l'annulla
+ * (`registerOutcomeUndoable`, T-056). Criteri: SCENARI C2, C3, C6, C7, C9, C10. D-ESITO-1.
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, listBy, save, saveBlock, type DatiBlocco } from '../data/repository';
+import { get, inTransaction, listBy, remove, save, saveBlock, type DatiBlocco } from '../data/repository';
 import { canRegisterOutcome, outcomeBlock, outcomeUnits, plannedMinutes, type DatiEsito } from '../domain/outcome';
 import { creditStreak, currentStreak, EMPTY_STREAK, outcomeCountsForStreak, type StatoStreak } from '../domain/streak';
 import { recomputePointer } from './pointer';
@@ -60,6 +61,38 @@ export async function writeOutcome(
   if (p.dati.contaNelPiano && outcomeCountsForStreak(p.dati.esito))
     await save(db, 'preferenze', { id: CHIAVE_STREAK, valore: creditStreak(await readStreakState(db), now) }, now);
   if (pianificata) await recomputePointer(db, pianificata.corsoId, now, fuso);
+}
+
+/**
+ * «Registra esito» dal cerchio di Oggi con «Annulla» (C10, T-056): registra come `registerOutcome` e restituisce l'annulla,
+ * che rimette blocco, unità del corso e streak com'erano e ricalcola il puntatore, purché il blocco sia ancora quello
+ * scritto dall'esito (un'altra scrittura nel frattempo resta). `null` senza scrivere se l'esito non si può registrare.
+ */
+export function registerOutcomeUndoable(
+  db: RoutForgeDb,
+  bloccoId: string,
+  dati: Omit<DatiEsito, 'contaNelPiano'>,
+  now: number,
+  fuso: string,
+): Promise<((now: number) => Promise<void>) | null> {
+  return inTransaction(db, TABELLE_ESITO, async () => {
+    const b = await get(db, 'blocchi', bloccoId);
+    const pianificata = b?.unitaId ? await get(db, 'unita', b.unitaId) : undefined;
+    const unita = pianificata ? await listBy(db, 'unita', 'corsoId', pianificata.corsoId) : [];
+    const streak = await get(db, 'preferenze', CHIAVE_STREAK);
+    if (!b || !(await registerOutcome(db, bloccoId, dati, now, fuso))) return null;
+    const scritto = await get(db, 'blocchi', bloccoId);
+    return (adesso: number) =>
+      inTransaction(db, TABELLE_ESITO, async () => {
+        const ora = await get(db, 'blocchi', bloccoId);
+        if (!ora || ora.updatedAt !== scritto?.updatedAt) return;
+        await saveBlock(db, b, adesso, fuso);
+        for (const u of unita) await save(db, 'unita', u, adesso);
+        if (streak) await save(db, 'preferenze', streak, adesso);
+        else await remove(db, 'preferenze', CHIAVE_STREAK, adesso);
+        if (pianificata) await recomputePointer(db, pianificata.corsoId, adesso, fuso);
+      });
+  });
 }
 
 /**

@@ -603,3 +603,46 @@
 .annullaToast {
   composes: annullaToast from './Today.module.css';
 }
+
+/* Foglio arrivato dal cerchio di Oggi (S1 `sheet`, T-056): senza il pannello del Dettaglio. Su mobile il foglio sale da
+   solo sopra Oggi, oscurato dal fondale del dialogo; su desktop riempie il pannello di 440 a destra
+   (claude-design/docs/BLOCCHI.md n. 2) */
+.pannello[data-solo-foglio] > :is(.maniglia, .testa, .corpo, .piede) {
+  display: none;
+}
+
+@media (width < 1024px) {
+  .pannello[data-solo-foglio] {
+    border-color: transparent;
+    background: transparent;
+    animation: none;
+  }
+
+  .pannello[data-solo-foglio] .sfondoVelo {
+    background: transparent;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pannello[data-solo-foglio] .velo {
+    justify-content: stretch;
+  }
+
+  .pannello[data-solo-foglio] .sfondoVelo {
+    display: none;
+  }
+
+  .pannello[data-solo-foglio] .sheet {
+    flex: 1;
+    max-height: none;
+    border-top: 0;
+    border-radius: 0;
+    background: var(--color-surface);
+    box-shadow: none;
+    animation: none;
+  }
+
+  .pannello[data-solo-foglio] .manigliaSheet {
+    display: none;
+  }
+}

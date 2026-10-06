@@ -269,6 +269,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     Mese): l'attività compare al suo posto al ridisegno e Oggi mostra «… creato» con «Annulla»; la chiusura trascinando
     in basso vale solo al tocco (col mouse «Annulla» ed Esc). La data dell'evento e l'inizio della ricorrenza si
     scelgono solo fra oggi e oggi + 6.
+61. Fogli dal cerchio (T-056): «Voci rimaste», «Revisione fasi» e «Registra esito» salgono da soli sopra Oggi (su
+    desktop riempiono il pannello di 440, BLOCCHI n. 2); il loro contenuto è ancora quello del vecchio design (titolo,
+    testo, «Non ora» al posto di «Tutte fatte») e si rifà con il Dettaglio (T-054). Se una scrittura fallisce compare il
+    pannello del Dettaglio con l'errore.
 
 ## 4. Mappa schermata → design → task
 
