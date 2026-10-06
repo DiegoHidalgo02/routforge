@@ -541,7 +541,6 @@
   "focusPerFascia": "Focus by time of day",
   "costanzaPerGiorno": "Consistency by day",
   "blocchiPersi": "Missed blocks",
-  "persiPeggiori": "{pct} % of judged blocks, mostly on {giorno} ({tipo}).",
   "verificaMetaDurata": "Halfway check",
   "recuperiDopoAvviso": "recovered after the alert",
   "avvisiRisposti": "alerts answered",
@@ -697,5 +696,12 @@
   "notaCodice": "node_modules, .env, lock files and logs are excluded · max 500 KB per file. Code takes priority over theory in the AI's answers.",
   "fileOZip": "Files or project ZIP",
   "fileCodiceSpazio": "Code files {spazio} · {n}",
-  "nFile": "{n} files"
+  "nFile": "{n} files",
+  "persiQuasiTutti": "Almost all on {giorno} {fascia}.",
+  "persiPiuSpesso": "Most often on {giorno} {fascia}.",
+  "persiMattina": "between 6:00 and 12:00",
+  "persiPomeriggio": "between 12:00 and 18:00",
+  "persiSera": "after 18:00",
+  "persiNotte": "before 6:00",
+  "sessioniBrevi": "{n} sess."
 }

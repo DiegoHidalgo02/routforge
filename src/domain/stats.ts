@@ -106,6 +106,42 @@ function perWeek(
   return barre;
 }
 
+/** Le settimane delle barre (S20, vince il design: D-STATS-1): le ultime 12, fino a quella corrente, qualunque sia il periodo. */
+export const SETTIMANE_BARRE = 12;
+export function barWeeks(now: number, inizio: InizioSettimana = 1): Intervallo {
+  const corrente = primoGiorno(now, inizio);
+  return {
+    da: startOfLocalDay(addLocalDays(corrente, -7 * (SETTIMANE_BARRE - 1))),
+    a: startOfLocalDay(addLocalDays(corrente, 7)),
+  };
+}
+
+/** Sessioni concluse per settimana sulle barre e la loro media (S20 «Sessioni a settimana · media»). */
+export function weeklySessions(
+  sessioni: readonly Pick<SessioneStatistica, 'avvio'>[],
+  barre: Intervallo,
+  inizio: InizioSettimana = 1,
+): { settimane: { settimana: number; numero: number }[]; media: number } {
+  const settimane = perWeek(
+    sessioni.map((s) => [s.avvio, 1]),
+    barre,
+    inizio,
+  ).map((b) => ({ settimana: b.settimana, numero: b.valore }));
+  return { settimane, media: settimane.length ? somma(settimane, (w) => w.numero) / settimane.length : 0 };
+}
+
+/** Blocchi persi per settimana sul giorno previsto (§20, «andamento»), sulle barre. */
+export const weeklyLost = (
+  blocchi: readonly Pick<Blocco, 'stato' | 'inizio'>[],
+  barre: Intervallo,
+  inizio: InizioSettimana = 1,
+): { settimana: number; numero: number }[] =>
+  perWeek(
+    blocchi.filter((b) => b.stato === 'perso').map((b) => [b.inizio, 1]),
+    barre,
+    inizio,
+  ).map((b) => ({ settimana: b.settimana, numero: b.valore }));
+
 /** Le barre del focus per settimana (§20), in minuti, con lo stesso ripiego del totale (`focusMinutes`). */
 export function weeklyFocus(
   sessioni: readonly SessioneStatistica[],
@@ -206,6 +242,8 @@ export function longestStreak(
 
 /** Soglia della puntualità di §20: avviato «in orario» con al più 5' di ritardo. */
 export const SOGLIA_PUNTUALITA = 5;
+/** Quota dei persi nello stesso momento da cui la frase dice «Quasi tutti» invece di «Più spesso» (D-STATS-1). */
+export const SOGLIA_QUASI_TUTTI = 0.75;
 
 /**
  * Studio (§20; SCENARI D5), in minuti: esiti dei blocchi di studio del periodo (Completata, Continua, Indietro, Salta
@@ -220,7 +258,6 @@ export function studyStats(
   blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'fine' | 'minutiRitardo' | 'minutiAnticipo'>[],
   sessioni: readonly SessioneStatistica[],
   r: Intervallo,
-  inizio: InizioSettimana = 1,
 ) {
   const studi = blocchi.filter((b) => b.tipo === 'studio' && dentro(b.inizio, r));
   const nel = sessioni.filter((s) => dentro(s.avvio, r));
@@ -233,22 +270,22 @@ export function studyStats(
     Math.round(somma(xs, f) / MINUTE);
   const conPiano = nel.filter((s) => plannedMs(s) !== null);
   const pomodoro = nel.filter((s) => s.modalita !== 'continua');
-  const unita = new Map<string, { unitaId: string; minuti: number; ultima: number }>();
+  const unita = new Map<string, { unitaId: string; minuti: number; ultima: number; sessioni: number }>();
   for (const s of nel)
     for (const [unitaId, ms] of Object.entries(s.riepilogo.perUnita)) {
-      const u = unita.get(unitaId) ?? { unitaId, minuti: 0, ultima: s.avvio };
-      unita.set(unitaId, { unitaId, minuti: u.minuti + ms / MINUTE, ultima: Math.max(u.ultima, s.avvio) });
+      const u = unita.get(unitaId) ?? { unitaId, minuti: 0, ultima: s.avvio, sessioni: 0 };
+      unita.set(unitaId, {
+        unitaId,
+        minuti: u.minuti + ms / MINUTE,
+        ultima: Math.max(u.ultima, s.avvio),
+        sessioni: u.sessioni + 1,
+      });
     }
   const scarti = studi
     .filter((b) => b.minutiRitardo != null && (b.fine === null || b.inizio + b.minutiRitardo * MINUTE < b.fine))
     .map((b) => ((b.minutiAnticipo ?? 0) > 0 ? -(b.minutiAnticipo ?? 0) : (b.minutiRitardo ?? 0)));
   const anticipi = scarti.filter((x) => x < 0);
   const media = (xs: readonly number[]) => (xs.length ? Math.round(somma(xs, (x) => x) / xs.length) : null);
-  const settimane = perWeek(
-    nel.map((s) => [s.avvio, 1]),
-    r,
-    inizio,
-  ).map((b) => ({ settimana: b.settimana, numero: b.valore }));
   return {
     esiti: {
       completata: conta(['completato'], ['completata']),
@@ -269,8 +306,6 @@ export function studyStats(
     pause: { numero: somma(nel, (s) => s.riepilogo.numeroPause), minuti: min(nel, (s) => s.riepilogo.durataPause) },
     interruzioni: somma(nel, (s) => s.riepilogo.interruzioni),
     pomodoro: { sessioni: pomodoro.length, segmenti: somma(pomodoro, (s) => s.riepilogo.segmentiCompletati) },
-    settimane,
-    mediaSettimana: settimane.length ? nel.length / settimane.length : 0,
     unita: [...unita.values()].map((u) => ({ ...u, minuti: Math.round(u.minuti) })).sort((a, b) => b.ultima - a.ultima),
     puntualita: {
       scarto: media(scarti),
@@ -334,8 +369,9 @@ export interface LogFasi {
  *   completati/parziali (mai entrambe);
  * - costanza per giorno della settimana (0 = domenica, la card del design): quota delle settimane intere prima della
  *   corrente, 4 per 7 e 30 giorni, 12 per 90 e «tutto», in cui quel giorno ha un blocco completato/parziale (D-STATS-1);
- * - persi: numero, tasso = persi / (completati + persi), per settimana sul giorno previsto, il giorno della settimana e
- *   il tipo con più persi;
+ * - persi: numero e il momento (giorno della settimana e fascia insieme) più frequente con la sua quota, per la frase
+ *   del design («Quasi tutti il venerdì dopo le 18»: vince il design sul tasso, il giorno e il tipo di §20, D-STATS-1);
+ *   l'andamento per settimana è `weeklyLost`, sulle 12 settimane delle barre;
  * - fasi: per fase del template (della routine o dell'evento) con l'etichetta e il titolo attuali (B5), saltate su
  *   registrate; le tre più saltate;
  * - routine senza durata: per routine, completate su giudicate (B4), in ordine d'orario.
@@ -373,12 +409,13 @@ export function behaviourStats(
   }
 
   const persi = nel.filter((b) => b.stato === 'perso');
-  const completati = nel.filter(completato).length;
-  const piu = <K extends string | number>(chiave: (b: (typeof persi)[number]) => K): K | null => {
-    const conti = new Map<K, number>();
-    for (const b of persi) conti.set(chiave(b), (conti.get(chiave(b)) ?? 0) + 1);
-    return [...conti].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-  };
+  const momenti = new Map<string, { giorno: number; fascia: number; n: number }>();
+  for (const b of persi) {
+    const m = { giorno: localWeekday(b.inizio), fascia: fascia(b.inizio) };
+    const k = `${m.giorno}|${m.fascia}`;
+    momenti.set(k, { ...m, n: (momenti.get(k)?.n ?? 0) + 1 });
+  }
+  const momento = [...momenti.values()].sort((a, b) => b.n - a.n)[0];
 
   const blocco = new Map(nel.map((b) => [b.id, b]));
   const ricorrenza = new Map(ricorrenze.map((x) => [x.id, x]));
@@ -419,14 +456,7 @@ export function behaviourStats(
     costanza: costanza.map((n) => n / settimane),
     persi: {
       numero: persi.length,
-      tasso: completati + persi.length ? persi.length / (completati + persi.length) : null,
-      settimane: perWeek(
-        persi.map((b) => [b.inizio, 1]),
-        r,
-        inizio,
-      ).map((b) => ({ settimana: b.settimana, numero: b.valore })),
-      giorno: piu((b) => localWeekday(b.inizio)),
-      tipo: piu((b) => b.tipo),
+      momento: momento ? { giorno: momento.giorno, fascia: momento.fascia, quota: momento.n / persi.length } : null,
     },
     fasi: [...fasi.values()]
       .filter((f) => f.saltate > 0)

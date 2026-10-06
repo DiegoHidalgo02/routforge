@@ -9,6 +9,7 @@ import type { RoutForgeDb } from '../data/db';
 import { list } from '../data/repository';
 import {
   activityMap,
+  barWeeks,
   behaviourStats,
   discipline,
   focusMinutes,
@@ -20,6 +21,8 @@ import {
   studyStats,
   triggerResponse,
   weeklyFocus,
+  weeklyLost,
+  weeklySessions,
   type Periodo,
 } from '../domain/stats';
 import { courseCards, type SchedaCorso } from './courses';
@@ -55,12 +58,15 @@ export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number, 
   ]);
   const r = periodRange(periodo, now);
   const p = previousRange(periodo, now);
-  const studio = studyStats(blocchi, sessioni, r, inizioSettimana);
+  const studio = studyStats(blocchi, sessioni, r);
+  // Le barre per settimana sono sempre le ultime 12 (vince il design, D-STATS-1)
+  const barreSettimane = barWeeks(now, inizioSettimana);
+  const perSettimana = weeklySessions(sessioni, barreSettimane, inizioSettimana);
   const perId = new Map(unita.map((u) => [u.id, u]));
   const panoramica: Panoramica = {
     focus: focusMinutes(sessioni, blocchi, r),
     focusPrima: p ? focusMinutes(sessioni, blocchi, p) : null,
-    barre: weeklyFocus(sessioni, blocchi, r, inizioSettimana),
+    barre: weeklyFocus(sessioni, blocchi, barreSettimane, inizioSettimana),
     costanza: { attuale, record: longestStreak(blocchi, attuale) },
     sessioni: sessionCount(sessioni, r),
     disciplina: discipline(blocchi, r),
@@ -72,10 +78,15 @@ export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number, 
     /** Ancora nessuna sessione e nessun blocco giudicato, in tutto (S20 `empty`: «dopo la prima sessione…»). */
     vuoto: statsEmpty(sessioni, blocchi),
     panoramica,
-    comportamenti: behaviourStats(blocchi, sessioni, logFasi, ricorrenze, periodo, now, inizioSettimana),
+    comportamenti: ((c) => ({
+      ...c,
+      persi: { ...c.persi, settimane: weeklyLost(blocchi, barreSettimane, inizioSettimana) },
+    }))(behaviourStats(blocchi, sessioni, logFasi, ricorrenze, periodo, now, inizioSettimana)),
     trigger: triggerResponse(blocchi, r, now),
     studio: {
       ...studio,
+      settimane: perSettimana.settimane,
+      mediaSettimana: perSettimana.media,
       unita: studio.unita
         .flatMap((x) => {
           const u = perId.get(x.unitaId);

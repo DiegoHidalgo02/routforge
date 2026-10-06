@@ -541,7 +541,6 @@
   "focusPerFascia": "Focus per fascia",
   "costanzaPerGiorno": "Costanza per giorno",
   "blocchiPersi": "Blocchi persi",
-  "persiPeggiori": "{pct} % dei blocchi giudicati, soprattutto di {giorno} ({tipo}).",
   "verificaMetaDurata": "Verifica di metà durata",
   "recuperiDopoAvviso": "recuperi dopo l’avviso",
   "avvisiRisposti": "avvisi risposti",
@@ -697,5 +696,12 @@
   "notaCodice": "Esclusi node_modules, .env, lock file, log · max 500 KB per file. Il codice ha priorità sulla teoria nelle risposte dell'AI.",
   "fileOZip": "File o ZIP di progetto",
   "fileCodiceSpazio": "File di codice {spazio} · {n}",
-  "nFile": "{n} file"
+  "nFile": "{n} file",
+  "persiQuasiTutti": "Quasi tutti di {giorno} {fascia}.",
+  "persiPiuSpesso": "Più spesso di {giorno} {fascia}.",
+  "persiMattina": "tra le 6 e le 12",
+  "persiPomeriggio": "tra le 12 e le 18",
+  "persiSera": "dopo le 18",
+  "persiNotte": "prima delle 6",
+  "sessioniBrevi": "{n} sess."
 }

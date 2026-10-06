@@ -11,7 +11,10 @@ import {
   statsEmpty,
   studyStats,
   triggerResponse,
+  barWeeks,
   weeklyFocus,
+  weeklyLost,
+  weeklySessions,
   type SessioneStatistica,
 } from './stats';
 import { local, MINUTE } from './time';
@@ -265,11 +268,9 @@ describe('Studio: piano, ritmo, unità e puntualità — MECCANISMI §20', () =>
     expect(s.pause).toEqual({ numero: 2, minuti: 6 });
     expect(s.interruzioni).toBe(1);
     expect(s.pomodoro).toEqual({ sessioni: 1, segmenti: 3 });
-    expect(s.settimane.at(-1)).toEqual({ settimana: local(2026, 9, 21), numero: 3 });
-    expect(s.mediaSettimana).toBe(3 / 2);
     expect(s.unita).toEqual([
-      { unitaId: 'u1', minuti: 60, ultima: local(2026, 9, 23, 9) },
-      { unitaId: 'u2', minuti: 30, ultima: local(2026, 9, 22, 9) },
+      { unitaId: 'u1', minuti: 60, ultima: local(2026, 9, 23, 9), sessioni: 2 },
+      { unitaId: 'u2', minuti: 30, ultima: local(2026, 9, 22, 9), sessioni: 1 },
     ]);
     expect(s.puntualita).toEqual({ scarto: 2, entro: 2 / 3, ritardi: 1, anticipi: 1, anticipoMedio: 10 });
   });
@@ -334,18 +335,26 @@ describe('Comportamenti — MECCANISMI §20, SCENARI B4, B5', () => {
     expect(c.fasce).toEqual([45, 0, 30, 0]);
     expect(behaviourStats(blocchi, [], log, ricorrenze, 7, ADESSO).fasce).toEqual([120, 0, 0, 0]);
     expect(c.costanza).toEqual([0, 2 / 4, 0, 0, 0, 0, 0]);
-    expect(c.persi).toEqual({
-      numero: 4,
-      tasso: 4 / 8,
-      settimane: [
-        { settimana: local(2026, 9, 14), numero: 0 },
-        { settimana: local(2026, 9, 21), numero: 4 },
-      ],
-      giorno: 1,
-      tipo: 'todo',
-    });
+    // La frase del design: lunedì di mattina ha 2 persi su 4 (09:00 e la routine delle 07:00)
+    expect(c.persi).toEqual({ numero: 4, momento: { giorno: 1, fascia: 0, quota: 2 / 4 } });
     // B5: «skin-care» rinominata «viso» nel template; i log restano com'erano, la fase compare una volta come «viso»
     expect(c.fasi).toEqual([{ etichetta: 'viso', padre: 'Mattina', saltate: 1, totali: 2 }]);
     expect(c.senzaDurata).toEqual([{ titolo: 'Meditazione', ora: '07:00', fatte: 1, totali: 2 }]);
+  });
+});
+
+describe('Barre per settimana — MECCANISMI §20 (S20: vince il design, D-STATS-1)', () => {
+  it('sempre le ultime 12 settimane fino a quella corrente, qualunque sia il periodo; sessioni con la media e persi', () => {
+    const barre = barWeeks(ADESSO);
+    expect([barre.da, barre.a]).toEqual([local(2026, 7, 6), local(2026, 9, 28)]);
+    const s = weeklySessions(
+      [sessione(local(2026, 9, 23, 9), 30), sessione(local(2026, 9, 22, 9), 30), sessione(local(2026, 9, 15, 9), 30)],
+      barre,
+    );
+    expect(s.settimane).toHaveLength(12);
+    expect(s.settimane.at(-1)).toEqual({ settimana: local(2026, 9, 21), numero: 2 });
+    expect(s.media).toBe(3 / 12);
+    const persi = weeklyLost([blocco({ stato: 'perso', inizio: local(2026, 9, 21, 9) }), blocco({})], barre);
+    expect([persi.length, persi.at(-1)?.numero]).toEqual([12, 1]);
   });
 });

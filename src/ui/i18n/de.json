@@ -541,7 +541,6 @@
   "focusPerFascia": "Fokus nach Tageszeit",
   "costanzaPerGiorno": "Beständigkeit nach Tag",
   "blocchiPersi": "Verpasste Blöcke",
-  "persiPeggiori": "{pct} % der bewerteten Blöcke, meist am {giorno} ({tipo}).",
   "verificaMetaDurata": "Halbzeit-Check",
   "recuperiDopoAvviso": "nach dem Hinweis nachgeholt",
   "avvisiRisposti": "Hinweise beantwortet",
@@ -697,5 +696,12 @@
   "notaCodice": "node_modules, .env, Lock-Dateien und Logs ausgeschlossen · max. 500 KB pro Datei. Code hat in den KI-Antworten Vorrang vor der Theorie.",
   "fileOZip": "Dateien oder Projekt-ZIP",
   "fileCodiceSpazio": "Code-Dateien {spazio} · {n}",
-  "nFile": "{n} Dateien"
+  "nFile": "{n} Dateien",
+  "persiQuasiTutti": "Fast alle am {giorno} {fascia}.",
+  "persiPiuSpesso": "Meist am {giorno} {fascia}.",
+  "persiMattina": "zwischen 6 und 12 Uhr",
+  "persiPomeriggio": "zwischen 12 und 18 Uhr",
+  "persiSera": "nach 18 Uhr",
+  "persiNotte": "vor 6 Uhr",
+  "sessioniBrevi": "{n} Sitz."
 }

@@ -7,9 +7,9 @@ import { Check, ChartColumn } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { appDb, watch } from '../app/db';
 import { readStats, type Panoramica, type Statistiche } from '../app/stats';
-import { GIORNI_MAPPA, SOGLIA_PUNTUALITA, type Periodo } from '../domain/stats';
+import { GIORNI_MAPPA, SOGLIA_PUNTUALITA, SOGLIA_QUASI_TUTTI, type Periodo } from '../domain/stats';
 import type { TipoBlocco } from '../domain/types';
-import { durata, SETTIMANA, TIPO } from './format';
+import { durata, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { useSettings } from './preferenze';
 import { Section } from './Section';
@@ -40,6 +40,8 @@ const LIVELLI = ['var(--color-data-0)', 'var(--color-data-1)', 'var(--color-data
 const livello = (x: number) => (x <= 0 ? 0 : Math.min(3, Math.ceil(x * 3)));
 /** Le fasce di §20 nell'ordine del dominio. */
 const FASCE = ['06–12', '12–18', '18–24', '00–06'];
+/** Le stesse fasce nella frase dei persi (mock: «Quasi tutti il venerdì dopo le 18»). */
+const FASCE_FRASE: Chiave[] = ['persiMattina', 'persiPomeriggio', 'persiSera', 'persiNotte'];
 /** Esiti di Studio: colori del mock (success, primary, text-2, text-3). */
 const ESITI: [keyof Statistiche['studio']['esiti'], Chiave, string][] = [
   ['completata', 'esitoCompletata', 'var(--color-success)'],
@@ -115,9 +117,6 @@ function Barre(p: { valori: number[]; className?: string; colore?: (v: number, i
   );
 }
 
-/** Al più un anno di barre settimanali («tutto»): oltre, con 3 px fra l'una e l'altra, non si vedrebbero. */
-const ultimoAnno = <T,>(xs: T[]) => xs.slice(-52);
-
 function KpiCard(p: { etichetta: string; valore: ReactNode; meta?: ReactNode; larga?: boolean }) {
   return (
     <Card etichetta={p.etichetta} className={`${s.kpi} ${p.larga ? s.largaMobile : ''}`}>
@@ -129,7 +128,7 @@ function KpiCard(p: { etichetta: string; valore: ReactNode; meta?: ReactNode; la
 
 function Overview({ p }: { p: Panoramica }) {
   const deltaFocus = p.focusPrima === null ? 0 : p.focus - p.focusPrima;
-  const barre = ultimoAnno(p.barre);
+  const barre = p.barre;
   const disc = p.disciplina.globale;
   const deltaDisc = segno(disc === null || p.disciplinaPrima === null ? 0 : pct(disc) - pct(p.disciplinaPrima));
   return (
@@ -250,7 +249,7 @@ function Behaviour({ c, trigger }: { c: Statistiche['comportamenti']; trigger: S
   const totale = c.fasce.reduce((n, x) => n + x, 0);
   const quote = c.fasce.map((x) => (totale ? Math.round((x / totale) * 100) : 0));
   const migliore = Math.max(...quote);
-  const persi = ultimoAnno(c.persi.settimane);
+  const momento = c.persi.momento;
   return (
     <div className={s.griglia}>
       <Card etichetta={t('focusPerFascia')} className={`${s.larga} ${s.fasce}`}>
@@ -293,16 +292,15 @@ function Behaviour({ c, trigger }: { c: Statistiche['comportamenti']; trigger: S
       </Card>
       <Card etichetta={t('blocchiPersi')} destra={<span className={s.totale}>{c.persi.numero}</span>}>
         <Barre
-          valori={persi.map((b) => b.numero)}
+          valori={c.persi.settimane.map((b) => b.numero)}
           className={s.barrePersi}
           colore={(v) => (v > 0 ? 'perso' : undefined)}
         />
-        {c.persi.tasso !== null && c.persi.giorno !== null && c.persi.tipo !== null && (
+        {momento && (
           <p className={s.frase}>
-            {t('persiPeggiori', {
-              pct: pct(c.persi.tasso),
-              giorno: giornoSettimana(c.persi.giorno, 'long'),
-              tipo: t(TIPO[c.persi.tipo]),
+            {t(momento.quota >= SOGLIA_QUASI_TUTTI ? 'persiQuasiTutti' : 'persiPiuSpesso', {
+              giorno: giornoSettimana(momento.giorno, 'long'),
+              fascia: t(FASCE_FRASE[momento.fascia]!),
             })}
           </p>
         )}
@@ -374,7 +372,9 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
   const pu = st.puntualita;
   const esiti = ESITI.map(([k, nome, colore]) => ({ k, nome, colore, n: st.esiti[k] }));
   const totaleEsiti = esiti.reduce((n, e) => n + e.n, 0);
-  const settimane = ultimoAnno(st.settimane);
+  // Il Focus di Studio del mock: grande solo il primo numero («3» e «h 45m»)
+  const focus = durata(p.focus);
+  const cifre = focus.search(/\D/);
   const voci: [string, string][] = [
     [durata(st.pause.minuti), t('pauseN', { n: st.pause.numero })],
     [String(st.interruzioni), t('interruzioniAnnotate')],
@@ -392,7 +392,9 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
     <div className={s.griglia}>
       <KpiCard
         etichetta={t('focus')}
-        valore={<Valore testo={durata(p.focus)} />}
+        valore={
+          cifre < 0 ? <Valore testo={focus} /> : <Valore testo={focus.slice(0, cifre)} unita={focus.slice(cifre)} />
+        }
         meta={<Delta testo={delta && t('vsPrima', { delta: `${delta} %` })} positivo={deltaFocus > 0} />}
       />
       <KpiCard
@@ -484,7 +486,8 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
               <span className={s.numeroUnita}>{u.numero}</span>
               <span className={s.ellissi}>{u.titolo}</span>
               <span className={s.metaUnita} data-fatta={u.completata || undefined}>
-                {minuti(u.minuti)}
+                {/* Il mock: i minuti di una finita («61 min»), le sessioni di una non finita («2 sess.») */}
+                {u.completata ? `${u.minuti} ${t('unitaMinuti')}` : t('sessioniBrevi', { n: u.sessioni })}
                 {u.completata && <Check size={14} strokeWidth={2.25} />}
               </span>
             </div>
@@ -496,7 +499,7 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
         className={s.larga}
         destra={<span className={s.conteggio}>{t('mediaDurata', { durata: decimale.format(st.mediaSettimana) })}</span>}
       >
-        <Barre valori={settimane.map((w) => w.numero)} className={s.barreSessioni} colore={() => 'primario'} />
+        <Barre valori={st.settimane.map((w) => w.numero)} className={s.barreSessioni} colore={() => 'primario'} />
       </Card>
     </div>
   );
