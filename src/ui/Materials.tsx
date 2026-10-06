@@ -1,7 +1,7 @@
 // Materiali dell'utente (T-024; FUNZ §10, MECC §17; D-MAT-1). «Tuoi» nella pagina dell'unità (S12: elenco, «Nuovo
 // link», «Nuova nota · markdown», «PDF troppo grande», pill per aggiungere); il visualizzatore `/materiali/:id` (S13:
 // le pagine del PDF disegnate dalla porta, o il testo della nota, mostrato senza HTML); lo spazio dei materiali in
-// Impostazioni (S22) con «Elimina» e «Annulla» per 5 s.
+// Impostazioni (S22) con «Elimina» e «Annulla» per 5 s, come il cestino di ogni riga di «Tuoi» (D-MAT-1).
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -12,6 +12,7 @@ import {
   Folder,
   Plus,
   StickyNote,
+  Trash2,
   TriangleAlert,
   User,
 } from 'lucide-react';
@@ -55,6 +56,39 @@ const adesso = () => Date.now();
 type Aperto = 'link' | 'nota' | { file: string; byte: number } | null;
 
 type RigaMateriale = Awaited<ReturnType<typeof readMaterials>>[number];
+
+/** «Materiale eliminato · …» con «Annulla» per 5 s (S22; e le righe di «Tuoi», scelta dell'utente del 06/10/2026). */
+function useAnnulla() {
+  const [avviso, setAvviso] = useState<{ testo: string; annulla: () => void }>();
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const mostra = (titolo: string, ripristina: () => Promise<unknown>) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAvviso(undefined), 5000);
+    setAvviso({
+      testo: t('materialeEliminato', { titolo }),
+      annulla: () => {
+        clearTimeout(timer.current);
+        setAvviso(undefined);
+        void ripristina();
+      },
+    });
+  };
+  const toast = (
+    <div className={s.regioneToast} role="status">
+      {avviso && (
+        <div className={s.toast}>
+          <span className={s.puntoToast} data-tono="info" />
+          <span className={s.testoToast}>{avviso.testo}</span>
+          <button type="button" className={s.annullaToast} onClick={avviso.annulla}>
+            {t('annullaAzione')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+  return { mostra, toast };
+}
 
 function Riga({ m }: { m: RigaMateriale }) {
   if (m.tipo === 'link')
@@ -109,8 +143,14 @@ export function TuoiMateriali({ corsoId, unitaId }: { corsoId: string; unitaId: 
     setAperto(null);
   };
   const scelta = useRef<HTMLInputElement>(null);
+  const { mostra, toast } = useAnnulla();
   useEffect(() => watch(() => readMaterials(appDb, unitaId), setMateriali), [unitaId]);
   const posto = { corsoId, unitaId };
+  const elimina = (m: RigaMateriale) =>
+    void deleteMaterial(appDb, m.id, adesso()).then(
+      (copia) => copia && mostra(m.titolo, () => restoreMaterial(appDb, copia, adesso())),
+      fallito,
+    );
 
   const salvaLink = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -158,7 +198,18 @@ export function TuoiMateriali({ corsoId, unitaId }: { corsoId: string; unitaId: 
       {materiali.length > 0 && (
         <div className={s.elenco}>
           {materiali.map((m) => (
-            <Riga key={m.id} m={m} />
+            <div key={m.id} className={s.rigaTuoi}>
+              <Riga m={m} />
+              <button
+                type="button"
+                className={s.eliminaRiga}
+                aria-label={t('eliminaMateriale', { titolo: m.titolo })}
+                title={t('elimina')}
+                onClick={() => elimina(m)}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -268,6 +319,7 @@ export function TuoiMateriali({ corsoId, unitaId }: { corsoId: string; unitaId: 
           e.currentTarget.value = '';
         }}
       />
+      {toast}
     </section>
   );
 }
@@ -493,37 +545,16 @@ export function MaterialViewer() {
 /** Impostazioni → Spazio dei materiali (S22, MECC §17): per tipo, dal più pesante, con «Elimina» e «Annulla». */
 export function MaterialsSpace() {
   const [v, setV] = useState<Awaited<ReturnType<typeof materialsSpace>>>();
-  const [avviso, setAvviso] = useState<{ testo: string; annulla: () => void }>();
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { mostra, toast } = useAnnulla();
   useEffect(() => watch(() => materialsSpace(appDb), setV), []);
-  useEffect(() => () => clearTimeout(timer.current), []);
   const elimina = async (m: Materiale) => {
     const copia = await deleteMaterial(appDb, m.id, adesso());
-    if (!copia) return;
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setAvviso(undefined), 5000);
-    setAvviso({
-      testo: t('materialeEliminato', { titolo: m.titolo }),
-      annulla: () => {
-        clearTimeout(timer.current);
-        setAvviso(undefined);
-        void restoreMaterial(appDb, copia, adesso());
-      },
-    });
+    if (copia) mostra(m.titolo, () => restoreMaterial(appDb, copia, adesso()));
   };
   const totale = v ? v.pdf + v.altri + v.codice : 0;
   const eliminaCaricamento = async (c: NonNullable<typeof v>['caricamenti'][number], nome: string) => {
     const righe = await deleteUpload(appDb, c.caricamento, adesso());
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setAvviso(undefined), 5000);
-    setAvviso({
-      testo: t('materialeEliminato', { titolo: nome }),
-      annulla: () => {
-        clearTimeout(timer.current);
-        setAvviso(undefined);
-        void restoreUpload(appDb, righe, adesso());
-      },
-    });
+    mostra(nome, () => restoreUpload(appDb, righe, adesso()));
   };
   const pdf = v?.righe.filter((m) => m.tipo === 'pdf') ?? [];
   return (
@@ -593,17 +624,7 @@ export function MaterialsSpace() {
           )}
         </div>
       )}
-      <div className={s.regioneToast} role="status">
-        {avviso && (
-          <div className={s.toast}>
-            <span className={s.puntoToast} data-tono="info" />
-            <span className={s.testoToast}>{avviso.testo}</span>
-            <button type="button" className={s.annullaToast} onClick={avviso.annulla}>
-              {t('annullaAzione')}
-            </button>
-          </div>
-        )}
-      </div>
+      {toast}
     </div>
   );
 }

@@ -703,5 +703,6 @@
   "persiPomeriggio": "tra le 12 e le 18",
   "persiSera": "dopo le 18",
   "persiNotte": "prima delle 6",
-  "sessioniBrevi": "{n} sess."
+  "sessioniBrevi": "{n} sess.",
+  "eliminaMateriale": "Elimina {titolo}"
 }

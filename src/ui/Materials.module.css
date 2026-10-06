@@ -62,6 +62,40 @@
   color: var(--color-text-3);
 }
 
+/* Il cestino accanto a ogni riga di «Tuoi» (scelta dell'utente, D-MAT-1): fuori dalla riga, che resta un link intero */
+.rigaTuoi {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rigaTuoi > .riga {
+  flex: 1;
+  min-width: 0;
+}
+
+.eliminaRiga {
+  flex: none;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+}
+
+.eliminaRiga:hover {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
+}
+
+.eliminaRiga:focus-visible {
+  box-shadow: var(--ring-focus-danger);
+}
+
 .testi {
   flex: 1;
   min-width: 0;

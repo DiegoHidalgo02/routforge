@@ -367,8 +367,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     dall'AI») non sono disegnate. Visualizzatore S13 con le pagine disegnate da pdf.js; la barra della pagina sta in
     alto sotto la testata (in basso la coprirebbe la barra della shell); lo stato `pdf-scan` del mock («Apri le
     pagine») non serve perché i PDF sono sul dispositivo; la nota si legge come testo, senza interpretare il markdown.
-    Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s. **Da decidere**: come si elimina un
-    materiale dalla pagina dell'unità (oggi solo da Impostazioni) e la lettura della nota. Su desktop la colonna da 320
+    Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s; nella pagina dell'unità un cestino accanto a
+    ogni riga di «Tuoi», con lo stesso «Annulla» (scelta dell'utente 06/10/2026, D-MAT-1: il mock non ha l'azione).
+    **Da decidere**: la lettura della nota. Su desktop la colonna da 320
     dell'unità (VideoCard, Tuoi, File di codice, Pratica) arriva con la seconda colonna (n. 71).
 78. File di codice (T-025, D-CODE-1): blocco di S12 come il mock (albero in surface-2, esclusi in text-3, nota,
     pill «File o ZIP di progetto»); senza file restano la nota e la pill. Una cartella tecnica esclusa è una riga sola.

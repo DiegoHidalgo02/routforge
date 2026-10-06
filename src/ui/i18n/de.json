@@ -703,5 +703,6 @@
   "persiPomeriggio": "zwischen 12 und 18 Uhr",
   "persiSera": "nach 18 Uhr",
   "persiNotte": "vor 6 Uhr",
-  "sessioniBrevi": "{n} Sitz."
+  "sessioniBrevi": "{n} Sitz.",
+  "eliminaMateriale": "{titolo} löschen"
 }
