@@ -2,6 +2,7 @@
 // loro task. «+ Crea» aperto dall'app porta nello stato la schermata di partenza (`sfondo`), che resta sotto il
 // dialog; aperto da un collegamento diretto si apre sopra la shell. Lo stesso vale per il Dettaglio (`/attivita/:id`).
 import { LucideProvider } from 'lucide-react';
+import { MotionConfig } from 'motion/react';
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, type Location } from 'react-router';
 import { Course, Module, Unit } from './Course';
@@ -11,7 +12,7 @@ import { Detail } from './Detail';
 import { MaterialsSpace, MaterialViewer } from './Materials';
 import { Notifications } from './Notifications';
 import { t } from './i18n';
-import { watchSettings } from './preferenze';
+import { useSettings, watchSettings } from './preferenze';
 import { Section } from './Section';
 import { About, Diagnostics, NotificationSettings, Settings } from './Settings';
 import { ActiveSession, SessionSetup } from './Session';
@@ -67,15 +68,21 @@ function Rotte() {
   );
 }
 
+/** Impostazioni → Animazioni per Motion: «Auto» segue la riduzione del sistema, «Sempre» la ignora, «Mai» le spegne. */
+const RIDUZIONE = { auto: 'user', sempre: 'never', mai: 'always' } as const;
+
 export function App() {
   // Animazioni, celebrazioni e aptico delle Impostazioni (T-032): un solo ascolto per tutta l'app
   useEffect(() => watchSettings(), []);
+  const { animazioni } = useSettings();
   return (
     // Tratto delle icone 1.75 (DESIGN.md §7)
-    <LucideProvider strokeWidth={1.75}>
-      <BrowserRouter>
-        <Rotte />
-      </BrowserRouter>
-    </LucideProvider>
+    <MotionConfig reducedMotion={RIDUZIONE[animazioni]}>
+      <LucideProvider strokeWidth={1.75}>
+        <BrowserRouter>
+          <Rotte />
+        </BrowserRouter>
+      </LucideProvider>
+    </MotionConfig>
   );
 }

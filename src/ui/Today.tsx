@@ -17,7 +17,6 @@
 import {
   CalendarCheck,
   CalendarDays,
-  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -25,6 +24,7 @@ import {
   RefreshCcw,
   X,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import {
   useEffect,
   useLayoutEffect,
@@ -89,6 +89,36 @@ const SALUTO_MS = 2600;
 const SCATTO_MS = 900;
 /** Durata dei coriandoli di «Piena»: 600 ms più lo scarto dell'ultimo (S1 `burst`). */
 const CORIANDOLI_MS = 720;
+/** Ciclo di completamento del mock (S1 `runCheck`): la spunta resta visibile 560 ms, poi la riga si chiude in 260 ms. */
+const SPUNTA_MS = 560;
+const CHIUSURA_MS = 260;
+
+/**
+ * La spunta disegnata sul cerchio (S1 `rf-check`: 250 ms dopo 40 ms; «spunta animata» delle celebrazioni sobria e
+ * piena, FUNZ §23) con Motion; ferma per un blocco già fatto quando la lista compare. Mobile 13 px, desktop 12.
+ */
+function SpuntaDisegnata({ anima, lato }: { anima: boolean; lato: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={lato}
+      height={lato}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <motion.path
+        d="M20 6 9 17l-5-5"
+        initial={anima ? { pathLength: 0 } : false}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.25, delay: 0.04, ease: 'easeOut' }}
+      />
+    </svg>
+  );
+}
 /** Toast della spunta dalla lista per tipo (TESTI: «Fatto · …», «Fatta · …», «Evento completato · …»). */
 const FATTO: Record<BloccoCalendario['tipo'], Chiave> = {
   todo: 'toastFatto',
@@ -671,25 +701,57 @@ function Giornata({
     const timer = setTimeout(() => setFesta(null), CORIANDOLI_MS);
     return () => clearTimeout(timer);
   }, [festa]);
+  // Ciclo di completamento (S1 `runCheck`, FUNZ §23): dal tocco la riga resta nella lista con la spunta disegnata; dopo
+  // 560 ms su mobile si chiude in 260 ms (`rf-collapse`, fino a coprire lo spazio fra le righe) e solo allora passa
+  // all'archivio, col toast. Con Celebrazioni off o animazioni ridotte tutto subito, come prima
+  const [uscenti, setUscenti] = useState<ReadonlyMap<string, 'spunta' | 'chiude'>>(new Map());
+  const [rientro, setRientro] = useState(0);
+  const segna = (id: string, fase?: 'spunta' | 'chiude') =>
+    setUscenti((m) => {
+      const n = new Map(m);
+      if (fase) n.set(id, fase);
+      else n.delete(id);
+      return n;
+    });
   const spunta = (b: BloccoCalendario, istante: number, cerchio?: Element) => {
     const punto = cerchio && centro(cerchio);
+    const anima = impostazioni().celebrazioni !== 'off' && !animazioniRidotte();
+    if (anima) segna(b.id, 'spunta');
+    if (lista.current) setRientro(-(parseFloat(getComputedStyle(lista.current).rowGap) || 0));
     void checkFromCalendar(appDb, b.id, istante, fuso()).then(
       (passo) => {
-        if (passo !== 'completa') return void apri(b, passo ?? undefined);
+        if (passo !== 'completa') {
+          segna(b.id);
+          return void apri(b, passo ?? undefined);
+        }
         vibra();
         if (punto && impostazioni().celebrazioni === 'piena' && !animazioniRidotte())
           setFesta({ ...punto, k: istante });
-        onCompletato(b);
+        if (!anima || desktop) {
+          onCompletato(b);
+          if (anima) setTimeout(() => segna(b.id), SPUNTA_MS);
+          return;
+        }
+        setTimeout(() => segna(b.id, 'chiude'), SPUNTA_MS);
+        setTimeout(() => {
+          segna(b.id);
+          onCompletato(b);
+        }, SPUNTA_MS + CHIUSURA_MS);
       },
-      () => void apri(b),
+      () => {
+        segna(b.id);
+        void apri(b);
+      },
     );
   };
 
   // Su mobile le completate lasciano la lista per l'archivio in testa, in ordine di completamento (S1, DATI-UI); su desktop
   // restano al loro posto in secondo piano. Con tutte le attività di oggi chiuse arriva la Giornata chiusa
-  const fatte = desktop ? [] : blocchi.filter(isDone).sort((a, b) => (a.chiusoIl ?? 0) - (b.chiusoIl ?? 0));
-  const righe = desktop ? sortDayDesktop(blocchi) : blocchi.filter((b) => !isDone(b));
-  const chiusa = !desktop && blocchi[0]?.giornoLocale === oggi && dayClosed(blocchi);
+  const fatte = desktop
+    ? []
+    : blocchi.filter((b) => isDone(b) && !uscenti.has(b.id)).sort((a, b) => (a.chiusoIl ?? 0) - (b.chiusoIl ?? 0));
+  const righe = desktop ? sortDayDesktop(blocchi) : blocchi.filter((b) => !isDone(b) || uscenti.has(b.id));
+  const chiusa = !desktop && uscenti.size === 0 && blocchi[0]?.giornoLocale === oggi && dayClosed(blocchi);
   const lista = useRef<HTMLOListElement>(null);
   const barra = useRef<HTMLDivElement>(null);
   // Riordino (MECC §15): il todo con la barra aperta (mobile), l'annuncio della regione live, il fuoco da ridare
@@ -844,7 +906,7 @@ function Giornata({
           const { i, n } = riordinabile ? posizione(b) : { i: 0, n: 0 };
           const slot = presa?.id === b.id && !desktop;
           return (
-            <li
+            <motion.li
               key={b.id}
               className={s.riga}
               data-id={b.id}
@@ -855,6 +917,9 @@ function Giornata({
               data-in-corso={isLiveBlock(b, now) || undefined}
               data-mosso={mosso === b.id || undefined}
               data-slot={slot || undefined}
+              data-uscente={uscenti.get(b.id)}
+              animate={uscenti.get(b.id) === 'chiude' ? { height: 0, opacity: 0, marginBottom: rientro } : undefined}
+              transition={{ duration: CHIUSURA_MS / 1000, ease: [0.4, 0, 0.2, 1] }}
             >
               <span className={b.conOrario ? s.ora : s.priorita} data-alta={b.priorita === 'alta' || undefined}>
                 {b.conOrario ? b.orarioInizio : b.priorita && t(PRIORITA[b.priorita])}
@@ -901,7 +966,7 @@ function Giornata({
                         fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now(), e.currentTarget)
                       }
                     >
-                      {fatta && <Check size={12} strokeWidth={2.75} />}
+                      {fatta && <SpuntaDisegnata anima={uscenti.has(b.id)} lato={desktop ? 12 : 13} />}
                     </button>
                   )}
                   {/* Toccando la card si apre il dettaglio (FUNZ §4): il collegamento copre la card, il cerchio sta sopra */}
@@ -959,7 +1024,7 @@ function Giornata({
                   </button>
                 </span>
               )}
-            </li>
+            </motion.li>
           );
         })}
         {sollevato && (

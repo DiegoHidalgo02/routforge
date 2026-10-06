@@ -27,6 +27,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `vite`, `@vitejs/plugin-react` | dev | `npm run dev`, `npm run build` (`vite.config.ts`), T-006; l'import `?raw` del corso di esempio (T-005). Vite resta alla 7 (Vitest 3 accetta fino alla 7: la 8 con Vitest 5, task dedicato), quindi `@vitejs/plugin-react` 5 (la 6 richiede Vite 8) | build, CSS Modules nativi, un solo Vite condiviso con Vitest | D-STACK-1 |
 | `react-router` | runtime | `src/ui/App.tsx` (rotte della shell), T-006 | rotte delle sezioni (FUNZ §1) e collegamenti diretti da widget e notifiche (MECC §21) | D-STACK-1 |
 | `lucide-react` | runtime | `src/ui`, T-006 | icone Lucide, tratto 1.75, come nel vecchio design: gli stessi glifi senza copiare i tracciati a mano | D-STACK-1 |
+| `motion` | runtime | `src/ui` (`MotionConfig` in `App.tsx`, spunta disegnata e coriandoli), T-032 | le animazioni seguono Impostazioni → Animazioni anche contro la riduzione del sistema («Sempre»), che nel CSS di `tokens.css` è imposta con `!important`; celebrazioni di FUNZ §23 (scelta dell'utente, 06/10/2026: «per animazioni usiamo Framer Motion») | D-TOOLS-1, D-IMPOST-1 |
 | `@fontsource/manrope`, `@fontsource/ibm-plex-mono` | runtime | `src/main.tsx`, T-006 | i font del design impacchettati in locale: l'app è offline (CONTESTO §3), niente Google Fonts | D-STACK-1 |
 | `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` | dev | `eslint.config.js`, T-006 | regole degli hook e accessibilità di base nel gate (CONTESTO §3). `jsx-a11y` 6.10.2 dichiara ESLint fino alla 9: `overrides` in `package.json` gli passa ESLint 10 (il suo codice non usa le API rimosse dalla 10, verificato in T-006); l'override si toglie quando il plugin dichiara la 10 | D-LINT-1, D-STACK-1 |
 | `jsdom` | dev | ambiente dei test della UI dove uno scenario lo richiede (`// @vitest-environment jsdom` in testa al file; resto della suite in `node`), T-015: `src/ui/Today.test.tsx` (G3) | ambiente DOM per Vitest. Versione 29: la 30 chiede Node 22.22 o 24.15, `engines` di `package.json` dice ancora Node 20 | D-STACK-1 |
@@ -41,5 +42,4 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |
 | `@google/genai` | prevista | `src/platform` (client AI), T-026 | fornitore Gemini scelto dalle spec | D-AI-1 |
 | `i18next` | prevista | `src/ui`, T-031 | sei lingue da file JSON | D-I18N-1 |
-| `motion` | prevista | `src/ui`, da T-006 solo dove il design lo prevede | animazioni e celebrazioni (FUNZ §23) | D-TOOLS-1 |
 | `@testing-library/react` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | test di interazione | D-TEST-1 |

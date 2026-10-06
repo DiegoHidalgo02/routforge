@@ -75,8 +75,9 @@ a {
     0 0 18px 6px color-mix(in srgb, var(--ink) 40%, transparent);
 }
 
-/* Impostazioni → Animazioni «Mai» (FUNZ §23, T-032): come la riduzione del sistema, ma sempre. «Sempre» non scavalca
-   la riduzione del sistema finché tokens.css la impone con !important (handoff n. 76). */
+/* Impostazioni → Animazioni «Mai» (FUNZ §23, T-032): come la riduzione del sistema, ma sempre. «Sempre» vale per le
+   animazioni in Motion (`MotionConfig` in App.tsx); quelle CSS seguono la riduzione del sistema, che tokens.css impone
+   con !important (D-IMPOST-1). */
 :root[data-animazioni='mai'] *,
 :root[data-animazioni='mai'] *::before,
 :root[data-animazioni='mai'] *::after {

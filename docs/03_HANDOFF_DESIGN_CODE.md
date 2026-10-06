@@ -256,7 +256,7 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 56. Cerchio (T-049): spento anche per lo studio di oggi non ancora finito o in corso (il design disegna solo «un altro
     giorno»), con il titolo «Si segna nel giorno previsto» solo per gli altri giorni; esiti di studio (parziale,
     indietro) senza cerchio finché T-040 non li mette nell'archivio. I fogli aperti dal cerchio stanno ancora nel
-    Dettaglio (T-056); la spunta disegnata e la chiusura della riga arrivano con l'archivio (T-040).
+    Dettaglio (T-056); spunta disegnata e chiusura della riga con Motion (06/10/2026, D-IMPOST-1).
 57. Riordino (T-044, D-RIORD-1): la card sollevata segue il puntatore (i mock sono fermi: sul mobile la disegnano sopra
     lo slot, sul desktop sopra la riga originale, che resta com'è); sul desktop la maniglia è solo il segno della presa,
     fuori dall'ordine del fuoco, e la regione live c'è anche lì (MECC §15, il mock desktop non la ha); «Fine» della
@@ -266,7 +266,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     28 giorni seguenti. Le classi delle frecce del riordino si chiamano `frecceRiordino`: con `frecce` coprivano le
     frecce del periodo della testata (difetto di T-044, corretto).
 59. Archivio e Giornata chiusa (T-040, D-PROG-1 n. 8–9): senza i pallini proiettati e i raccordi del mazzo, senza
-    `rf-land` e `rf-collapse` alla spunta (la card passa al mazzo al ridisegno) e con i segmenti senza scaglionamento;
+    `rf-land` (la card passa al mazzo quando la riga si è chiusa: `rf-collapse` e la spunta disegnata ci sono, con
+    Motion, dal 06/10/2026) e con i segmenti senza scaglionamento;
     le card dell'archivio aperto restano a `--opacity-archive` (il .32 del mock non regge il contrasto); Invio e Spazio
     sul mazzo in attesa del n. 13.
 60. Crea (T-050): il foglio non si rimpicciolisce fino alla card né la fa posare nel calendario (Giorno, Settimana,
@@ -353,11 +354,11 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     un'unità non finita; le barre per settimana sempre 12; ritardi oltre 5', salti delle fasi per settimana e media della
     costanza non mostrati; la mappa di calore ha oggi nell'ultima cella. **Da fare dall'utente**: allineare MECC §20
     (proposta nel riepilogo della sessione del 06/10). Pratica senza dati fino a T-027 e T-028.
-76. Impostazioni S22 (T-032, D-IMPOST-1): radice e Notifiche come il mock, Informazioni con la versione della build.
-    **Da decidere**: la vista di Animazioni, Celebrazioni, Feedback aptico e Inizio settimana (oggi il selettore del
-    sistema); il sottotitolo della radice («Alex», il nome dell'account, con T-033); «Sempre» delle animazioni contro la
-    regola `!important` di tokens.css; il pallino di «Routine di studio» primary nel mock (qui il colore del tipo, come
-    nel resto dell'app); la barra in basso nelle viste interne (il mock la mostra solo sulla radice); l'orario del
+76. Impostazioni S22 (T-032, D-IMPOST-1): radice e Notifiche come il mock, Informazioni con la versione della build;
+    «Sempre» delle animazioni vale per quelle in Motion (scelta dell'utente 06/10/2026). **Da decidere**: la vista di
+    Animazioni, Celebrazioni, Feedback aptico e Inizio settimana (oggi il selettore del sistema); il sottotitolo della
+    radice («Alex», il nome dell'account, con T-033); il pallino di «Routine di studio» primary nel mock (qui il colore
+    del tipo, come nel resto dell'app); la barra in basso nelle viste interne (il mock la mostra solo sulla radice); l'orario del
     digest senza controllo. Diagnostica come il mock con i valori del web (allarmi precisi e Non Disturbare «Non
     disponibile», account «Non attivo»); il registro mostra solo gli errori dei servizi, «Spazio locale» divide dati e
     cache dove il browser lo dice; «Coda notifiche» è un valore solo (armate e prossima, come il mock) dove MECC §23

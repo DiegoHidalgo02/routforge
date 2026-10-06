@@ -1,4 +1,5 @@
-/* Coriandoli della celebrazione «Piena» (S1 `burst`): 5 · 4 px alternati; la curva del mock resta letterale. */
+/* Coriandoli della celebrazione «Piena» (S1 `burst`): 5 · 4 px alternati, centrati sul cerchio con `translate`, che si
+   somma alla trasformazione scritta da Motion. */
 .origine {
   position: fixed;
   z-index: 6;
@@ -14,7 +15,7 @@
   width: 5px;
   height: 5px;
   border-radius: var(--radius-pill);
-  animation: global(rf-burst) var(--dur-burst) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  translate: -50% -50%;
 }
 
 .origine > span:nth-child(even) {

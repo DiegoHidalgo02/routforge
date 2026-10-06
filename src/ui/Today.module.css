@@ -491,6 +491,16 @@
   box-shadow: var(--glow-success);
 }
 
+/* Riga appena spuntata (S1 `checking`): titolo in text-dim finché resta; si chiude senza uscire dai suoi bordi */
+.riga[data-uscente] .titoloCard {
+  color: var(--color-text-dim);
+  transition: color var(--dur-feedback) var(--ease-out);
+}
+
+.riga[data-uscente='chiude'] {
+  overflow: hidden;
+}
+
 .card {
   position: relative;
   min-height: var(--size-card-activity);
