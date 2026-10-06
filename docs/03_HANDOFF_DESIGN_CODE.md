@@ -371,6 +371,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s. **Da decidere**: come si elimina un
     materiale dalla pagina dell'unità (oggi solo da Impostazioni) e la lettura della nota. Su desktop la colonna da 320
     dell'unità (VideoCard, Tuoi, File di codice, Pratica) arriva con la seconda colonna (n. 71).
+78. File di codice (T-025, D-CODE-1): blocco di S12 come il mock (albero in surface-2, esclusi in text-3, nota,
+    pill «File o ZIP di progetto»); senza file restano la nota e la pill. Una cartella tecnica esclusa è una riga sola.
+    CONTROLLI dice «max 500 file», S12 «max 500 KB per file»: vale S12 (§17). I caricamenti si eliminano da Impostazioni
+    → Spazio dei materiali. **Da fare**: la riga «Carica il codice prodotto» della chiusura di S15 (n. 66).
 
 ## 4. Mappa schermata → design → task
 

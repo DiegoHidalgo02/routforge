@@ -29,3 +29,4 @@ export * from './notifications/digest';
 export * from './stats';
 export * from './settings';
 export * from './materials';
+export * from './codeFiles';

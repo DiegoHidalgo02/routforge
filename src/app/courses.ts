@@ -340,14 +340,15 @@ async function courseRecords(db: RoutForgeDb, corsoId: string) {
     b.ricorrenzaId ? routineVia.has(b.ricorrenzaId) : b.tipo === 'studio',
   );
   const staccare = [...tutti.values()].filter((b) => !blocchi.includes(b));
-  const perUnita = <K extends 'mazzi' | 'pratiche' | 'fileCodice'>(nome: K) =>
+  const perUnita = <K extends 'mazzi' | 'pratiche'>(nome: K) =>
     Promise.all(unita.map((u) => listBy(db, nome, 'unitaId', u.id))).then((x) => x.flat());
   const [mazzi, pratiche, materiali, fileCodice] = await Promise.all([
     perUnita('mazzi'),
     perUnita('pratiche'),
     // I materiali per corso: anche quelli rimasti senza unità dopo un reimport (T-024)
     list(db, 'materiali').then((xs) => xs.filter((m) => m.corsoId === corsoId)),
-    perUnita('fileCodice'),
+    // Anche i file di codice per corso, come i materiali (T-025)
+    list(db, 'fileCodice').then((xs) => xs.filter((f) => f.corsoId === corsoId)),
   ]);
   const [carte, binari, log] = await Promise.all([
     Promise.all(mazzi.map((m) => listBy(db, 'carte', 'mazzoId', m.id))).then((x) => x.flat()),
@@ -394,7 +395,8 @@ export async function courseCascade(db: RoutForgeDb, corsoId: string): Promise<C
     carte: r.carte.length,
     pratiche: r.pratiche.length,
     conversazioni: 0,
-    fileCodice: r.fileCodice.length,
+    // Come S12 e S22: i file ammessi, non gli esclusi né la riga di una cartella tecnica
+    fileCodice: r.fileCodice.filter((f) => !f.motivo).length,
   };
 }
 

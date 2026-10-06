@@ -690,5 +690,12 @@
   "materialeEliminato": "Materiale eliminato · {titolo}",
   "delCorso": "del corso",
   "nonSalvato": "Non salvato: errore del dispositivo, vedi Diagnostica.",
-  "sorgenteMateriali": "Materiali"
+  "sorgenteMateriali": "Materiali",
+  "fileDiCodice": "File di codice",
+  "contatoreCodice": "{n} file · {m} esclusi · solo per l'AI",
+  "esclusoBreve": "escluso",
+  "notaCodice": "Esclusi node_modules, .env, lock file, log · max 500 KB per file. Il codice ha priorità sulla teoria nelle risposte dell'AI.",
+  "fileOZip": "File o ZIP di progetto",
+  "fileCodiceSpazio": "File di codice {spazio} · {n}",
+  "nFile": "{n} file"
 }

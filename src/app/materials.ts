@@ -14,6 +14,7 @@ import {
   pdfTooLarge,
   type Materiale,
 } from '../domain/materials';
+import { codeUploads } from './codeFiles';
 import type { LettorePdf } from './ports/pdf';
 
 let lettore: LettorePdf = { leggi: () => Promise.resolve(null), pagina: () => Promise.resolve(null) };
@@ -127,7 +128,11 @@ export function restoreMaterial(
 
 /** Lo spazio dei materiali (§17: numero, file, byte) con il numero dell'unità di ognuno, dal più pesante. */
 export async function materialsSpace(db: RoutForgeDb) {
-  const [materiali, unita] = await Promise.all([list(db, 'materiali'), list(db, 'unita')]);
+  const [materiali, unita, caricamenti] = await Promise.all([
+    list(db, 'materiali'),
+    list(db, 'unita'),
+    codeUploads(db),
+  ]);
   const numero = new Map(unita.map((u) => [u.id, u.numero]));
   const righe = materiali
     .map((m) => ({
@@ -139,25 +144,30 @@ export async function materialsSpace(db: RoutForgeDb) {
     .sort((a, b) => b.peso - a.peso);
   return {
     righe,
+    caricamenti,
     pdf: righe.filter((m) => m.tipo === 'pdf').reduce((n, m) => n + m.peso, 0),
     altri: righe.filter((m) => m.tipo !== 'pdf').reduce((n, m) => n + m.peso, 0),
+    codice: caricamenti.reduce((n, c) => n + c.byte, 0),
   };
 }
 
 /**
- * Reimport (FUNZ §10, D-DESIGN-1 n. 8): i materiali dei corsi con lo stesso titolo passano al corso appena importato,
+ * Reimport (FUNZ §10, D-DESIGN-1 n. 8): i materiali e i file di codice dei corsi con lo stesso titolo passano al corso appena importato,
  * all'unità con lo stesso numero; quelli senza corrispondenza restano sul corso nuovo, senza unità.
  */
 export async function moveMaterialsOnImport(db: RoutForgeDb, corso: { id: string; titolo: string }, now: number) {
-  return inTransaction(db, ['corsi', 'unita', 'materiali'], async () => {
+  return inTransaction(db, ['corsi', 'unita', 'materiali', 'fileCodice'], async () => {
     const vecchi = (await list(db, 'corsi')).filter((c) => c.id !== corso.id && c.titolo === corso.titolo);
     if (vecchi.length === 0) return;
     const ids = new Set(vecchi.map((c) => c.id));
     const materiali = (await list(db, 'materiali')).filter((m) => ids.has(m.corsoId));
-    if (materiali.length === 0) return;
+    // Anche i file di codice restano al reimport (FUNZ §10, T-025)
+    const codice = (await list(db, 'fileCodice')).filter((x) => x.corsoId !== null && ids.has(x.corsoId));
+    if (materiali.length + codice.length === 0) return;
     const unita = await list(db, 'unita');
     const numeroVecchio = new Map(unita.filter((u) => ids.has(u.corsoId)).map((u) => [u.id, u.numero]));
     const unitaNuova = new Map(unita.filter((u) => u.corsoId === corso.id).map((u) => [u.numero, u.id]));
     for (const m of moveMaterials(materiali, numeroVecchio, unitaNuova, corso.id)) await save(db, 'materiali', m, now);
+    for (const x of moveMaterials(codice, numeroVecchio, unitaNuova, corso.id)) await save(db, 'fileCodice', x, now);
   });
 }

@@ -124,7 +124,7 @@ export function Settings() {
     () =>
       watch(
         () => materialsSpace(appDb),
-        (x) => setSpazio(x.pdf + x.altri),
+        (x) => setSpazio(x.pdf + x.altri + x.codice),
       ),
     [],
   );

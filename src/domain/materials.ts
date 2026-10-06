@@ -57,15 +57,15 @@ export const isGroundable = (m: Pick<Materiale, 'tipo' | 'testoEstratto'>): bool
   m.tipo !== 'pdf' || m.testoEstratto != null;
 
 /**
- * Reimport (FUNZ §10): i materiali del corso vecchio passano al corso nuovo, all'unità con lo stesso numero; senza
- * corrispondenza restano sul corso nuovo, senza unità.
+ * Reimport (FUNZ §10): i materiali e i file di codice del corso vecchio passano al corso nuovo, all'unità con lo stesso
+ * numero; senza corrispondenza restano sul corso nuovo, senza unità.
  */
-export function moveMaterials(
-  materiali: readonly Materiale[],
+export function moveMaterials<M extends { corsoId: string | null; unitaId: string | null }>(
+  materiali: readonly M[],
   numeroVecchio: ReadonlyMap<string, string>,
   unitaNuova: ReadonlyMap<string, string>,
   corsoId: string,
-): Materiale[] {
+): M[] {
   return materiali.map((m) => {
     const numero = m.unitaId ? numeroVecchio.get(m.unitaId) : undefined;
     return { ...m, corsoId, unitaId: (numero && unitaNuova.get(numero)) || null };

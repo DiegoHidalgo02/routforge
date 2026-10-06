@@ -690,5 +690,12 @@
   "materialeEliminato": "Support supprimé · {titolo}",
   "delCorso": "du cours",
   "nonSalvato": "Non enregistré : erreur de l’appareil, voir Diagnostic.",
-  "sorgenteMateriali": "Supports"
+  "sorgenteMateriali": "Supports",
+  "fileDiCodice": "Fichiers de code",
+  "contatoreCodice": "{n} fichiers · {m} exclus · pour l’IA seulement",
+  "esclusoBreve": "exclu",
+  "notaCodice": "node_modules, .env, fichiers lock et logs exclus · 500 Ko max par fichier. Le code passe avant la théorie dans les réponses de l’IA.",
+  "fileOZip": "Fichiers ou ZIP du projet",
+  "fileCodiceSpazio": "Fichiers de code {spazio} · {n}",
+  "nFile": "{n} fichiers"
 }

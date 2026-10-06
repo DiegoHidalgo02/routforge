@@ -280,6 +280,56 @@
   inset: calc((100% - var(--size-touch)) / 2) 0;
 }
 
+/* «File di codice» (S12): albero in surface-2, nomi nel font dei numeri, esclusi in text-3, rientro di 16 per livello */
+.albero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 10px var(--space-card-inner);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+}
+
+.rigaAlbero {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: calc(var(--livello, 0) * 16px);
+}
+
+.iconaAlbero {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.nomeFile {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.metaFile {
+  flex: none;
+  color: var(--color-text-3);
+  font: 400 var(--text-xs) var(--font-ui);
+}
+
+.rigaAlbero[data-escluso] .nomeFile,
+.rigaAlbero[data-escluso] .iconaAlbero {
+  color: var(--color-text-3);
+}
+
+.notaCodice {
+  padding-top: 6px;
+  color: var(--color-text-3);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
+}
+
 /* Visualizzatore (S13) */
 .visore {
   display: flex;
@@ -433,8 +483,12 @@
   background: var(--color-primary);
 }
 
-.barra > span:last-child {
+.barra > span:nth-child(2) {
   background: var(--color-data-2);
+}
+
+.barra > span:nth-child(3) {
+  background: var(--color-text-3);
 }
 
 .legenda {
@@ -460,6 +514,10 @@
 
 .quadratino[data-pdf] {
   background: var(--color-primary);
+}
+
+.quadratino[data-codice] {
+  background: var(--color-text-3);
 }
 
 .rigaSpazio {

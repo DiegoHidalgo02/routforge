@@ -2,9 +2,22 @@
 // link», «Nuova nota · markdown», «PDF troppo grande», pill per aggiungere); il visualizzatore `/materiali/:id` (S13:
 // le pagine del PDF disegnate dalla porta, o il testo della nota, mostrato senza HTML); lo spazio dei materiali in
 // Impostazioni (S22) con «Elimina» e «Annulla» per 5 s.
-import { ArrowUpRight, ChevronLeft, ExternalLink, FileText, Plus, StickyNote, TriangleAlert, User } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  ArrowUpRight,
+  ChevronLeft,
+  Code,
+  ExternalLink,
+  File,
+  FileText,
+  Folder,
+  Plus,
+  StickyNote,
+  TriangleAlert,
+  User,
+} from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { deleteUpload, readCode, restoreUpload, uploadCode } from '../app/codeFiles';
 import { appDb, watch } from '../app/db';
 import { logError } from '../app/diagnostics';
 import {
@@ -34,7 +47,7 @@ const unDecimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
 export const dimensione = (byte: number, perEccesso = false) =>
   byte >= 1024 * 1024
     ? `${unDecimale.format((perEccesso ? Math.ceil : Math.round)((byte / (1024 * 1024)) * 10) / 10)} MB`
-    : `${Math.max(1, Math.round(byte / 1024))} KB`;
+    : `${byte > 0 ? Math.max(1, Math.round(byte / 1024)) : 0} KB`;
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 /** L'istante delle scritture, letto al gesto (fuori dal render). */
 const adesso = () => Date.now();
@@ -259,6 +272,99 @@ export function TuoiMateriali({ corsoId, unitaId }: { corsoId: string; unitaId: 
   );
 }
 
+/** Dimensione di un file di codice: «2,1 KB». */
+const dimensioneFine = (byte: number) =>
+  byte >= 1024 * 1024 ? dimensione(byte) : `${unDecimale.format(Math.max(0.1, byte / 1024))} KB`;
+
+/**
+ * «File di codice» (S12, T-025; MECC §17): l'albero dei file caricati con gli esclusi, i contatori e la pill per file o
+ * ZIP. Il contenuto non si mostra: serve solo all'AI.
+ */
+export function CodiceUnita({ corsoId, unitaId }: { corsoId: string; unitaId: string }) {
+  const [v, setV] = useState<Awaited<ReturnType<typeof readCode>>>();
+  const [lavoro, setLavoro] = useState(false);
+  const [errore, setErrore] = useState(false);
+  const scelta = useRef<HTMLInputElement>(null);
+  useEffect(() => watch(() => readCode(appDb, unitaId), setV), [unitaId]);
+  const carica = async (lista: FileList | null) => {
+    if (!lista?.length) return;
+    setLavoro(true);
+    try {
+      // La lettura è pigra: un file escluso o uno ZIP oltre il tetto non si legge nemmeno (D-CODE-1)
+      const scelti = [...lista].map((f) => ({
+        nome: f.name,
+        byte: f.size,
+        leggi: async () => new Uint8Array(await f.arrayBuffer()),
+      }));
+      await uploadCode(appDb, { corsoId, unitaId }, scelti, adesso());
+      setErrore(false);
+    } catch (e) {
+      logError('materiali', e);
+      setErrore(true);
+    } finally {
+      setLavoro(false);
+    }
+  };
+  const pieno = v && v.righe.length > 0;
+  return (
+    <section className={s.tuoi}>
+      <div className={s.testa}>
+        <span className={s.etichetta}>
+          <Code size={14} />
+          {t('fileDiCodice')}
+        </span>
+        {pieno && <span className={s.conteggio}>{t('contatoreCodice', { n: v.file, m: v.esclusi })}</span>}
+      </div>
+      {pieno ? (
+        <div className={s.albero}>
+          {v.righe.map((r) => (
+            <span
+              key={r.percorso}
+              className={s.rigaAlbero}
+              data-escluso={r.motivo ? '' : undefined}
+              style={{ '--livello': r.livello } as CSSProperties}
+            >
+              {r.cartella ? (
+                <Folder size={13} className={s.iconaAlbero} />
+              ) : (
+                <File size={13} className={s.iconaAlbero} />
+              )}
+              <span className={s.nomeFile}>{r.nome}</span>
+              {(r.motivo || !r.cartella) && (
+                <span className={s.metaFile}>{r.motivo ? t('esclusoBreve') : dimensioneFine(r.byte ?? 0)}</span>
+              )}
+            </span>
+          ))}
+          <span className={s.notaCodice}>{t('notaCodice')}</span>
+        </div>
+      ) : (
+        <span className={s.notaCodice}>{t('notaCodice')}</span>
+      )}
+      {errore && (
+        <span className={s.nota} role="alert">
+          {t('nonSalvato')}
+        </span>
+      )}
+      <div className={s.pill}>
+        <button type="button" disabled={lavoro} aria-busy={lavoro} onClick={() => scelta.current?.click()}>
+          <Plus size={14} strokeWidth={2} />
+          {t('fileOZip')}
+        </button>
+      </div>
+      <input
+        ref={scelta}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          void carica(e.currentTarget.files);
+          e.currentTarget.value = '';
+        }}
+      />
+    </section>
+  );
+}
+
 type Vista = Awaited<ReturnType<typeof readMaterial>>;
 
 /** Una pagina del PDF: si disegna quando entra nello schermo. */
@@ -405,7 +511,20 @@ export function MaterialsSpace() {
       },
     });
   };
-  const totale = v ? v.pdf + v.altri : 0;
+  const totale = v ? v.pdf + v.altri + v.codice : 0;
+  const eliminaCaricamento = async (c: NonNullable<typeof v>['caricamenti'][number], nome: string) => {
+    const righe = await deleteUpload(appDb, c.caricamento, adesso());
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAvviso(undefined), 5000);
+    setAvviso({
+      testo: t('materialeEliminato', { titolo: nome }),
+      annulla: () => {
+        clearTimeout(timer.current);
+        setAvviso(undefined);
+        void restoreUpload(appDb, righe, adesso());
+      },
+    });
+  };
   const pdf = v?.righe.filter((m) => m.tipo === 'pdf') ?? [];
   return (
     <div className={s.paginaSpazio}>
@@ -415,6 +534,7 @@ export function MaterialsSpace() {
           <span className={s.barra} aria-hidden>
             <span style={{ width: `${totale ? (v.pdf / totale) * 100 : 0}%` }} />
             <span style={{ width: `${totale ? (v.altri / totale) * 100 : 0}%` }} />
+            <span style={{ width: `${totale ? (v.codice / totale) * 100 : 0}%` }} />
           </span>
           <span className={s.legenda}>
             <span>
@@ -425,8 +545,35 @@ export function MaterialsSpace() {
               <span className={s.quadratino} />
               {t('noteLinkSpazio', { spazio: dimensione(v.altri), n: v.righe.length - pdf.length })}
             </span>
+            <span>
+              <span className={s.quadratino} data-codice />
+              {t('fileCodiceSpazio', {
+                spazio: dimensione(v.codice),
+                n: v.caricamenti.reduce((n, c) => n + c.file, 0),
+              })}
+            </span>
           </span>
-          {v.righe.length === 0 ? (
+          {v.caricamenti.map((c) => {
+            const nome = c.nome || t('nFile', { n: c.file });
+            return (
+              <div key={c.caricamento} className={s.rigaSpazio}>
+                <span className={s.testi}>
+                  <span className={s.nomeSpazio}>{nome}</span>
+                  <span className={s.sotto}>
+                    {[
+                      c.numeroUnita ? t('tuoiUnita', { n: c.numeroUnita }) : t('delCorso'),
+                      t('nFile', { n: c.file }),
+                    ].join(' · ')}
+                  </span>
+                </span>
+                <span className={`${s.num} ${s.peso}`}>{dimensione(c.byte)}</span>
+                <button type="button" className={s.elimina} onClick={() => void eliminaCaricamento(c, nome)}>
+                  {t('elimina')}
+                </button>
+              </div>
+            );
+          })}
+          {v.righe.length + v.caricamenti.length === 0 ? (
             <span className={s.nota}>{t('nessunMateriale')}</span>
           ) : (
             v.righe.map((m) => (

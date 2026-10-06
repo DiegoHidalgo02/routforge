@@ -690,5 +690,12 @@
   "materialeEliminato": "Material gelöscht · {titolo}",
   "delCorso": "Kurs",
   "nonSalvato": "Nicht gespeichert: Gerätefehler, siehe Diagnose.",
-  "sorgenteMateriali": "Materialien"
+  "sorgenteMateriali": "Materialien",
+  "fileDiCodice": "Code-Dateien",
+  "contatoreCodice": "{n} Dateien · {m} ausgeschlossen · nur für die KI",
+  "esclusoBreve": "ausgeschlossen",
+  "notaCodice": "node_modules, .env, Lock-Dateien und Logs ausgeschlossen · max. 500 KB pro Datei. Code hat in den KI-Antworten Vorrang vor der Theorie.",
+  "fileOZip": "Dateien oder Projekt-ZIP",
+  "fileCodiceSpazio": "Code-Dateien {spazio} · {n}",
+  "nFile": "{n} Dateien"
 }

@@ -690,5 +690,12 @@
   "materialeEliminato": "Material eliminado · {titolo}",
   "delCorso": "del curso",
   "nonSalvato": "No guardado: error del dispositivo, mira Diagnóstico.",
-  "sorgenteMateriali": "Materiales"
+  "sorgenteMateriali": "Materiales",
+  "fileDiCodice": "Archivos de código",
+  "contatoreCodice": "{n} archivos · {m} excluidos · solo para la IA",
+  "esclusoBreve": "excluido",
+  "notaCodice": "Se excluyen node_modules, .env, lock files y logs · máx. 500 KB por archivo. El código tiene prioridad sobre la teoría en las respuestas de la IA.",
+  "fileOZip": "Archivos o ZIP del proyecto",
+  "fileCodiceSpazio": "Archivos de código {spazio} · {n}",
+  "nFile": "{n} archivos"
 }

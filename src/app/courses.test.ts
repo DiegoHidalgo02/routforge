@@ -141,7 +141,22 @@ describe('Eliminazione corso — SCENARI H3, MECCANISMI §16', () => {
       now,
     );
     await save(db, 'materialiBinari', { id: m.id, materialeId: m.id, dati: new Uint8Array([1]) }, now);
-    await save(db, 'fileCodice', { unitaId, sessioneId: null }, now);
+    await save(
+      db,
+      'fileCodice',
+      {
+        corsoId,
+        unitaId,
+        sessioneId: null,
+        caricamento: 'z',
+        nomeCaricamento: 'a.zip',
+        percorso: 'a.js',
+        byte: 1,
+        contenuto: 'x',
+        motivo: null,
+      },
+      now,
+    );
   };
 
   it('sparisce tutto ciò che è del corso, con le tombstone; l’altro corso, i todo, le altre routine e le sessioni restano', async () => {

@@ -690,5 +690,12 @@
   "materialeEliminato": "Material deleted · {titolo}",
   "delCorso": "course",
   "nonSalvato": "Not saved: device error, see Diagnostics.",
-  "sorgenteMateriali": "Materials"
+  "sorgenteMateriali": "Materials",
+  "fileDiCodice": "Code files",
+  "contatoreCodice": "{n} files · {m} excluded · for the AI only",
+  "esclusoBreve": "excluded",
+  "notaCodice": "node_modules, .env, lock files and logs are excluded · max 500 KB per file. Code takes priority over theory in the AI's answers.",
+  "fileOZip": "Files or project ZIP",
+  "fileCodiceSpazio": "Code files {spazio} · {n}",
+  "nFile": "{n} files"
 }

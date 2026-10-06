@@ -51,7 +51,7 @@ import { durata as durataCorso } from './Courses';
 import { durata as durataBreve, fuso, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './Session';
-import { TuoiMateriali } from './Materials';
+import { CodiceUnita, TuoiMateriali } from './Materials';
 import s from './Course.module.css';
 
 const fmtGiornoBreve = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
@@ -729,6 +729,7 @@ export function Unit() {
         </div>
         <VideoStudio key={u.id} m={v.materiale} />
         <TuoiMateriali corsoId={corso} unitaId={u.id} />
+        <CodiceUnita corsoId={corso} unitaId={u.id} />
         <Link to={`/sessione/setup?unita=${encodeURIComponent(u.id)}`} className={s.cta}>
           <Play size={14} fill="currentColor" />
           {t(

@@ -17,6 +17,7 @@ import type {
   SezioneImportata,
   UnitaImportata,
 } from '../domain/course/parser';
+import type { FileCodice } from '../domain/codeFiles';
 import type { Materiale } from '../domain/materials';
 import type { DatiEsito } from '../domain/outcome';
 import type { StatoCarta } from '../domain/sm2';
@@ -75,7 +76,8 @@ export interface Tabelle {
   materiali: Riga<Materiale>;
   /** Il binario del PDF, id = id del materiale (D-DATA-2): resta sul dispositivo, mai nella sync (S13, T-033). */
   materialiBinari: Riga<{ materialeId: string; dati: Uint8Array }>;
-  fileCodice: Riga<{ unitaId: string | null; sessioneId: string | null }>;
+  /** File di codice dell'utente (MECC §17, T-025): il contenuto per l'AI, gli esclusi senza contenuto. */
+  fileCodice: Riga<FileCodice>;
   /** Una riga per impostazione, id = chiave (D-DATA-2). */
   preferenze: Riga<{ valore: unknown }>;
   /**
