@@ -64,9 +64,10 @@ const GIORNATA = [
     da: [12, 0],
     conOrario: false,
     priorita: 'alta',
+    ordine: 1,
     checklist: voci(3, 7),
   },
-  { tipo: 'todo', titolo: 'Prenota il treno', da: [12, 0], conOrario: false, priorita: 'alta' },
+  { tipo: 'todo', titolo: 'Prenota il treno', da: [12, 0], conOrario: false, priorita: 'alta', ordine: 2 },
   { tipo: 'todo', titolo: 'Chiama Marco', da: [12, 0], conOrario: false, priorita: 'normale' },
   // «Prossime attività» del mock: giovedì 24 e venerdì 25
   { tipo: 'studio', titolo: 'Lezione di Algoritmi', da: [9, 0, 24], a: [10, 30, 24] },

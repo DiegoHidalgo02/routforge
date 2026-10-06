@@ -39,9 +39,24 @@
 }
 
 /* IconButton da 40 (S5 Panel) con area di tocco 44 (DESIGN.md §4) */
+/* IconButton da 40 della testata (S5 Panel): indietro, cestino */
 .icona {
-  composes: chiudi from './Create.module.css';
   position: relative;
+  width: var(--size-chip-type);
+  height: var(--size-chip-type);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.icona:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
 }
 
 .icona::after {
