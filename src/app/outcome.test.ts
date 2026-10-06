@@ -7,6 +7,7 @@ import type { DatiEsito } from '../domain/outcome';
 import type { SceltaSessione } from '../domain/session';
 import { local } from '../domain/time';
 import type { Blocco, Esito, StatoUnita } from '../domain/types';
+import { readDetail } from './completion';
 import { readStreak, registerOutcome, registerOutcomeUndoable } from './outcome';
 import { recomputePointer } from './pointer';
 import { runCycle } from './scheduler';
@@ -209,6 +210,26 @@ describe('Annulla dell’esito dal cerchio — SCENARI C10 (servizio)', () => {
     );
     await annulla?.(oggi(10, 23));
     expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'completato', notaEsito: riscritto.notaEsito });
+  });
+});
+
+describe('Dettaglio dello studio — FUNZIONALITA §4 (S5 «Prossima unità proposta»)', () => {
+  it('l’unità del puntatore con il suo modulo e le unità fatte del modulo; senza unità nessuna', async () => {
+    await save(
+      db,
+      'unita',
+      { ...unita('u12', 1, 2, '1.2', 'completata'), concettoCore: { titolo: 'C', testo: 'Il cuore' } },
+      2,
+    );
+    await studio('s1', { unitaId: 'u12' });
+    expect((await readDetail(db, 's1'))?.unita).toEqual({
+      numero: '1.2',
+      titolo: 'Unità 1.2',
+      concettoCore: { titolo: 'C', testo: 'Il cuore' },
+      modulo: { numero: 1, titolo: 'M', fatte: 1, totali: 2 },
+    });
+    await studio('s2', { unitaId: null });
+    expect((await readDetail(db, 's2'))?.unita).toBeUndefined();
   });
 });
 

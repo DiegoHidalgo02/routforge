@@ -273,6 +273,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     desktop riempiono il pannello di 440, BLOCCHI n. 2); il loro contenuto è ancora quello del vecchio design (titolo,
     testo, «Non ora» al posto di «Tutte fatte») e si rifà con il Dettaglio (T-054). Se una scrittura fallisce compare il
     pannello del Dettaglio con l'errore.
+62. Dettaglio (T-054): la matita «Modifica» arriva con T-042; «corso non importato qui» con la sync (T-034);
+    l'unità aperta mostra concetto core e modulo, non ancora le sezioni dell'«Unità inline» del mock; dopo «Elimina»
+    il pannello si chiude allo scadere del toast (n. 27, provvisorio). Nel foglio di eliminazione «solo questa
+    occorrenza» invece di «l'occorrenza di oggi» del mock, che sbaglia su un'occorrenza di un altro giorno.
 
 ## 4. Mappa schermata → design → task
 

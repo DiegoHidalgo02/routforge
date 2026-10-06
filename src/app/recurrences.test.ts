@@ -141,6 +141,21 @@ describe('Eliminazione della routine — MECC §7 (servizio)', () => {
     expect(await get(db, 'ricorrenze', r.id)).toBeUndefined();
     expect(await list(db, 'logFasi')).toEqual([]);
   });
+
+  it('l’annulla del toast rimette definizione, occorrenze programmate e log fasi (S5 «Routine eliminata»)', async () => {
+    const r = await creaCorsa();
+    const stamattina = occurrenceId(r.id, '2026-09-23', '07:00');
+    await save(db, 'logFasi', { id: stamattina, ricorrenzaId: r.id, fasi: [] }, NOW);
+    const prima = (await occorrenze(r)).map((b) => [b.id, b.stato]);
+
+    const annulla = await deleteRecurrence(db, r.id, local(2026, 9, 23, 9, 0));
+    expect(await occorrenze(r)).toEqual([]);
+    await annulla(local(2026, 9, 23, 9, 1), FUSO);
+
+    expect(await get(db, 'ricorrenze', r.id)).toMatchObject({ titolo: 'Corsa' });
+    expect((await occorrenze(r)).map((b) => [b.id, b.stato])).toEqual(prima);
+    expect((await list(db, 'logFasi')).map((l) => l.id)).toEqual([stamattina]);
+  });
 });
 
 describe('Modifica ripetuta e occorrenza singola — MECC §7, D-DATA-2, D-TIME-2 (servizio)', () => {

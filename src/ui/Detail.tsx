@@ -8,9 +8,11 @@
 // (Avvia · Anticipa · Recupera · Riprendi · Ripasso) vengono da `studyActions` (T-016); «Registra esito» senza sessione
 // apre lo sheet dell'esito di S16 (T-018, D-ESITO-1).
 import {
+  BookOpen,
   Calendar,
   CalendarClock,
   Check,
+  ChevronDown,
   ChevronLeft,
   Clock,
   Flag,
@@ -40,6 +42,7 @@ import {
 } from '../app/completion';
 import { appDb, watch } from '../app/db';
 import { registerOutcome, registerOutcomeUndoable } from '../app/outcome';
+import { deleteRecurrence } from '../app/recurrences';
 import { readActiveSession } from '../app/session';
 import { inheritedDay } from '../domain/checklist';
 import { canRegisterOutcome, plannedMinutes, type DatiEsito } from '../domain/outcome';
@@ -115,7 +118,7 @@ const suggerimentoStudio = (azione: AzioneStudio | undefined): string | null =>
         ? t('suggerimentoStudioAltroGiorno')
         : null;
 
-type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo' | 'esito';
+type Vista = 'dettaglio' | 'revisione' | 'followup' | 'residuo' | 'esito' | 'elimina';
 interface Toast {
   testo: string;
   annulla: () => void;
@@ -153,6 +156,8 @@ export function Detail() {
   // La sheet aperta dal cerchio entra insieme al pannello, senza la propria animazione
   const [subito, setSubito] = useState(false);
   const [saltate, setSaltate] = useState<ReadonlySet<string>>(() => new Set());
+  // La card dell'unità proposta si apre sul concetto core e sul modulo (S5 `unitOpen`)
+  const [unitaAperta, setUnitaAperta] = useState(false);
   const [scelte, setScelte] = useState<ReadonlySet<string>>(() => new Set());
   const [toast, setToast] = useState<Toast | null>(null);
   const [errore, setErrore] = useState(false);
@@ -299,6 +304,10 @@ export function Detail() {
       ok: b.stato === 'completato',
       parziale: b.stato === 'parziale',
     };
+  } else if (tipo === 'studio' && b.stato === 'in_corso') {
+    // Studio con la sessione aperta (S5 «In corso · sessione attiva»): l'ora è l'avvio della sessione
+    const avvio = attiva?.bloccoId === b.id ? attiva.avvio : b.inizio;
+    esito = { testo: t('esitoInCorso'), ora: conto(avvio), ok: false, parziale: true };
   } else if (b.stato === 'completato' && tipo !== 'studio') {
     const testo =
       tipo === 'todo'
@@ -466,10 +475,22 @@ export function Detail() {
           reopenBlock(appDb, id, ora(), fuso),
         )
       : setVista('dettaglio');
-  const elimina = () => {
+  // Elimina (S5): un'occorrenza di routine chiede «Solo questa» o «Tutta la routine»; todo ed evento si eliminano subito
+  const elimina = () => (b.ricorrenzaId ? setVista('elimina') : eliminaQuesta(t('eliminata', { titolo })));
+  const eliminaQuesta = (testo: string) => {
     const prima = d;
-    mostraToast(t('eliminata', { titolo }), () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
+    setVista('dettaglio');
+    mostraToast(testo, () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
     void act(() => deleteBlock(appDb, id, ora(), fuso));
+  };
+  const eliminaRoutine = (ricorrenzaId: string) => {
+    setVista('dettaglio');
+    void act(async () => {
+      const annulla = await deleteRecurrence(appDb, ricorrenzaId, ora());
+      mostraToast(t(tipo === 'studio' ? 'studioEliminata' : 'routineEliminata'), () => annulla(ora(), fuso), {
+        poi: chiudi,
+      });
+    });
   };
 
   // «Riapri» del todo e della routine completati (per la routine è la scelta dell'utente, divergenza 23: vince il design)
@@ -630,6 +651,73 @@ export function Detail() {
             </span>
           )}
         </div>
+
+        {tipo === 'studio' && (
+          <section className={s.gruppo}>
+            {d.unita ? (
+              <>
+                <span className={s.etichetta}>
+                  <BookOpen size={14} />
+                  {t('prossimaUnitaProposta')}
+                </span>
+                <button
+                  type="button"
+                  className={s.unitaProposta}
+                  aria-expanded={unitaAperta}
+                  onClick={() => setUnitaAperta((x) => !x)}
+                >
+                  <span className={s.testaUnita}>
+                    <span className={s.occhielloUnita}>
+                      {t('moduloUnita', {
+                        modulo: String(d.unita.modulo.numero).padStart(2, '0'),
+                        unita: d.unita.numero,
+                      })}
+                    </span>
+                    <ChevronDown size={16} className={s.chevronUnita} />
+                  </span>
+                  <span className={s.titoloUnita}>{d.unita.titolo}</span>
+                  <span className={s.avanzamentoUnita}>
+                    <span className={s.barraUnita}>
+                      {/* larghezza = dato, non misura del design */}
+                      <span
+                        style={{
+                          width: `${Math.round((d.unita.modulo.fatte / Math.max(1, d.unita.modulo.totali)) * 100)}%`,
+                        }}
+                      />
+                    </span>
+                    <span className={s.num}>
+                      {t('unitaDelModulo', { fatte: d.unita.modulo.fatte, totali: d.unita.modulo.totali })}
+                    </span>
+                  </span>
+                </button>
+                {unitaAperta && (
+                  <div className={s.unitaAperta}>
+                    {d.unita.concettoCore && (
+                      <>
+                        <span className={s.etichetta}>{t('concettoCore')}</span>
+                        <p className={s.concetto}>{d.unita.concettoCore.testo}</p>
+                      </>
+                    )}
+                    <span className={s.etichetta}>{t('modulo')}</span>
+                    <p className={s.testoNota}>{d.unita.modulo.titolo}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <span className={s.etichetta}>
+                  <BookOpen size={14} />
+                  {t('cosaStudiareEtichetta')}
+                </span>
+                <div className={s.senzaUnita}>
+                  <span className={s.occhielloSenza}>{t('nessunaUnitaAssegnata')}</span>
+                  <span className={s.titoloUnita}>{t('sceltaNelSetup')}</span>
+                  <span className={s.testoSenza}>{t('sceltaNelSetupTesto')}</span>
+                </div>
+              </>
+            )}
+          </section>
+        )}
 
         {tipo === 'todo' && voci.length > 0 && (
           <section className={s.gruppo}>
@@ -800,6 +888,40 @@ export function Detail() {
                   </button>
                   <button type="button" className={`${s.azione} ${s.primaria}`} onClick={conferma}>
                     {t('conferma')}
+                  </button>
+                </div>
+              </>
+            ) : vista === 'elimina' ? (
+              <>
+                <div className={s.testiSheet}>
+                  <span className={`${s.occhiello} ${s.occhielloPericolo}`}>{t('elimina')}</span>
+                  <span id="sheet-titolo" className={s.titoloSheet}>
+                    {t('eliminareTitolo', { titolo })}
+                  </span>
+                  <span className={s.sottotitoloSheet}>
+                    {t(tipo === 'studio' ? 'eliminaStudioTesto' : 'eliminaRoutineTesto')}
+                  </span>
+                </div>
+                <div className={s.scelteElimina}>
+                  <button
+                    type="button"
+                    className={`${s.azione} ${s.secondaria}`}
+                    onClick={() => eliminaQuesta(t('occorrenzaEliminata'))}
+                  >
+                    {t('soloQuesta')} · <span className={s.num}>{fmtData.format(b.inizio)}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${s.azione} ${s.pericolo}`}
+                    onClick={() => b.ricorrenzaId && eliminaRoutine(b.ricorrenzaId)}
+                  >
+                    {t(tipo === 'studio' ? 'tuttaRoutineStudio' : 'tuttaRoutine')}
+                  </button>
+                  <span className={s.notaElimina}>
+                    {t(tipo === 'studio' ? 'notaEliminaStudio' : 'notaEliminaRoutine')}
+                  </span>
+                  <button type="button" className={`${s.azione} ${s.fantasma}`} onClick={chiudiFoglio}>
+                    {t('annulla')}
                   </button>
                 </div>
               </>

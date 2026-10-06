@@ -666,3 +666,132 @@
     display: none;
   }
 }
+
+/* Studio: l'unità proposta dal puntatore (S5 «Prossima unità proposta»), card r12 surface-2 che si apre sul concetto
+   core e sul modulo; senza unità la card che rimanda al setup */
+.unitaProposta,
+.senzaUnita {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-card-inner);
+  border: 1px solid var(--color-surface-2);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.unitaProposta {
+  width: 100%;
+  cursor: pointer;
+  transition: border-color var(--dur-feedback) var(--ease-out);
+}
+
+.unitaProposta:hover,
+.unitaProposta[aria-expanded='true'] {
+  border-color: var(--color-border-strong);
+}
+
+.testaUnita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.occhielloUnita,
+.occhielloSenza {
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 12px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.occhielloSenza {
+  color: var(--color-text-2);
+}
+
+.chevronUnita {
+  flex: none;
+  color: var(--color-text-3);
+  transition: transform 200ms var(--ease-out);
+}
+
+.unitaProposta[aria-expanded='true'] .chevronUnita {
+  transform: rotate(180deg);
+}
+
+.titoloUnita {
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+}
+
+.avanzamentoUnita {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+}
+
+.barraUnita {
+  flex: 1;
+  height: var(--size-accent-bar);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.barraUnita > span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.testoSenza {
+  color: var(--color-text-2);
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.unitaAperta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.concetto {
+  margin: 0;
+  padding: var(--space-3) var(--space-card-inner);
+  border-left: var(--size-accent-bar) solid var(--color-primary);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: var(--color-surface-2);
+  font: 500 var(--text-md) / var(--leading-body) var(--font-ui);
+}
+
+/* Eliminazione di una routine (S5 `view=delete`): «Solo questa · data» secondario, «Tutta la routine» danger, la nota
+   e «Annulla» a tutta larghezza */
+.occhielloPericolo {
+  color: var(--color-danger-ink);
+}
+
+.scelteElimina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pericolo {
+  border-color: transparent;
+  background: var(--color-danger);
+  color: var(--color-text);
+}
+
+.pericolo:active {
+  transform: scale(var(--scale-press));
+}
+
+.notaElimina {
+  color: var(--color-text-2);
+  font: var(--text-sm) / 16px var(--font-ui);
+}

@@ -10,7 +10,7 @@
  * già iniziata. Decisione: D-DETT-1.
  */
 import type { RoutForgeDb, Tabelle } from '../data/db';
-import { get, inTransaction, remove, save, saveBlock } from '../data/repository';
+import { get, inTransaction, listBy, remove, save, saveBlock } from '../data/repository';
 import { afterToggle, leftoverDraft, toggleItem } from '../domain/checklist';
 import {
   canCheckFromCalendar,
@@ -36,6 +36,13 @@ export interface DettaglioAttivita {
   log: FaseLog[] | null;
   ricorrenza?: Ricorrenza;
   corso?: { titolo: string };
+  /** Lo studio con un'unità: quella proposta dal puntatore, il suo modulo e quante unità del modulo sono fatte (S5). */
+  unita?: {
+    numero: string;
+    titolo: string;
+    concettoCore: { titolo: string; testo: string } | null;
+    modulo: { numero: number; titolo: string; fatte: number; totali: number };
+  };
 }
 
 export async function readDetail(db: RoutForgeDb, id: string): Promise<DettaglioAttivita | undefined> {
@@ -44,12 +51,30 @@ export async function readDetail(db: RoutForgeDb, id: string): Promise<Dettaglio
   const ricorrenza = blocco.ricorrenzaId ? await get(db, 'ricorrenze', blocco.ricorrenzaId) : undefined;
   const corso = blocco.corsoId ? await get(db, 'corsi', blocco.corsoId) : undefined;
   const log = await get(db, 'logFasi', id);
+  const unita = blocco.tipo === 'studio' && blocco.unitaId ? await get(db, 'unita', blocco.unitaId) : undefined;
+  const modulo = unita ? await get(db, 'moduli', unita.moduloId) : undefined;
+  // Unità fatte del modulo = completate (MECC §11)
+  const delModulo = unita ? await listBy(db, 'unita', 'moduloId', unita.moduloId) : [];
   return {
     blocco,
     fasi: ricorrenza?.fasi ?? blocco.fasi ?? [],
     log: log?.fasi ?? null,
     ...(ricorrenza && { ricorrenza }),
     ...(corso && { corso: { titolo: corso.titolo } }),
+    ...(unita &&
+      modulo && {
+        unita: {
+          numero: unita.numero,
+          titolo: unita.titolo,
+          concettoCore: unita.concettoCore,
+          modulo: {
+            numero: modulo.numero,
+            titolo: modulo.titolo,
+            fatte: delModulo.filter((u) => u.stato === 'completata').length,
+            totali: delModulo.length,
+          },
+        },
+      }),
   };
 }
 

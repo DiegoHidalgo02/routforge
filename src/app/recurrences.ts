@@ -8,7 +8,7 @@
  * blocco non basta, la generazione successiva lo ricreerebbe con lo stesso id (D-DATA-2, D-OCC-1).
  */
 import type { RoutForgeDb } from '../data/db';
-import { inTransaction, listBy, listKeyRange, remove, save, saveBlock } from '../data/repository';
+import { get, inTransaction, listBy, listKeyRange, remove, save, saveBlock } from '../data/repository';
 import { editPlan, horizonSlotRange, missingOccurrences, removableOccurrences } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 
@@ -36,12 +36,29 @@ export async function editRecurrence(db: RoutForgeDb, r: Ricorrenza, now: number
   });
 }
 
-/** Elimina la routine (§7): occorrenze programmate (anche passate), definizione e log fasi; completate e perse restano. */
-export async function deleteRecurrence(db: RoutForgeDb, ricorrenzaId: string, now: number): Promise<void> {
-  await inTransaction(db, ['ricorrenze', 'blocchi', 'logFasi'], async () => {
-    for (const id of removableOccurrences(await occurrencesOf(db, ricorrenzaId))) await remove(db, 'blocchi', id, now);
-    for (const log of await listBy(db, 'logFasi', 'ricorrenzaId', ricorrenzaId))
-      await remove(db, 'logFasi', log.id, now);
+/**
+ * Elimina la routine (§7): occorrenze programmate (anche passate), definizione e log fasi; completate e perse restano.
+ * Restituisce l'annulla del toast (S5 «Routine eliminata»), che rimette definizione, occorrenze e log com'erano.
+ */
+export async function deleteRecurrence(
+  db: RoutForgeDb,
+  ricorrenzaId: string,
+  now: number,
+): Promise<(now: number, fuso: string) => Promise<void>> {
+  return inTransaction(db, ['ricorrenze', 'blocchi', 'logFasi'], async () => {
+    const r = await get(db, 'ricorrenze', ricorrenzaId);
+    const occorrenze = await occurrencesOf(db, ricorrenzaId);
+    const via = new Set(removableOccurrences(occorrenze));
+    const tolte = occorrenze.filter((b) => via.has(b.id));
+    const log = await listBy(db, 'logFasi', 'ricorrenzaId', ricorrenzaId);
+    for (const b of tolte) await remove(db, 'blocchi', b.id, now);
+    for (const l of log) await remove(db, 'logFasi', l.id, now);
     await remove(db, 'ricorrenze', ricorrenzaId, now);
+    return (adesso: number, fuso: string) =>
+      inTransaction(db, ['ricorrenze', 'blocchi', 'logFasi'], async () => {
+        if (r) await save(db, 'ricorrenze', r, adesso);
+        for (const b of tolte) await saveBlock(db, b, adesso, fuso);
+        for (const l of log) await save(db, 'logFasi', l, adesso);
+      });
   });
 }
