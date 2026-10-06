@@ -283,6 +283,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     (n. 28). La data fuori da oggi … oggi + 6 resta la sua (n. 24, provvisorio). Nel pacchetto «Il tipo non si cambia
     dopo la creazione» è in text-3, che `tokens.css` esclude per il testo informativo (3,2:1 a 12 px): l'app segue il
     mock, da decidere.
+64. Toast di Oggi (S1): pallino verde per ciò che è fatto (spunta, esito, voci tutte fatte), nel colore del todo per i
+    todo nuovi (creato, voci rimaste, follow-up), primary per il resto (creazioni, «Modifiche salvate»), come nel mock.
 
 ## 4. Mappa schermata → design → task
 

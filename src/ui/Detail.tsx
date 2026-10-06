@@ -57,7 +57,7 @@ import { useMinuto } from './clock';
 import { durata, fmtData, fuso as fusoCorrente, maiuscola, SETTIMANA, TIPO, titolo as titoloDi } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
-import { lascia } from './avvisi';
+import { lascia, type Tono } from './avvisi';
 import { SchedaEsito, useStudyAction } from './Session';
 
 const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bassa: 'prioritaRigaBassa' } as const;
@@ -366,8 +366,8 @@ export function Detail() {
   // Annullare il foglio: torna al pannello, o a Oggi se il foglio è arrivato dal cerchio
   const chiudiFoglio = () => (soloFoglio ? chiudi() : setVista('dettaglio'));
   // Confermare il foglio arrivato dal cerchio: Oggi mostra il messaggio con «Annulla» per 5 s (S1, T-056)
-  const torna = (testo: string, annulla: () => Promise<unknown>) => {
-    lascia({ id, testo, annulla });
+  const torna = (testo: string, annulla: () => Promise<unknown>, tono: Tono = 'successo') => {
+    lascia({ id, testo, tono, annulla });
     chiudi();
   };
   // Spunta (§3): con fasi si passa dalla revisione a inversione (§5) e si scrive solo al Conferma; con voci rimaste si
@@ -399,10 +399,14 @@ export function Detail() {
       const nuovo = await completeWithLeftover(appDb, id, ora(), fuso);
       if (!nuovo) return fallita();
       if (soloFoglio)
-        return torna(t('completatoVociNuovoTodo', { n: voci.length - fatte }), async () => {
-          await deleteBlock(appDb, nuovo, ora(), fuso);
-          await restoreBlock(appDb, prima, ora(), fuso);
-        });
+        return torna(
+          t('completatoVociNuovoTodo', { n: voci.length - fatte }),
+          async () => {
+            await deleteBlock(appDb, nuovo, ora(), fuso);
+            await restoreBlock(appDb, prima, ora(), fuso);
+          },
+          'todo',
+        );
       setVista('dettaglio');
       mostraToast(
         t('todoCreato', { titolo }),
@@ -444,9 +448,13 @@ export function Detail() {
       const testo =
         ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length });
       if (soloFoglio)
-        return torna(testo, async () => {
-          for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
-        });
+        return torna(
+          testo,
+          async () => {
+            for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
+          },
+          'todo',
+        );
       setVista('dettaglio');
       mostraToast(
         testo,

@@ -523,7 +523,7 @@ function Foglio({ modifica }: { modifica?: DettaglioAttivita }) {
         if (r.ok) {
           // «Salva» torna a Oggi con «Modifiche salvate», senza «Annulla» (S1, handoff §3 n. 28): da Oggi c'erano il
           // Dettaglio e la Modifica sopra
-          lascia({ id: modifica.blocco.id, testo: t('modificheSalvate') });
+          lascia({ id: modifica.blocco.id, testo: t('modificheSalvate'), tono: 'info' });
           return sfondo ? navigate(-2) : navigate('/', { replace: true });
         }
         throw new Error('modifica');
@@ -535,6 +535,7 @@ function Foglio({ modifica }: { modifica?: DettaglioAttivita }) {
         lascia({
           id,
           testo: creato(bozza),
+          tono: bozza.tipo === 'todo' ? 'todo' : 'info',
           annulla: () =>
             ricorrente ? deleteRecurrence(appDb, id, Date.now()) : deleteBlock(appDb, id, Date.now(), fuso()),
         });

@@ -940,6 +940,23 @@ button.spunta:not([data-fatta], [aria-disabled]):hover {
   animation: global(rf-up) var(--dur-layout) var(--ease-standard);
 }
 
+/* Pallino del toast (S1): primary; verde per ciò che è fatto, colore del todo per i todo nuovi */
+.puntoToast {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.puntoToast[data-tono='successo'] {
+  background: var(--color-success);
+}
+
+.puntoToast[data-tono='todo'] {
+  background: var(--color-cat-todo);
+}
+
 .testoToast {
   flex: 1;
   min-width: 0;

@@ -64,7 +64,7 @@ import { useMinuto, useOggi } from './clock';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
-import { ascolta } from './avvisi';
+import { ascolta, type Tono } from './avvisi';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
@@ -198,7 +198,7 @@ export function Today() {
   };
 
   // Toast con «Annulla» per 5 s dopo la spunta dalla lista (§3, A7)
-  const [avviso, setAvviso] = useState<{ id: string; testo: string; annulla?: () => void }>();
+  const [avviso, setAvviso] = useState<{ id: string; testo: string; tono: Tono; annulla?: () => void }>();
   const timerToast = useRef<ReturnType<typeof setTimeout>>(undefined);
   const annullaToast = useRef<HTMLButtonElement>(null);
   useEffect(() => () => clearTimeout(timerToast.current), []);
@@ -219,6 +219,7 @@ export function Today() {
     setAvviso({
       id,
       testo,
+      tono: 'successo',
       annulla: () => {
         chiudiToast(id);
         void annulla().catch(() => undefined);
@@ -229,12 +230,13 @@ export function Today() {
   // «Modifiche salvate», senza
   useEffect(
     () =>
-      ascolta(({ id, testo, annulla }) => {
+      ascolta(({ id, testo, tono, annulla }) => {
         clearTimeout(timerToast.current);
         timerToast.current = setTimeout(() => setAvviso(undefined), ANNULLA_MS);
         setAvviso({
           id,
           testo,
+          tono,
           ...(annulla && {
             annulla: () => {
               clearTimeout(timerToast.current);
@@ -503,6 +505,7 @@ export function Today() {
       <div className={s.regioneToast} role="status">
         {avviso && (
           <div className={s.toast}>
+            <span className={s.puntoToast} data-tono={avviso.tono} />
             <span className={s.testoToast}>{avviso.testo}</span>
             {avviso.annulla && (
               <button ref={annullaToast} type="button" className={s.annullaToast} onClick={avviso.annulla}>
