@@ -892,6 +892,7 @@ export function ActiveSession() {
             titoloId="esito-titolo"
             minuti={minutiDi(r.focus)}
             extra={minutiDi(r.extra)}
+            perUnita={r.perUnita}
             unitaId={sx.unitaId}
             conta={sx.bloccoId ? 'routine' : 'libera'}
             contaIniziale={countsByDefault(sx)}
@@ -950,6 +951,8 @@ export function SchedaEsito(p: {
    * né nota, e i sottotitoli di Indietro e Salta nominano l'unità («La 0.6 torna da rivedere», TESTI).
    */
   compatta?: ReactNode;
+  /** Ms di focus per unità (`summary`): con più di un'unità il riquadro «Minuti per unità» (S15, D3). */
+  perUnita?: Record<string, number>;
 }) {
   const ingressi = useIngressi(null);
   const [esito, setEsito] = useState<Esito | null>(null);
@@ -958,6 +961,10 @@ export function SchedaEsito(p: {
   const [conta, setConta] = useState(p.contaIniziale);
   const materia = unitaDi(ingressi?.corsi ?? [], p.unitaId);
   const numero = (id: string) => materia?.corso.unita.find((u) => u.id === id)?.numero ?? '';
+  const numeroDi = (id: string) => ingressi?.corsi.flatMap((c) => c.unita).find((u) => u.id === id)?.numero ?? '';
+  // Multi-materia (MECC §10.3, D3): l'esito resta sull'unità pianificata, le altre hanno solo i minuti
+  const perUnita = Object.entries(p.perUnita ?? {});
+  const multiMateria = perUnita.some(([id]) => id !== p.unitaId);
   const h = materia && outcomeHints(materia.corso.unita, materia.unita.id);
   const sotto: Record<Esito, string | null> = h
     ? {
@@ -998,6 +1005,22 @@ export function SchedaEsito(p: {
             )}
             {p.extra > 0 && ` · ${t('extraBreve', { min: p.extra })}`}
           </span>
+        </div>
+      )}
+      {multiMateria && (
+        <div className={s.perUnita}>
+          <span className={s.etichettaPerUnita}>{t('minutiPerUnita')}</span>
+          {perUnita.map(([id, ms]) => (
+            <span key={id} className={s.rigaPerUnita} data-pianificata={id === p.unitaId || undefined}>
+              <span>
+                {t('unita')} <span className={s.num}>{numeroDi(id)}</span> ·{' '}
+                {t(id === p.unitaId ? 'pianificata' : 'soloMinuti')}
+              </span>
+              <span className={s.num}>
+                {minutiDi(ms)} {t('minutiUnita')}
+              </span>
+            </span>
+          ))}
         </div>
       )}
       <div className={s.esiti}>

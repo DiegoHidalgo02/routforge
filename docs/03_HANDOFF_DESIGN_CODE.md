@@ -303,6 +303,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     puntatore» anche sull'unità della routine e «6 / 13 unità» del corso; origine «Recupero · occorrenza di … saltata
     | persa» e «Sessione libera · dall'unità». «Della routine · 45» del mock con l'orologio alle 16:08 contraddice la
     sua «fine prevista 16:45»: resta la durata fino alla fine del blocco (37, D-SESS-1).
+68. Debrief multi-materia (T-055, D3): il riquadro «Minuti per unità · l'esito resta sulla pianificata» compare quando
+    la sessione ha dato minuti a un'unità diversa dalla pianificata, in qualunque modalità (il mock lo lega al
+    pomodoro); i minuti escludono le pause dei segmenti, come il riepilogo.
 
 ## 4. Mappa schermata → design → task
 

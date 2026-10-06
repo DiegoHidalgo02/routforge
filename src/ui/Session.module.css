@@ -1662,3 +1662,32 @@
 .bannerSidebar[aria-current='page'] .bannerAzione {
   display: none;
 }
+
+/* Debrief multi-materia (S15 «Minuti per unità», D3): la pianificata in bianco, le altre in text-2 */
+.perUnita {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface);
+}
+
+.etichettaPerUnita {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.rigaPerUnita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: var(--text-base) / 18px var(--font-ui);
+}
+
+.rigaPerUnita[data-pianificata] {
+  color: var(--color-text);
+}
