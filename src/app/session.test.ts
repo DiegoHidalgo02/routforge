@@ -152,6 +152,15 @@ describe('Routine di studio senza corso, setup — SCENARI C9', () => {
   });
 });
 
+describe('Note della sessione — FUNZIONALITA §11.2', () => {
+  it('le note scritte durante la sessione restano nella sessione chiusa', async () => {
+    await startSession(db, null, scelta(), oggi(9), FUSO);
+    await editActiveSession(db, (x) => ({ ...x, note: '- una sola corsia' }), oggi(9, 10));
+    await endSession(db, oggi(9, 30), FUSO, ESITO);
+    expect((await list(db, 'sessioni')).map((x) => x.note)).toEqual(['- una sola corsia']);
+  });
+});
+
 describe('Una sola sessione — SCENARI D6', () => {
   it('con una sessione attiva, un avvio da un altro blocco restituisce quella e non tocca l’altro', async () => {
     await studio('s1', { inizio: oggi(9), fine: oggi(10) });

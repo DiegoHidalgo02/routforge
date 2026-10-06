@@ -1691,3 +1691,7 @@
 .rigaPerUnita[data-pianificata] {
   color: var(--color-text);
 }
+
+.contenutoScheda[hidden] {
+  display: none;
+}

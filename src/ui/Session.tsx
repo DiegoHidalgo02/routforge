@@ -46,7 +46,7 @@ import {
   type VistaSessione,
 } from '../app/session';
 import { disableDoNotDisturb, enableDoNotDisturb, keepScreenOn } from '../app/sessionDevice';
-import { countsByDefault, outcomeHints, type DatiEsito } from '../domain/outcome';
+import { countsByDefault, outcomeHints, sessionMinutes, type DatiEsito } from '../domain/outcome';
 import {
   lockedUnit,
   startContext,
@@ -530,6 +530,8 @@ export function ActiveSession() {
     minuti: number;
     percento: number | null;
     libera: boolean;
+    /** La sessione aveva un'unità: senza, «proporrà l'unità giusta» non vale (C9). */
+    unita: boolean;
     streak: { giorni: number; piu: boolean };
   } | null>(null);
   const attiva = Boolean(vista);
@@ -576,7 +578,13 @@ export function ActiveSession() {
           <span className={s.fattoTesto}>
             {fatto.percento !== null
               ? t('esitoAutomaticoTesto', { pct: fatto.percento })
-              : t(!fatto.dati.contaNelPiano ? 'contaNo' : fatto.libera ? 'esitoLiberaTesto' : 'esitoFattoTesto')}
+              : !fatto.dati.contaNelPiano
+                ? t('contaNo')
+                : !fatto.libera && (fatto.dati.esito === 'completata' || fatto.dati.esito === 'continua')
+                  ? t('esitoFattoTesto')
+                  : fatto.unita
+                    ? t('esitoLiberaTesto')
+                    : null}
           </span>
         </span>
         <span className={`${s.righe} ${s.fattoRighe}`}>
@@ -619,18 +627,18 @@ export function ActiveSession() {
     void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
   };
   // Chiude e legge la streak prima e dopo: «+1» solo se questa chiusura l'ha fatta crescere (§12, handoff §3 n. 48)
-  const chiudiCon = async (chiusura: () => Promise<SessioneRegistrata | null>) => {
+  const chiudiCon = async (chiusura: (n: number) => Promise<SessioneRegistrata | null>) => {
     const n = adesso();
     const prima = await readStreak(appDb, n);
-    const c = await chiusura();
-    const giorni = await readStreak(appDb, adesso());
+    const c = await chiusura(n);
+    const giorni = await readStreak(appDb, n);
     return c && { c, streak: { giorni, piu: giorni > prima } };
   };
   // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma; altrimenti si torna a Oggi
   const abbandona = () => {
     if (inChiusura) return;
     setInChiusura(true);
-    void chiudiCon(() => abandonSession(appDb, adesso(), fuso()))
+    void chiudiCon((n) => abandonSession(appDb, n, fuso()))
       .catch(() => null)
       .then((x) =>
         x?.c.esito
@@ -640,6 +648,7 @@ export function ActiveSession() {
               minuti: minutiDi(x.c.riepilogo.focus),
               percento: focusPercent(x.c, x.c.chiusaIl),
               libera: x.c.bloccoId === null,
+              unita: x.c.unitaId !== null,
               streak: x.streak,
             })
           : navigate('/', { replace: true }),
@@ -649,7 +658,7 @@ export function ActiveSession() {
   const registra = (dati: DatiEsito, puntatore: string | null) => {
     if (inChiusura) return;
     setInChiusura(true);
-    void chiudiCon(() => endSession(appDb, adesso(), fuso(), dati))
+    void chiudiCon((n) => endSession(appDb, n, fuso(), dati))
       .catch(() => null)
       .then((x) =>
         x
@@ -659,6 +668,7 @@ export function ActiveSession() {
               minuti: minutiDi(x.c.riepilogo.focus),
               percento: null,
               libera: x.c.bloccoId === null,
+              unita: x.c.unitaId !== null,
               streak: x.streak,
             })
           : navigate('/', { replace: true }),
@@ -892,7 +902,7 @@ export function ActiveSession() {
             titoloId="esito-titolo"
             minuti={minutiDi(r.focus)}
             extra={minutiDi(r.extra)}
-            perUnita={r.perUnita}
+            perUnita={sessionMinutes(r).perUnita}
             unitaId={sx.unitaId}
             conta={sx.bloccoId ? 'routine' : 'libera'}
             contaIniziale={countsByDefault(sx)}
@@ -951,7 +961,7 @@ export function SchedaEsito(p: {
    * né nota, e i sottotitoli di Indietro e Salta nominano l'unità («La 0.6 torna da rivedere», TESTI).
    */
   compatta?: ReactNode;
-  /** Ms di focus per unità (`summary`): con più di un'unità il riquadro «Minuti per unità» (S15, D3). */
+  /** Minuti per unità come li accredita l'esito (`sessionMinutes`): con un'altra unità il riquadro (S15, D3). */
   perUnita?: Record<string, number>;
 }) {
   const ingressi = useIngressi(null);
@@ -963,7 +973,7 @@ export function SchedaEsito(p: {
   const numero = (id: string) => materia?.corso.unita.find((u) => u.id === id)?.numero ?? '';
   const numeroDi = (id: string) => ingressi?.corsi.flatMap((c) => c.unita).find((u) => u.id === id)?.numero ?? '';
   // Multi-materia (MECC §10.3, D3): l'esito resta sull'unità pianificata, le altre hanno solo i minuti
-  const perUnita = Object.entries(p.perUnita ?? {});
+  const perUnita = Object.entries(p.perUnita ?? {}).filter(([, min]) => min > 0);
   const multiMateria = perUnita.some(([id]) => id !== p.unitaId);
   const h = materia && outcomeHints(materia.corso.unita, materia.unita.id);
   const sotto: Record<Esito, string | null> = h
@@ -1010,14 +1020,14 @@ export function SchedaEsito(p: {
       {multiMateria && (
         <div className={s.perUnita}>
           <span className={s.etichettaPerUnita}>{t('minutiPerUnita')}</span>
-          {perUnita.map(([id, ms]) => (
+          {perUnita.map(([id, min]) => (
             <span key={id} className={s.rigaPerUnita} data-pianificata={id === p.unitaId || undefined}>
               <span>
                 {t('unita')} <span className={s.num}>{numeroDi(id)}</span> ·{' '}
                 {t(id === p.unitaId ? 'pianificata' : 'soloMinuti')}
               </span>
               <span className={s.num}>
-                {minutiDi(ms)} {t('minutiUnita')}
+                {min} {t('minutiUnita')}
               </span>
             </span>
           ))}
@@ -1183,8 +1193,12 @@ function Schede({ unitaId, note }: { unitaId: string | null; note: string }) {
           <div className={s.schedeLato} role="group" aria-label={t('schede')}>
             {LATI.map(({ id, chiave }) => scheda(lato === id, chiave, () => setLato(id)))}
           </div>
-          <div key={lato} className={s.contenutoScheda} data-scheda={lato}>
-            {lato === 'note' ? <Note note={note} /> : <SenzaChiave />}
+          {/* Montati una volta sola: rimontare le note le farebbe ripartire da un valore forse non ancora salvato */}
+          <div className={s.contenutoScheda} data-scheda="ai" hidden={lato !== 'ai'}>
+            <SenzaChiave />
+          </div>
+          <div className={s.contenutoScheda} data-scheda="note" hidden={lato !== 'note'}>
+            <Note note={note} />
           </div>
         </div>
       </div>
@@ -1236,6 +1250,19 @@ function Note({ note }: { note: string }) {
   const salva = () => {
     if (testo !== note) void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(() => null);
   };
+  // All'uscita dalla schermata (indietro di sistema, app chiusa) il testo non ancora salvato si salva lo stesso
+  const ultimo = useRef({ testo, note });
+  useEffect(() => {
+    ultimo.current = { testo, note };
+  });
+  useEffect(
+    () => () => {
+      const u = ultimo.current;
+      if (u.testo !== u.note)
+        void editActiveSession(appDb, (x) => ({ ...x, note: u.testo }), adesso()).catch(() => null);
+    },
+    [],
+  );
   useEffect(() => {
     if (testo === note) return;
     const id = setTimeout(
