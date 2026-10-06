@@ -61,10 +61,12 @@ import type { AvvisoAssenza } from '../domain/scheduler/absence';
 import { localDayKey, localInstant } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
 import { useMinuto, useOggi } from './clock';
+import { centro, Coriandoli } from './Coriandoli';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
 import { ascolta, type Tono } from './avvisi';
+import { animazioniRidotte, impostazioni, vibra } from './preferenze';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
@@ -84,6 +86,8 @@ const VISTE = ['giorno', 'settimana', 'mese'] as const satisfies readonly Vista[
 const SALUTO_MS = 2600;
 /** Scatto dell'ora (S1 `strikeDelay`): su mobile la card Adesso cresce a hero 900 ms dopo l'apertura dell'app. */
 const SCATTO_MS = 900;
+/** Durata dei coriandoli di «Piena»: 600 ms più lo scarto dell'ultimo (S1 `burst`). */
+const CORIANDOLI_MS = 720;
 /** Toast della spunta dalla lista per tipo (TESTI: «Fatto · …», «Fatta · …», «Evento completato · …»). */
 const FATTO: Record<BloccoCalendario['tipo'], Chiave> = {
   todo: 'toastFatto',
@@ -644,9 +648,7 @@ function Giornata({
   const oggi = localDayKey(now);
   const [ingressi, setIngressi] = useState<IngressiAdesso>();
   useEffect(() => watch(() => nowInputs(appDb, oggi), setIngressi), [oggi]);
-  const [scatto, setScatto] = useState(
-    () => scattato || eDesktop() || window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
+  const [scatto, setScatto] = useState(() => scattato || eDesktop() || animazioniRidotte());
   useEffect(() => {
     if (scatto) return;
     const timer = setTimeout(() => {
@@ -659,14 +661,26 @@ function Giornata({
   const apri = (b: BloccoCalendario, passo?: PassoSpunta) =>
     navigate(`/attivita/${b.id}`, { state: { ...sfondo, ...(passo && { vista: passo }) } });
   // `null`: la finestra si è chiusa fra il ridisegno al minuto e il tocco; il Dettaglio dice perché
-  const spunta = (b: BloccoCalendario, istante: number) =>
+  // Celebrazioni e aptico delle Impostazioni (T-032): la vibrazione alla spunta, i coriandoli con «Piena»
+  const [festa, setFesta] = useState<{ x: number; y: number; k: number } | null>(null);
+  useEffect(() => {
+    if (!festa) return;
+    const timer = setTimeout(() => setFesta(null), CORIANDOLI_MS);
+    return () => clearTimeout(timer);
+  }, [festa]);
+  const spunta = (b: BloccoCalendario, istante: number, cerchio?: Element) => {
+    const punto = cerchio && centro(cerchio);
     void checkFromCalendar(appDb, b.id, istante, fuso()).then(
       (passo) => {
-        if (passo === 'completa') onCompletato(b);
-        else void apri(b, passo ?? undefined);
+        if (passo !== 'completa') return void apri(b, passo ?? undefined);
+        vibra();
+        if (punto && impostazioni().celebrazioni === 'piena' && !animazioniRidotte())
+          setFesta({ ...punto, k: istante });
+        onCompletato(b);
       },
       () => void apri(b),
     );
+  };
 
   // Su mobile le completate lasciano la lista per l'archivio in testa, in ordine di completamento (S1, DATI-UI); su desktop
   // restano al loro posto in secondo piano. Con tutte le attività di oggi chiuse arriva la Giornata chiusa
@@ -852,7 +866,7 @@ function Giornata({
                   now={now}
                   attiva={ingressi?.attiva ?? null}
                   sfondo={sfondo}
-                  onSpunta={cerchio === 'attivo' ? () => spunta(b, Date.now()) : undefined}
+                  onSpunta={cerchio === 'attivo' ? (e) => spunta(b, Date.now(), e.currentTarget) : undefined}
                 />
               ) : (
                 <div
@@ -879,7 +893,10 @@ function Giornata({
                       }
                       tabIndex={fatta ? -1 : undefined}
                       aria-label={t(fatta ? 'completatoTitolo' : 'segnaFattoTitolo', { titolo: titolo(b) })}
-                      onClick={() => (fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now()))}
+                      data-celebra
+                      onClick={(e) =>
+                        fatta ? void apri(b) : cerchio === 'attivo' && spunta(b, Date.now(), e.currentTarget)
+                      }
                     >
                       {fatta && <Check size={12} strokeWidth={2.75} />}
                     </button>
@@ -997,6 +1014,7 @@ function Giornata({
       <p className={s.soloLettore} aria-live="polite">
         {annuncio}
       </p>
+      {festa && <Coriandoli key={festa.k} x={festa.x} y={festa.y} />}
     </>
   );
 }

@@ -1,0 +1,333 @@
+/* Impostazioni (S22 Impostazioni Panel, S20 Shell). Restano letterali le misure del mock fuori dalla scala dei token:
+   righe alte 52 · 56 · 44, interruttore 44 × 26 col pomello 20, rientro 34 del pannello del tipo, chip larghi almeno 34,
+   gap 10 · 6 · 1, interlinee 14 · 16 · 18, opacità .45 dei tipi col generale spento, larghezza 640 su desktop. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--color-text);
+}
+
+.viste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.gruppo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card-gap);
+}
+
+/* Generale spento: i tipi restano modificabili, più chiari */
+.gruppo[data-spento] .card {
+  opacity: 0.45;
+}
+
+.etichettaGruppo {
+  margin: 0;
+  padding: 0 2px;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+/* Niente ritaglio: l'anello del fuoco delle righe resta intero; i bordi arrotondati li prendono le righe di bordo */
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.card > :first-child,
+.card > .tipo:first-child > .riga {
+  border-top-left-radius: calc(var(--radius-card) - 1px);
+  border-top-right-radius: calc(var(--radius-card) - 1px);
+}
+
+.card > :last-child,
+.card > .tipo:last-child > :last-child {
+  border-bottom-left-radius: calc(var(--radius-card) - 1px);
+  border-bottom-right-radius: calc(var(--radius-card) - 1px);
+}
+
+.riga {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-card-inner);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.riga[data-alta] {
+  min-height: 56px;
+}
+
+.riga + .riga,
+.tipo + .tipo {
+  border-top: 1px solid var(--color-border);
+}
+
+a.riga:hover,
+label.riga:hover {
+  background: var(--color-surface-2);
+}
+
+.tipo > .riga:hover {
+  background: var(--color-surface-hover);
+}
+
+.riga:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+/* Il selettore del sistema è invisibile sopra la riga: il fuoco si vede sulla riga */
+.riga:has(.selettore:focus-visible) {
+  z-index: 1;
+  box-shadow: var(--ring-focus);
+}
+
+.selettore {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.etichettaRiga {
+  flex: 1;
+  min-width: 0;
+  font: 500 var(--text-md) / 18px var(--font-ui);
+}
+
+.etichettaRiga[data-pericolo] {
+  color: var(--color-danger-ink);
+}
+
+.valore {
+  flex: none;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  white-space: nowrap;
+}
+
+.valore[data-tono='successo'] {
+  color: var(--color-success);
+}
+
+.valore[data-tono='avviso'] {
+  color: var(--color-warning);
+}
+
+.valore[data-tono='chiaro'] {
+  color: var(--color-text);
+}
+
+.valore[data-tono='spento'] {
+  color: var(--color-text-3);
+}
+
+.chevron {
+  flex: none;
+  color: var(--color-text-3);
+  transition: transform var(--dur-feedback) var(--ease-out);
+}
+
+.chevron[data-aperto] {
+  transform: rotate(90deg);
+}
+
+.interruttore {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  cursor: pointer;
+  transition: background var(--dur-feedback) var(--ease-out);
+}
+
+.interruttore[aria-checked='true'] {
+  background: var(--color-success);
+}
+
+.interruttore::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--color-selected);
+  transition: left var(--dur-feedback) var(--ease-out);
+}
+
+.interruttore[aria-checked='true']::after {
+  left: 21px;
+}
+
+/* Area di tocco 44 per interruttore (26), chip (28) e bottone di contorno (32) */
+.interruttore::before,
+.chip > button::before,
+.contorno::before {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.pallino {
+  flex: none;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.muto {
+  flex: none;
+  color: var(--color-text-3);
+}
+
+.pannello {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 var(--space-card-inner) var(--space-3) 34px;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.sottoRiga {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.etichettaSotto {
+  flex: 1;
+  font: 500 var(--text-md) var(--font-ui);
+}
+
+.etichettaAnticipo {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip > button {
+  position: relative;
+  height: var(--size-chip-sm);
+  min-width: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  font: 500 var(--text-xs) var(--font-num);
+  cursor: pointer;
+}
+
+.chip > button[aria-pressed='true'] {
+  border-color: var(--color-selected);
+  background: var(--color-selected);
+  color: var(--color-selected-ink);
+  font-weight: 600;
+}
+
+.testi {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sottotitolo {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.ora {
+  flex: none;
+  font: 500 var(--text-md) var(--font-num);
+}
+
+.permesso {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-card-inner);
+}
+
+.permesso[data-permesso='denied'] {
+  align-items: flex-start;
+}
+
+.pallinoStato {
+  flex: none;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--color-text-3);
+}
+
+.permesso[data-permesso='granted'] .pallinoStato {
+  background: var(--color-success);
+}
+
+.permesso[data-permesso='denied'] .pallinoStato {
+  margin-top: 5px;
+  background: var(--color-danger-ink);
+}
+
+.contorno {
+  position: relative;
+  flex: none;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-sm) var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.contorno:hover {
+  background: var(--color-surface-2);
+}
+
+/* Desktop da 1024 px (D-UI-1): la colonna del mock è larga al più 640 */
+@media (min-width: 1024px) {
+  .pagina {
+    max-width: 640px;
+  }
+}

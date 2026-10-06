@@ -74,3 +74,19 @@ a {
     0 0 8px 2px color-mix(in srgb, var(--ink) 80%, transparent),
     0 0 18px 6px color-mix(in srgb, var(--ink) 40%, transparent);
 }
+
+/* Impostazioni → Animazioni «Mai» (FUNZ §23, T-032): come la riduzione del sistema, ma sempre. «Sempre» non scavalca
+   la riduzione del sistema finché tokens.css la impone con !important (handoff n. 76). */
+:root[data-animazioni='mai'] *,
+:root[data-animazioni='mai'] *::before,
+:root[data-animazioni='mai'] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Celebrazioni «Off» (claude-design/CLAUDE.md): alla spunta solo il cambio di stato, senza transizioni né coriandoli */
+:root[data-celebrazioni='off'] [data-celebra],
+:root[data-celebrazioni='off'] [data-celebra] * {
+  transition: none !important;
+  animation: none !important;
+}

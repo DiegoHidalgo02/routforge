@@ -13,7 +13,7 @@
 - **Fino al 02/10/2026**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
 
 ## In corso
-- Nessun task in corso.
+- **T-032 Impostazioni**: fatti radice, Notifiche, Informazioni e preferenze di aspetto (D-IMPOST-1); restano l'effetto di «Inizio settimana» (vista Settimana, fine dell'orizzonte, barre delle Statistiche) e la Diagnostica.
 
 ## Problemi aperti
 **Da decidere con l'utente, non bloccanti**

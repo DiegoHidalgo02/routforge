@@ -1,0 +1,47 @@
+/* Coriandoli della celebrazione «Piena» (S1 `burst`): 5 · 4 px alternati; la curva del mock resta letterale. */
+.origine {
+  position: fixed;
+  z-index: 6;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.origine > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  animation: global(rf-burst) var(--dur-burst) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.origine > span:nth-child(even) {
+  width: 4px;
+  height: 4px;
+}
+
+.origine > span:nth-child(1) {
+  background: var(--color-primary);
+}
+
+.origine > span:nth-child(2) {
+  background: var(--color-cat-routine);
+}
+
+.origine > span:nth-child(3) {
+  background: var(--color-cat-event);
+}
+
+.origine > span:nth-child(4) {
+  background: var(--color-cat-todo-ink);
+}
+
+.origine > span:nth-child(5) {
+  background: var(--color-cat-study-ink);
+}
+
+.origine > span:nth-child(6) {
+  background: var(--color-success);
+}

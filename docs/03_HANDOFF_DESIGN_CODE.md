@@ -206,7 +206,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     «tutto», tessere che seguono il periodo; il Focus di Studio non coincide con la Panoramica (cifra del mock).
     **Bloccante**. T-029: scelte provvisorie in D-STATS-1 e n. 75.
 38. Impostazioni: orario del digest, scelte di Animazioni, Celebrazioni, Aptico, Inizio settimana e Lingua delle
-    risposte, vista Informazioni, nome dell'account, errori di accesso e di sincronizzazione. **Bloccante**. T-032, T-033.
+    risposte, vista Informazioni, nome dell'account, errori di accesso e di sincronizzazione. **Bloccante**. T-032, T-033:
+    scelte provvisorie in D-IMPOST-1 e n. 76.
 39. Tavola 06 «Bug Hunter · soluzione» monta il secondo tentativo, non lo stato risolto: da correggere nel design;
     vale il codice del Panel e SCENARI I3. T-028.
 
@@ -352,6 +353,12 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     piccoli); le «Ultime unità» mostrano sempre i minuti (il mock scrive «2 sess.» per una non finita, senza regola); la
     mappa di calore ha oggi nell'ultima cella e le righe non sono giorni della settimana; i ritardi oltre 5', i salti delle
     fasi per settimana e la media della costanza non sono mostrati. Pratica senza dati fino a T-027 e T-028.
+76. Impostazioni S22 (T-032, D-IMPOST-1): radice e Notifiche come il mock, Informazioni con la versione della build.
+    **Da decidere**: la vista di Animazioni, Celebrazioni, Feedback aptico e Inizio settimana (oggi il selettore del
+    sistema); il sottotitolo della radice («Alex», il nome dell'account, con T-033); «Sempre» delle animazioni contro la
+    regola `!important` di tokens.css; il pallino di «Routine di studio» primary nel mock (qui il colore del tipo, come
+    nel resto dell'app); la barra in basso nelle viste interne (il mock la mostra solo sulla radice); l'orario del
+    digest senza controllo.
 
 ## 4. Mappa schermata → design → task
 

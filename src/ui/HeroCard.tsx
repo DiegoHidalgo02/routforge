@@ -5,6 +5,7 @@
 // sessione (`studyActions`, T-016); gli altri tipi: cerchio 28 su un bersaglio 48 che spunta come il cerchio della card
 // (MECC §3, D-DETT-3). Il tocco sulla card apre il Dettaglio. Decisioni: D-NOW-2, D-DESIGN-3.
 import { GraduationCap, MapPin, Play, SquareCheckBig } from 'lucide-react';
+import type { MouseEvent } from 'react';
 import { Link, type Location } from 'react-router';
 import type { BloccoAdesso } from '../app/nowBlock';
 import type { StatoHero } from '../domain/nowBlock';
@@ -56,7 +57,7 @@ export function HeroCard({
   attiva: SessioneAttiva | null;
   sfondo: { sfondo: Location };
   /** Spunta dal cerchio, se il blocco si spunta da qui (`canCheckFromCalendar`). */
-  onSpunta?: () => void;
+  onSpunta?: (e: MouseEvent<HTMLButtonElement>) => void;
 }) {
   const avvia = useStudyAction();
   const [numero, unita, testo] = dato(b, stato);
@@ -103,6 +104,7 @@ export function HeroCard({
             className={s.cerchio}
             aria-label={t(SPUNTA[b.tipo])}
             title={t(SPUNTA[b.tipo])}
+            data-celebra
             onClick={onSpunta}
           >
             <span className={s.anello} />

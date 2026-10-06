@@ -109,6 +109,13 @@ export interface NotificationService {
   test(now: number): Promise<void>;
 }
 
+let registrato: NotificationService | null = null;
+/** Il servizio dell'app, registrato dal punto di composizione per la «Notifica di prova» di Impostazioni (§13.6, T-032). */
+export const registerNotificationService = (s: NotificationService): void => {
+  registrato = s;
+};
+export const sendTestNotification = (now: number): Promise<void> => registrato?.test(now) ?? Promise.resolve();
+
 export function createNotifications(db: RoutForgeDb, porta: Notifications, clock: Clock): NotificationService {
   // Dopo un ricaricamento il web non ha più timer e su Android un permesso revocato cancella le notifiche esatte: la
   // prima riconciliazione del processo riarma tutto (stesso id = sostituzione, D-NOTIF-1 n. 5)

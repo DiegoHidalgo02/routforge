@@ -12,7 +12,7 @@ import './ui/styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
-import { createNotifications } from './app/notifications';
+import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
 import { startHeartbeat } from './app/session';
 import { configureSessionDevice } from './app/sessionDevice';
@@ -47,6 +47,7 @@ const apri = (percorso: string) => {
   dispatchEvent(new PopStateEvent('popstate'));
 };
 const notifiche = createNotifications(appDb, webNotifications(testiNotifica, apri), webClock);
+registerNotificationService(notifiche);
 createScheduler(appDb, webClock, notifiche).start();
 notifiche.start();
 // Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; il servizio Android è T-021

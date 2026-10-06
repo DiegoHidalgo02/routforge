@@ -5,10 +5,22 @@
   gap: var(--space-3);
 }
 
+.testi {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .titolo {
   margin: 0;
   font: 600 var(--text-xl-2) / var(--leading-tight) var(--font-ui);
   letter-spacing: var(--tracking-title);
+}
+
+/* Sottotitolo delle viste di Impostazioni: 12/16 text-2 */
+.sottotitolo {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
 }
 
 .indietro {
