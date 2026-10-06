@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { appDb, watch } from '../app/db';
 import { readDiagnostics, type Diagnostica } from '../app/diagnostics';
 import { readInbox } from '../app/inbox';
+import { materialsSpace } from '../app/materials';
 import { editNotificationSettings, readNotificationSettings, sendTestNotification } from '../app/notifications';
 import { saveSettings } from '../app/settings';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
@@ -19,6 +20,7 @@ import { useMinuto } from './clock';
 import { maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { animazioniRidotte, useSettings } from './preferenze';
+import { dimensione } from './Materials';
 import { Section } from './Section';
 import s from './Settings.module.css';
 
@@ -117,6 +119,15 @@ export function Settings() {
       ),
     [],
   );
+  const [spazio, setSpazio] = useState<number>();
+  useEffect(
+    () =>
+      watch(
+        () => materialsSpace(appDb),
+        (x) => setSpazio(x.pdf + x.altri),
+      ),
+    [],
+  );
   const attivi = notifiche ? Object.values(notifiche.perTipo).filter((x) => x.attivo).length : 0;
 
   return (
@@ -187,7 +198,11 @@ export function Settings() {
         </Gruppo>
         <Gruppo titolo={t('gruppoDati')}>
           <RigaLink etichetta={t('backupRiga')} to="/impostazioni/backup" />
-          <RigaLink etichetta={t('spazioMateriali')} to="/impostazioni/materiali" />
+          <RigaLink
+            etichetta={t('spazioMateriali')}
+            valore={spazio ? dimensione(spazio) : undefined}
+            to="/impostazioni/materiali"
+          />
           <RigaLink etichetta={t('eliminaTuttiIDati')} pericolo />
         </Gruppo>
         <Gruppo titolo={t('avanzate')}>
@@ -396,6 +411,7 @@ const SORGENTE = {
   ciclo: 'sorgenteCiclo',
   notifiche: 'sorgenteNotifiche',
   dispositivo: 'sorgenteDispositivo',
+  materiali: 'sorgenteMateriali',
 } as const;
 /** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
 const testoEvento = (e: Diagnostica['eventi'][number]) =>

@@ -8,6 +8,7 @@ import { Course, Module, Unit } from './Course';
 import { Courses } from './Courses';
 import { Create } from './Create';
 import { Detail } from './Detail';
+import { MaterialsSpace, MaterialViewer } from './Materials';
 import { Notifications } from './Notifications';
 import { t } from './i18n';
 import { watchSettings } from './preferenze';
@@ -37,6 +38,7 @@ function Rotte() {
           <Route path="sessione/setup" element={<SessionSetup />} />
           <Route path="sessione" element={<ActiveSession />} />
           <Route path="notifiche" element={<Notifications />} />
+          <Route path="materiali/:id" element={<MaterialViewer />} />
           <Route path="impostazioni" element={<Settings />} />
           <Route path="impostazioni/notifiche" element={<NotificationSettings />} />
           <Route path="impostazioni/informazioni" element={<About />} />
@@ -48,10 +50,7 @@ function Rotte() {
             path="impostazioni/backup"
             element={<Section titolo="backupDati" indietro sottotitolo={t('impostazioni')} />}
           />
-          <Route
-            path="impostazioni/materiali"
-            element={<Section titolo="spazioMateriali" indietro sottotitolo={t('impostazioni')} />}
-          />
+          <Route path="impostazioni/materiali" element={<MaterialsSpace />} />
           <Route path="account" element={<Section titolo="account" indietro sottotitolo={t('impostazioni')} />} />
           <Route path="diagnostica" element={<Diagnostics />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -130,12 +130,17 @@ describe('Eliminazione corso — SCENARI H3, MECCANISMI §16', () => {
     termine: null,
   });
   // Un record per tabella sull'unità `unitaId`
-  const materiale = async (unitaId: string, now: number) => {
+  const materiale = async (unitaId: string, corsoId: string, now: number) => {
     const mazzo = await save(db, 'mazzi', { unitaId }, now);
     await save(db, 'carte', { ...newCard(now), mazzoId: mazzo.id }, now);
     await save(db, 'pratiche', { unitaId, tipo: 'quiz', creataIl: now }, now);
-    const m = await save(db, 'materiali', { unitaId }, now);
-    await save(db, 'materialiBinari', { materialeId: m.id }, now);
+    const m = await save(
+      db,
+      'materiali',
+      { unitaId, corsoId, tipo: 'pdf', titolo: 'a.pdf', byte: 1, testoEstratto: null },
+      now,
+    );
+    await save(db, 'materialiBinari', { id: m.id, materialeId: m.id, dati: new Uint8Array([1]) }, now);
     await save(db, 'fileCodice', { unitaId, sessioneId: null }, now);
   };
 
@@ -154,8 +159,8 @@ describe('Eliminazione corso — SCENARI H3, MECCANISMI §16', () => {
       now,
       FUSO,
     );
-    await materiale(unita.id, now);
-    await materiale(sua.id, now);
+    await materiale(unita.id, corso!.id, now);
+    await materiale(sua.id, altro!.id, now);
     // Una sessione libera chiusa sul corso: resta nelle statistiche
     const scelta = {
       unitaId: unita.id,

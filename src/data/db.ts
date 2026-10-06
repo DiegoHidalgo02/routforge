@@ -17,6 +17,7 @@ import type {
   SezioneImportata,
   UnitaImportata,
 } from '../domain/course/parser';
+import type { Materiale } from '../domain/materials';
 import type { DatiEsito } from '../domain/outcome';
 import type { StatoCarta } from '../domain/sm2';
 import type { SessioneChiusa } from '../domain/timer';
@@ -70,8 +71,10 @@ export interface Tabelle {
   pratiche: Riga<{ unitaId: string; tipo: string; creataIl: number }>;
   conversazioni: Riga<{ ambito: string; ultimoMessaggio: number }>;
   messaggi: Riga<{ conversazioneId: string }>;
-  materiali: Riga<{ unitaId: string }>;
-  materialiBinari: Riga<{ materialeId: string }>;
+  /** Materiali dell'utente (MECC §17, T-024): link, nota, metadati del PDF; `unitaId` `null` = del corso (dopo un reimport). */
+  materiali: Riga<Materiale>;
+  /** Il binario del PDF, id = id del materiale (D-DATA-2): resta sul dispositivo, mai nella sync (S13, T-033). */
+  materialiBinari: Riga<{ materialeId: string; dati: Uint8Array }>;
   fileCodice: Riga<{ unitaId: string | null; sessioneId: string | null }>;
   /** Una riga per impostazione, id = chiave (D-DATA-2). */
   preferenze: Riga<{ valore: unknown }>;

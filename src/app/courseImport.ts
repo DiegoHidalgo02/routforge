@@ -10,6 +10,8 @@
 import { unzipSync, strFromU8 } from 'fflate';
 import { newId, saveCourse } from '../data/repository';
 import type { RoutForgeDb } from '../data/db';
+import { logError } from './diagnostics';
+import { moveMaterialsOnImport } from './materials';
 import m0 from '../data/sample-course/M0-Riattivazione_JavaScript.md?raw';
 import m1 from '../data/sample-course/M1-Tooling_Moderno.md?raw';
 import {
@@ -49,6 +51,8 @@ export const zipNeedsTitle = (zip: Uint8Array): boolean => !hasStructureFile(rea
 export async function importZip(db: RoutForgeDb, zip: Uint8Array, now: number, titolo?: string) {
   const { corso, avvisi } = importCourseFromZip(zip, { corsoId: newId(), now, titolo });
   await saveCourse(db, corso, now);
+  // I materiali dei corsi con lo stesso titolo passano a questo (FUNZ §10, T-024); un errore non annulla l'import
+  await moveMaterialsOnImport(db, corso, now).catch((e: unknown) => logError('materiali', e));
   return { corso, avvisi: avvisi.slice(0, MAX_WARNINGS_SHOWN), totaleAvvisi: avvisi.length };
 }
 
@@ -75,5 +79,6 @@ export async function importSampleCourse(db: RoutForgeDb, now: number): Promise<
     segnaposto: SEGNAPOSTO_ESEMPIO,
   });
   await saveCourse(db, r.corso, now, true);
+  await moveMaterialsOnImport(db, r.corso, now).catch((e: unknown) => logError('materiali', e));
   return r;
 }

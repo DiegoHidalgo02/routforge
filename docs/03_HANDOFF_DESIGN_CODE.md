@@ -363,6 +363,14 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     disponibile», account «Non attivo»); il registro mostra solo gli errori dei servizi, «Spazio locale» divide dati e
     cache dove il browser lo dice; «Coda notifiche» è un valore solo (armate e prossima, come il mock) dove MECC §23
     vuole pendenti e voci nel registro distinti.
+77. Materiali (T-024, D-MAT-1): «Tuoi» in S12 come il mock (contatore e righe compaiono col primo materiale); la
+    riga di un link come la ResourceRow delle sezioni e quella di un PDF senza testo («senza testo, non usato
+    dall'AI») non sono disegnate. Visualizzatore S13 con le pagine disegnate da pdf.js; la barra della pagina sta in
+    alto sotto la testata (in basso la coprirebbe la barra della shell); lo stato `pdf-scan` del mock («Apri le
+    pagine») non serve perché i PDF sono sul dispositivo; la nota si legge come testo, senza interpretare il markdown.
+    Spazio dei materiali in Impostazioni con «Elimina» e «Annulla» per 5 s. **Da decidere**: come si elimina un
+    materiale dalla pagina dell'unità (oggi solo da Impostazioni) e la lettura della nota. Su desktop la colonna da 320
+    dell'unità (VideoCard, Tuoi, File di codice, Pratica) arriva con la seconda colonna (n. 71).
 
 ## 4. Mappa schermata → design → task
 

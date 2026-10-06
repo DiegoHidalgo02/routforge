@@ -13,6 +13,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
 import { configureDiagnostics } from './app/diagnostics';
+import { configurePdf } from './app/materials';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
 import { startHeartbeat } from './app/session';
@@ -20,6 +21,7 @@ import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
 import { webNotifications } from './platform/notifications';
+import { webPdf } from './platform/pdf';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
 import { testiNotifica } from './ui/notificationTexts';
@@ -29,6 +31,8 @@ document.documentElement.lang = lingua;
 configureSessionDevice({ schermo: webScreenAwake, nonDisturbare: webDoNotDisturb });
 // L'orologio degli eventi della Diagnostica (T-032)
 configureDiagnostics(webClock);
+// Lettore dei PDF dei materiali (MECC §17, D-MAT-1): pdf.js, caricato solo al primo PDF
+configurePdf(webPdf);
 
 const radice = document.getElementById('root');
 if (radice)

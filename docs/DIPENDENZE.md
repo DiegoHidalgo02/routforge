@@ -20,6 +20,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | `prettier` | dev | formato (`npm run format`, `npm run format:check`) | stile uniforme fra modelli e sessioni diverse | D-LINT-1 |
 | `fflate` | runtime | `src/app/courseImport.ts` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso; piccola, senza dipendenze, stesso codice su web e WebView | D-STACK-1 |
 | `dexie` | runtime | `src/data` (schema v1 e repository), T-004 | IndexedDB con stesso codice su web e WebView; id globali e `updatedAt` per la sync. I suoi tipi citano API DOM: senza la lib `DOM` (D-TS-1) restano comunque stretti sui metodi usati (verificato in T-004) | D-DATA-1 |
+| `pdfjs-dist` | runtime | `src/platform/pdf.ts` (porta `LettorePdf`), T-024 | testo delle prime 40 pagine dei PDF dell'utente (MECC §17, H2) e pagine del visualizzatore (S13) anche dove il browser o la WebView non mostrano i PDF (Android); il worker è un file a parte, caricato solo quando si apre un PDF; la sua dipendenza opzionale `@napi-rs/canvas` serve solo in Node e non entra nel bundle | D-MAT-1 |
 | `fake-indexeddb` | dev | test di `src/data` (`import 'fake-indexeddb/auto'`), T-004 | repository testati senza browser | D-DATA-1 |
 | `react`, `react-dom` | runtime | `src/ui` e `src/main.tsx`, T-006 | React 19: la logica dei mock è scritta con l'API di `React.Component`, la traduzione in componenti è meccanica | D-STACK-1 |
 | `@types/react`, `@types/react-dom` | dev | tipi di React per `tsconfig.dom.json`, T-006 | typecheck della UI | D-STACK-1 |

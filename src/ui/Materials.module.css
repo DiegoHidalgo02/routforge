@@ -1,0 +1,523 @@
+/* Materiali (S12 «Tuoi», S13 PDF, S22 spazio). Restano letterali le misure del mock fuori dalla scala dei token: righe
+   alte 48, area di testo 96, pallino 6, gap 10 · 6 · 2 · 1, padding 10 · 28, rientro delle pill 10, pagina col numero a
+   10 dal bordo, bottoni tondi 40, interlinee 14 · 16 · 18. La barra della pagina corrente sta in alto, sotto la testata:
+   in basso la coprirebbe la barra di navigazione della shell. */
+.tuoi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--color-text);
+}
+
+.testa {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.etichetta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.conteggio {
+  color: var(--color-text-3);
+  font: 500 var(--text-sm) / 14px var(--font-num);
+}
+
+.elenco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.riga {
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.riga:hover {
+  background: var(--color-surface-hover);
+}
+
+.icona {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.freccia {
+  flex: none;
+  color: var(--color-text-3);
+}
+
+.testi {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.titolo,
+.sotto,
+.nome,
+.nomeSpazio {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titolo {
+  font: 500 var(--text-md) / 18px var(--font-ui);
+}
+
+.titolo .num {
+  font: 500 var(--text-base) var(--font-num);
+}
+
+.sotto {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.num {
+  font-family: var(--font-num);
+}
+
+.stato {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.stato .num {
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.pallino {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-3);
+}
+
+.stato[data-attivo] .pallino {
+  background: var(--color-success);
+}
+
+.modulo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-3);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.etichettaModulo {
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+}
+
+.campo,
+.area {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.campo {
+  height: var(--size-control);
+  padding: 0 var(--space-3);
+  font: 500 var(--text-md) var(--font-ui);
+}
+
+.campo.num {
+  font: 500 var(--text-base) var(--font-num);
+}
+
+.area {
+  min-height: 96px;
+  padding: 10px var(--space-3);
+  font: 400 var(--text-md) / var(--leading-body) var(--font-ui);
+  resize: vertical;
+}
+
+.campo:focus,
+.area:focus {
+  border-color: var(--color-primary);
+}
+
+.campo::placeholder,
+.area::placeholder {
+  color: var(--color-text-3);
+}
+
+.nota {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.azioni {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.fantasma,
+.secondario {
+  position: relative;
+  height: var(--size-control-sm);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+}
+
+.fantasma {
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.secondario {
+  padding: 0 var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.fantasma:hover,
+.secondario:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
+.rifiuto {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.allarme {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-danger-ink);
+}
+
+.testiRifiuto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.titoloRifiuto {
+  font: 600 var(--text-md) / 18px var(--font-ui);
+}
+
+.pill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill > button {
+  position: relative;
+  height: var(--size-chip);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-3) 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.pill > button:hover {
+  background: var(--color-surface-2);
+}
+
+.pill > button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.limite {
+  color: var(--color-text-3);
+  font: 400 var(--text-xs) var(--font-ui);
+}
+
+/* Area di tocco 44 per pill (32), bottoni (36) e «Elimina» (28) */
+.pill > button::after,
+.fantasma::after,
+.secondario::after,
+.elimina::after,
+.iconaBottone::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+/* Visualizzatore (S13) */
+.visore {
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text);
+}
+
+.cimaVisore {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: var(--color-surface);
+}
+
+.testaVisore {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.iconaBottone {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.iconaBottone:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.testiVisore {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nome {
+  margin: 0;
+  font: 600 var(--text-lg) / 18px var(--font-ui);
+}
+
+.barraVisore {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.traccia {
+  flex: 1;
+  height: var(--size-accent-bar);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.traccia > span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.pagine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+
+.pagina {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-segment);
+  background: var(--color-surface-2);
+}
+
+.numeroPagina {
+  position: absolute;
+  z-index: 1;
+  top: var(--space-2);
+  right: 10px;
+  color: var(--color-text-3);
+  font: 500 var(--text-2xs) var(--font-num);
+}
+
+.immagine {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.testoNota {
+  padding: var(--space-4) 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font: 400 var(--text-md) / var(--leading-body) var(--font-ui);
+}
+
+/* Spazio dei materiali (S22) */
+.paginaSpazio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--color-text);
+}
+
+.cartaSpazio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.barra {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+}
+
+.barra > span:first-child {
+  background: var(--color-primary);
+}
+
+.barra > span:last-child {
+  background: var(--color-data-2);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) 14px;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) var(--font-ui);
+}
+
+.legenda > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quadratino {
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-xs);
+  background: var(--color-data-2);
+}
+
+.quadratino[data-pdf] {
+  background: var(--color-primary);
+}
+
+.rigaSpazio {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.nomeSpazio {
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.peso {
+  flex: none;
+  color: var(--color-text-2);
+  font-size: var(--text-sm);
+}
+
+.elimina {
+  position: relative;
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-segment);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.elimina:hover {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
+}
+
+.elimina:focus-visible {
+  box-shadow: var(--ring-focus-danger);
+}
+
+.regioneToast {
+  composes: regioneToast from './Today.module.css';
+}
+
+.toast {
+  composes: toast from './Today.module.css';
+}
+
+.puntoToast {
+  composes: puntoToast from './Today.module.css';
+}
+
+.testoToast {
+  composes: testoToast from './Today.module.css';
+}
+
+.annullaToast {
+  composes: annullaToast from './Today.module.css';
+}

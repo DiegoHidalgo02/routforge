@@ -340,12 +340,13 @@ async function courseRecords(db: RoutForgeDb, corsoId: string) {
     b.ricorrenzaId ? routineVia.has(b.ricorrenzaId) : b.tipo === 'studio',
   );
   const staccare = [...tutti.values()].filter((b) => !blocchi.includes(b));
-  const perUnita = <K extends 'mazzi' | 'pratiche' | 'materiali' | 'fileCodice'>(nome: K) =>
+  const perUnita = <K extends 'mazzi' | 'pratiche' | 'fileCodice'>(nome: K) =>
     Promise.all(unita.map((u) => listBy(db, nome, 'unitaId', u.id))).then((x) => x.flat());
   const [mazzi, pratiche, materiali, fileCodice] = await Promise.all([
     perUnita('mazzi'),
     perUnita('pratiche'),
-    perUnita('materiali'),
+    // I materiali per corso: anche quelli rimasti senza unità dopo un reimport (T-024)
+    list(db, 'materiali').then((xs) => xs.filter((m) => m.corsoId === corsoId)),
     perUnita('fileCodice'),
   ]);
   const [carte, binari, log] = await Promise.all([
