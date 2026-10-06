@@ -68,6 +68,7 @@ import {
   pauseSession,
   segmentTimeline,
   resumeSession,
+  SOGLIA_ABBANDONO,
   skipSegment,
   summary,
   timerState,
@@ -186,8 +187,18 @@ export function SessionSetup() {
     contesto === 'routine' && b
       ? t('origineRoutine', { titolo: titoloBlocco(b), ora: b.orarioInizio })
       : contesto === 'recupero' && b
-        ? t('origineRecupero', { data: fmtGiorno.format(b.inizio) })
-        : t('origineLibera');
+        ? // Con lo stato dell'occorrenza: «… di lun 21 set saltata» (S15 `recovery`)
+          t(
+            b.stato === 'saltato'
+              ? 'origineRecuperoSaltata'
+              : b.stato === 'perso'
+                ? 'origineRecuperoPersa'
+                : 'origineRecupero',
+            {
+              data: fmtGiorno.format(b.inizio),
+            },
+          )
+        : t(params.get('unita') ? 'origineLiberaUnita' : 'origineLibera');
   const titoloUnita: Chiave =
     bloccata === null ? 'cosaStudiare' : contesto === 'routine' ? 'unitaProposta' : 'unitaOccorrenza';
 
@@ -386,10 +397,19 @@ function SchedaUnita(p: {
           {t('modulo')} <span className={s.num}>{String(u.moduloNumero).padStart(2, '0')}</span> · {t('unita')}{' '}
           <span className={s.num}>{u.numero}</span>
         </span>
-        {corso.proposta === u.id && <span className={s.tag}>{t('dalPuntatore')}</span>}
+        {(corso.proposta === u.id || p.disabilitata) && <span className={s.tag}>{t('dalPuntatore')}</span>}
       </span>
       <span className={s.unitaTitolo}>{u.titolo}</span>
-      <span className={s.unitaCorso}>{corso.titolo}</span>
+      {/* Il corso con le unità fatte sul totale (S15 «6 / 13 unità») */}
+      <span className={s.unitaCorso}>
+        {corso.titolo} ·{' '}
+        {cifre(
+          t('unitaDelModulo', {
+            fatte: corso.unita.filter((x) => x.stato === 'completata').length,
+            totali: corso.unita.length,
+          }),
+        )}
+      </span>
     </button>
   );
 }
@@ -883,7 +903,7 @@ export function ActiveSession() {
           >
             <button type="button" className={s.abbandonaLink} disabled={inChiusura} onClick={abbandona}>
               {conEsito
-                ? t('chiudiComeContinua', { pct: focusPercent(sx, now) ?? 0 })
+                ? t('chiudiComeContinua', { soglia: SOGLIA_ABBANDONO })
                 : t(sx.bloccoId ? 'abbandonaBlocco' : 'abbandonaSessione')}
             </button>
           </SchedaEsito>

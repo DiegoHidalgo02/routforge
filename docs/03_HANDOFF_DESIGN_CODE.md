@@ -298,6 +298,11 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 66. Sessione su desktop (T-055): Materiale a sinistra e AI · Note in una colonna di 400 a destra, come S15 Desktop;
     nella sessione la carta della sidebar non offre «Riprendi». Debrief: «Abbandona» centrato sotto i bottoni, con «il
     blocco torna programmato» solo se c'è un blocco (n. 47); la riga «Carica il codice prodotto» arriva con T-025.
+67. Sessione, ritocchi (T-055): testata del timer in tempo extra su `--color-surface-overrun`; «Abbandona» oltre soglia
+    col testo del mock («… oltre il 65 %: si chiude con esito Continua», n. 47); card dell'unità del setup con «dal
+    puntatore» anche sull'unità della routine e «6 / 13 unità» del corso; origine «Recupero · occorrenza di … saltata
+    | persa» e «Sessione libera · dall'unità». «Della routine · 45» del mock con l'orologio alle 16:08 contraddice la
+    sua «fine prevista 16:45»: resta la durata fino alla fine del blocco (37, D-SESS-1).
 
 ## 4. Mappa schermata → design → task
 

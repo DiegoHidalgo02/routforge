@@ -339,8 +339,8 @@
 }
 
 /* ---- Timer (S15 `timer`, T-017). Restano misure del mock senza token: timer 44 (mobile) e 26 (desktop, --text-stat),
-   pulsanti tondi 44/40, segmenti alti 6 con larghezza minuti / 5 (minimo 6), barra 3, gap 10 e 6, righe 18/16. Il
-   fondo della testa nel tempo extra (#161C28 nel mock) non ha token: resta surface. ---- */
+   pulsanti tondi 44/40, segmenti alti 6 con larghezza minuti / 5 (minimo 6), barra 3, gap 10 e 6, righe 18/16. Nel
+   tempo extra la testa ha il fondo --color-surface-overrun. ---- */
 /* Alto quanto lo schermo: la testata resta, scorrono il contenuto delle schede e l'elenco delle unità (S15) */
 .timer {
   display: flex;
@@ -365,6 +365,10 @@
   row-gap: 10px;
   padding: var(--space-2) var(--space-3) 14px var(--space-2);
   border-bottom: 1px solid var(--color-border);
+}
+
+.testaTimer[data-stato='extra'] {
+  background: var(--color-surface-overrun);
 }
 
 .testaTimer > .indietro {

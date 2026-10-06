@@ -216,7 +216,7 @@ describe('Iperfocus — SCENARI D5 (UI)', () => {
 describe('Abbandono oltre soglia — SCENARI D7 (UI)', () => {
   // Routine sul blocco 09:00–10:00 avviata alle 09:00 (60 minuti pianificati)
   const alle9 = local(2026, 9, 28, 9);
-  it('alle 09:40 con 39 minuti di focus (65%) il link dice «Close as Continue (65%)» e la schermata finale conferma l’esito', async () => {
+  it('alle 09:40 con 39 minuti di focus (65%) il link dice «Abandon · over 65 %: closes with outcome Continue» e la schermata finale conferma l’esito', async () => {
     await studio('s1', 9);
     await startSession(appDb, 's1', scelta(), alle9, FUSO);
     await editActiveSession(appDb, (x) => pauseSession(x, alle9 + 20 * 60_000), alle9 + 20 * 60_000);
@@ -225,8 +225,8 @@ describe('Abbandono oltre soglia — SCENARI D7 (UI)', () => {
     mostra('/sessione');
     await vi.waitFor(() => expect(box.textContent).toContain('Finish'));
     bottone('Finish').click();
-    await vi.waitFor(() => expect(box.textContent).toContain('Close as Continue (65%)'));
-    bottone('Close as Continue (65%)').click();
+    await vi.waitFor(() => expect(box.textContent).toContain('Abandon · over 65 %: closes with outcome Continue'));
+    bottone('Abandon · over 65 %: closes with outcome Continue').click();
     await vi.waitFor(() => expect(box.textContent).toContain('Outcome · Continue'));
     expect(box.textContent).toContain('You studied 65% of the plan');
     expect(await appDb.blocchi.get('s1')).toMatchObject({ stato: 'parziale', minuti: 39 });
@@ -239,7 +239,7 @@ describe('Abbandono oltre soglia — SCENARI D7 (UI)', () => {
     await vi.waitFor(() => expect(box.textContent).toContain('Finish'));
     bottone('Finish').click();
     await vi.waitFor(() => expect(box.textContent).toContain('Abandon · no outcome'));
-    expect(box.textContent).not.toContain('Close as Continue');
+    expect(box.textContent).not.toContain('closes with outcome Continue');
   });
 });
 
