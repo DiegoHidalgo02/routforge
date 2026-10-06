@@ -47,7 +47,7 @@ const activeAt = (s: SessioneAttiva, t: number): number =>
 /**
  * Battito di continuità (§10.4, D-TIMER-2): registra l'istante; se dall'ultimo battito sono passati più di 30' registra
  * l'intervallo come non verificato. Una pausa rimasta aperta è verificata solo fino all'ultimo battito: si chiude lì,
- * così l'intervallo non conta nemmeno come pausa volontaria e «Conta nel focus» ha effetto.
+ * così l'intervallo non conta nemmeno come pausa volontaria e «Conta come studio» ha effetto.
  */
 export function beat(s: SessioneAttiva, now: number): SessioneAttiva {
   if (now - s.ultimoBattito <= SOGLIA_NON_VERIFICATO) return { ...s, ultimoBattito: now };
@@ -60,10 +60,16 @@ export function beat(s: SessioneAttiva, now: number): SessioneAttiva {
   };
 }
 
-/** «Conta nel focus» (§10.4): l'intervallo non verificato che inizia a `da` entra nel focus. */
+/** «Conta come studio» (§10.4): l'intervallo non verificato che inizia a `da` entra nel focus. */
 export const countInterval = (s: SessioneAttiva, da: number): SessioneAttiva => ({
   ...s,
   intervalliNonVerificati: s.intervalliNonVerificati.map((i) => (i.da === da ? { ...i, contato: true } : i)),
+});
+
+/** «Lascia fuori» (S15, handoff §3 n. 40): l'intervallo che inizia a `da` resta fuori dal focus e l'avviso si chiude. */
+export const excludeInterval = (s: SessioneAttiva, da: number): SessioneAttiva => ({
+  ...s,
+  intervalliNonVerificati: s.intervalliNonVerificati.map((i) => (i.da === da ? { ...i, escluso: true } : i)),
 });
 
 /** Durata pianificata in ms (§10.2): fine − avvio se ancorata all'orologio, altrimenti la durata; `null` col cronometro. */

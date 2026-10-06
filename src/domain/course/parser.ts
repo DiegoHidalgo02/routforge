@@ -618,3 +618,15 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
 
 /** Massimo avvisi mostrati all'utente (MECC §16). Il parser li restituisce tutti; la UI ne mostra 5. */
 export const MAX_WARNINGS_SHOWN = 5;
+
+/**
+ * Il titolo di una sezione accanto al suo badge (S15 Materiale, S12; FORMATO §3): dopo i due punti che vengono prima di
+ * ogni parentesi, senza virgolette («Mini Progetto Finale: "Batteria…"» → «Batteria…»), altrimenti fra le parentesi
+ * finali («Teoria (Fondamenta)» → «Fondamenta»), altrimenti l'intestazione intera. Il design non dà la regola: handoff
+ * §3 n. 65.
+ */
+export function sectionTitle(intestazione: string): string {
+  const dopo = /^[^:(]*:\s*(.+)$/.exec(intestazione)?.[1];
+  if (dopo) return dopo.replaceAll('"', '').trim();
+  return /\(([^)]+)\)\s*$/.exec(intestazione)?.[1] ?? intestazione;
+}

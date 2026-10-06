@@ -2,17 +2,19 @@
 // `/sessione/setup?blocco=<id>` (sessione sul blocco: il contesto lo decide l'orologio) o `?unita=<id>` (sessione
 // libera, anche senza unità): cosa studiare, quanto, modalità, iperfocus; «Inizia» scrive la sessione attiva e porta a
 // `/sessione`. Con una sessione già attiva il setup porta lì (D6). `/sessione` è il timer (T-017, MECC §10.2–§10.5),
-// il banner «Sessione in corso» lo riapre. Le regole stanno in `domain/session.ts`, `domain/timer.ts` e
-// `app/session.ts`. Decisioni: D-SESS-1, D-TIMER-1.
+// il banner «Sessione in corso» lo riapre; sotto il timer le schede Materiale · AI · Note (T-055). Le regole stanno in
+// `domain/session.ts`, `domain/timer.ts` e `app/session.ts`. Decisioni: D-SESS-1, D-TIMER-1.
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Check,
   ChevronDown,
   ChevronLeft,
   CircleAlert,
   Clock,
   Crosshair,
+  KeyRound,
   ListIcon,
   Lock,
   Pause,
@@ -20,11 +22,14 @@ import {
   RefreshCcw,
   Repeat,
   SkipForward,
+  SlidersVertical,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { readStreak } from '../app/outcome';
 import {
   abandonSession,
   anticipateSession,
@@ -33,6 +38,7 @@ import {
   startSession,
   readSessionView,
   setupInputs,
+  type SessioneRegistrata,
   type CorsoSetup,
   type IngressiSetup,
   type UnitaSetup,
@@ -55,6 +61,7 @@ import {
   changeUnit,
   countInterval,
   currentStudyUnit,
+  excludeInterval,
   exitLocked,
   focusPercent,
   pauseSession,
@@ -65,6 +72,7 @@ import {
   timerState,
   type StatoTimer,
 } from '../domain/timer';
+import type { TipoSezione } from '../domain/course/parser';
 import type { Blocco, Esito } from '../domain/types';
 import { useMinuto, useSecondo } from './clock';
 import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
@@ -101,6 +109,18 @@ const MODALITA: { id: Modalita; num?: string }[] = [
   { id: 'p90', num: '90 · 20' },
 ];
 const DURATA_PREDEFINITA = 50;
+
+/** Le cifre di un testo nel font dei numeri (DESIGN: cifre in `--font-num`). */
+const cifre = (testo: string) =>
+  testo.split(/(\d[\d:.,]*)/).map((x, i) =>
+    i % 2 ? (
+      <span key={i} className={s.num}>
+        {x}
+      </span>
+    ) : (
+      x
+    ),
+  );
 
 /** Durata come la scrive il mock: «45 min», «1h», «1h 30m». */
 const inMinuti = (min: number) => (min < 60 ? `${min} ${t('minutiUnita')}` : durataBreve(min));
@@ -488,6 +508,8 @@ export function ActiveSession() {
     puntatore: string | null;
     minuti: number;
     percento: number | null;
+    libera: boolean;
+    streak: { giorni: number; piu: boolean };
   } | null>(null);
   const attiva = Boolean(vista);
   const bloccata = vista ? exitLocked(vista.sessione, now) : false;
@@ -533,10 +555,11 @@ export function ActiveSession() {
           <span className={s.fattoTesto}>
             {fatto.percento !== null
               ? t('esitoAutomaticoTesto', { pct: fatto.percento })
-              : t(fatto.dati.contaNelPiano ? 'esitoFattoTesto' : 'contaNo')}
+              : t(!fatto.dati.contaNelPiano ? 'contaNo' : fatto.libera ? 'esitoLiberaTesto' : 'esitoFattoTesto')}
           </span>
         </span>
         <span className={`${s.righe} ${s.fattoRighe}`}>
+          <Riga etichetta={t('giorniDiFila')} valore={String(fatto.streak.giorni)} piu={fatto.streak.piu} />
           <Riga etichetta={t('durataCampo')} valore={`${fatto.minuti} ${t('minutiUnita')}`} />
           <Riga etichetta={t('sicurezza')} valore={etichettaConfidenza(fatto.dati.confidenza)} />
           {fatto.puntatore && <Riga etichetta={t('puntatore')} valore={fatto.puntatore} puntatore />}
@@ -574,19 +597,29 @@ export function ActiveSession() {
     const n = adesso();
     void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
   };
+  // Chiude e legge la streak prima e dopo: «+1» solo se questa chiusura l'ha fatta crescere (§12, handoff §3 n. 48)
+  const chiudiCon = async (chiusura: () => Promise<SessioneRegistrata | null>) => {
+    const n = adesso();
+    const prima = await readStreak(appDb, n);
+    const c = await chiusura();
+    const giorni = await readStreak(appDb, adesso());
+    return c && { c, streak: { giorni, piu: giorni > prima } };
+  };
   // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma; altrimenti si torna a Oggi
   const abbandona = () => {
     if (inChiusura) return;
     setInChiusura(true);
-    void abandonSession(appDb, adesso(), fuso())
+    void chiudiCon(() => abandonSession(appDb, adesso(), fuso()))
       .catch(() => null)
-      .then((c) =>
-        c?.esito
+      .then((x) =>
+        x?.c.esito
           ? setFatto({
-              dati: c.esito,
+              dati: x.c.esito,
               puntatore: null,
-              minuti: minutiDi(c.riepilogo.focus),
-              percento: focusPercent(c, c.chiusaIl),
+              minuti: minutiDi(x.c.riepilogo.focus),
+              percento: focusPercent(x.c, x.c.chiusaIl),
+              libera: x.c.bloccoId === null,
+              streak: x.streak,
             })
           : navigate('/', { replace: true }),
       );
@@ -595,11 +628,18 @@ export function ActiveSession() {
   const registra = (dati: DatiEsito, puntatore: string | null) => {
     if (inChiusura) return;
     setInChiusura(true);
-    void endSession(appDb, adesso(), fuso(), dati)
+    void chiudiCon(() => endSession(appDb, adesso(), fuso(), dati))
       .catch(() => null)
-      .then((c) =>
-        c
-          ? setFatto({ dati, puntatore, minuti: minutiDi(c.riepilogo.focus), percento: null })
+      .then((x) =>
+        x
+          ? setFatto({
+              dati,
+              puntatore,
+              minuti: minutiDi(x.c.riepilogo.focus),
+              percento: null,
+              libera: x.c.bloccoId === null,
+              streak: x.streak,
+            })
           : navigate('/', { replace: true }),
       );
   };
@@ -615,21 +655,34 @@ export function ActiveSession() {
       {t('iperfocus')}
     </span>
   );
-  // Intervalli non verificati alla riapertura (§10.4, D-TIMER-2): ora dell'ultimo battito (circa), durata per eccesso,
-  // tempo residuo; restano finché l'utente non li conta. Anche nell'iperfocus, dove l'ora di sblocco ne dipende
+  // Intervalli non verificati alla riapertura (§10.4, D-TIMER-2; S15): ora dell'ultimo battito, durata per eccesso,
+  // tempo residuo; restano finché l'utente non li conta o li lascia fuori (handoff §3 n. 40). Anche nell'iperfocus,
+  // dove l'ora di sblocco ne dipende
   const residuo = st.restante === null ? null : inMinuti(minutiDi(st.restante));
   const avvisiNonVerificati = sx.intervalliNonVerificati
-    .filter((i) => !i.contato)
+    .filter((i) => !i.contato && !i.escluso)
     .map((i) => {
       const dati = { ora: localTimeKey(i.da), min: Math.ceil((i.a - i.da) / MINUTE) };
       return (
         <div key={i.da} className={s.nonVerificato} role="status">
-          <span>
-            {residuo === null ? t('nonVerificatoSenzaFine', dati) : t('nonVerificato', { ...dati, restante: residuo })}
+          <span className={s.testoNonVerificato}>
+            <Clock size={16} className={s.iconaNonVerificato} />
+            <span>
+              {cifre(
+                residuo === null
+                  ? t('nonVerificatoSenzaFine', dati)
+                  : t('nonVerificato', { ...dati, restante: residuo }),
+              )}
+            </span>
           </span>
-          <button type="button" className={s.pill} onClick={() => modifica((x) => countInterval(x, i.da))}>
-            {t('contaNelFocus')}
-          </button>
+          <span className={s.azioniNonVerificato}>
+            <button type="button" className={s.lasciaFuori} onClick={() => modifica((x) => excludeInterval(x, i.da))}>
+              {t('lasciaFuori')}
+            </button>
+            <button type="button" className={s.contaStudio} onClick={() => modifica((x) => countInterval(x, i.da))}>
+              {t('contaComeStudio')}
+            </button>
+          </span>
         </div>
       );
     });
@@ -773,6 +826,8 @@ export function ActiveSession() {
       </div>
 
       {avvisiNonVerificati}
+
+      {!elenco && <Schede unitaId={currentStudyUnit(sx)} note={sx.note ?? ''} />}
 
       {elenco && ingressi && (
         <div className={s.elencoUnita}>
@@ -1015,13 +1070,157 @@ function Foglio(p: { titolo: string; scuro?: boolean; onEsc: () => void; childre
   );
 }
 
-function Riga({ etichetta, valore, puntatore }: { etichetta: string; valore: string; puntatore?: boolean }) {
+function Riga(p: { etichetta: string; valore: string; puntatore?: boolean; piu?: boolean }) {
   return (
     <span className={s.riga}>
-      {etichetta}
-      <span className={s.rigaValore} data-puntatore={puntatore || undefined}>
-        {valore}
+      {p.etichetta}
+      <span className={s.rigaValore} data-puntatore={p.puntatore || undefined}>
+        {p.valore}
+        {p.piu && <span className={s.piuUno}>+1</span>}
       </span>
     </span>
+  );
+}
+
+type Scheda = 'materiale' | 'ai' | 'note';
+const SCHEDE: { id: Scheda; chiave: Chiave }[] = [
+  { id: 'materiale', chiave: 'materiale' },
+  { id: 'ai', chiave: 'ai' },
+  { id: 'note', chiave: 'note' },
+];
+const SEZIONE: Record<TipoSezione, Chiave> = {
+  teoria: 'sezioneTeoria',
+  studio: 'sezioneStudio',
+  pratica: 'sezionePratica',
+  progetto: 'sezioneProgetto',
+};
+
+/**
+ * Le schede sotto il timer (S15 `tab`, FUNZ §11.2): il Materiale dell'unità studiata adesso, l'AI (senza client né chiave
+ * ancora: lo stato «Serve la chiave API Gemini» di S19, T-026) e le Note della sessione. Il conteggio «2» della scheda AI
+ * del mock non dice che cosa conti: non c'è (handoff §3 n. 65).
+ */
+function Schede({ unitaId, note }: { unitaId: string | null; note: string }) {
+  const [scheda, setScheda] = useState<Scheda>('materiale');
+  return (
+    <>
+      <div className={s.schede} role="group" aria-label={t('schede')}>
+        {SCHEDE.map(({ id, chiave }) => (
+          <button
+            key={id}
+            type="button"
+            className={s.scheda}
+            aria-pressed={scheda === id}
+            onClick={() => setScheda(id)}
+          >
+            {t(chiave)}
+          </button>
+        ))}
+      </div>
+      <div key={scheda} className={s.contenutoScheda} data-scheda={scheda}>
+        {scheda === 'note' ? (
+          <Note note={note} />
+        ) : scheda === 'ai' ? (
+          <SenzaChiave />
+        ) : unitaId ? (
+          <Materiale unitaId={unitaId} />
+        ) : (
+          <span className={s.vuotoScheda}>{t('nessunaUnitaAssegnata')}</span>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** Concetto core e sezioni dell'unità con le risorse (S15 `tab=material`); testo semplice, senza HTML del corso. */
+function Materiale({ unitaId }: { unitaId: string }) {
+  const [m, setM] = useState<MaterialeUnita | null>();
+  useEffect(() => watch(() => readUnitMaterial(appDb, unitaId), setM), [unitaId]);
+  if (!m) return null;
+  return (
+    <>
+      {m.concettoCore && (
+        <div className={s.gruppoMateriale}>
+          <span className={s.etichettaMateriale}>{t('concettoCore')}</span>
+          <p className={s.concettoCore}>{m.concettoCore.testo}</p>
+        </div>
+      )}
+      {m.sezioni.map((x) => (
+        <div key={x.id} className={s.gruppoMateriale}>
+          <span className={s.testaSezione}>
+            <span className={s.badgeSezione}>{t(SEZIONE[x.tipo])}</span>
+            {x.titolo}
+          </span>
+          {x.risorse.map((r, i) => (
+            <a key={i} className={s.risorsa} href={r.url} target="_blank" rel="noopener noreferrer">
+              <span className={s.testiRisorsa}>
+                <span className={s.titoloRisorsa}>{r.titolo}</span>
+                <span className={s.hostRisorsa}>{r.host}</span>
+              </span>
+              <ArrowUpRight size={14} className={s.frecciaRisorsa} />
+            </a>
+          ))}
+          {x.descrizione && <p className={s.descrizione}>{x.descrizione}</p>}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Ms di quiete prima di salvare le note mentre si scrive; all'uscita dal campo si salva subito. */
+const NOTE_MS = 600;
+
+/** Le note della sessione (S15 `tab=notes`): markdown, salvate sulla sessione attiva, restano nella sessione chiusa. */
+function Note({ note }: { note: string }) {
+  const [testo, setTesto] = useState(note);
+  const salva = () => {
+    if (testo !== note) void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(() => null);
+  };
+  useEffect(() => {
+    if (testo === note) return;
+    const id = setTimeout(
+      () => void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(() => null),
+      NOTE_MS,
+    );
+    return () => clearTimeout(id);
+  }, [testo, note]);
+  return (
+    <>
+      <span className={s.testaNote}>
+        {t('noteSessione')}
+        {testo === note && (
+          <span className={s.salvate}>
+            {t('salvate')} <span className={s.puntoSalvate}>●</span>
+          </span>
+        )}
+      </span>
+      <textarea
+        className={s.areaNote}
+        value={testo}
+        placeholder={t('scriviMentreStudi')}
+        aria-label={t('noteSessione')}
+        onChange={(e) => setTesto(e.currentTarget.value)}
+        onBlur={salva}
+      />
+    </>
+  );
+}
+
+/** La scheda AI senza chiave Gemini (S19 `chat-nokey`): la chat arriva con il client di T-026. */
+function SenzaChiave() {
+  return (
+    <div className={s.senzaChiave}>
+      <span className={s.iconaChiave}>
+        <KeyRound size={24} />
+      </span>
+      <span className={s.testiChiave}>
+        <span className={s.titoloChiave}>{t('chiaveGeminiTitolo')}</span>
+        <span className={s.testoChiave}>{t('chiaveGeminiTesto')}</span>
+      </span>
+      <Link to="/impostazioni" className={s.secondario}>
+        <SlidersVertical size={16} />
+        {t('impostazioniModelloAi')}
+      </Link>
+    </div>
   );
 }

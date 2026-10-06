@@ -624,7 +624,7 @@ describe('Casistica delle chiusure — docs/SESSIONI.md (D-SESS-2 confermata il 
       streak: 0,
     },
     {
-      caso: '19. come il 18 ma con «Conta nel focus»: 55 minuti (91%), chiusa come Continua con 55 minuti',
+      caso: '19. come il 18 ma con «Conta come studio»: 55 minuti (91%), chiusa come Continua con 55 minuti',
       avvio: oggi(9),
       azioni: modifica(...battiti(oggi(9, 10), oggi(9, 50)), [oggi(9, 51), (s) => countInterval(s, oggi(9, 10))]),
       chiudi: abbandona,

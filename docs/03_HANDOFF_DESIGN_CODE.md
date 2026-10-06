@@ -285,6 +285,16 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     mock, da decidere.
 64. Toast di Oggi (S1): pallino verde per ciò che è fatto (spunta, esito, voci tutte fatte), nel colore del todo per i
     todo nuovi (creato, voci rimaste, follow-up), primary per il resto (creazioni, «Modifiche salvate»), come nel mock.
+65. Sessione (T-055, primo incremento): schede Materiale · AI · Note sotto il timer, con la testata ferma e il contenuto
+    che scorre; Materiale = concetto core e sezioni dell'unità studiata adesso, testo semplice, titolo della sezione
+    ricavato dall'intestazione (`sectionTitle`: la regola non è nel design), descrizione con la maiuscola come nel mock;
+    senza unità «Nessuna unità assegnata» (n. 45); i «Tuoi» materiali arrivano con T-024. AI: lo stato «Serve la chiave
+    API Gemini» di S19 finché non c'è il client (T-026); il conteggio «2» della scheda e il link «Come ottenere una
+    chiave» non hanno un significato o una destinazione nel pacchetto: non ci sono. Note: markdown sulla sessione
+    attiva, salvate dopo 600 ms di quiete e all'uscita dal campo, restano nella sessione chiusa; «salvate» in text-3
+    come nel mock. Intervallo non verificato con «Lascia fuori» e «Conta come studio» (n. 40, applicata). Fine: «Giorni
+    di fila» con «+1» solo se la chiusura ha fatto crescere la streak; «La card su Oggi è spuntata» solo con un blocco,
+    per la libera solo la seconda frase (n. 48, applicata).
 
 ## 4. Mappa schermata → design → task
 

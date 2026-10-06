@@ -9,6 +9,7 @@ import {
   closeSession,
   countInterval,
   currentStudyUnit,
+  excludeInterval,
   exitLocked,
   focusPercent,
   pauseSession,
@@ -158,7 +159,7 @@ describe('Persistenza e continuità — SCENARI D4', () => {
     expect(timerState(esatti, ore(9, 30)).focus).toBe(30 * MINUTE);
     expect(timerState(beat(sessione(), ore(9, 30, 1)), ore(9, 30, 1)).focus).toBe(0);
   });
-  it('«Conta nel focus» attribuisce l’intervallo al focus', () => {
+  it('«Conta come studio» attribuisce l’intervallo al focus', () => {
     const s = beat(sessione(), ore(9, 45));
     const contato = countInterval(s, ore(9));
     expect(contato.intervalliNonVerificati).toEqual([{ da: ore(9), a: ore(9, 45), contato: true }]);
@@ -171,6 +172,11 @@ describe('Persistenza e continuità — SCENARI D4', () => {
     expect(timerState(s, ore(9, 50))).toMatchObject({ focus: 5 * MINUTE, inPausa: false });
     expect(summary(s, ore(9, 50))).toMatchObject({ durataPause: 0, numeroPause: 1 });
     expect(timerState(countInterval(s, ore(9, 5)), ore(9, 50)).focus).toBe(50 * MINUTE);
+  });
+  it('«Lascia fuori» chiude l’avviso e lascia l’intervallo fuori dal focus', () => {
+    const s = excludeInterval(beat(sessione(), ore(9, 45)), ore(9));
+    expect(s.intervalliNonVerificati).toEqual([{ da: ore(9), a: ore(9, 45), contato: false, escluso: true }]);
+    expect(timerState(s, ore(9, 46)).focus).toBe(1 * MINUTE);
   });
 });
 

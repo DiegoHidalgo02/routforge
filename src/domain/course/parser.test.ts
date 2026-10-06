@@ -8,6 +8,7 @@ import {
   parseEstimatedHours,
   parseModule,
   parseThreshold,
+  sectionTitle,
 } from './parser';
 import { local } from '../time';
 import { assignPointer, type UnitaPercorso } from '../pointer';
@@ -407,5 +408,23 @@ describe('Vocabolario unico — unità importate e puntatore (D-NAMING-1)', () =
     const unita: UnitaPercorso[] = corso.moduli.flatMap((m) => m.unita); // verificato dal compilatore
     const mappa = assignPointer(unita, [{ id: 'b1', inizio: local(2026, 9, 23, 9, 0) }]);
     expect(mappa.get('b1')).toBe('corso-1:M1:U1.1');
+  });
+});
+
+describe('Titolo della sezione — FORMATO_CORSO §3', () => {
+  it('fra parentesi, dopo i due punti senza virgolette, altrimenti l’intestazione', () => {
+    expect(sectionTitle('Teoria (Fondamenta)')).toBe('Fondamenta');
+    expect(sectionTitle('Pratica (Testing & Debugging)')).toBe('Testing & Debugging');
+    expect(sectionTitle('Mini Progetto Finale: "Batteria di previsioni: 10 su Loupe"')).toBe(
+      'Batteria di previsioni: 10 su Loupe',
+    );
+    expect(sectionTitle('Mini Progetto Finale: "Closure senza rete" (factory in console)')).toBe(
+      'Closure senza rete (factory in console)',
+    );
+    expect(sectionTitle('Mini Progetto Finale: vedi Progetto del Modulo (Task Tracker)')).toBe(
+      'vedi Progetto del Modulo (Task Tracker)',
+    );
+    expect(sectionTitle('Studio (Visualizzazione: video)')).toBe('Visualizzazione: video');
+    expect(sectionTitle('Esercizi')).toBe('Esercizi');
   });
 });

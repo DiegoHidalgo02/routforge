@@ -102,7 +102,7 @@ describe('Una sola sessione — SCENARI D6 (UI)', () => {
 });
 
 describe('Persistenza e continuità — SCENARI D4 (UI)', () => {
-  it('riaperta 45 minuti dopo l’ultimo battito: avviso con l’ora, la durata e il tempo residuo; «Count as focus» li attribuisce', async () => {
+  it('riaperta 45 minuti dopo l’ultimo battito: avviso con l’ora, la durata e il tempo residuo; «Count as study» li attribuisce', async () => {
     await startSession(appDb, null, scelta(), ADESSO, FUSO);
     // Il battito della riapertura (`startHeartbeat`, main.tsx) registra l'intervallo
     const riapertura = ADESSO + 45 * 60_000;
@@ -110,14 +110,30 @@ describe('Persistenza e continuità — SCENARI D4 (UI)', () => {
     vi.setSystemTime(riapertura);
     mostra('/sessione');
     await vi.waitFor(() =>
-      expect(box.textContent).toContain('Unverified since about 10:20: 45 min outside focus · 50 min left'),
+      expect(box.textContent).toContain(
+        'Idle since 10:20 for 45 min: unverified interval, left out of focus. 50 min left.',
+      ),
     );
     expect(box.textContent).toContain('50:00');
-    bottone('Count as focus').click();
+    bottone('Count as study').click();
     await vi.waitFor(() => expect(box.textContent).toContain('05:00'));
-    expect(box.textContent).not.toContain('Unverified');
+    expect(box.textContent).not.toContain('unverified interval');
     expect((await readActiveSession(appDb))?.intervalliNonVerificati).toEqual([
       { da: ADESSO, a: ADESSO + 45 * 60_000, contato: true },
+    ]);
+  });
+  it('«Leave out» chiude l’avviso e lascia l’intervallo fuori dal focus (handoff §3 n. 40)', async () => {
+    await startSession(appDb, null, scelta(), ADESSO, FUSO);
+    const riapertura = ADESSO + 45 * 60_000;
+    await editActiveSession(appDb, (x) => beat(x, riapertura), riapertura);
+    vi.setSystemTime(riapertura);
+    mostra('/sessione');
+    await vi.waitFor(() => expect(box.textContent).toContain('unverified interval'));
+    bottone('Leave out').click();
+    await vi.waitFor(() => expect(box.textContent).not.toContain('unverified interval'));
+    expect(box.textContent).toContain('50:00');
+    expect((await readActiveSession(appDb))?.intervalliNonVerificati).toEqual([
+      { da: ADESSO, a: ADESSO + 45 * 60_000, contato: false, escluso: true },
     ]);
   });
   it('ancorata all’orologio (routine 09:00–10:00) riaperta alle 09:45: il residuo è la fine del blocco, 15 minuti', async () => {
@@ -128,21 +144,25 @@ describe('Persistenza e continuità — SCENARI D4 (UI)', () => {
     vi.setSystemTime(alle9 + 45 * 60_000);
     mostra('/sessione');
     await vi.waitFor(() =>
-      expect(box.textContent).toContain('Unverified since about 09:00: 45 min outside focus · 15 min left'),
+      expect(box.textContent).toContain(
+        'Idle since 09:00 for 45 min: unverified interval, left out of focus. 15 min left.',
+      ),
     );
     expect(box.textContent).toContain('15:00');
   });
-  it('nell’iperfocus l’avviso compare lo stesso e «Count as focus» anticipa l’ora di sblocco', async () => {
+  it('nell’iperfocus l’avviso compare lo stesso e «Count as study» anticipa l’ora di sblocco', async () => {
     await startSession(appDb, null, scelta({ iperfocus: true }), ADESSO, FUSO);
     const riapertura = ADESSO + 45 * 60_000;
     await editActiveSession(appDb, (x) => beat(x, riapertura), riapertura);
     vi.setSystemTime(riapertura);
     mostra('/sessione');
     await vi.waitFor(() => expect(box.textContent).toContain('Exit unlocks at 11:55'));
-    expect(box.textContent).toContain('Unverified since about 10:20: 45 min outside focus · 50 min left');
-    bottone('Count as focus').click();
+    expect(box.textContent).toContain(
+      'Idle since 10:20 for 45 min: unverified interval, left out of focus. 50 min left.',
+    );
+    bottone('Count as study').click();
     await vi.waitFor(() => expect(box.textContent).toContain('Exit unlocks at 11:10'));
-    expect(box.textContent).not.toContain('Unverified');
+    expect(box.textContent).not.toContain('unverified interval');
   });
   it('riaperta 12 minuti dopo, il banner mostra la sessione e «Resume» riporta al timer', async () => {
     await startSession(appDb, null, scelta(), ADESSO, FUSO);

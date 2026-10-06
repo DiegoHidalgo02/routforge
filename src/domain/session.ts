@@ -36,12 +36,14 @@ export interface SceltaSessione {
 
 /**
  * Intervallo di continuità non verificata (§10.4, D-TIMER-2): più di 30' dall'ultimo battito. Fuori dal focus e dalle
- * pause finché l'utente non lo attribuisce al focus (`contato`).
+ * pause finché l'utente non lo attribuisce al focus (`contato`); «Lascia fuori» lo lascia escluso e chiude l'avviso
+ * (`escluso`, S15, handoff §3 n. 40).
  */
 export interface IntervalloNonVerificato {
   da: number;
   a: number;
   contato: boolean;
+  escluso?: boolean;
 }
 
 /**
@@ -65,6 +67,8 @@ export interface SessioneAttiva extends SceltaSessione {
   ultimoBattito: number;
   /** Intervalli non verificati già riconosciuti da un battito (§10.4, D-TIMER-2). */
   intervalliNonVerificati: IntervalloNonVerificato[];
+  /** Note della sessione (S15 «Note», FUNZ §11.2), markdown: restano nella sessione chiusa. */
+  note?: string;
 }
 
 /** I campi del timer di una sessione appena avviata (T-017, T-047). */

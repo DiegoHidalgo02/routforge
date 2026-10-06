@@ -76,7 +76,7 @@ background anche su iOS e web.
   riapertura» come dice il testo. Fra la riapertura e la scrittura del battito il timer può mostrare per un istante il
   tempo intero come focus.
 - Una **pausa rimasta aperta** è verificata solo fino all'ultimo battito: il battito che registra l'intervallo la chiude
-  lì, così l'intervallo non conta né nel focus né come pausa volontaria (§10.4) e «Conta nel focus» ha effetto; alla
+  lì, così l'intervallo non conta né nel focus né come pausa volontaria (§10.4) e «Conta come studio» ha effetto; alla
   riapertura la sessione non è in pausa (uscire dall'interfaccia non mette in pausa, n. 4).
 - L'avviso resta finché l'intervallo non è attribuito (non c'è «lascia fuori»: la spec non lo prevede) e compare anche
   nell'iperfocus, dove l'ora di sblocco di una sessione ancorata al focus dipende dall'attribuzione.
@@ -94,4 +94,4 @@ Fatta con T-047: `src/domain/timer.test.ts` («Persistenza e continuità — SCE
 battito ed escluso dal focus, attribuzione manuale, 30 minuti esatti inclusi e 30'01" esclusi, fine ancorata
 invariata, focus confermato per la soglia di D7, pausa sovrapposta), `src/app/session.test.ts` (battito subito, ogni
 minuto e al primo piano con l'orologio finto; D4 seconda parte dal database; righe vecchie), `src/ui/Session.test.tsx`
-(avviso alla riapertura e «Conta nel focus»).
+(avviso alla riapertura e «Conta come studio»).
