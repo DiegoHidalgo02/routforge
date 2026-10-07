@@ -135,12 +135,17 @@ export interface IngressiSetup {
   corsi: CorsoSetup[];
 }
 
-/** Gli ingressi del setup: sessione attiva, blocco d'origine (se c'è) e corsi con le loro unità. */
+/**
+ * Gli ingressi del setup: sessione attiva, blocco d'origine (se c'è) e corsi con le loro unità. Un'unità che qui non c'è
+ * (una routine ricevuta col corso di un altro dispositivo, non ancora importato: MECC §25, J3) vale come nessuna: il
+ * setup è libero.
+ */
 export async function setupInputs(db: RoutForgeDb, bloccoId: string | null): Promise<IngressiSetup> {
   const [corsi, moduli, unita] = await Promise.all([list(db, 'corsi'), list(db, 'moduli'), list(db, 'unita')]);
+  const b = bloccoId ? await get(db, 'blocchi', bloccoId) : undefined;
   return {
     attiva: await readActiveSession(db),
-    blocco: bloccoId ? ((await get(db, 'blocchi', bloccoId)) ?? null) : null,
+    blocco: b ? (b.unitaId && !unita.some((u) => u.id === b.unitaId) ? { ...b, unitaId: null } : b) : null,
     corsi: corsi
       .sort((a, b) => a.importatoIl - b.importatoIl)
       .map((c) => {

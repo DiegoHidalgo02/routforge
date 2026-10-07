@@ -6,6 +6,7 @@ import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 import {
   editPlan,
   horizonSlotRange,
+  isMovedOccurrence,
   missingOccurrences,
   occurrenceDay,
   occurrenceId,
@@ -261,6 +262,13 @@ describe("Id dell'occorrenza = slot della ricorrenza — D-DATA-2", () => {
     const occ = missingOccurrences(ricorrenza(), [], NOW);
     const spostata = { ...occ[0]!, inizio: local(2026, 9, 23, 6, 40), fine: local(2026, 9, 23, 7, 40) };
     expect(missingOccurrences(ricorrenza(), [spostata, ...occ.slice(1)], NOW)).toEqual([]);
+  });
+
+  it('spostata = giorno o orario di parete diversi dallo slot del suo id; una ricorrenza che cambia orario non sposta le sue (D-SYNC-6)', () => {
+    const slot = { id: 'r-corsa:2026-09-23:07:00', giornoLocale: '2026-09-23', orarioInizio: '07:00' };
+    expect(isMovedOccurrence(slot, 'r-corsa')).toBe(false);
+    expect(isMovedOccurrence({ ...slot, orarioInizio: '06:40' }, 'r-corsa')).toBe(true);
+    expect(isMovedOccurrence({ ...slot, giornoLocale: '2026-09-24' }, 'r-corsa')).toBe(true);
   });
 
   it("il giorno dello slot si legge dall'id, anche con un id di ricorrenza qualsiasi (T-009: eliminare un'occorrenza spostata)", () => {

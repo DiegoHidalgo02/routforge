@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampUpdatedAt,
+  courseFingerprint,
   decide,
   isGenerata,
   isSynced,
   mergeLocalFields,
+  needsFingerprints,
+  relinkPlan,
   serverAccepts,
   stripLocalFields,
   toEnvelope,
@@ -126,5 +129,86 @@ describe('Che cosa viaggia — MECCANISMI §25 (D-SYNC-3)', () => {
     expect(validEnvelope(busta('preferenze', 'impostazioni', { id: 'chiaveAi', valore: 'AIza-altrui' }))).toBe(false);
     expect(validEnvelope(busta('materiali', 'm1', { id: 'm1' }))).toBe(false);
     expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: null }, 5))).toBe(false);
+  });
+});
+
+describe('Corsi e routine di studio — MECCANISMI §25 (impronta del corso, D-SYNC-5)', () => {
+  const moduli = [
+    { numero: 1, markdown: '# MODULO M1 — Tooling Moderno' },
+    { numero: 0, markdown: '# MODULO M0 — Riattivazione JavaScript' },
+  ];
+  it('l’impronta viene da titolo e contenuto: non dall’ordine in cui si leggono i moduli', () => {
+    const impronta = courseFingerprint('Syllabus', moduli);
+    expect(courseFingerprint('Syllabus', [...moduli].reverse())).toBe(impronta);
+    expect(courseFingerprint('Altro corso', moduli)).not.toBe(impronta);
+    expect(courseFingerprint('Syllabus', [moduli[0]!, { numero: 0, markdown: '# MODULO M0 — Altro' }])).not.toBe(
+      impronta,
+    );
+  });
+
+  // Adesso: i blocchi futuri iniziano dopo
+  const ADESSO = 1_000;
+  const qui = new Set(['c-qui', 'c-doppio', 'c-altro']);
+  const impronte = [
+    { id: 'c-qui', impronta: 'i1' },
+    { id: 'c-doppio', impronta: 'i1' },
+    { id: 'c-altro', impronta: 'i2' },
+  ];
+  const ricorrenza = (corsoId: string | null, impronta: string | null = null) => ({ id: 'r1', corsoId, impronta });
+  const blocco = (
+    id: string,
+    corsoId: string,
+    over: Partial<{ stato: 'programmato' | 'completato'; inizio: number; unitaId: string | null }> = {},
+  ) => ({ id, stato: 'programmato' as const, inizio: ADESSO + 1, corsoId, unitaId: null, ricorrenzaId: 'r1', ...over });
+
+  it('una routine col corso di un altro dispositivo passa al corso di qui con la stessa impronta, il primo importato; i blocchi programmati futuri la seguono senza unità', () => {
+    const piano = relinkPlan(
+      [ricorrenza('c-fuori', 'i1')],
+      qui,
+      impronte,
+      [
+        blocco('futuro', 'c-fuori', { unitaId: 'c-fuori:M0:U0.1' }),
+        blocco('fatto', 'c-fuori', { stato: 'completato', unitaId: 'c-fuori:M0:U0.1' }),
+        blocco('passato', 'c-fuori', { inizio: ADESSO - 1 }),
+      ],
+      ADESSO,
+    );
+    expect(piano.ricorrenze).toEqual([{ id: 'r1', corsoId: 'c-qui', impronta: 'i1' }]);
+    // Storia e passato restano com'erano; il puntatore assegnerà le unità alle future
+    expect(piano.blocchi).toEqual([blocco('futuro', 'c-qui')]);
+  });
+
+  it('un blocco toccato sull’altro dispositivo e ricevuto dopo il collegamento prende il corso di qui della sua routine', () => {
+    // La routine è già collegata (corso di qui); il blocco spostato arriva col corso e l'unità del telefono
+    const piano = relinkPlan(
+      [ricorrenza('c-qui', 'i1')],
+      qui,
+      [],
+      [blocco('spostato', 'c-fuori', { unitaId: 'c-fuori:M0:U0.2' })],
+      ADESSO,
+    );
+    expect(piano).toEqual({ ricorrenze: [], blocchi: [blocco('spostato', 'c-qui')] });
+  });
+
+  it('senza un corso di qui il blocco tiene il corso altrove ma perde l’unità, che qui non esiste (J3: setup libero)', () => {
+    const piano = relinkPlan(
+      [ricorrenza('c-fuori', 'i9')],
+      qui,
+      impronte,
+      [blocco('spostato', 'c-fuori', { unitaId: 'c-fuori:M0:U0.2' }), blocco('generato', 'c-fuori')],
+      ADESSO,
+    );
+    expect(piano).toEqual({ ricorrenze: [], blocchi: [blocco('spostato', 'c-fuori')] });
+  });
+
+  it('senza impronta, col corso già qui o senza corso non cambia nulla; le impronte servono solo con un corso altrove', () => {
+    const nulla = { ricorrenze: [], blocchi: [] };
+    expect(relinkPlan([ricorrenza('c-fuori')], qui, impronte, [blocco('b', 'c-fuori')], ADESSO)).toEqual(nulla);
+    expect(relinkPlan([ricorrenza('c-altro', 'i1')], qui, impronte, [blocco('b', 'c-altro')], ADESSO)).toEqual(nulla);
+    expect(relinkPlan([ricorrenza(null, 'i1')], qui, impronte, [], ADESSO)).toEqual(nulla);
+    expect(needsFingerprints([ricorrenza('c-fuori', 'i1')], qui)).toBe(true);
+    expect(needsFingerprints([ricorrenza('c-fuori'), ricorrenza('c-qui', 'i1'), ricorrenza(null, 'i1')], qui)).toBe(
+      false,
+    );
   });
 });

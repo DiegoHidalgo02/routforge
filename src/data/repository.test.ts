@@ -390,6 +390,8 @@ describe('Coda della sync — MECCANISMI §25, INV-14 (T-033)', () => {
     const b = await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
     await saveBlock(db, { ...evento, id: 'b2' }, T0, ROMA, 'ciclo');
     await save(db, 'ricorrenze', { id: 'r1' } as never, T0);
+    // Il collegamento di una routine al corso di qui lo scrive il ciclo (T-034)
+    await save(db, 'ricorrenze', { id: 'r2' } as never, T0, 'ciclo');
     await save(db, 'logFasi', { id: 'b1', ricorrenzaId: null, fasi: [] }, T0);
     expect(await voci()).toEqual([
       ['blocchi:b1', T0, false],
@@ -399,6 +401,15 @@ describe('Coda della sync — MECCANISMI §25, INV-14 (T-033)', () => {
     // Un'eliminazione si accoda con la sua tombstone; una modifica successiva aggiorna la stessa voce
     await remove(db, 'blocchi', b.id, T1);
     expect((await coda()).find((v) => v.id === 'blocchi:b1')?.updatedAt).toBe(T1);
+  });
+
+  it('cambiare solo l’interruttore generale delle notifiche (resta qui) non accoda la riga; gli altri campi sì (D-SYNC-6)', async () => {
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: true, x: 1 } }, T0);
+    await purge(db, 'syncCoda', ['preferenze:notifiche']);
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: false, x: 1 } }, T1);
+    expect(await voci()).toEqual([]);
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: false, x: 2 } }, T1);
+    expect(await voci()).toEqual([['preferenze:notifiche', T1, false]]);
   });
 
   it('fuori dall’ambito niente coda: preferenze fuori elenco (chiave AI, stato della sync), corsi, pratica', async () => {

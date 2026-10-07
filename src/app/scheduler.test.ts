@@ -5,11 +5,13 @@ import { openDb, type RoutForgeDb, type Tabelle } from '../data/db';
 import { get, list, listBy, save, saveBlock, saveCourse, watch, type DatiBlocco } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import { parseCourse } from '../domain/course/parser';
+import { courseFingerprint } from '../domain/sync';
 import { endOfLocalDay, local } from '../domain/time';
 import { CHIAVE_ULTIMA_APERTURA, readAbsenceNotice } from './absence';
 import { createActivity } from './activities';
 import { calendarDays } from './calendar';
 import type { Clock } from './ports/clock';
+import { courseFingerprints } from './courses';
 import { createScheduler, runCycle } from './scheduler';
 import { CHIAVE_SESSIONE_ATTIVA } from './session';
 
@@ -82,6 +84,24 @@ async function studioC1(
   const numeri = new Map((await listBy(db, 'unita', 'corsoId', corso.id)).map((u) => [u.id, u.numero]));
   return { corsoId: corso.id, numero: (unitaId) => (unitaId ? (numeri.get(unitaId) ?? unitaId) : null) };
 }
+/** Una routine di studio come arriva dalla sync: col corso di un altro dispositivo e l'impronta del suo (T-034, D-SYNC-5). */
+const ricevuta = (id: string, corsoId: string, impronta: string) => ({
+  id,
+  tipo: 'studio' as const,
+  titolo: 'Studio',
+  note: '',
+  giorni: [1, 2, 3, 4, 5],
+  dataInizio: '2026-09-21',
+  dataFine: null,
+  dateSaltate: [],
+  corsoId,
+  impronta,
+  fasi: [],
+  promemoria: { modo: 'auto' as const },
+  orarioInizio: '09:00',
+  orarioFine: '10:00',
+  fuso: FUSO,
+});
 const studioDel = async (corsoId: string, giorno: string) =>
   (await listBy(db, 'blocchi', 'corsoId', corsoId)).find((b) => b.giornoLocale === giorno)!;
 
@@ -290,6 +310,11 @@ describe('Idempotenza — MECCANISMI §9, INV-15', () => {
   it('rieseguire il ciclo senza cambiamenti non scrive nulla e non avvisa nessuno', async () => {
     await crea(routine([1, 3, 5], '07:00', '08:00', '2026-09-21'), LUNEDI);
     const { corsoId } = await studioC1();
+    // Due routine ricevute col corso di un altro dispositivo (T-034): una si collega al primo ciclo, l'altra non ha un
+    // corso di qui; nessuna scrive al secondo
+    const [c1] = await courseFingerprints(db);
+    await save(db, 'ricorrenze', ricevuta('r-collega', 'c-altrove', c1!.impronta), LUNEDI);
+    await save(db, 'ricorrenze', ricevuta('r-altrove', 'c-altrove-2', 'nessuna'), LUNEDI);
     const martedi = await studioDel(corsoId, '2026-09-22');
     await saveBlock(db, { ...martedi, stato: 'in_corso' }, local(2026, 9, 22, 9, 0), FUSO); // orfano
     await blocco({
@@ -469,6 +494,21 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
     const id = await crea(routine([3], '18:00', '20:00', '2026-09-23'), local(2026, 9, 23, 20, 31));
     await vi.waitFor(async () => expect((await listBy(db, 'blocchi', 'ricorrenzaId', id))[0]?.stato).toBe('perso'));
     expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 0));
+    stop();
+  });
+
+  it('l’import di un corso esegue il ciclo: la routine di studio ricevuta col corso di un altro dispositivo si collega subito (§25)', async () => {
+    const files = [{ name: 'M1-Uno.md', content: '# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n' }];
+    const altrove = parseCourse(files, { corsoId: 'c-altrove', now: LUNEDI }).corso;
+    // La routine come arriva dalla sync: il corso dell'altro dispositivo e la sua impronta (D-SYNC-5)
+    await save(db, 'ricorrenze', ricevuta('r1', altrove.id, courseFingerprint(altrove.titolo, altrove.moduli)), LUNEDI);
+    const stop = createScheduler(db, orologioFinto(LUNEDI).clock).start();
+    const prima = async () =>
+      (await listBy(db, 'blocchi', 'ricorrenzaId', 'r1')).sort((a, b) => a.inizio - b.inizio)[0];
+    await vi.waitFor(async () => expect(await prima()).toMatchObject({ corsoId: 'c-altrove', unitaId: null }));
+    await saveCourse(db, parseCourse(files, { corsoId: 'c-qui', now: LUNEDI }).corso, LUNEDI);
+    await vi.waitFor(async () => expect(await prima()).toMatchObject({ corsoId: 'c-qui', unitaId: 'c-qui:M1:U1.1' }));
+    expect(await get(db, 'ricorrenze', 'r1')).toMatchObject({ corsoId: 'c-qui' });
     stop();
   });
 

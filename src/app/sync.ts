@@ -4,7 +4,8 @@
  * record (`decide`, D-SYNC-1, D-SYNC-2), la fusione al primo accesso (J4), l'uscita che lascia i dati (J5), «Scollega»
  * e «Cancella i dati remoti». Una sincronizzazione alla volta (una richiesta durante la riesegue alla fine); parte
  * all'avvio, al ritorno in primo piano, al ritorno della rete, all'accesso e dopo 3 s da una modifica locale. Gli errori
- * vanno in Diagnostica, mai alla UI (INV-16). Criteri: SCENARI J1, J2, J4, J5; il ciclo dopo la ricezione è di T-034.
+ * vanno in Diagnostica, mai alla UI (INV-16). Dopo ogni ricezione i cicli dello scheduler (`dopoRicezione`, §25); le
+ * routine di studio partono con l'impronta del loro corso (T-034, D-SYNC-5). Criteri: SCENARI J1–J5.
  */
 import type { RoutForgeDb } from '../data/db';
 import {
@@ -13,6 +14,7 @@ import {
   get,
   inTransaction,
   list,
+  listKeyRange,
   purge,
   putRemote,
   rawRow,
@@ -32,24 +34,23 @@ import {
 } from '../domain/sync';
 import { missingOccurrences } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
+import { courseFingerprints } from './courses';
 import { logError } from './diagnostics';
 import type { Clock } from './ports/clock';
 import type { Rete } from './ports/network';
 import { RevocatoError, type Dispositivo, type SyncBackend } from './ports/sync';
 import { dropOccurrences, followRecurrence } from './recurrences';
 
-/** Lo stato della sync su questo dispositivo: account, cursore, ultima riuscita. Mai in sync né nel backup. */
-export const CHIAVE_SYNC = CHIAVE_STATO_SYNC;
 /** Il nome facoltativo dell'account (S22 Account): viaggia con la sync, per il saluto su ogni dispositivo. */
 export const CHIAVE_PROFILO = 'profilo';
 /** «Raggruppata entro pochi secondi» (piano §2.9): la sync parte 3 s dopo l'ultima modifica locale. */
 const RITARDO_MS = 3000;
 const LOTTO = 200;
 
+/** Lo stato della sync su questo dispositivo (`CHIAVE_STATO_SYNC`): account e cursore. Mai in sync né nel backup. */
 interface StatoLocale {
   userId: string;
   cursore: number;
-  ultimaSync: number | null;
 }
 export type FaseSync = 'senza_account' | 'in_pari' | 'in_corso' | 'offline' | 'errore' | 'scollegato';
 export interface StatoSync {
@@ -63,9 +64,9 @@ export interface StatoSync {
 }
 
 const leggiStato = async (db: RoutForgeDb) =>
-  (await get(db, 'preferenze', CHIAVE_SYNC))?.valore as StatoLocale | undefined;
+  (await get(db, 'preferenze', CHIAVE_STATO_SYNC))?.valore as StatoLocale | undefined;
 const scriviStato = (db: RoutForgeDb, s: StatoLocale, now: number) =>
-  save(db, 'preferenze', { id: CHIAVE_SYNC, valore: s }, now);
+  save(db, 'preferenze', { id: CHIAVE_STATO_SYNC, valore: s }, now);
 const contaCoda = async (db: RoutForgeDb) => (await list(db, 'syncCoda')).length;
 export const readProfileName = async (db: RoutForgeDb): Promise<string | null> => {
   const v = (await get(db, 'preferenze', CHIAVE_PROFILO))?.valore as { nome?: unknown } | undefined;
@@ -75,7 +76,12 @@ export const readProfileName = async (db: RoutForgeDb): Promise<string | null> =
 /** Il giro si ferma: l'account è uscito o i dati sono stati azzerati mentre aspettava il servizio. */
 class Fermata extends Error {}
 
-/** Le occorrenze di qui seguono la ricorrenza ricevuta (§2.3 n. 4): viva, la nuova definizione; eliminata, spariscono. */
+/**
+ * Le occorrenze di qui seguono la ricorrenza ricevuta (§2.3 n. 4): viva, la nuova definizione; eliminata, spariscono.
+ * Un'occorrenza con una modifica dell'utente in coda più recente del gesto della definizione resta com'è: per record
+ * vince il gesto più recente (D-SYNC-4); riscritta, la sua voce spedirebbe la riga riscritta e la modifica sparirebbe
+ * ovunque (D-SYNC-6).
+ */
 async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fuso: string): Promise<void> {
   if (b.deletedAt !== null) return dropOccurrences(db, b.id, now);
   const r = b.dati as unknown as Ricorrenza;
@@ -85,7 +91,14 @@ async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fu
     // Una definizione che non si legge non blocca la pagina, come nel ciclo (D-SCHED-1 n. 8)
     return logError('sync', e);
   }
-  await followRecurrence(db, r, now, fuso);
+  const inCoda = await listKeyRange(db, 'syncCoda', `blocchi:${r.id}:`, `blocchi:${r.id}:~`);
+  await followRecurrence(
+    db,
+    r,
+    now,
+    fuso,
+    new Set(inCoda.filter((v) => v.updatedAt > b.updatedAt).map((v) => v.recordId)),
+  );
 }
 
 /**
@@ -93,7 +106,9 @@ async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fu
  * compromesso non scrive fuori dall'ambito); poi il vincitore, con l'istante del gesto della voce in coda (D-SYNC-4); la
  * remota si scrive così com'è (con i campi di questo dispositivo rimessi), toglie dalla coda la modifica locale che ha
  * battuto e, se è una ricorrenza, le occorrenze di qui la seguono al suo posto nella pagina (le righe dopo vincono). Il
- * cursore avanza nella stessa transazione, così una pagina interrotta si riapplica uguale.
+ * cursore avanza nella stessa transazione, così una pagina interrotta si riapplica uguale. Una ricorrenza nella versione
+ * che c'è già (rimandata dal servizio a chi aveva perso, D-SYNC-6) non si riscrive né si risegue: il collegamento al
+ * corso di qui resta (D-SYNC-5). Restituisce quante righe remote ha scritto.
  */
 function applyPage(
   db: RoutForgeDb,
@@ -102,10 +117,11 @@ function applyPage(
   stato: StatoLocale,
   now: number,
   fuso: string,
-): Promise<void> {
+): Promise<number> {
   return inTransaction(db, [...TABELLE_SINCRONIZZATE], async () => {
     // «Esci», l'import di un backup o «Elimina tutti i dati» durante l'attesa: di questa pagina non si scrive nulla
     if ((await leggiStato(db))?.userId !== stato.userId) throw new Fermata();
+    let scritte = 0;
     for (const b of buste) {
       if (!validEnvelope(b)) {
         logError('sync', new Error(`busta scartata: ${b.tabella}`));
@@ -114,25 +130,38 @@ function applyPage(
       const locale = await rawRow(db, b.tabella, b.id);
       const voce = await get(db, 'syncCoda', `${b.tabella}:${b.id}`);
       if (decide(locale, voce, b, mio) !== 'remota') continue;
+      if (voce) await purge(db, 'syncCoda', [voce.id]);
+      const stessa =
+        b.tabella === 'ricorrenze' &&
+        locale?.deletedAt === null &&
+        locale.updatedAt === (b.dati as { updatedAt?: unknown }).updatedAt;
+      if (stessa) continue;
       const riga = mergeLocalFields(
         b.tabella,
         b.dati as { id: string; updatedAt: number; deletedAt: number | null },
         locale,
       );
       await putRemote(db, b.tabella, [riga as never]);
-      if (voce) await purge(db, 'syncCoda', [voce.id]);
+      scritte++;
       if (b.tabella === 'ricorrenze') await followReceived(db, b, now, fuso);
     }
     await scriviStato(db, stato, now);
+    return scritte;
   });
 }
 
 /**
  * La coda spedita a lotti (§2.3 n. 5): le righe lette adesso, con l'istante del gesto della voce (D-SYNC-4); una voce
- * fuori dall'ambito non parte mai; si tolgono le voci non cambiate durante il push.
+ * fuori dall'ambito non parte mai; si tolgono le voci non cambiate durante il push. Le ricorrenze partono prima dei
+ * blocchi: chi le riceve rigenera le occorrenze dalla definizione e poi applica quelle toccate dall'utente (uno
+ * spostamento, C4), che altrimenti la definizione arrivata dopo riscriverebbe. Una routine di studio parte con
+ * l'impronta del suo corso di qui (§25, D-SYNC-5); se il corso qui non c'è tiene quella che ha.
  */
 async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<void> {
-  const voci = await list(db, 'syncCoda');
+  const voci = (await list(db, 'syncCoda')).sort(
+    (a, b) => Number(b.tabella === 'ricorrenze') - Number(a.tabella === 'ricorrenze'),
+  );
+  let impronte: Map<string, string> | undefined;
   for (let i = 0; i < voci.length; i += LOTTO) {
     const buste = [];
     const spedite = [];
@@ -142,7 +171,12 @@ async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<void> {
       const tabella = v.tabella as TabellaSincronizzata;
       // Un record che non c'è più (azzerato con l'import di un backup): la voce non ha nulla da spedire
       const riga = await rawRow(db, tabella, v.recordId);
-      if (riga) buste.push(toEnvelope(tabella, riga, v));
+      if (!riga) continue;
+      const corsoId = tabella === 'ricorrenze' && riga.deletedAt === null ? (riga as Ricorrenza).corsoId : null;
+      if (corsoId) impronte ??= new Map((await courseFingerprints(db)).map((c) => [c.id, c.impronta]));
+      const impronta = corsoId ? impronte?.get(corsoId) : undefined;
+      const spedita = impronta ? { ...riga, impronta } : riga;
+      buste.push(toEnvelope(tabella, spedita, v));
     }
     if (buste.length) await backend.push(buste);
     await dequeue(db, spedite);
@@ -173,7 +207,16 @@ export function createSyncService(
   rete: Rete,
   clock: Clock,
   dispositivo: { nome: string; piattaforma: string },
-  { pagina = 500, finto = false }: { pagina?: number; finto?: boolean } = {},
+  {
+    pagina = 500,
+    finto = false,
+    dopoRicezione,
+  }: {
+    pagina?: number;
+    finto?: boolean;
+    /** I cicli dello scheduler dopo un giro che ha scritto righe ricevute (§25: «Dopo ogni ricezione»). */
+    dopoRicezione?: () => void;
+  } = {},
 ): SyncService {
   let stato: StatoSync = {
     account: null,
@@ -198,6 +241,8 @@ export function createSyncService(
   let ancora = false;
   let uscendo = false;
   let accedendo = false;
+  // Un tentativo di registrazione per un dispositivo che il servizio non conosce, fino al prossimo giro riuscito
+  let registrando = false;
 
   const scollegato = async () => {
     await signOutLocal();
@@ -219,26 +264,50 @@ export function createSyncService(
       }
       aggiorna({ fase: 'in_corso' });
       let locale = await leggiStato(db);
-      // Primo accesso, altro account, dopo un import che ha azzerato lo stato: fusione (§2.7, J4)
+      // Primo accesso, altro account, dopo un import che ha azzerato lo stato: fusione (§2.7, J4). In una transazione
+      // che ricontrolla la sessione: «Esci», l'import di un backup o «Elimina tutti i dati» nel frattempo la fermano,
+      // altrimenti lo stato scritto nei dati nuovi salterebbe la loro fusione (D-SYNC-6)
       if (locale?.userId !== s.userId) {
-        await enqueueAll(db);
-        locale = { userId: s.userId, cursore: 0, ultimaSync: null };
-        await scriviStato(db, locale, clock.now());
+        const nuovo = { userId: s.userId, cursore: 0 };
+        await inTransaction(db, [...TABELLE_SINCRONIZZATE], async () => {
+          if (backend.session()?.userId !== s.userId) throw new Fermata();
+          await enqueueAll(db);
+          await scriviStato(db, nuovo, clock.now());
+        });
+        locale = nuovo;
       }
-      for (;;) {
-        const { buste, ultimoSeq } = await backend.pull(locale.cursore, pagina);
-        locale = { ...locale, cursore: ultimoSeq };
-        await applyPage(db, buste, s.dispositivo, locale, clock.now(), clock.fuso());
-        if (buste.length < pagina) break;
+      let ricevute = 0;
+      try {
+        for (;;) {
+          const { buste, ultimoSeq } = await backend.pull(locale.cursore, pagina);
+          locale = { ...locale, cursore: ultimoSeq };
+          ricevute += await applyPage(db, buste, s.dispositivo, locale, clock.now(), clock.fuso());
+          if (buste.length < pagina) break;
+        }
+      } finally {
+        // Le occorrenze ricevute si giudicano, le routine di studio si collegano ai corsi di qui (§25), anche se una
+        // pagina successiva non arriva
+        if (ricevute) dopoRicezione?.();
       }
       await pushQueue(db, backend);
-      locale = { ...locale, ultimaSync: clock.now() };
-      await scriviStato(db, locale, clock.now());
-      aggiorna({ fase: 'in_pari', ultimaSync: locale.ultimaSync, dispositivi: await backend.devices() });
+      // Il cursore è già salvato con ogni pagina; l'ultima riuscita resta in memoria (nessuna scrittura qui: durante il
+      // push un import potrebbe aver sostituito i dati)
+      registrando = false;
+      aggiorna({ fase: 'in_pari', ultimaSync: clock.now(), dispositivi: await backend.devices() });
       await conta();
     } catch (e) {
       if (e instanceof Fermata) return;
       if (e instanceof RevocatoError) return scollegato();
+      // Una sessione senza la sua riga dei dispositivi (l'app chiusa fra il codice e la registrazione, o un'altra scheda
+      // partita prima): si registra (è idempotente) e il giro riparte una volta (D-SYNC-6)
+      if (e instanceof Error && e.message.includes('dispositivo_sconosciuto') && !registrando) {
+        registrando = true;
+        const fatto = await backend
+          .registerDevice(dispositivo.nome, dispositivo.piattaforma)
+          .then(() => true)
+          .catch((x: unknown) => void logError('sync', x));
+        if (fatto) return void (ancora = true);
+      }
       logError('sync', e);
       aggiorna({ fase: 'errore' });
     }

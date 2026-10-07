@@ -1,10 +1,12 @@
 /**
- * La sincronizzazione fra dispositivi, la parte pura (MECCANISMI §1, §25; T-033): che cosa viaggia, la busta di un
- * record, il vincitore fra la riga locale e la remota («ultimo vince» per record), la stessa regola dal lato del servizio
- * (specchio dell'SQL), le occorrenze generate che non sovrascrivono, il campo che resta su questo dispositivo. Gli
- * scenari J1, J2, J4, J5 si verificano nel servizio. Decisioni: D-SYNC-1, D-SYNC-2, D-SYNC-3, D-SYNC-4.
+ * La sincronizzazione fra dispositivi, la parte pura (MECCANISMI §1, §25; T-033, T-034): che cosa viaggia, la busta di
+ * un record, il vincitore fra la riga locale e la remota («ultimo vince» per record), la stessa regola dal lato del
+ * servizio (specchio dell'SQL), le occorrenze generate che non sovrascrivono, il campo che resta su questo dispositivo,
+ * l'impronta del corso e il collegamento delle routine di studio ai corsi di qui. Gli scenari J1–J5 si verificano nel
+ * servizio. Decisioni: D-SYNC-1, D-SYNC-2, D-SYNC-3, D-SYNC-4, D-SYNC-5.
  */
-import type { StatoBlocco } from './types';
+import { nativeId } from './notifications/desiredSet';
+import type { Blocco, Ricorrenza, StatoBlocco } from './types';
 
 /** Le tabelle che viaggiano (§25): i corsi si reimportano; sessioni, pratica, materiali e chat restano qui. */
 export const TABELLE_SINCRONIZZATE = ['ricorrenze', 'blocchi', 'logFasi', 'preferenze'] as const;
@@ -171,3 +173,63 @@ export function serverAccepts(
 /** D-SYNC-2: l'istante salvato dal servizio non supera di più di 5 minuti la sua ora. */
 export const clampUpdatedAt = (updatedAt: number, oraServizio: number): number =>
   Math.min(updatedAt, oraServizio + ANTICIPO_MASSIMO_MS);
+
+/**
+ * L'impronta del corso (§25 «Corsi e routine di studio»: titolo + contenuto, D-SYNC-5): il titolo e il testo dei file
+ * dei moduli in ordine di numero. Lo stesso ZIP dà la stessa impronta su ogni dispositivo, mentre l'id del corso è nuovo
+ * a ogni import (MECC §16); il contenuto di un corso importato non cambia. Lo stesso FNV-1a degli id nativi (§13.3), con
+ * la lunghezza del testo: basta a distinguere i corsi di un utente.
+ */
+export function courseFingerprint(titolo: string, moduli: readonly { numero: number; markdown: string }[]): string {
+  const testo = [titolo, ...[...moduli].sort((a, b) => a.numero - b.numero).map((m) => m.markdown)].join('\u0000');
+  return `${(nativeId(testo) >>> 0).toString(16)}-${testo.length.toString(16)}`;
+}
+
+/** Le impronte dei corsi di qui servono solo se una routine di studio ha il corso altrove e porta la sua (§25). */
+export const needsFingerprints = (
+  ricorrenze: readonly Pick<Ricorrenza, 'corsoId' | 'impronta'>[],
+  qui: ReadonlySet<string>,
+): boolean => ricorrenze.some((r) => !!r.corsoId && !!r.impronta && !qui.has(r.corsoId));
+
+/**
+ * Il collegamento delle routine di studio ai corsi di questo dispositivo (§25, J3; D-SYNC-5): una ricorrenza col corso
+ * di un altro dispositivo (qui non c'è) passa al corso di qui con la stessa impronta, il primo importato se sono più
+ * d'uno. Un blocco programmato futuro col corso altrove (generato qui prima del collegamento, o toccato sull'altro
+ * dispositivo e ricevuto) passa al corso di qui della sua ricorrenza, o a quello con l'impronta del suo corso, senza
+ * unità: il puntatore assegna le future. Se un corso di qui non c'è resta senza unità, perché quella dell'altro
+ * dispositivo qui non esiste (setup libero). Passato e storia restano come sono. `qui` sono i corsi di questo
+ * dispositivo; `impronte` le loro, in ordine d'import (vuote se non servono, `needsFingerprints`).
+ */
+export function relinkPlan<
+  R extends Pick<Ricorrenza, 'id' | 'corsoId' | 'impronta'>,
+  B extends Pick<Blocco, 'stato' | 'inizio' | 'corsoId' | 'unitaId' | 'ricorrenzaId'>,
+>(
+  ricorrenze: readonly R[],
+  qui: ReadonlySet<string>,
+  impronte: readonly { id: string; impronta: string }[],
+  blocchi: readonly B[],
+  now: number,
+): { ricorrenze: R[]; blocchi: B[] } {
+  const altrove = (corsoId: string | null | undefined): corsoId is string => !!corsoId && !qui.has(corsoId);
+  const verso = new Map<string, string>();
+  for (const r of ricorrenze) {
+    const c = altrove(r.corsoId) && r.impronta ? impronte.find((x) => x.impronta === r.impronta) : undefined;
+    if (c) verso.set(r.corsoId!, c.id);
+  }
+  // Il corso di qui di ogni ricorrenza, dopo il collegamento
+  const diQui = (corsoId: string | null | undefined) =>
+    altrove(corsoId) ? verso.get(corsoId) : (corsoId ?? undefined);
+  const corsoRicorrenza = new Map(ricorrenze.map((r) => [r.id, diQui(r.corsoId)]));
+  return {
+    ricorrenze: ricorrenze.flatMap((r) => {
+      const corsoId = altrove(r.corsoId) ? verso.get(r.corsoId) : undefined;
+      return corsoId ? [{ ...r, corsoId }] : [];
+    }),
+    blocchi: blocchi.flatMap((b) => {
+      if (b.stato !== 'programmato' || b.inizio <= now || !altrove(b.corsoId)) return [];
+      const corsoId =
+        (b.ricorrenzaId ? corsoRicorrenza.get(b.ricorrenzaId) : undefined) ?? verso.get(b.corsoId) ?? b.corsoId;
+      return corsoId !== b.corsoId || b.unitaId ? [{ ...b, corsoId, unitaId: null }] : [];
+    }),
+  };
+}

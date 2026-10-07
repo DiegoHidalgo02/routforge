@@ -17,6 +17,7 @@ import {
 } from '../domain/course/parser';
 import { quizCriterion } from '../domain/generation';
 import { criteriaMet, currentUnit, modulePath, sortedUnits, statiModuli } from '../domain/pointer';
+import { courseFingerprint } from '../domain/sync';
 import { STATI_UNITA_PENDENTI } from '../domain/types';
 import { sessionMinutes } from '../domain/outcome';
 import type { Esito, StatoModulo, StatoUnita } from '../domain/types';
@@ -59,6 +60,24 @@ export async function courseCards(db: RoutForgeDb): Promise<SchedaCorso[]> {
         prossima: p ? { id: p.id, numero: p.numero, titolo: p.titolo } : null,
       };
     });
+}
+
+/**
+ * Le impronte dei corsi di questo dispositivo (MECC §25, D-SYNC-5), in ordine d'import: dal titolo e dal testo dei
+ * moduli salvati, che dopo l'import non cambiano. Le leggono la sync, che le mette nelle routine spedite, e il ciclo, che
+ * collega a un corso di qui le routine ricevute.
+ */
+export async function courseFingerprints(db: RoutForgeDb): Promise<{ id: string; impronta: string }[]> {
+  const [corsi, moduli] = await Promise.all([list(db, 'corsi'), list(db, 'moduli')]);
+  return corsi
+    .sort((a, b) => a.importatoIl - b.importatoIl)
+    .map((c) => ({
+      id: c.id,
+      impronta: courseFingerprint(
+        c.titolo,
+        moduli.filter((m) => m.corsoId === c.id),
+      ),
+    }));
 }
 
 /**

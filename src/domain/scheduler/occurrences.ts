@@ -40,6 +40,16 @@ export function horizonSlotRange(ricorrenzaId: string, now: number): readonly [s
 export const occurrenceDay = (id: string, ricorrenzaId: string): string =>
   id.slice(ricorrenzaId.length + 1, ricorrenzaId.length + 11);
 
+/**
+ * Un'occorrenza spostata dall'utente (C4, «Anticipa»): giorno o orario di parete diversi dal suo slot, che resta
+ * nell'id (D-DATA-2). È un dato dell'utente: una definizione ricevuta non la riscrive né la toglie, e riportarla allo
+ * slot con una modifica fatta qui è un gesto che viaggia (D-SYNC-6).
+ */
+export const isMovedOccurrence = (
+  b: Pick<BloccoAncorato, 'id' | 'giornoLocale' | 'orarioInizio'>,
+  ricorrenzaId: string,
+): boolean => occurrenceId(ricorrenzaId, b.giornoLocale, b.orarioInizio) !== b.id;
+
 /** Differenza da applicare a una modifica (§7): blocchi da scrivere (nuovi o riscritti), id da eliminare. */
 export interface PianoOccorrenze {
   daScrivere: Blocco[];

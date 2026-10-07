@@ -15,7 +15,7 @@
  */
 import Dexie, { liveQuery } from 'dexie';
 import type { CorsoImportato } from '../domain/course/parser';
-import { isGenerata, isSynced, TABELLE_SINCRONIZZATE } from '../domain/sync';
+import { isGenerata, isSynced, stripLocalFields, TABELLE_SINCRONIZZATE } from '../domain/sync';
 import { localDayKey, localTimeKey } from '../domain/time';
 import type { OraDiParete } from '../domain/types';
 import type { CampiComuni, RoutForgeDb, Tabelle, Tombstone } from './db';
@@ -49,7 +49,8 @@ const tabella = <K extends NomeTabella>(db: RoutForgeDb, nome: K) => db.table<Ta
  * Chi scrive un blocco (T-033): l'utente, la cui modifica si spedisce, o il ciclo (generazione, riancoraggio, persi,
  * ritardo, orfani, puntatore, occorrenze che seguono la definizione), le cui scritture ogni dispositivo ricalcola e che
  * quindi non si accodano: accodate, un riancoraggio rimbalzerebbe fra due fusi e un «perso» del ciclo vincerebbe su un
- * completamento più vecchio. Le altre tabelle sincronizzate le scrive solo l'utente.
+ * completamento più vecchio. Le altre tabelle sincronizzate le scrive solo l'utente, salvo il collegamento di una
+ * routine di studio al corso di questo dispositivo (T-034), che il ciclo ricalcola.
  */
 export type Origine = 'utente' | 'ciclo';
 const SINCRONIZZATE: readonly string[] = TABELLE_SINCRONIZZATE;
@@ -130,12 +131,21 @@ export async function listKeyRange<K extends NomeTabella>(
   );
 }
 
-/** Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. */
+/** La parte di una riga che viaggia con la sync, senza i suoi istanti: uguale prima e dopo, non c'è nulla da spedire. */
+const parteCheViaggia = (nome: NomeTabella, r: Tabelle[NomeTabella] | Tombstone) =>
+  JSON.stringify({ ...stripLocalFields(nome, r), createdAt: 0, updatedAt: 0 });
+
+/**
+ * Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. Una scrittura
+ * che non cambia la parte che viaggia (solo l'interruttore generale delle notifiche, o nulla) non si accoda: accodata,
+ * la riga intera vincerebbe con un istante nuovo sulle modifiche altrui ai campi che viaggiano (D-SYNC-6).
+ */
 export async function save<K extends Exclude<NomeTabella, 'blocchi'>>(
   db: RoutForgeDb,
   nome: K,
   dati: Dati<Tabelle[K]>,
   now: number,
+  origine: Origine = 'utente',
 ): Promise<Tabelle[K]> {
   const t = tabella(db, nome);
   const id = dati.id ?? newId();
@@ -143,20 +153,32 @@ export async function save<K extends Exclude<NomeTabella, 'blocchi'>>(
     const prev = await t.get(id);
     const rec = { ...dati, id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null } as Tabelle[K];
     await t.put(rec);
-    await accoda(db, nome, rec);
+    // Il confronto solo per le righe che viaggiano: le altre possono essere grandi (il binario di un PDF)
+    const viaggia = isSynced(nome, id);
+    if (viaggia && (!vivo(prev) || parteCheViaggia(nome, prev) !== parteCheViaggia(nome, rec)))
+      await accoda(db, nome, rec, origine);
     return rec;
   });
 }
 
-/** Elimina lasciando una tombstone minima; un record assente o già eliminato resta com'è. */
-export async function remove<K extends NomeTabella>(db: RoutForgeDb, nome: K, id: string, now: number): Promise<void> {
+/**
+ * Elimina lasciando una tombstone minima; un record assente o già eliminato resta com'è. Le occorrenze tolte perché
+ * seguono una definizione ricevuta sono del ciclo (`origine`): le tombstone di chi l'ha modificata bastano (D-SYNC-6).
+ */
+export async function remove<K extends NomeTabella>(
+  db: RoutForgeDb,
+  nome: K,
+  id: string,
+  now: number,
+  origine: Origine = 'utente',
+): Promise<void> {
   const t = tabella(db, nome);
   await db.transaction('rw', conCoda(db, t, nome, id), async () => {
     const prev = await t.get(id);
     if (!vivo(prev)) return;
     const tombstone: Tombstone = { id, createdAt: prev.createdAt, updatedAt: now, deletedAt: now };
     await t.put(tombstone);
-    await accoda(db, nome, tombstone);
+    await accoda(db, nome, tombstone, origine);
   });
 }
 

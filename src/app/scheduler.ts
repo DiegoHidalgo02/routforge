@@ -1,23 +1,26 @@
 /**
  * Ciclo dello scheduler (MECC §9): nell'ordine vincolante, riancoraggio al cambio di fuso (D-TIME-2, INV-18) →
- * estensione delle ricorrenze (§7) → spostamento dei todo (§6) → reset degli orfani (§8) → marcatura dei persi (§8, con
+ * collegamento delle routine di studio ricevute ai corsi di qui (§25, D-SYNC-5) → estensione delle ricorrenze (§7) →
+ * spostamento dei todo (§6) → reset degli orfani (§8) → marcatura dei persi (§8, con
  * l'avviso «in ritardo» dei todo, D-HOR-1) → puntatore dei corsi (§11, FUNZ §8). I passi sui dati stanno in una sola
  * transazione: tutto o niente, serializzata con le altre schede e con le azioni dell'utente; senza cambiamenti nessuna
  * scrittura (INV-15). Le regole stanno nel dominio (`reanchor`, `rollPlan`, `orphanPlan`, `lostPlan`, `pointerPlan`);
  * qui si leggono i blocchi e si scrive la differenza. Dopo la transazione vengono la riconciliazione delle notifiche
  * (T-019), che arma anche gli avvisi «perso» e «in ritardo» derivandoli dalle marcature `persoIl` e `ritardoIl` appena
  * scritte (T-020, D-NOTIF-2; gli id restituiti da `runCycle` restano per la Diagnostica), e la streak, che non si
- * scrive: `currentStreak` la azzera alla lettura (§12, T-018). Criteri: SCENARI C8, G4, B7; A1, A2, B1, B2, C1, E2.
+ * scrive: `currentStreak` la azzera alla lettura (§12, T-018). Criteri: SCENARI C8, G4, B7; A1, A2, B1, B2, C1, E2; J3.
  * All'avvio e al ritorno in primo piano `start()` registra anche l'apertura, per il ritorno dopo un'assenza (§9,
  * `registerOpening`). Decisioni: D-SCHED-1, D-ASSENZA-1.
  */
 import type { RoutForgeDb } from '../data/db';
-import { inTransaction, list, listBy, saveBlock, watch } from '../data/repository';
+import { inTransaction, list, listBy, save, saveBlock, watch } from '../data/repository';
 import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
 import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
+import { needsFingerprints, relinkPlan } from '../domain/sync';
 import type { Ricorrenza } from '../domain/types';
 import { MINUTE } from '../domain/time';
 import { registerOpening } from './absence';
+import { courseFingerprints } from './courses';
 import { logError } from './diagnostics';
 import { rollTodos } from './horizon';
 import { recomputePointer } from './pointer';
@@ -60,6 +63,18 @@ export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Prom
     // 0. Riancoraggio (D-TIME-2): i blocchi di oggi e futuri calcolati in un altro fuso, prima di estendere e giudicare
     for (const b of reanchor(await listBy(db, 'blocchi', 'stato', 'programmato'), fuso, now))
       await saveBlock(db, b, now, fuso, 'ciclo');
+    // 0b. Collegamento ai corsi di qui (§25, J3): routine di studio e blocchi programmati futuri col corso di un altro
+    //     dispositivo passano al corso di qui con la stessa impronta, prima di estendere e di ricalcolare il puntatore.
+    //     È di questo dispositivo: non si accoda (INV-21), e la ricorrenza tiene il suo istante, perché non è un gesto
+    //     (in una fusione non batte modifiche altrui). Le impronte si leggono solo se servono.
+    // ponytail: finché il corso non viene importato, ogni ciclo rilegge il testo dei moduli per le impronte; se pesa,
+    // salvare l'impronta sul corso all'import (il contenuto non cambia).
+    const qui = new Set((await list(db, 'corsi')).map((c) => c.id));
+    const ricorrenze = await list(db, 'ricorrenze');
+    const impronte = needsFingerprints(ricorrenze, qui) ? await courseFingerprints(db) : [];
+    const piano = relinkPlan(ricorrenze, qui, impronte, await listBy(db, 'blocchi', 'stato', 'programmato'), now);
+    for (const r of piano.ricorrenze) await save(db, 'ricorrenze', r, r.updatedAt, 'ciclo');
+    for (const b of piano.blocchi) await saveBlock(db, b, now, fuso, 'ciclo');
     // 1. Estensione delle ricorrenze (§7): una ricorrenza scaduta non genera nulla; una definizione che non si legge
     //    (il piano puro fallisce) si salta prima di aprire la sua transazione, che fallendo annullerebbe il ciclo, e si
     //    riporta (D-SCHED-1 n. 8)
@@ -124,7 +139,8 @@ export function createScheduler(
           .catch((e: unknown) => logError('ciclo', e));
       };
       apri();
-      // Creazione, modifica ed eliminazione di routine scrivono `ricorrenze`; la prima emissione è l'avvio, già eseguito
+      // Creazione, modifica ed eliminazione di routine scrivono `ricorrenze`; l'import di un corso `corsi`, e le routine
+      // ricevute si collegano subito (§25, J3). La prima emissione è l'avvio, già eseguito
       let avvio = true;
       // Ogni minuto il ciclo intero, non solo al cambio di data (§9 «controllo ogni 60 s»): B7 vuole la routine persa
       // alle 20:30 e le fini alle 23:59 diventano perse alle 00:29; senza cambiamenti il ciclo non scrive (D-SCHED-1 n. 3)
@@ -132,7 +148,7 @@ export function createScheduler(
         clock.onForeground(apri),
         clock.every(MINUTE, () => void run()),
         watch(
-          () => list(db, 'ricorrenze'),
+          () => Promise.all([list(db, 'ricorrenze'), list(db, 'corsi')]),
           () => {
             if (avvio) avvio = false;
             else void run();

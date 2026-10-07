@@ -99,8 +99,10 @@ const notifiche = createNotifications(appDb, android ?? webNotifications(testiNo
 registerNotificationService(notifiche);
 // Su Android prima i gesti fatti ad app chiusa (T-057, A6): il primo ciclo altrimenti troverebbe il todo ancora da fare
 // e lo sposterebbe in ritardo. Al più 3 s: un ponte che non risponde non ferma scheduler e notifiche
-void Promise.race([android?.pronte, new Promise((r) => setTimeout(r, 3000))]).then(() => {
-  createScheduler(appDb, webClock, notifiche).start();
+const scheduler = createScheduler(appDb, webClock, notifiche);
+const pronti = Promise.race([android?.pronte, new Promise((r) => setTimeout(r, 3000))]);
+void pronti.then(() => {
+  scheduler.start();
   notifiche.start();
 });
 // Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; su Android il servizio in
@@ -109,7 +111,8 @@ startHeartbeat(appDb, webClock);
 // I messaggi della chat scritti offline partono al ritorno della rete (MECC §18)
 followPendingMessages(appDb, webNetwork, () => webClock.now());
 // La sincronizzazione fra dispositivi (MECC §25, T-033, D-SYNC-1): Supabase con le chiavi di `.env.local`; senza, il
-// servizio finto in memoria, che si svuota a ogni ricaricamento (Diagnostica: «servizio finto»)
+// servizio finto in memoria, che si svuota a ogni ricaricamento (Diagnostica: «servizio finto»). Dopo ogni ricezione il
+// ciclo dello scheduler (T-034), anche lui dopo i gesti fatti ad app chiusa
 const urlSync: unknown = import.meta.env.VITE_SUPABASE_URL;
 const chiaveSync: unknown = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const syncFinta = !(typeof urlSync === 'string' && urlSync && typeof chiaveSync === 'string' && chiaveSync);
@@ -121,7 +124,7 @@ const sync = createSyncService(
   webNetwork,
   webClock,
   deviceDescription(eAndroid ? 'android' : 'web'),
-  { finto: syncFinta },
+  { finto: syncFinta, dopoRicezione: () => void pronti.then(() => scheduler.run()) },
 );
 registerSyncService(sync);
 sync.start();

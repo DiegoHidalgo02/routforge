@@ -90,10 +90,17 @@ revoke update on public.devices from authenticated;
 grant update (ultima_attivita) on public.devices to authenticated;
 -- Nessuna delete sui dispositivi: «Scollega» passa da revoke_device
 
--- Come `attivo()` del servizio in memoria: un dispositivo revocato riceve l'errore che l'app traduce in «scollegato».
+-- Come `attivo()` del servizio in memoria: un dispositivo revocato riceve l'errore che l'app traduce in «scollegato»;
+-- uno non ancora registrato (un'altra scheda che parte prima della registrazione) un errore da ritentare.
 create or replace function public.assert_device() returns void
 language plpgsql security invoker set search_path = '' as $$
 begin
+  if not exists (
+    select 1 from public.devices d
+    where d.session_id = (auth.jwt() ->> 'session_id')::uuid and d.user_id = auth.uid()
+  ) then
+    raise exception 'dispositivo_sconosciuto' using errcode = 'P0001';
+  end if;
   if not public.device_active() then
     raise exception 'dispositivo_revocato' using errcode = 'P0001';
   end if;
@@ -129,7 +136,7 @@ $$;
 -- dispositivo dal JWT e controlla il dispositivo, quindi non scavalca l'isolamento fra utenti.
 create or replace function public.push_records(p_righe jsonb)
 returns void
-language plpgsql security definer set search_path = '' as $
+language plpgsql security definer set search_path = '' as $$
 declare
   v_ora bigint := (extract(epoch from clock_timestamp()) * 1000)::bigint;
   v_dispositivo uuid := (auth.jwt() ->> 'session_id')::uuid;
@@ -156,13 +163,19 @@ begin
      or (not excluded.generata
          and (excluded.updated_at > r.updated_at
               or (excluded.updated_at = r.updated_at and excluded.device_id > r.device_id)));
+  -- Dove la riga in arrivo (valida come per l'insert) ha perso, la memorizzata, di un altro dispositivo, prende un `seq`
+  -- nuovo e torna col prossimo pull a chi ha spedito, che si allinea invece di tenere la sua versione (D-SYNC-6)
+  update public.records r set received_at = clock_timestamp(), seq = default
+  from jsonb_to_recordset(p_righe) as e(tabella text, id text, dati jsonb, updated_at bigint)
+  where r.user_id = auth.uid() and r.tabella = e.tabella and r.id = e.id and r.device_id <> v_dispositivo
+    and e.updated_at is not null and e.dati ->> 'id' = e.id;
 end;
 $$;
 
 -- «Scollega» (e la parte remota di «Esci»): il dispositivo resta in elenco come revocato e la sua sessione finisce.
 create or replace function public.revoke_device(p_session uuid)
 returns void
-language plpgsql security definer set search_path = '' as $
+language plpgsql security definer set search_path = '' as $$
 begin
   -- Solo un dispositivo ancora attivo può scollegare (il token di uno revocato vale fino alla scadenza)
   perform public.assert_device();

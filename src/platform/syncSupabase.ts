@@ -38,17 +38,21 @@ interface RigaRecord {
   seq: number;
 }
 
+/** Dove il client salva la sessione nel dispositivo (le chiavi che toglie anche la sua uscita). */
+const CHIAVE_SESSIONE = 'routforge-sync';
+
 export function supabaseSyncBackend(url: string, chiaveAnonima: string): SyncBackend {
   const client = createClient(url, chiaveAnonima, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: CHIAVE_SESSIONE },
   });
   let sessione: Sessione | null = null;
   const ascolti = new Set<(s: Sessione | null) => void>();
+  const cambia = (s: Sessione | null) => {
+    sessione = s;
+    for (const f of ascolti) f(s);
+  };
   // La sessione salvata arriva all'avvio con INITIAL_SESSION; poi accessi, rinnovi e uscite (anche una revoca)
-  client.auth.onAuthStateChange((_evento, s) => {
-    sessione = sessioneDa(s);
-    for (const f of ascolti) f(sessione);
-  });
+  client.auth.onAuthStateChange((_evento, s) => cambia(sessioneDa(s)));
   const attiva = (): Sessione => {
     if (!sessione) throw new RevocatoError();
     return sessione;
@@ -87,9 +91,13 @@ export function supabaseSyncBackend(url: string, chiaveAnonima: string): SyncBac
       if (error) throw errore(error);
     },
     async signOut() {
-      // Solo questo dispositivo: il default di supabase-js è «global» e farebbe uscire tutti
+      // Solo questo dispositivo: il default di supabase-js è «global» e farebbe uscire tutti. Offline col token scaduto
+      // il client si ferma sul rinnovo fallito e la sessione resta: la sync ripartirebbe da sola al ritorno della rete,
+      // anche dopo un import o «Elimina tutti i dati». Allora la si toglie qui, con le chiavi che toglie il client
       const { error } = await client.auth.signOut({ scope: 'local' });
-      if (error) throw errore(error);
+      if (!error) return;
+      for (const k of ['', '-user', '-code-verifier']) localStorage.removeItem(CHIAVE_SESSIONE + k);
+      cambia(null);
     },
     async pull(daSeq, limite) {
       const { data, error } = await client.rpc('pull_records', { p_da: daSeq, p_limite: limite });

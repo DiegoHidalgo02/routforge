@@ -3,19 +3,25 @@
 // (`app` non importa da `platform`, nemmeno nei test).
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb } from './data/db';
-import { allRows, get, list, newId, replaceAll, save } from './data/repository';
+import { allRows, get, list, newId, replaceAll, save, saveBlock } from './data/repository';
 import type { BozzaAttivita } from './domain/activity';
 import { desiredSet, IMPOSTAZIONI_NOTIFICHE_DEFAULT } from './domain/notifications/desiredSet';
+import { lockedUnit } from './domain/session';
+import { CHIAVE_STATO_SYNC, courseFingerprint } from './domain/sync';
 import { local, MINUTE } from './domain/time';
 import { CODICE_FINTO, createSyncStore, memorySyncBackend, type ArchivioSync } from './platform/syncMemory';
 import { createActivity } from './app/activities';
 import { completeBlock } from './app/completion';
+import { importSampleCourse } from './app/courseImport';
 import type { Clock } from './app/ports/clock';
+import type { SyncBackend } from './app/ports/sync';
 import { deleteRecurrence, editRecurrence, generateOccurrences } from './app/recurrences';
 import { eraseAllData } from './app/backup';
-import { CHIAVE_SYNC, createSyncService, registerSyncService, type SyncService } from './app/sync';
+import { runCycle } from './app/scheduler';
+import { setupInputs } from './app/session';
+import { createSyncService, registerSyncService, type SyncService } from './app/sync';
 
 const FUSO = 'Europe/Rome';
 const EMAIL = 'diego@example.com';
@@ -38,7 +44,7 @@ interface Dispositivo {
 let archivio: ArchivioSync;
 let n = 0;
 const aperti: RoutForgeDb[] = [];
-function dispositivo(nome: string, opzioni: { pagina?: number } = {}): Dispositivo {
+function dispositivo(nome: string, opzioni: { pagina?: number; dopoRicezione?: () => void } = {}): Dispositivo {
   const db = openDb(`test-sync-${nome}-${++n}`);
   aperti.push(db);
   const d: Dispositivo = { db, online: true } as Dispositivo;
@@ -173,6 +179,110 @@ describe('Conflitto — SCENARI J2', () => {
     });
 });
 
+describe('Routine di studio senza corso — SCENARI J3', () => {
+  const studio = (corsoId: string): BozzaAttivita => ({
+    ...comune,
+    tipo: 'studio',
+    titolo: 'Studio',
+    corsoId,
+    giorni: [0, 1, 2, 3, 4, 5, 6],
+    inizio: '18:00',
+    fine: '19:00',
+    dataInizio: '2026-09-22',
+    termine: null,
+  });
+  const future = async (db: RoutForgeDb, ricorrenzaId: string) =>
+    (await list(db, 'blocchi'))
+      .filter((b) => b.ricorrenzaId === ricorrenzaId && b.stato === 'programmato' && b.inizio > ora)
+      .sort((x, y) => x.inizio - y.inizio);
+
+  it('senza il corso le occorrenze non hanno unità e il setup è libero; dopo l’import dello stesso corso le future puntano alle unità', async () => {
+    let cicli = 0;
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet', { dopoRicezione: () => void cicli++ });
+    await accedi(telefono);
+    const { corso } = await importSampleCourse(telefono.db, ora);
+    const id = await crea(telefono.db, studio(corso.id));
+    await runCycle(telefono.db, ora, FUSO);
+    // Sul telefono il puntatore ha dato le unità; poi l'utente sposta di mezz'ora la prima occorrenza (C4)
+    const prima = (await future(telefono.db, id))[0]!;
+    expect(prima.unitaId).toMatch(new RegExp(`^${corso.id}:`));
+    const spostata = { ...prima, inizio: prima.inizio + 30 * MINUTE, fine: prima.fine! + 30 * MINUTE };
+    await saveBlock(telefono.db, spostata, ora, FUSO);
+    await telefono.sync.run();
+    // La routine parte con l'impronta del corso: titolo e contenuto
+    const remota = () => [...archivio.righe.values()].find((x) => x.busta.tabella === 'ricorrenze')!.busta.dati;
+    expect(remota()).toMatchObject({ corsoId: corso.id, impronta: courseFingerprint(corso.titolo, corso.moduli) });
+
+    await accedi(tablet);
+    // Lo spostamento fatto sul telefono arriva com'è, con l'unità del telefono: «Inizia sessione» alla sua ora apre il
+    // setup libero, senza un'unità imposta che qui non esiste
+    expect(await get(tablet.db, 'blocchi', prima.id)).toMatchObject({
+      inizio: spostata.inizio,
+      unitaId: prima.unitaId,
+    });
+    const allOra = spostata.inizio + 5 * MINUTE;
+    expect(lockedUnit((await setupInputs(tablet.db, prima.id)).blocco, allOra)).toBeNull();
+    // Dopo la ricezione i cicli dello scheduler (MECC §25): qui come li esegue `main.tsx`
+    expect(cicli).toBe(1);
+    await runCycle(tablet.db, ora, FUSO);
+    const senza = await future(tablet.db, id);
+    expect(senza.length).toBeGreaterThan(0);
+    // Le occorrenze non hanno unità, nemmeno quella arrivata con l'unità del telefono
+    expect(senza[0]).toMatchObject({ id: prima.id, inizio: spostata.inizio });
+    expect(senza.map((b) => b.unitaId)).toEqual(senza.map(() => null));
+
+    // L'import dello stesso ZIP (qui il corso di esempio) ricollega la routine: le occorrenze future puntano alle unità
+    ora = ADESSO;
+    const qui = (await importSampleCourse(tablet.db, ora)).corso;
+    await runCycle(tablet.db, ora, FUSO);
+    // Il collegamento è di questo dispositivo: non entra in coda (INV-21)
+    expect(await list(tablet.db, 'syncCoda')).toEqual([]);
+    expect(await get(tablet.db, 'ricorrenze', id)).toMatchObject({ corsoId: qui.id });
+    const dopo = await future(tablet.db, id);
+    expect(dopo.every((b) => b.corsoId === qui.id)).toBe(true);
+    expect(dopo[0]).toMatchObject({ id: prima.id, inizio: spostata.inizio, unitaId: `${qui.id}:M0:U0.1` });
+    // Il servizio resta col corso del telefono
+    await tablet.sync.run();
+    expect(cicli).toBe(1);
+    expect(remota()).toMatchObject({ corsoId: corso.id });
+  });
+
+  it('col corso su entrambi, un’occorrenza spostata sul telefono arriva al tablet col corso e un’unità del tablet', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const { corso } = await importSampleCourse(telefono.db, ora);
+    const id = await crea(telefono.db, studio(corso.id));
+    await runCycle(telefono.db, ora, FUSO);
+    await telefono.sync.run();
+    const qui = (await importSampleCourse(tablet.db, ora)).corso;
+    await accedi(tablet);
+    await runCycle(tablet.db, ora, FUSO);
+    expect(await get(tablet.db, 'ricorrenze', id)).toMatchObject({ corsoId: qui.id });
+    // Sul telefono l'utente sposta l'occorrenza di domani: arriva col corso e l'unità del telefono
+    const domani = (await future(telefono.db, id))[1]!;
+    await saveBlock(
+      telefono.db,
+      { ...domani, inizio: domani.inizio + 30 * MINUTE, fine: domani.fine! + 30 * MINUTE },
+      ora,
+      FUSO,
+    );
+    await telefono.sync.run();
+    await tablet.sync.run();
+    await runCycle(tablet.db, ora, FUSO);
+    const ricevuta = await get(tablet.db, 'blocchi', domani.id);
+    expect(ricevuta).toMatchObject({ corsoId: qui.id, inizio: domani.inizio + 30 * MINUTE });
+    expect(ricevuta?.unitaId).toMatch(new RegExp(`^${qui.id}:`));
+    // Il servizio rimanda la routine com'è (seq nuovo, stessi dati): il collegamento al corso di qui resta (D-SYNC-6)
+    const chiave = [...archivio.righe.keys()].find((k) => k.endsWith(`:ricorrenze:${id}`))!;
+    const riga = archivio.righe.get(chiave)!;
+    archivio.righe.set(chiave, { ...riga, busta: { ...riga.busta, seq: ++archivio.seq } });
+    await tablet.sync.run();
+    expect(await get(tablet.db, 'ricorrenze', id)).toMatchObject({ corsoId: qui.id });
+  });
+});
+
 describe('Primo accesso con dati locali — SCENARI J4', () => {
   it('20 attività locali e 30 nell’account: dopo la sync 50 da entrambe le parti, nessuna persa né doppia', async () => {
     const altro = dispositivo('altro');
@@ -280,7 +390,7 @@ describe('Casi limite della sync — MECCANISMI §25 (T-033)', () => {
     await telefono.sync.run();
     const righe = await allRows(telefono.db, 'blocchi');
     await replaceAll(telefono.db, { blocchi: righe });
-    expect(await get(telefono.db, 'preferenze', CHIAVE_SYNC)).toBeUndefined();
+    expect(await get(telefono.db, 'preferenze', CHIAVE_STATO_SYNC)).toBeUndefined();
     await telefono.sync.run();
     expect(await titoli(telefono.db)).toEqual(['Uno']);
     expect(telefono.sync.snapshot()).toMatchObject({ fase: 'in_pari', inCoda: 0 });
@@ -360,5 +470,186 @@ describe('Casi limite della sync — MECCANISMI §25 (T-033)', () => {
     const rimaste = (await list(b.db, 'blocchi')).filter((x) => x.ricorrenzaId === id && x.stato === 'programmato');
     expect(rimaste).toEqual([]);
     expect(await get(b.db, 'ricorrenze', id)).toBeUndefined();
+    // Le tombstone di A bastano: B non rispedisce quelle delle sue occorrenze (nessun rimbalzo, D-SYNC-6)
+    const idB = b.sync.snapshot().dispositivi.find((x) => x.corrente)!.id;
+    expect([...archivio.righe.values()].filter((x) => x.busta.dispositivo === idB)).toEqual([]);
+  });
+
+  it('uno spostamento fatto da uscito resta al rientro, quando la routine arriva di nuovo: vince il gesto più recente (D-SYNC-6)', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const id = await crea(telefono.db, {
+      ...comune,
+      tipo: 'routine',
+      titolo: 'Corsa',
+      giorni: [0, 1, 2, 3, 4, 5, 6],
+      inizio: '07:00',
+      fine: '08:00',
+      dataInizio: '2026-09-22',
+      termine: null,
+      fasi: [],
+    });
+    await telefono.sync.run();
+    await accedi(tablet);
+    await tablet.sync.signOut();
+    ora = ADESSO + MINUTE;
+    const domani = (await list(tablet.db, 'blocchi')).find(
+      (b) => b.ricorrenzaId === id && b.giornoLocale === '2026-09-23',
+    )!;
+    await saveBlock(
+      tablet.db,
+      { ...domani, inizio: domani.inizio + 60 * MINUTE, fine: domani.fine! + 60 * MINUTE },
+      ora,
+      FUSO,
+    );
+    // Il rientro riparte dal cursore 0: la routine arriva di nuovo, prima che lo spostamento parta
+    await accedi(tablet);
+    await telefono.sync.run();
+    for (const d of [tablet, telefono])
+      expect(await get(d.db, 'blocchi', domani.id)).toMatchObject({ orarioInizio: '08:00' });
+  });
+
+  it('una modifica più vecchia di quella sul servizio perde anche qui: la riga del servizio torna col pull dopo (D-SYNC-6)', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    await accedi(tablet);
+    const id = await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    await tablet.sync.run();
+    // Alle 10:30 il tablet lo rinomina; alle 11:00 il telefono riceve e poi applica un «Segna fatto» delle 10:00 dato ad
+    // app chiusa (D-NATIVO-3): il servizio tiene le 10:30
+    ora = ADESSO + 90 * MINUTE;
+    await saveBlock(tablet.db, { ...(await get(tablet.db, 'blocchi', id))!, titolo: 'Chiama Marco e Anna' }, ora, FUSO);
+    await tablet.sync.run();
+    ora = ADESSO + 120 * MINUTE;
+    await telefono.sync.run();
+    expect(await completeBlock(telefono.db, id, ADESSO + 60 * MINUTE, FUSO)).toBe(true);
+    await telefono.sync.run();
+    await telefono.sync.run();
+    for (const d of [telefono, tablet])
+      expect(await get(d.db, 'blocchi', id)).toMatchObject({ titolo: 'Chiama Marco e Anna', stato: 'programmato' });
+  });
+
+  it('un dispositivo che il servizio non conosce (app chiusa prima della registrazione, altra scheda) si registra e non esce', async () => {
+    const db = openDb(`test-sync-scheda-${++n}`);
+    aperti.push(db);
+    const backend = memorySyncBackend(archivio, () => ora, newId);
+    const rete = { online: () => true, onOnline: () => () => undefined };
+    const sync = createSyncService(db, backend, rete, clock, { nome: 'scheda', piattaforma: 'web' });
+    await backend.verifyCode(EMAIL, CODICE_FINTO);
+    await sync.run();
+    expect(sync.snapshot()).toMatchObject({ fase: 'in_pari' });
+    expect(sync.snapshot().dispositivi).toMatchObject([{ nome: 'scheda', corrente: true }]);
+  });
+
+  const quotidiana = {
+    ...comune,
+    tipo: 'routine' as const,
+    titolo: 'Corsa',
+    giorni: [0, 1, 2, 3, 4, 5, 6],
+    inizio: '07:00',
+    fine: '08:00',
+    dataInizio: '2026-09-22',
+    termine: null,
+    fasi: [],
+  };
+  const sposta = async (d: Dispositivo, id: string, minuti: number) => {
+    const b = (await get(d.db, 'blocchi', id))!;
+    await saveBlock(d.db, { ...b, inizio: b.inizio + minuti * MINUTE, fine: b.fine! + minuti * MINUTE }, ora, FUSO);
+  };
+
+  it('uno spostamento più recente di una modifica della routine fatta offline altrove resta su tutti (D-SYNC-6)', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const id = await crea(telefono.db, quotidiana);
+    await telefono.sync.run();
+    await accedi(tablet);
+    const mercoledi = `${id}:2026-09-23:07:00`;
+    // Alle 10:00 il telefono, offline, toglie il mercoledì; alle 10:05 il tablet sposta l'occorrenza di mercoledì
+    telefono.online = false;
+    ora = local(2026, 9, 22, 10, 0);
+    const r = (await get(telefono.db, 'ricorrenze', id))!;
+    await editRecurrence(telefono.db, { ...r, giorni: [0, 1, 2, 4, 5, 6] }, ora, FUSO);
+    ora = local(2026, 9, 22, 10, 5);
+    await sposta(tablet, mercoledi, 60);
+    await tablet.sync.run();
+    telefono.online = true;
+    await telefono.sync.run();
+    await tablet.sync.run();
+    for (const d of [telefono, tablet])
+      expect(await get(d.db, 'blocchi', mercoledi)).toMatchObject({ orarioInizio: '08:00' });
+  });
+
+  it('chi modifica la routine riporta allo slot un’occorrenza spostata altrove, e il ripristino arriva agli altri (D-SYNC-6)', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const id = await crea(telefono.db, quotidiana);
+    await telefono.sync.run();
+    await accedi(tablet);
+    const mercoledi = `${id}:2026-09-23:07:00`;
+    ora = local(2026, 9, 22, 10, 0);
+    await sposta(tablet, mercoledi, 60);
+    await tablet.sync.run();
+    await telefono.sync.run();
+    expect(await get(telefono.db, 'blocchi', mercoledi)).toMatchObject({ orarioInizio: '08:00' });
+    // Alle 10:05 il telefono rinomina la routine: lo spostamento torna allo slot (§7) anche sul tablet
+    ora = local(2026, 9, 22, 10, 5);
+    const r = (await get(telefono.db, 'ricorrenze', id))!;
+    await editRecurrence(telefono.db, { ...r, titolo: 'Corsa lenta' }, ora, FUSO);
+    await telefono.sync.run();
+    await tablet.sync.run();
+    for (const d of [telefono, tablet])
+      expect(await get(d.db, 'blocchi', mercoledi)).toMatchObject({ orarioInizio: '07:00', titolo: 'Corsa lenta' });
+  });
+
+  it('una routine rimandata uguale dal servizio non riporta allo slot uno spostamento già spedito (D-SYNC-6)', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const id = await crea(telefono.db, quotidiana);
+    await telefono.sync.run();
+    await accedi(tablet);
+    const mercoledi = `${id}:2026-09-23:07:00`;
+    await sposta(tablet, mercoledi, 60);
+    await tablet.sync.run();
+    // Il servizio rimanda la routine com'è (il push di un altro dispositivo ha perso): nuovo seq, stessi dati
+    const chiave = [...archivio.righe.keys()].find((k) => k.endsWith(`:ricorrenze:${id}`))!;
+    const riga = archivio.righe.get(chiave)!;
+    archivio.righe.set(chiave, { ...riga, busta: { ...riga.busta, seq: ++archivio.seq } });
+    await tablet.sync.run();
+    expect(await get(tablet.db, 'blocchi', mercoledi)).toMatchObject({ orarioInizio: '08:00' });
+  });
+
+  it('«Elimina tutti i dati» mentre il push aspetta la risposta: lo stato della sync non torna nei dati azzerati (D-SYNC-6)', async () => {
+    const db = openDb(`test-sync-lento-${++n}`);
+    aperti.push(db);
+    const backend = memorySyncBackend(archivio, () => ora, newId);
+    let spinto = false;
+    let sblocca = () => {};
+    // La risposta del push arriva tardi: il servizio ha già scritto
+    const lento: SyncBackend = {
+      ...backend,
+      async push(buste) {
+        await backend.push(buste);
+        spinto = true;
+        await new Promise<void>((fatto) => (sblocca = fatto));
+      },
+    };
+    const rete = { online: () => true, onOnline: () => () => undefined };
+    const sync = createSyncService(db, lento, rete, clock, { nome: 'lento', piattaforma: 'web' });
+    expect(await sync.verifyCode(EMAIL, CODICE_FINTO)).toBe(true);
+    await sync.run();
+    await crea(db, todo('Prima'));
+    const giro = sync.run();
+    await vi.waitFor(() => expect(spinto).toBe(true));
+    registerSyncService(sync);
+    await eraseAllData(db);
+    sblocca();
+    await giro;
+    expect(await get(db, 'preferenze', CHIAVE_STATO_SYNC)).toBeUndefined();
   });
 });

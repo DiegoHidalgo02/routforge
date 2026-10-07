@@ -160,6 +160,11 @@ export interface Ricorrenza extends OraDiParete {
   dateSaltate: string[];
   /** Solo routine di studio, opzionale (§2). */
   corsoId: string | null;
+  /**
+   * Solo routine di studio: l'impronta del corso (§25), che la sync mette nella riga spedita perché l'altro dispositivo,
+   * dove il corso ha un altro id, lo ritrovi (T-034, D-SYNC-5). Assente nelle righe nate qui.
+   */
+  impronta?: string | null;
   /** Template delle fasi (§5); vuoto per le routine di studio (§2). */
   fasi: FaseTemplate[];
   /** Override sulla definizione, ereditato dalle istanze (§2). */

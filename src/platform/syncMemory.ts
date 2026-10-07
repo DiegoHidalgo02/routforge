@@ -42,10 +42,15 @@ export function memorySyncBackend(archivio: ArchivioSync, ora: () => number, nuo
     sessione = s;
     for (const f of ascolti) f(s);
   };
-  /** Come `assert_device` dell'SQL: il dispositivo esiste, non è revocato; aggiorna l'ultima attività. */
+  /**
+   * Come `assert_device` dell'SQL: il dispositivo esiste (altrimenti un errore da ritentare: la registrazione non è
+   * ancora arrivata), non è revocato; aggiorna l'ultima attività.
+   */
   const attivo = (): Sessione => {
-    const d = sessione && archivio.dispositivi.get(sessione.dispositivo);
-    if (!sessione || !d || d.revocato) throw new RevocatoError();
+    if (!sessione) throw new RevocatoError();
+    const d = archivio.dispositivi.get(sessione.dispositivo);
+    if (!d) throw new Error('dispositivo_sconosciuto');
+    if (d.revocato) throw new RevocatoError();
     d.ultimaAttivita = ora();
     return sessione;
   };
@@ -102,6 +107,9 @@ export function memorySyncBackend(archivio: ArchivioSync, ora: () => number, nuo
           const memorizzata = archivio.righe.get(chiave)?.busta;
           if (serverAccepts(memorizzata, arrivata))
             archivio.righe.set(chiave, { userId: s.userId, busta: { ...arrivata, seq: ++archivio.seq } });
+          // Ha perso: la memorizzata di un altro dispositivo torna a chi ha spedito col prossimo pull, come nell'SQL
+          else if (memorizzata && memorizzata.dispositivo !== s.dispositivo)
+            archivio.righe.set(chiave, { userId: s.userId, busta: { ...memorizzata, seq: ++archivio.seq } });
         }
         return Promise.resolve();
       } catch (e) {

@@ -22,6 +22,8 @@ let db: RoutForgeDb;
 let n = 0;
 beforeEach(async () => {
   db = openDb(`test-esito-${++n}`);
+  // Il corso c'è, come dopo `saveCourse`: un blocco col corso che qui non c'è perde l'unità al ciclo (D-SYNC-5)
+  await save(db, 'corsi', { id: 'c1', titolo: 'Corso', sottotitolo: '', importatoIl: 0, esempio: false }, 1);
   await save(db, 'moduli', modulo('m1', 1), 1);
   await save(db, 'moduli', modulo('m2', 2), 1);
   await save(db, 'unita', unita('u11', 1, 1, '1.1'), 1);
