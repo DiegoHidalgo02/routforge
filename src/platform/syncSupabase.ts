@@ -60,7 +60,8 @@ export function supabaseSyncBackend(url: string, chiaveAnonima: string): SyncBac
       return () => void ascolti.delete(f);
     },
     async sendCode(email) {
-      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+      // L'account lo crea l'utente nel progetto (passi in testa a supabase/schema.sql): dall'app nessuna registrazione
+      const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
       if (error) throw errore(error);
     },
     async verifyCode(email, codice) {

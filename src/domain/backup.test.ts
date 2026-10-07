@@ -53,4 +53,20 @@ describe('Formato del backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', ()
       tabelle: { blocchi: [{ id: 't', createdAt: 1, updatedAt: 2, deletedAt: 2 }] },
     });
   });
+
+  it('un link che non è http(s) rende il file illeggibile (data:, file: costruiti ad arte; security review)', () => {
+    const riga = {
+      id: 'm1',
+      createdAt: 1,
+      updatedAt: 1,
+      deletedAt: null,
+      tipo: 'link',
+      url: 'data:text/html,<h1>x</h1>',
+    };
+    const testo = JSON.stringify({ formato: FORMATO_BACKUP, versione: 1, creatoIl: 1, tabelle: { materiali: [riga] } });
+    expect(parseBackup(testo, ['materiali'])).toEqual({ errore: 'illeggibile' });
+    const buona = { ...riga, url: 'https://esempio.it' };
+    const ok = JSON.stringify({ formato: FORMATO_BACKUP, versione: 1, creatoIl: 1, tabelle: { materiali: [buona] } });
+    expect(parseBackup(ok, ['materiali'])).not.toHaveProperty('errore');
+  });
 });

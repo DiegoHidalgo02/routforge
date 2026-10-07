@@ -30,7 +30,7 @@
 **Limiti noti della UI** (elenco del vecchio design in `git show 7fe5040:docs/STATO.md`; lo scorrimento touch del desktop su iPad si verifica in T-036): le schermate leggono `Date.now()` (la porta `Clock` è dei servizi, D-SCHED-1 n. 9); jsdom non impagina, quindi `useOggi`, `useMinuto` e il banner del ritorno si verificano solo nel browser (G4 `parziale`); la vista pronta con 500 blocchi è misurata solo in fake-indexeddb.
 
 **Ambiente e strumenti**
-- Remote `origin` (GitHub, `DiegoHidalgo02/routforge`): `main` pushato il 02/10/2026, CI verde; `/security-review` mai girato: serve prima del merge per file utente e PDF (T-024, T-025, D-MAT-2) e per il `.md` enorme nello ZIP decompresso in memoria (T-021).
+- Remote `origin` (GitHub, `DiegoHidalgo02/routforge`): `main` pushato il 02/10/2026, CI verde. Security review del 07/10 (AI, file utente, backup, sync, Android): nessun problema grave, correzioni applicate; resta T-059.
 - `npm audit`: due avvisi moderati su `@vitest/mocker` (correzione solo con Vitest 5); `eslint-plugin-jsx-a11y` usa `overrides` per ESLint 10 (`docs/DIPENDENZE.md`).
 - Server MCP `claude-design`: si connette dopo `/design-login` e `/mcp` (05/10). `read_file` restituisce `& < >` codificati e rifiuta i binari; un reimport si verifica confrontando i byte con `list_files` (Write ed Edit alterano spazi finali, righe di soli spazi e `\uXXXX` letterali).
 - `scripts/loop.sh` risulta modificato su Windows: `git config core.fileMode false` prima di `git add` (se già aggiunto: `git update-index --chmod=+x scripts/loop.sh`).

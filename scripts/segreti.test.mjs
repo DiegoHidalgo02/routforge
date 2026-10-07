@@ -19,6 +19,7 @@ export const PATTERN = [
   [/-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/, 'chiave privata'],
   [/\bsk-[A-Za-z0-9]{20,}\b/, 'chiave API OpenAI'],
   [/\bghp_[A-Za-z0-9]{36}\b/, 'token GitHub'],
+  [/\bsb_secret_[A-Za-z0-9_-]{20,}/, 'chiave segreta Supabase'],
   [/\beyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\b/, 'token JWT'],
 ];
 
@@ -55,6 +56,7 @@ describe('Segreti — CLAUDE.md §8 (INV-9)', () => {
     expect(segretiIn(`${'-----BEGIN '}PRIVATE KEY-----`)).toEqual(['chiave privata']);
     expect(segretiIn(`openai=${'sk-'}${'a'.repeat(24)}`)).toEqual(['chiave API OpenAI']);
     expect(segretiIn(`token ${'ghp_'}${'x'.repeat(36)}`)).toEqual(['token GitHub']);
+    expect(segretiIn(`chiave ${'sb_secret_'}${'x'.repeat(30)}`)).toEqual(['chiave segreta Supabase']);
     const segmento = `${'eyJ'}${'a'.repeat(24)}`;
     expect(segretiIn(`bearer ${segmento}.${segmento}.${'b'.repeat(12)}`)).toEqual(['token JWT']);
     expect(segretiIn('testo normale con AIza breve, sk-corta e eyJ.eyJ.x')).toEqual([]);

@@ -6,7 +6,10 @@
 --   2. Authentication → Emails → «Magic Link»: nel testo metti il codice {{ .Token }} (l'app chiede il codice di
 --      6 cifre, non il collegamento). Il servizio email incluso ha un limite basso di invii: per l'uso quotidiano
 --      conviene un SMTP proprio (Authentication → Emails → SMTP).
---   3. In `.env.local` (mai nel repository): VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY (Project Settings → API).
+--   3. Authentication → Users → «Add user»: crea il tuo utente con la tua email; poi Authentication → Sign In /
+--      Providers: spegni «Allow new users to sign up». URL e chiave anonima finiscono nell'app (sono pubblici per
+--      costruzione): senza questo passo chiunque potrebbe crearsi un account e riempire lo spazio del progetto.
+--   4. In `.env.local` (mai nel repository): VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY (Project Settings → API).
 -- La chiave `service_role` non va mai nell'app. Nessuna Edge Function.
 
 -- Dispositivi: uno per sessione dell'accesso (`session_id` del JWT). `revoked_at` è monotono: si segna solo con
@@ -33,7 +36,9 @@ create table if not exists public.records (
   device_id uuid not null,
   received_at timestamptz not null default clock_timestamp(),
   seq bigint generated always as identity,
-  primary key (user_id, tabella, id)
+  primary key (user_id, tabella, id),
+  -- Un record dell'app sta ben sotto 1 MB: una riga più grande è un abuso
+  check (octet_length(dati::text) <= 1048576)
 );
 create index if not exists records_user_seq on public.records (user_id, seq);
 
@@ -62,7 +67,10 @@ create policy records_insert on public.records for insert
 create policy records_update on public.records for update
   using (user_id = auth.uid() and public.device_active())
   with check (user_id = auth.uid() and device_id = (auth.jwt() ->> 'session_id')::uuid);
-grant select, insert, update, delete on public.records to authenticated;
+-- Le scritture passano solo da push_records, che applica elenco, istante e «ultimo vince»; la delete serve a «Cancella i
+-- dati remoti»
+grant select, delete on public.records to authenticated;
+revoke insert, update on public.records from authenticated;
 grant select, insert on public.devices to authenticated;
 create policy records_delete on public.records for delete
   using (user_id = auth.uid() and public.device_active());
@@ -117,9 +125,11 @@ $$;
 -- tutto, una `generata` in arrivo non sovrascrive; altrimenti la più recente e, a parità, il dispositivo maggiore.
 -- L'istante si ferma a 5 minuti dopo l'ora del servizio. Solo le tabelle e le preferenze dell'ambito (la chiave AI mai,
 -- D-SYNC-3): una riga fuori elenco si scarta anche se un client la manda.
+-- security definer: senza insert né update diretti su records, solo questa funzione scrive; mette lei utente e
+-- dispositivo dal JWT e controlla il dispositivo, quindi non scavalca l'isolamento fra utenti.
 create or replace function public.push_records(p_righe jsonb)
 returns void
-language plpgsql security invoker set search_path = '' as $$
+language plpgsql security definer set search_path = '' as $
 declare
   v_ora bigint := (extract(epoch from clock_timestamp()) * 1000)::bigint;
   v_dispositivo uuid := (auth.jwt() ->> 'session_id')::uuid;

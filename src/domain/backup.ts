@@ -96,6 +96,19 @@ const rigaValida = (r: unknown): r is RigaBackup =>
   (r.deletedAt === null || typeof r.deletedAt === 'number');
 
 /**
+ * Gli indirizzi dei link di un file importato: solo http(s), come quelli che scrivono l'app e il parser. Un `data:` o un
+ * `file:` costruito ad arte aprirebbe una pagina dentro l'app o la farebbe chiudere (security review del 07/10).
+ */
+const urlSicuro = (u: unknown): boolean =>
+  u === undefined || u === null || (typeof u === 'string' && /^https?:\/\//i.test(u));
+const indirizziSicuri = (nome: string, r: RigaBackup): boolean =>
+  nome === 'materiali' || nome === 'risorse'
+    ? urlSicuro((r as { url?: unknown }).url)
+    : nome === 'moduli'
+      ? urlSicuro((r as { progetto?: { risorsa?: { url?: unknown } } | null }).progetto?.risorsa?.url)
+      : true;
+
+/**
  * Le righe delle tabelle `nomi` dal testo di un file di backup; una tabella assente è vuota (un backup senza PDF si
  * importa), una che questa versione non conosce si ignora. `versione`: il file viene da una versione più nuova.
  */
@@ -120,7 +133,8 @@ export function parseBackup(testo: string, nomi: readonly string[]): EsitoLettur
     const tabelle: Record<string, RigaBackup[]> = {};
     for (const nome of nomi) {
       const righe = Object.hasOwn(sorgente, nome) ? sorgente[nome] : [];
-      if (!Array.isArray(righe) || !righe.every(rigaValida)) return { errore: 'illeggibile' };
+      if (!Array.isArray(righe) || !righe.every(rigaValida) || !righe.every((r) => indirizziSicuri(nome, r)))
+        return { errore: 'illeggibile' };
       // Una tombstone resta minima, coi soli campi comuni (INV-14: fuori dagli indici secondari)
       tabelle[nome] = righe.map((r): RigaBackup =>
         r.deletedAt !== null
