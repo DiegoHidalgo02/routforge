@@ -50,20 +50,22 @@ export function scoreDevSwipe(expected: readonly Verdetto[], firstPass: readonly
 export interface RisultatoEsercizioBugHunter {
   /** 2 al primo tentativo, 1 al secondo, altrimenti 0. */
   punti: 0 | 1 | 2;
-  /** true se la soluzione va mostrata perché l'utente non ha trovato la riga. */
+  /** La riga sbagliata è stata trovata. */
   risolto: boolean;
+  /** L'esercizio è chiuso (riga trovata o due tentativi): si mostrano codice corretto e spiegazione. */
+  finito: boolean;
 }
 
 /**
  * @param wrongLine numero (1-based) della riga sbagliata dell'esercizio
- * @param taps sequenza delle righe toccate dall'utente (max 2 considerate)
+ * @param taps sequenza delle righe toccate dall'utente (max 2 righe diverse considerate: ritoccare la stessa riga
+ *   sbagliata non consuma il secondo tentativo)
  */
 export function scoreBugHunterExercise(wrongLine: number, taps: readonly number[]): RisultatoEsercizioBugHunter {
-  const first = taps[0];
-  const second = taps[1];
-  if (first === wrongLine) return { punti: 2, risolto: true };
-  if (second === wrongLine) return { punti: 1, risolto: true };
-  return { punti: 0, risolto: false };
+  const [first, second] = [...new Set(taps)];
+  if (first === wrongLine) return { punti: 2, risolto: true, finito: true };
+  if (second === wrongLine) return { punti: 1, risolto: true, finito: true };
+  return { punti: 0, risolto: false, finito: second !== undefined };
 }
 
 /** Punteggio finale = punti / (2 × esercizi). */

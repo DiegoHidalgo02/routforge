@@ -13,7 +13,8 @@ import { Create } from './Create';
 import { Detail } from './Detail';
 import { MaterialsSpace, MaterialViewer } from './Materials';
 import { Notifications } from './Notifications';
-import { DeckScreen, QuizScreen, ReviewScreen } from './Practice';
+import { DeckScreen, ReviewScreen } from './Practice';
+import { PracticeScreen } from './PracticeGames';
 import { t } from './i18n';
 import { useSettings, watchSettings } from './preferenze';
 import { Section } from './Section';
@@ -46,7 +47,7 @@ function Rotte() {
           <Route path="notifiche" element={<Notifications />} />
           <Route path="chat" element={<ChatScreen />} />
           <Route path="chat/conversazioni" element={<Conversations />} />
-          <Route path="pratica/:id" element={<QuizScreen />} />
+          <Route path="pratica/:id" element={<PracticeScreen />} />
           <Route path="mazzo/:id" element={<DeckScreen />} />
           <Route path="ripasso" element={<ReviewScreen />} />
           <Route path="materiali/:id" element={<MaterialViewer />} />

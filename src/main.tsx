@@ -15,6 +15,7 @@ import { configureAi, followPendingMessages } from './app/ai';
 import { appDb } from './app/db';
 import { configureDiagnostics } from './app/diagnostics';
 import { configureBackupFiles } from './app/backup';
+import { configureVoice } from './app/practice';
 import { configurePdf } from './app/materials';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
@@ -33,6 +34,7 @@ import { androidWidget, followLinks } from './platform/widgetAndroid';
 import { geminiClient } from './platform/aiGemini';
 import { webNetwork } from './platform/network';
 import { webPdf } from './platform/pdf';
+import { deviceVoice } from './platform/voice';
 import { androidPdfViewer } from './platform/pdfAndroid';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
@@ -55,6 +57,8 @@ configurePdf(webPdf, androidPdfViewer);
 configureBackupFiles(backupFiles);
 // L'assistente AI (MECC §18, T-026): Gemini con la chiave dell'utente, senza proxy (D-AI-1)
 configureAi(geminiClient);
+// La voce dell'Audio Flash-Trivia (MECC §18, T-028): il motore di sintesi di Android, altrimenti quello del browser
+configureVoice(deviceVoice());
 
 const radice = document.getElementById('root');
 if (radice)

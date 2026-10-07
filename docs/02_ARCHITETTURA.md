@@ -150,7 +150,7 @@ resta fuori dal dominio.
 | Timer con app chiusa (D-TIMER-2) | no: solo Wake Lock a scheda aperta; battiti e intervallo non verificato (T-047) | servizio in primo piano con notifica-cronometro (T-021) | Live Activity + notifica «tempo scaduto» (T-036) | il tempo oltre 30' dall'ultimo battito non conta nel focus |
 | Widget | no | Kotlin AppWidget (T-023) | "se disponibile" (WidgetKit, dopo) | |
 | Backup su cartella documenti | download | `@capacitor/filesystem` Documents | Files | §22 |
-| TTS (Trivia) | Web Speech API | `@capacitor-community/text-to-speech` | idem | §18 |
+| TTS (Trivia) | Web Speech API (si ferma a schermo spento) | plugin locale `VoceTrivia`: coda di `TextToSpeech` con i silenzi (D-NATIVO-4) | da scrivere (T-036) | §18 |
 | Schermo acceso | Wake Lock API | plugin keep-awake | idem | §10.4 |
 
 ## 7. Comandi di scaffold (T-006 fatto il 25/09/2026; Capacitor in T-021, PWA in T-035)

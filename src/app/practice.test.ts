@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list, listBy, remove } from '../data/repository';
+import type { Verdetto } from '../domain/practice';
 import { addLocalDays, local, MINUTE } from '../domain/time';
 import { configureAi, removeAiKey, saveAiKey } from './ai';
 import { importSampleCourse } from './courseImport';
@@ -12,9 +13,10 @@ import {
   gradeCard,
   readDeckView,
   readDueCards,
+  readPractice,
   readPracticeStats,
-  readQuiz,
   readUnitPractice,
+  savePracticeResult,
   saveQuizResult,
 } from './practice';
 import type { AiClient } from './ports/ai';
@@ -128,7 +130,7 @@ describe('Quiz e criterio Go/No-Go automatico — MECCANISMI §11, §18 (D-QUIZ-
     expect((await auto())?.fatto).toBe(false);
     // Rifare lo stesso quiz non cambia il punteggio salvato: si riapre su quello (D-QUIZ-4)
     await saveQuizResult(db, id, Array<boolean>(10).fill(true), ADESSO + 1, FUSO);
-    expect((await readQuiz(db, id))?.risultato).toMatchObject({ giuste: 7, sbagliate: [7, 8, 9] });
+    expect((await readPractice(db, id))?.risultato).toMatchObject({ giuste: 7, sbagliate: [7, 8, 9] });
     expect((await auto())?.fatto).toBe(false);
     // ≥8/10 (M0): con 8 giuste su un quiz nuovo il criterio si spunta; S11 mostra l'ultimo quiz del modulo
     const nuovo = await genera();
@@ -138,7 +140,7 @@ describe('Quiz e criterio Go/No-Go automatico — MECCANISMI §11, §18 (D-QUIZ-
     expect((await readModule(db, u.corsoId, m!.numero))?.ultimoQuiz).toEqual({ giuste: 8, totali: 10 });
     expect((await readUnitPractice(db, u.id, ADESSO)).find((p) => p.id === nuovo)).toMatchObject({
       tipo: 'quiz',
-      domande: 10,
+      elementi: 10,
       giuste: 8,
       percentuale: 80,
     });
@@ -167,5 +169,65 @@ describe('Flashcard e ripasso — SCENARI I1, MECCANISMI §19', () => {
     expect((await readDueCards(db, dopo)).map((c) => c.fronte)).toEqual(['b', 'a']);
     // S20 Pratica: valutazioni date e carte scadute oggi
     expect(await readPracticeStats(db, ADESSO - 1, ADESSO + 1, dopo)).toMatchObject({ valutazioni: 2, scaduteOggi: 2 });
+  });
+});
+
+describe('DevSwipe, Bug Hunter e Trivia — SCENARI I2, I3, I4 (T-028)', () => {
+  it('DevSwipe: 10 carte, 3 errori → 7/10 salvato una volta; Bug Hunter: la riga fuori dal codice non si salva', async () => {
+    const u = await unita('0.1');
+    json = JSON.stringify(
+      Array.from({ length: 10 }, (_, i) => ({ contenuto: `c${i}`, verdetto: 'corretto', spiegazione: 'perché' })),
+    );
+    const r = await generatePractice(db, u.id, 'devswipe', 10, 'media', ADESSO);
+    const id = 'id' in r ? r.id : '';
+    expect((await readPractice(db, id))?.parametri).toEqual({ quantita: 10, difficolta: 'media' });
+    const verdetti = Array.from({ length: 10 }, (_, i): Verdetto => ([1, 4, 8].includes(i) ? 'errato' : 'corretto'));
+    expect(await savePracticeResult(db, id, { tipo: 'devswipe', verdetti }, ADESSO)).toMatchObject({
+      giuste: 7,
+      totali: 10,
+      sbagliate: [1, 4, 8],
+    });
+    // Conta il primo: rifarla non cambia il risultato (D-QUIZ-4)
+    await savePracticeResult(db, id, { tipo: 'devswipe', verdetti: Array(10).fill('corretto') }, ADESSO + 1);
+    expect((await readPractice(db, id))?.risultato).toMatchObject({ giuste: 7, istante: ADESSO });
+    const codice = ['a', 'b', 'c', 'd', 'e'].join('\n');
+    json = JSON.stringify([
+      { codice, riga: 4, corretto: codice.replace('d', 'D') },
+      { codice, riga: 9, corretto: codice.replace('d', 'D') },
+    ]);
+    const b = await generatePractice(db, u.id, 'bughunter', 5, 'facile', ADESSO);
+    expect('id' in b && (await readPractice(db, b.id))?.elementi.map((e) => ('riga' in e ? e.riga : 0))).toEqual([4]);
+  });
+
+  it('Trivia: lingua del materiale, 2 saltate su 10 → 8/10; tornano una volta nella playlist successiva (I4)', async () => {
+    const u = await unita('0.1');
+    const playlist = (n: number) =>
+      JSON.stringify({
+        lingua: 'en',
+        elementi: Array.from({ length: n }, (_, i) => ({ domanda: `Q${i}`, spiegazione: `A${i}` })),
+      });
+    json = playlist(10);
+    const prima = await generatePractice(db, u.id, 'trivia', 10, 'media', ADESSO);
+    const p1 = 'id' in prima ? prima.id : '';
+    expect(await readPractice(db, p1)).toMatchObject({ tipo: 'trivia', lingua: 'en', parametri: { difficolta: null } });
+    await savePracticeResult(db, p1, { tipo: 'trivia', saltate: [3, 8] }, ADESSO);
+    expect((await readPractice(db, p1))?.risultato).toMatchObject({ giuste: 8, totali: 10, percentuale: 80 });
+    json = playlist(5);
+    const seconda = await generatePractice(db, u.id, 'trivia', 5, null, ADESSO + 1);
+    const p2 = 'id' in seconda ? seconda.id : '';
+    const elementi = (await readPractice(db, p2))?.elementi ?? [];
+    expect(elementi).toHaveLength(7);
+    expect(elementi.slice(5)).toEqual([
+      { domanda: 'Q3', spiegazione: 'A3', riproposto: true },
+      { domanda: 'Q8', spiegazione: 'A8', riproposto: true },
+    ]);
+    // Saltate di nuovo, non tornano più: tornano solo le nuove saltate
+    await savePracticeResult(db, p2, { tipo: 'trivia', saltate: [0, 5, 6] }, ADESSO + 2);
+    const terza = await generatePractice(db, u.id, 'trivia', 5, null, ADESSO + 3);
+    const ultime = (await readPractice(db, 'id' in terza ? terza.id : ''))?.elementi.slice(5);
+    expect(ultime).toEqual([{ domanda: 'Q0', spiegazione: 'A0', riproposto: true }]);
+    // S20 Pratica: le playlist completate nel periodo; S12: le pratiche nei Recenti
+    expect(await readPracticeStats(db, ADESSO - 1, ADESSO + 10, ADESSO)).toMatchObject({ trivia: 2, devswipe: null });
+    expect((await readUnitPractice(db, u.id, ADESSO)).filter((p) => p.tipo === 'trivia')).toHaveLength(3);
   });
 });

@@ -2,7 +2,7 @@
 // 7g · 30g · 90g · tutto (90 all'apertura, come il mock). I numeri li calcola `app/stats.ts` con le definizioni di
 // `domain/stats.ts` (D-STATS-1); le card sono di sola lettura (CONTROLLI S20). Lo stato vuoto del mock compare finché non
 // c'è nessuna sessione e nessun blocco giudicato; un dato che manca nel periodo si scrive sulla sua riga (TESTI). La
-// Pratica ha quiz e flashcard (T-027); DevSwipe, Bug Hunter e Trivia arrivano con T-028.
+// Pratica ha quiz, flashcard (T-027), DevSwipe, Bug Hunter e Trivia (T-028).
 import { Check, ChartColumn } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -509,7 +509,8 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
 
 /**
  * Pratica (§20): quiz = media delle percentuali dei quiz finiti nel periodo; flashcard = valutazioni date nel periodo e
- * carte scadute adesso, con l'ingresso al ripasso trasversale (T-027); DevSwipe, Bug Hunter e Trivia arrivano con T-028.
+ * carte scadute adesso, con l'ingresso al ripasso trasversale (T-027); DevSwipe e Bug Hunter = media dei punteggi,
+ * Trivia = playlist completate (T-028; mock: «accuratezza · 6 mazzi», «9 playlist · completate»).
  */
 function Practice({ periodo }: { periodo: Periodo }) {
   const [p, setP] = useState<Awaited<ReturnType<typeof readPracticeStats>>>();
@@ -518,7 +519,6 @@ function Practice({ periodo }: { periodo: Periodo }) {
     // Le carte scadute adesso: l'istante di ogni lettura, non quello dell'apertura
     return watch(() => readPracticeStats(appDb, da, a, Date.now()), setP);
   }, [periodo]);
-  const altre: Chiave[] = ['praticaDevSwipe', 'praticaBugHunter', 'praticaTrivia'];
   return (
     <div className={s.griglia}>
       <KpiCard
@@ -526,9 +526,45 @@ function Practice({ periodo }: { periodo: Periodo }) {
         valore={<Valore testo={p?.quiz == null ? '—' : String(p.quiz)} {...(p?.quiz != null && { unita: '%' })} />}
         meta={p?.quizFatti ? t('quizFatti', { n: p.quizFatti }) : <SenzaDati />}
       />
-      {altre.map((k) => (
-        <KpiCard key={k} etichetta={t(k)} valore={<Valore testo="—" />} meta={<SenzaDati />} />
-      ))}
+      <KpiCard
+        etichetta={t('praticaDevSwipe')}
+        valore={
+          <Valore testo={p?.devswipe == null ? '—' : String(p.devswipe)} {...(p?.devswipe != null && { unita: '%' })} />
+        }
+        meta={
+          p?.devswipeFatti ? (
+            t(p.devswipeFatti === 1 ? 'accuratezzaMazzo' : 'accuratezzaMazzi', { n: p.devswipeFatti })
+          ) : (
+            <SenzaDati />
+          )
+        }
+      />
+      <KpiCard
+        etichetta={t('praticaBugHunter')}
+        valore={
+          <Valore
+            testo={p?.bughunter == null ? '—' : String(p.bughunter)}
+            {...(p?.bughunter != null && { unita: '%' })}
+          />
+        }
+        meta={
+          p?.bughunterFatti ? (
+            t(p.bughunterFatti === 1 ? 'accuratezzaSerieUna' : 'accuratezzaSerie', { n: p.bughunterFatti })
+          ) : (
+            <SenzaDati />
+          )
+        }
+      />
+      <KpiCard
+        etichetta={t('praticaTrivia')}
+        valore={
+          <Valore
+            testo={p?.trivia ? String(p.trivia) : '—'}
+            {...(p?.trivia && { unita: t(p.trivia === 1 ? 'playlistUnitaUna' : 'playlistUnita') })}
+          />
+        }
+        meta={p?.trivia ? t('completateMinuscolo') : <SenzaDati />}
+      />
       <KpiCard
         etichetta={t('carteDovuteOggi')}
         larga

@@ -93,4 +93,14 @@
          solo nel manifest del plugin delle notifiche) -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- T-028: la voce dell'Audio Flash-Trivia tiene acceso il processore durante la lettura (i silenzi non hanno audio);
+         dichiarato qui, non solo nel manifest del plugin delle notifiche. Da Android 11 il motore di sintesi è visibile
+         solo se dichiarato nelle queries -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>

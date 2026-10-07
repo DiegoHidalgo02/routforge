@@ -99,6 +99,7 @@ D-DESIGN-3. Ogni voce è un task nuovo o ritocca un task esistente; l'handoff pe
 | Navbar e intestazione (FUNZ §1) | pill «Oggi» nell'intestazione e nel Mese (T-043) | su mobile «Oggi» della barra in basso riporta a oggi; nessun tasto «Oggi» nell'intestazione né nel Mese; su desktop «Oggi» fra le frecce | handoff di S1 |
 | Fine sessione (FUNZ §12; S15 `done`) | schermata finale di T-018 e T-046 | «Giorni di fila 13 · +1», «Torna a Oggi», «Riduci» | handoff di S15 |
 | Celebrazioni e percentuali (FUNZ §23; `claude-design/CLAUDE.md`) | — | sobria (default) · piena · off; percentuali con lo spazio («38 %») | T-032, i18n |
+| Dettaglio di studio (S5; CONTROLLI di S5) | unità proposta, concetto core e modulo (T-054); niente AI | file di contesto AI del blocco (rimuovi, aggiungi nota, PDF o ZIP), scorciatoie della pratica sull'unità, domanda rapida all'AI; il contesto del blocco non è nella spec: **da decidere** | T-058 |
 | Schermate senza codice | — | S8 sveglia, S9 notifiche di sistema, S11 e S12 (corso, modulo, unità), S13 PDF e widget, S19 AI, S20 statistiche, S21 notifiche, S22 impostazioni | i task del backlog (T-021–T-032) e quelli che nascono dall'handoff |
 
 **Blocchi del pacchetto** (`claude-design/docs/BLOCCHI.md`): 1 (creazione su desktop) e 2 («Registra esito» dal
@@ -423,6 +424,21 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     mano (D-QUIZ-3); l'ingresso al ripasso trasversale è il collegamento sotto «Carte dovute oggi» in S20 Pratica (il mock lo
     documenta solo come collegamento del widget); la nota sulla lingua non nomina la lingua (l'app non la conosce); S11
     mostra «ultimo 6/10» accanto al criterio automatico; quiz e flashcard a schermo pieno senza BottomNav come la chat.
+84. S19 DevSwipe, Bug Hunter, Audio Flash-Trivia e «Pratica · riepilogo», S12 coi cinque tipi, S20 Pratica (T-028,
+    D-PRATICA-1, D-NATIVO-4): come i mock (confronto del 07/10 su errore DevSwipe, esercizio Bug Hunter, domanda della
+    Trivia, riepilogo DevSwipe). Dove il mock tace o non torna: la soglia dello swipe è un quarto della carta e la carta
+    segue il dito (il mock ha solo lo stato dopo il verdetto); il codice della carta va a capo invece di scorrere (lo
+    scorrimento orizzontale litigherebbe con lo swipe); il verdetto dice «Giusto · problema riconosciuto», «Giusto · era
+    da tenere», «Sbagliato · era da scartare», «Sbagliato · era corretto» (il mock ha solo il caso del code smell); la
+    vibrazione dell'errore è quella breve della spunta e segue «Feedback aptico»; Bug Hunter ha «difficoltà …» nel
+    sottotitolo invece di «dal tuo codice» (l'app non sa se l'esercizio viene dal codice) e il riepilogo «I n esercizi
+    sbagliati» senza «riproposti una volta» né etichetta (nessuna riproposta in §18); le righe giuste del codice corretto
+    sono in verde; la Trivia parte col primo Play, mostra «lettura» senza durata (non si conosce in anticipo) e il
+    silenzio conta i secondi; l'icona Pausa è quella di lucide (due barre piene); i comandi sono 48 · 64 · 48 come il mock
+    (CONTROLLI dice 44 · 56 · 44) e il secondo tasto del riepilogo è «Torna all'unità» primario come il mock (CONTROLLI
+    dice «Chiudi» ghost); senza voce una riga d'avviso. «Rifai la pratica» genera una pratica nuova con gli stessi
+    parametri (§18; il mock riapre la stessa). S20: «accuratezza · n mazzi», «accuratezza · n serie», «n playlist ·
+    completate» e il Quiz «media · n quiz» come il mock.
 
 ## 4. Mappa schermata → design → task
 

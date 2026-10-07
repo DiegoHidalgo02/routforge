@@ -23,19 +23,25 @@ describe('DevSwipe — SCENARI I2', () => {
 
 describe('Bug Hunter — SCENARI I3', () => {
   it('riga errata 4: tocco su 4 al primo tentativo → 2 punti', () => {
-    expect(scoreBugHunterExercise(4, [4])).toEqual({ punti: 2, risolto: true });
+    expect(scoreBugHunterExercise(4, [4])).toEqual({ punti: 2, risolto: true, finito: true });
   });
 
   it('tocco su 2, poi su 4 → 1 punto', () => {
-    expect(scoreBugHunterExercise(4, [2, 4])).toEqual({ punti: 1, risolto: true });
+    expect(scoreBugHunterExercise(4, [2])).toEqual({ punti: 0, risolto: false, finito: false });
+    expect(scoreBugHunterExercise(4, [2, 4])).toEqual({ punti: 1, risolto: true, finito: true });
   });
 
   it('due errori → 0 punti e soluzione mostrata', () => {
-    expect(scoreBugHunterExercise(4, [2, 3])).toEqual({ punti: 0, risolto: false });
+    expect(scoreBugHunterExercise(4, [2, 3])).toEqual({ punti: 0, risolto: false, finito: true });
   });
 
   it('il terzo tocco non conta (max 2 tentativi)', () => {
     expect(scoreBugHunterExercise(4, [2, 3, 4]).punti).toBe(0);
+  });
+
+  it('ritoccare la stessa riga sbagliata non consuma il secondo tentativo', () => {
+    expect(scoreBugHunterExercise(4, [2, 2])).toEqual({ punti: 0, risolto: false, finito: false });
+    expect(scoreBugHunterExercise(4, [2, 2, 4])).toEqual({ punti: 1, risolto: true, finito: true });
   });
 
   it('punteggio finale = punti / (2 × esercizi)', () => {

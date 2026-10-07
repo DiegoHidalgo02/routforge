@@ -759,7 +759,7 @@ export function Unit() {
             <VideoStudio key={u.id} m={v.materiale} />
             <TuoiMateriali corsoId={corso} unitaId={u.id} />
             <CodiceUnita corsoId={corso} unitaId={u.id} />
-            <PraticaUnita key={u.id} unitaId={u.id} />
+            <PraticaUnita key={`pratica:${u.id}`} unitaId={u.id} />
           </div>
         </div>
         <div className={s.piede}>

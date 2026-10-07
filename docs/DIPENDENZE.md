@@ -41,7 +41,5 @@ un pacchetto non registrato è un `BLOCCO:`.
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `vite-plugin-pwa` | prevista | dev, web installabile (manifest e service worker), T-035: nome e icona arrivano con CP6 | PWA sulla stessa build di Vite | D-STACK-1 |
-| `@capacitor-community/text-to-speech` | prevista | `src/platform`, T-028 | Audio Flash-Trivia (MECC §18) | D-STACK-1 |
-| `@google/genai` | prevista | `src/platform` (client AI), T-026 | fornitore Gemini scelto dalle spec | D-AI-1 |
 | `i18next` | prevista | `src/ui`, T-031 | sei lingue da file JSON | D-I18N-1 |
 | `@testing-library/react` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | test di interazione | D-TEST-1 |

@@ -1,8 +1,9 @@
-// La pratica generata dall'AI (MECC §18, §19; T-027; `claude-design/S19 AI Panel.dc.html` stati `quiz*` e `flashcard*`,
-// `S12 Unità Panel.dc.html` sezione «Pratica»): in S12 tipo, quantità e difficoltà, «Genera» con l'attesa e l'errore
-// «nessun elemento valido», i Recenti; il quiz con le quattro opzioni, la verifica e il punteggio; le flashcard da girare
-// con i quattro gradi SM-2 (solo l'etichetta, D-DESIGN-1 n. 9) per un mazzo o per il ripasso trasversale (`/ripasso`).
-// Le regole stanno in `app/practice` e nel dominio: qui si mostra e si passa il gesto.
+// La pratica generata dall'AI (MECC §18, §19; T-027, T-028; `claude-design/S19 AI Panel.dc.html` stati `quiz*` e
+// `flashcard*`, `S12 Unità Panel.dc.html` sezione «Pratica»): in S12 i cinque tipi, quantità e difficoltà, «Genera» con
+// l'attesa e l'errore «nessun elemento valido», i Recenti; il quiz con le quattro opzioni, la verifica e il punteggio; le
+// flashcard da girare con i quattro gradi SM-2 (solo l'etichetta, D-DESIGN-1 n. 9) per un mazzo o per il ripasso
+// trasversale (`/ripasso`). DevSwipe, Bug Hunter e Trivia stanno in `PracticeGames.tsx`. Le regole stanno in
+// `app/practice` e nel dominio: qui si mostra e si passa il gesto.
 import { Check, ChevronLeft, Layers, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
@@ -12,32 +13,48 @@ import {
   gradeCard,
   readDeckView,
   readDueCards,
-  readQuiz,
   readUnitPractice,
   saveQuizResult,
   type CartaDaRipassare,
   type EsitoGenerazione,
+  type PraticaAperta,
   type PraticaRecente,
-  type TipoGenerabile,
 } from '../app/practice';
 import { citations, type ErroreAi } from '../domain/ai';
-import { QUANTITA, quizScore, type DifficoltaPratica, type Quantita } from '../domain/generation';
+import { QUANTITA, quizScore, type DifficoltaPratica, type Quantita, type TipoPratica } from '../domain/generation';
 import type { Valutazione } from '../domain/sm2';
 import { fmtData, fuso } from './format';
 import { t, type Chiave } from './i18n';
 import s from './Practice.module.css';
 
-const TIPI: [TipoGenerabile, Chiave][] = [
-  ['quiz', 'praticaQuiz'],
-  ['flashcard', 'praticaFlashcard'],
-];
-const DIFFICOLTA: [DifficoltaPratica, Chiave][] = [
+/** I cinque tipi di S12, nell'ordine del mock, col loro nome; il sostantivo dell'errore «nessun … valido» (TESTI). */
+export const NOME_TIPO: Record<TipoPratica, Chiave> = {
+  quiz: 'praticaQuiz',
+  flashcard: 'praticaFlashcard',
+  devswipe: 'praticaDevSwipe',
+  bughunter: 'praticaBugHunter',
+  trivia: 'praticaTrivia',
+};
+const TIPI = Object.keys(NOME_TIPO) as TipoPratica[];
+const NESSUNO_VALIDO: Record<TipoPratica, Chiave> = {
+  quiz: 'nessunaDomandaValida',
+  flashcard: 'nessunaCartaValida',
+  devswipe: 'nessunaCartaValida',
+  bughunter: 'nessunEsercizioValido',
+  trivia: 'nessunaDomandaValida',
+};
+/** La difficoltà dove S12 la mostra: nascosta per Flashcard e Trivia (CONTROLLI di S12). */
+const conDifficolta = (tipo: TipoPratica) => tipo !== 'flashcard' && tipo !== 'trivia';
+/** Dove si apre una pratica: il mazzo per le flashcard, S19 per le altre. */
+export const rottaPratica = (tipo: TipoPratica, id: string) =>
+  tipo === 'flashcard' ? `/mazzo/${encodeURIComponent(id)}` : `/pratica/${encodeURIComponent(id)}`;
+export const DIFFICOLTA: [DifficoltaPratica, Chiave][] = [
   ['facile', 'difficoltaFacile'],
   ['media', 'difficoltaMedia'],
   ['difficile', 'difficoltaDifficile'],
 ];
 type Errore = Extract<EsitoGenerazione, { errore: unknown }>['errore'];
-const ERRORE: Record<ErroreAi | 'vuota', Chiave> = {
+export const ERRORE: Record<ErroreAi | 'vuota', Chiave> = {
   vuota: 'generazioneVuotaTesto',
   chiave: 'erroreChiaveTesto',
   modello: 'erroreModelloTesto',
@@ -60,20 +77,20 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
       montato.current = false;
     };
   }, []);
-  const [tipo, setTipo] = useState<TipoGenerabile>('quiz');
+  const [tipo, setTipo] = useState<TipoPratica>('quiz');
   const [quantita, setQuantita] = useState<Quantita>(10);
   const [difficolta, setDifficolta] = useState<DifficoltaPratica>('media');
   const [stato, setStato] = useState<'pronto' | 'genera' | Errore>('pronto');
   const [recenti, setRecenti] = useState<PraticaRecente[]>();
   useEffect(() => watch(() => readUnitPractice(appDb, unitaId, Date.now()), setRecenti), [unitaId]);
-  const nome = t(tipo === 'quiz' ? 'praticaQuiz' : 'praticaFlashcard');
+  const nome = t(NOME_TIPO[tipo]);
   const genera = async () => {
     setStato('genera');
     const r = await generatePractice(appDb, unitaId, tipo, quantita, difficolta, Date.now());
     if (!montato.current) return;
     if ('errore' in r) return setStato(r.errore);
     setStato('pronto');
-    void navigate(tipo === 'quiz' ? `/pratica/${encodeURIComponent(r.id)}` : `/mazzo/${encodeURIComponent(r.id)}`);
+    void navigate(rottaPratica(tipo, r.id));
   };
   return (
     <section className={s.sezione}>
@@ -82,7 +99,7 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
         {t('praticaGenera')}
       </h2>
       <div className={s.tipi}>
-        {TIPI.map(([id, chiave]) => (
+        {TIPI.map((id) => (
           <button
             key={id}
             type="button"
@@ -91,7 +108,7 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
             disabled={stato === 'genera'}
             onClick={() => setTipo(id)}
           >
-            {t(chiave)}
+            {t(NOME_TIPO[id])}
           </button>
         ))}
       </div>
@@ -113,7 +130,7 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
             ))}
           </span>
         </div>
-        {tipo === 'quiz' && (
+        {conDifficolta(tipo) && (
           <div className={s.riga}>
             <span className={s.etichetta}>{t('difficolta')}</span>
             <span className={s.chips}>
@@ -137,13 +154,7 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
             <TriangleAlert size={18} className={s.iconaErrore} />
             <span className={s.testiErrore}>
               <span className={s.titoloErrore}>
-                {t(
-                  stato === 'vuota'
-                    ? tipo === 'quiz'
-                      ? 'nessunaDomandaValida'
-                      : 'nessunaCartaValida'
-                    : 'generazioneNonFatta',
-                )}
+                {t(stato === 'vuota' ? NESSUNO_VALIDO[tipo] : 'generazioneNonFatta')}
               </span>
               <span className={s.dettaglioErrore}>{t(ERRORE[stato])}</span>
               <span className={s.azioniErrore}>
@@ -182,29 +193,26 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
         <div className={s.recenti}>
           <span className={s.etichetta}>{t('recenti')}</span>
           {recenti.map((r) => (
-            <Link
-              key={r.id}
-              className={s.recente}
-              to={r.tipo === 'quiz' ? `/pratica/${encodeURIComponent(r.id)}` : `/mazzo/${encodeURIComponent(r.id)}`}
-            >
-              <span className={s.tipoRecente}>{t(r.tipo === 'quiz' ? 'praticaQuiz' : 'praticaFlashcard')}</span>
+            <Link key={r.id} className={s.recente} to={rottaPratica(r.tipo, r.id)}>
+              <span className={s.tipoRecente}>{t(NOME_TIPO[r.tipo])}</span>
               <span className={s.titoloRecente}>
-                {fmtData.format(r.creataIl)} ·{' '}
-                {r.tipo === 'quiz'
-                  ? t('recenteDomande', { n: r.domande })
-                  : t(r.dovute === 1 ? 'recenteCarteUnaScaduta' : 'recenteCarte', { n: r.carte, d: r.dovute })}
+                {fmtData.format(r.creataIl)} · <Quanti r={r} />
               </span>
               <span
                 className={s.punteggioRecente}
-                data-tono={r.tipo === 'quiz' ? (r.giuste !== null ? 'successo' : undefined) : 'primary'}
+                data-tono={
+                  r.tipo === 'flashcard' ? 'primary' : r.tipo === 'quiz' && r.giuste !== null ? 'successo' : undefined
+                }
               >
-                {r.tipo === 'quiz'
-                  ? r.giuste !== null && r.totali !== null
-                    ? t('punteggioRecente', { g: r.giuste, t: r.totali, p: r.percentuale ?? 0 })
-                    : ''
-                  : r.dovute > 0
+                {r.tipo === 'flashcard'
+                  ? r.dovute > 0
                     ? t('ripassa')
-                    : ''}
+                    : ''
+                  : r.giuste === null || r.totali === null
+                    ? ''
+                    : r.tipo === 'quiz'
+                      ? t('punteggioRecente', { g: r.giuste, t: r.totali, p: r.percentuale ?? 0 })
+                      : `${r.giuste} / ${r.totali}`}
               </span>
             </Link>
           ))}
@@ -214,11 +222,24 @@ export function PraticaUnita({ unitaId }: { unitaId: string }) {
   );
 }
 
+/** Quanti elementi ha una pratica dei Recenti (mock di S12: «10 domande», «15 carte», «12 carte · 4 scadute»). */
+function Quanti({ r }: { r: PraticaRecente }) {
+  if (r.tipo === 'flashcard')
+    return t(r.dovute === 1 ? 'recenteCarteUnaScaduta' : 'recenteCarte', { n: r.carte, d: r.dovute });
+  const chiave: Record<typeof r.tipo, Chiave> = {
+    quiz: 'recenteDomande',
+    devswipe: 'recenteSoloCarte',
+    bughunter: 'recenteEsercizi',
+    trivia: 'recentePlaylist',
+  };
+  return t(chiave[r.tipo], { n: r.elementi });
+}
+
 /** La rotta dell'unità della pratica: dove tornano «Indietro» e «Torna all'unità». */
-const rottaUnita = (u: { unitaId: string; corsoId: string | null }) =>
+export const rottaUnita = (u: { unitaId: string; corsoId: string | null }) =>
   u.corsoId ? `/corsi/${encodeURIComponent(u.corsoId)}/unita/${encodeURIComponent(u.unitaId)}` : '/';
 
-function Testa(p: { titolo: string; sottotitolo: string; progresso?: [number, number]; indietro: () => void }) {
+export function Testa(p: { titolo: string; sottotitolo: string; progresso?: [number, number]; indietro: () => void }) {
   return (
     <header className={s.testa}>
       <div className={s.rigaTesta}>
@@ -245,7 +266,7 @@ function Testa(p: { titolo: string; sottotitolo: string; progresso?: [number, nu
 }
 
 /** La fonte di un elemento generato come chip numerata con l'etichetta (le stesse etichette della chat). */
-function Fonte({ citazione }: { citazione: string }) {
+export function Fonte({ citazione }: { citazione: string }) {
   if (!citazione) return null;
   const f = citations(citazione.startsWith('[') ? citazione : `[${citazione}]`).fonti[0];
   const tipo: Record<string, Chiave> = {
@@ -272,13 +293,8 @@ const salvaQuiz = (id: string, esiti: boolean[]) => saveQuizResult(appDb, id, es
  * S19 Quiz (`quiz`, `quiz-answered`, `quiz-done`): una domanda alla volta, «Conferma» e la spiegazione, il punteggio. Un
  * quiz già fatto si riapre sul punteggio salvato, con le sue sbagliate da rivedere (D-QUIZ-4).
  */
-export function QuizScreen() {
-  const { id = '' } = useParams();
+export function QuizScreen({ q }: { q: Extract<PraticaAperta, { tipo: 'quiz' }> }) {
   const navigate = useNavigate();
-  const [q, setQ] = useState<Awaited<ReturnType<typeof readQuiz>> | null>();
-  useEffect(() => {
-    void readQuiz(appDb, id).then((x) => setQ(x ?? null));
-  }, [id]);
   // «Rivedi le sbagliate»: un giro sulle sole domande sbagliate, che non cambia il punteggio salvato
   const [giro, setGiro] = useState<number[] | null>(null);
   const [i, setI] = useState(0);
@@ -286,10 +302,8 @@ export function QuizScreen() {
   const [verificata, setVerificata] = useState(false);
   const [esiti, setEsiti] = useState<boolean[]>([]);
   const [fine, setFine] = useState(false);
-  if (q === undefined) return null;
-  if (q === null) return <Indietro />;
-  const ordine = giro ?? q.domande.map((_, k) => k);
-  const d = q.domande[ordine[i] ?? 0];
+  const ordine = giro ?? q.elementi.map((_, k) => k);
+  const d = q.elementi[ordine[i] ?? 0];
   const indietro = () => void navigate(rottaUnita(q));
   const sottotitolo = t('quizSottotitolo', { u: q.numero, n: ordine.length });
   const salvato = giro ? null : q.risultato;
@@ -412,7 +426,7 @@ export function QuizScreen() {
   );
 }
 
-function Indietro() {
+export function Indietro() {
   const navigate = useNavigate();
   useEffect(() => void navigate('/', { replace: true }), [navigate]);
   return null;
