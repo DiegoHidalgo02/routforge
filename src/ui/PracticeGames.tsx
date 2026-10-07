@@ -108,16 +108,21 @@ function DevSwipe({ p }: { p: Di<'devswipe'> }) {
       if (v !== c.verdetto) vibra();
       return;
     }
-    setRisposta(null);
-    if (k + 1 < coda.length) return setK(k + 1);
+    const prossima = () => {
+      setRisposta(null);
+      setK(k + 1);
+    };
+    if (k + 1 < coda.length) return prossima();
     const { daRiproporre } = scoreDevSwipe(
       p.elementi.map((x) => x.verdetto),
       verdetti,
     );
     if (coda.length === n && daRiproporre.length) {
       setCoda([...coda, ...daRiproporre]);
-      return setK(k + 1);
+      return prossima();
     }
+    // A fine mazzo la carta resta giudicata finché il salvataggio torna: un tocco in più risalva (idempotente) e non
+    // aggiunge un verdetto
     void salva(p, { tipo: 'devswipe', verdetti }).then(setRisultato);
   };
   const giu = (e: PointerEvent<HTMLDivElement>) => {
@@ -388,6 +393,7 @@ function Trivia({ p }: { p: Di<'trivia'> }) {
   const finisci = () => void salva(p, { tipo: 'trivia', saltate: saltate.current }).then(setRisultato);
   const avvia = (da: number) => {
     setSuona(true);
+    setSenzaVoce(false);
     readAloud(p.elementi, da, p.lingua, {
       fase: (indice, f) => {
         setI(indice);
@@ -455,7 +461,8 @@ function Trivia({ p }: { p: Di<'trivia'> }) {
             type="button"
             className={s.comandoPrincipale}
             aria-label={t(suona ? 'pausa' : 'play')}
-            disabled={senzaVoce}
+            // Spento solo senza voce; dopo un errore della lettura (anche passeggero) si riprova
+            disabled={!hasVoice()}
             onClick={() => (suona ? ferma(false) : avvia(i))}
           >
             {suona ? <Pause size={22} strokeWidth={2.5} /> : <Play size={22} fill="currentColor" />}

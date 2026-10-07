@@ -846,6 +846,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   overflow-y: auto;
+  /* Un contenitore che scorre riaprirebbe tutti i gesti: lo swipe parte anche dal codice */
+  touch-action: pan-y;
 }
 
 .contenuto[data-genere='affermazione'] {

@@ -103,6 +103,34 @@ describe('DevSwipe — SCENARI I2 (UI)', () => {
     expect(bottone('Back to the unit')).toBeDefined();
     expect(await risultato()).toMatchObject({ giuste: 7, totali: 10, sbagliate: [1, 4, 8] });
   });
+
+  it('a fine mazzo i tocchi in più mentre il risultato si salva non aggiungono verdetti', async () => {
+    const carte = Array.from({ length: 3 }, (_, i) => ({
+      contenuto: `const y${i} = ${i};`,
+      verdetto: 'corretto',
+      spiegazione: `Perché ${i}`,
+    }));
+    await pratica('devswipe', carte);
+    apri();
+    for (let i = 0; i < 3; i++) {
+      await vi.waitFor(() => expect(testo()).toContain(`const y${i} = ${i};`));
+      bottone('Right').click();
+      await vi.waitFor(() => expect(testo()).toContain(`Perché ${i}`));
+      if (i < 2) bottone('Right').click();
+    }
+    // Il gesto che chiude il mazzo e altri due tocchi, prima che il salvataggio torni: nessun errore nel gestore
+    const errori = vi.fn();
+    window.addEventListener('error', errori);
+    for (let j = 0; j < 3; j++) {
+      bottone('Right').click();
+      // React ridisegna fra un tocco e l'altro (microtask), il salvataggio su IndexedDB non è ancora tornato
+      await Promise.resolve();
+    }
+    await vi.waitFor(() => expect(testo()).toContain('DevSwipe complete'));
+    window.removeEventListener('error', errori);
+    expect(errori).not.toHaveBeenCalled();
+    expect(await risultato()).toMatchObject({ giuste: 3, totali: 3, sbagliate: [] });
+  });
 });
 
 describe('Bug Hunter — SCENARI I3 (UI)', () => {
@@ -176,5 +204,25 @@ describe('Audio Flash-Trivia — SCENARI I4 (UI)', () => {
     expect(testo()).toContain('Domanda 8?');
     expect(testo()).toContain('comes back');
     expect(await risultato()).toMatchObject({ giuste: 8, totali: 10, percentuale: 80, sbagliate: [3, 8] });
+  });
+
+  it('un errore della voce ferma la lettura e lo dice, ma Play resta: si riprova dallo stesso elemento', async () => {
+    let eventi: EventiVoce | null = null;
+    const leggi = vi.fn((_e: unknown, _da: number, _l: string | null, _p: number, ev: EventiVoce) => {
+      eventi = ev;
+      return Promise.resolve();
+    });
+    configureVoice({ leggi, ferma: () => Promise.resolve() });
+    await pratica('trivia', [{ domanda: 'Domanda?', spiegazione: 'Risposta.' }]);
+    apri();
+    await vi.waitFor(() => expect(testo()).toContain('Domanda?'));
+    bottone('Play').click();
+    const voce = () => eventi!;
+    voce().errore();
+    await vi.waitFor(() => expect(box.querySelector('[role="alert"]')).not.toBeNull());
+    expect(bottone('Play').disabled).toBe(false);
+    bottone('Play').click();
+    expect(leggi).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(box.querySelector('[role="alert"]')).toBeNull());
   });
 });
