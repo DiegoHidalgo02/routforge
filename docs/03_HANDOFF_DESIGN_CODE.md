@@ -395,6 +395,14 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     pannello (fuoco intrappolato, Esc, sfondo inerte); la CTA del pannello desktop di modulo e unità sta in un piede
     sticky come il mock (n. 71); `rf-land` non c'è (layout animation fragile fra due liste, n. 59): al suo posto il
     contatore «Completate» pulsa come `rf-bump`.
+81. S8 Sveglia (T-057, D-NATIVO-3): come il mock (striscia del tipo, campana `rf-bell`, ora 56/60, data lunga, badge,
+    titolo, fascia, contesto nell'ink del tipo con `graduation-cap` anche sul todo, tre tasti a tutta larghezza; confronto
+    del 07/10 su studio e todo). L'ora è quella corrente: allo scatto coincide con quella del mock, dopo un Posticipa è
+    quella vera. Il contesto del todo è la sola checklist («Deep Work» del mock non ha una fonte nei dati), quello dello
+    studio «corso · Unità n»; routine ed evento non ne hanno. Gli anticipi oltre il mock: «1 ora prima», «2 ore prima»,
+    «90 min prima». La nota sotto i tasti è una didascalia. «Chiudi» toglie la sveglia dalla tendina senza azione (la riga
+    resta nel registro per S21). Vince il mock su DESIGN (contesto in ink e non text-2, anticipo in text-3, icona 18 del
+    tasto, tre tasti e non due).
 
 ## 4. Mappa schermata → design → task
 

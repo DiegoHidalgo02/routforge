@@ -740,5 +740,15 @@
   "allarmiNegati": "Non autorisées",
   "accessoDato": "Accès accordé",
   "senzaAccesso": "Sans accès",
-  "widgetVuoto": "Rien pour aujourd'hui"
+  "widgetVuoto": "Rien pour aujourd'hui",
+  "svegliaEyebrow": "Réveil",
+  "svegliaPrima": "{anticipo} avant",
+  "apriIlBlocco": "Ouvrir le bloc",
+  "posticipa": "Reporter",
+  "piuDieciMin": "+10 min",
+  "corsoUnita": "{corso} · Unité {unita}",
+  "schermoInteroRiga": "Réveils en plein écran",
+  "schermoInteroConcesse": "Autorisés",
+  "schermoInteroNegate": "Refusés",
+  "sopraIlBlocco": "Sur l’écran verrouillé"
 }

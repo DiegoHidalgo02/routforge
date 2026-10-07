@@ -50,6 +50,20 @@
                 android:resource="@xml/widget_routforge_info" />
         </receiver>
 
+        <!-- Sveglie a schermo intero e notifiche dei todo armate in proprio (MECC §13.1, §13.2, §21; T-057): scatto, azioni
+             senza aprire l'app e riarmo dopo il riavvio, anche prima del primo sblocco. Non esportato: il sistema lo
+             raggiunge comunque (allarmi, avvio), le altre app no -->
+        <receiver
+            android:name=".PromemoriaReceiver"
+            android:directBootAware="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
         <!-- La sessione di studio con l'app chiusa: notifica fissa col cronometro (MECC §10.4, D-TIMER-2; T-021) -->
         <service
             android:name=".SessioneService"
@@ -75,4 +89,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <!-- T-057: la sveglia a schermo intero sopra il blocco schermo (S8) e il riarmo dopo il riavvio (dichiarato qui, non
+         solo nel manifest del plugin delle notifiche) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

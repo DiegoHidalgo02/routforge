@@ -1,0 +1,197 @@
+/* S8 Sveglia a schermo intero (claude-design/S8 Sveglia Mobile.dc.html; T-057): tutto lo schermo, con la safe area. */
+.sveglia {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.striscia {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--size-accent-bar);
+  background: var(--fill);
+}
+
+.testa {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 28px var(--space-6) 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 var(--text-2xs) / 12px var(--font-ui);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.campana {
+  animation: global(rf-bell) var(--dur-neon) ease-in-out infinite;
+}
+
+.anticipo {
+  margin-left: auto;
+  font: 500 var(--text-sm) var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-3);
+}
+
+.corpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: 0 var(--space-6);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.quando {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ora {
+  font: 600 var(--text-score) / 60px var(--font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.data {
+  font: 500 var(--text-base) / 18px var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  height: var(--size-badge);
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--soft);
+  color: var(--ink);
+  font: 600 var(--text-2xs) / 1 var(--font-ui);
+  letter-spacing: var(--tracking-badge);
+  text-transform: uppercase;
+}
+
+.titolo {
+  margin: 0;
+  font: 600 var(--text-3xl) / 28px var(--font-ui);
+  letter-spacing: var(--tracking-title);
+  text-wrap: pretty;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.fascia {
+  font: 500 var(--text-base) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.contesto {
+  color: var(--ink);
+}
+
+.piede {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-6) var(--space-8);
+}
+
+.principale,
+.posticipa,
+.chiudi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  font: 600 var(--text-lg) var(--font-ui);
+  cursor: pointer;
+}
+
+.principale {
+  background: var(--fill);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary-cat);
+}
+
+.principale:hover {
+  filter: brightness(1.08);
+}
+
+.principale:active {
+  transform: scale(var(--scale-press));
+}
+
+/* L'ombra del tasto coprirebbe l'anello del fuoco (regola di ui.md) */
+.principale:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+/* Testo e «+10 min» separati da uno spazio, come nel mock, non dal gap della riga */
+.posticipa {
+  display: block;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.posticipa:hover {
+  background: var(--color-surface-3);
+}
+
+.dieci {
+  font: 500 var(--text-md) var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+}
+
+.chiudi {
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.chiudi:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}

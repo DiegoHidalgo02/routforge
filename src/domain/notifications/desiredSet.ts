@@ -56,6 +56,11 @@ export interface NotificaPianificata {
   sveglia: boolean;
   silenzioso: boolean;
   azioni: AzioneNotifica[];
+  /**
+   * Solo todo: voci della checklist non spuntate (§4). «Segna fatto» allora apre l'app su «Voci rimaste» invece di
+   * completare in sfondo, e la piattaforma lo deve sapere quando arma la notifica (A6, T-057).
+   */
+  vociAperte: boolean;
   /** Avviso one-shot (§13.6): parte all'istante della marcatura o della prova. */
   oneShot: boolean;
   /** Solo per il trigger «digest»: conteggio, arretrati e titoli (§13.5). */
@@ -156,10 +161,18 @@ function voceDi(
     sveglia: false,
     silenzioso: imp.perTipo[b.tipo].silenzioso,
     azioni: AZIONI[b.tipo],
+    vociAperte: b.tipo === 'todo' && (b.checklist ?? []).some((v) => !v.fatta),
     oneShot: false,
     ...over,
   };
 }
+
+/**
+ * Le azioni che non aprono l'app (A6, §13.2): «Posticipa» e «Segna fatto» senza voci aperte, che completa subito con
+ * l'operazione di §3; le altre portano l'app dove serve (setup, Dettaglio, esito).
+ */
+export const runsInBackground = (v: Pick<NotificaPianificata, 'vociAperte'>, azione: AzioneNotifica): boolean =>
+  azione === 'posticipa' || (azione === 'segna_fatto' && !v.vociAperte);
 
 /**
  * Gli avvisi one-shot di un blocco (§13.6), derivati dalle marcature del ciclo così che ogni riconciliazione li ritrovi
@@ -249,6 +262,7 @@ const voceSenzaBlocco = (
   sveglia: false,
   silenzioso: false,
   azioni: [],
+  vociAperte: false,
   oneShot: false,
   ...over,
 });
@@ -368,6 +382,7 @@ const stessaVoce = (a: NotificaPianificata, b: NotificaPianificata): boolean =>
   a.inizioBlocco === b.inizioBlocco &&
   a.sveglia === b.sveglia &&
   a.silenzioso === b.silenzioso &&
+  a.vociAperte === b.vociAperte &&
   a.oneShot === b.oneShot &&
   a.azioni.join() === b.azioni.join() &&
   JSON.stringify(a.digest) === JSON.stringify(b.digest);

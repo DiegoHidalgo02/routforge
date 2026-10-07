@@ -14,12 +14,32 @@ export interface Notifications {
   cancel(idNativi: readonly number[]): Promise<void>;
   /** Lo stato dei permessi per Impostazioni e Diagnostica (§13.3, MECC §23); `null` dove la piattaforma non lo ha. */
   permissions?(): Promise<PermessiNotifiche>;
+  /** La schermata della sveglia sopra il blocco schermo (S8; T-057): solo dove c'è lo schermo intero. */
+  sveglia?: SchermoSveglia;
+}
+
+/** S8 sopra il blocco schermo (T-057): niente dell'app senza sblocco, e alla chiusura il telefono torna al blocco. */
+export interface SchermoSveglia {
+  /** S8 è disegnata: si può mostrare sopra il blocco (fino ad allora l'app è nascosta). */
+  mostra(): Promise<void>;
+  /** Prima di portare l'utente nell'app: lo sblocco del telefono; `false` se l'ha annullato. */
+  sblocca(): Promise<boolean>;
+  /** Toglie la sveglia dalle notifiche e S8 da sopra il blocco; `inSfondo` rimette il telefono al blocco schermo. */
+  chiudi(idNativo: number | null, inSfondo: boolean): Promise<void>;
+}
+
+/** La sveglia che ha aperto l'app sopra il blocco schermo (S8; T-057): la voce, il suo id nativo e l'anticipo. */
+export interface SvegliaAperta extends VoceToccata {
+  idNativo: number;
+  anticipo: number;
 }
 
 export interface PermessiNotifiche {
   notifiche: 'granted' | 'denied' | 'default' | null;
   /** Gli allarmi esatti di Android 12+ (i promemoria all'istante giusto anche col telefono a riposo). */
   allarmiEsatti: boolean | null;
+  /** Le notifiche a schermo intero di Android 14+ (la sveglia S8 sopra il blocco, T-057); senza, arriva in alto. */
+  schermoIntero?: boolean | null;
 }
 
 /** Ciò che l'utente fa su una notifica nativa (§13.2; T-021): un'azione rapida o il tocco. */

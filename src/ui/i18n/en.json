@@ -740,5 +740,15 @@
   "allarmiNegati": "Not allowed",
   "accessoDato": "Access granted",
   "senzaAccesso": "No access",
-  "widgetVuoto": "Nothing for today"
+  "widgetVuoto": "Nothing for today",
+  "svegliaEyebrow": "Alarm",
+  "svegliaPrima": "{anticipo} before",
+  "apriIlBlocco": "Open the block",
+  "posticipa": "Snooze",
+  "piuDieciMin": "+10 min",
+  "corsoUnita": "{corso} · Unit {unita}",
+  "schermoInteroRiga": "Full-screen alarms",
+  "schermoInteroConcesse": "Allowed",
+  "schermoInteroNegate": "Denied",
+  "sopraIlBlocco": "Over the lock screen"
 }

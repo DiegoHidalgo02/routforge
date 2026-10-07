@@ -719,6 +719,12 @@ export function Diagnostics() {
       tinta: tinta(permessi?.allarmiEsatti),
     },
     {
+      etichetta: t('schermoInteroRiga'),
+      valore: sìNo(permessi?.schermoIntero, 'schermoInteroConcesse', 'schermoInteroNegate'),
+      meta: t('sopraIlBlocco'),
+      tinta: tinta(permessi?.schermoIntero),
+    },
+    {
       etichetta: t('nonDisturbare'),
       valore: sìNo(permessi?.nonDisturbare, 'accessoDato', 'senzaAccesso'),
       meta: t('iperfocus'),

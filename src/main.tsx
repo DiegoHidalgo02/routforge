@@ -72,19 +72,24 @@ const apri = (percorso: string, stato: unknown = null) => {
   history.pushState({ usr: stato, key: Math.random().toString(36).slice(2, 10), idx }, '', percorso);
   dispatchEvent(new PopStateEvent('popstate'));
 };
-// Il gesto su una notifica nativa (§13.2): l'app fa ciò che serve e poi si apre dove serve (T-021, T-051)
-const gesto = (voce: VoceToccata, g: GestoNotifica) =>
-  void notificationGesture(appDb, voce, g, webClock.now(), webClock.fuso()).then(
-    (d) => d && apri(d.percorso, d.vista ? { vista: d.vista } : null),
-  );
-const notifiche = createNotifications(
-  appDb,
-  eAndroid ? androidNotifications(testiNotifica, etichetteNative, gesto) : webNotifications(testiNotifica, apri),
-  webClock,
-);
+// Il gesto su una notifica nativa (§13.2): l'app fa ciò che serve e poi si apre dove serve (T-021, T-051). Un gesto
+// fatto senza aprire l'app arriva con il suo istante e non apre nulla (A6, T-057)
+const gesto = (voce: VoceToccata, g: GestoNotifica, istante?: number) =>
+  notificationGesture(appDb, voce, g, istante ?? webClock.now(), webClock.fuso()).then((d) => {
+    if (istante === undefined && d) apri(d.percorso, d.vista ? { vista: d.vista } : null);
+  });
+// La sveglia a schermo intero apre S8 sopra il blocco schermo (T-057)
+const android = eAndroid
+  ? androidNotifications(testiNotifica, etichetteNative, gesto, (s) => apri('/sveglia', s))
+  : null;
+const notifiche = createNotifications(appDb, android ?? webNotifications(testiNotifica, apri), webClock);
 registerNotificationService(notifiche);
-createScheduler(appDb, webClock, notifiche).start();
-notifiche.start();
+// Su Android prima i gesti fatti ad app chiusa (T-057, A6): il primo ciclo altrimenti troverebbe il todo ancora da fare
+// e lo sposterebbe in ritardo. Al più 3 s: un ponte che non risponde non ferma scheduler e notifiche
+void Promise.race([android?.pronte, new Promise((r) => setTimeout(r, 3000))]).then(() => {
+  createScheduler(appDb, webClock, notifiche).start();
+  notifiche.start();
+});
 // Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; su Android il servizio in
 // primo piano della sessione li tiene vivi anche con l'app chiusa (T-021)
 startHeartbeat(appDb, webClock);

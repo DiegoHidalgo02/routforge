@@ -740,5 +740,15 @@
   "allarmiNegati": "Nicht erlaubt",
   "accessoDato": "Zugriff erteilt",
   "senzaAccesso": "Kein Zugriff",
-  "widgetVuoto": "Nichts für heute"
+  "widgetVuoto": "Nichts für heute",
+  "svegliaEyebrow": "Wecker",
+  "svegliaPrima": "{anticipo} vorher",
+  "apriIlBlocco": "Block öffnen",
+  "posticipa": "Später",
+  "piuDieciMin": "+10 Min.",
+  "corsoUnita": "{corso} · Einheit {unita}",
+  "schermoInteroRiga": "Vollbild-Wecker",
+  "schermoInteroConcesse": "Erlaubt",
+  "schermoInteroNegate": "Verweigert",
+  "sopraIlBlocco": "Über dem Sperrbildschirm"
 }

@@ -5,6 +5,7 @@ import { LucideProvider } from 'lucide-react';
 import { MotionConfig } from 'motion/react';
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, type Location } from 'react-router';
+import { Alarm } from './Alarm';
 import { Course, Module, Unit } from './Course';
 import { CorsiColonne } from './Courses';
 import { Create } from './Create';
@@ -55,6 +56,8 @@ function Rotte() {
           <Route path="diagnostica" element={<Diagnostics />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
+        {/* La sveglia a schermo intero sta sopra l'app, senza shell né banner della sessione (S8, T-057) */}
+        <Route path="sveglia" element={<Alarm />} />
       </Routes>
       {sfondo && (
         <Routes>

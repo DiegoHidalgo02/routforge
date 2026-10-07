@@ -16,6 +16,7 @@ const voce = (over: Partial<VoceRegistro> = {}): VoceRegistro => ({
   sveglia: false,
   silenzioso: true,
   azioni: [],
+  vociAperte: false,
   oneShot: false,
   idNativo: 7,
   ...over,

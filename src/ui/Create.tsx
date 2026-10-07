@@ -58,7 +58,7 @@ import { horizonLastDay } from '../domain/lost';
 import { local, localDayKey, localInstant } from '../domain/time';
 import type { Orizzonte, Priorita } from '../domain/types';
 import { lascia } from './avvisi';
-import { durata, fmtData, fuso, SETTIMANA } from './format';
+import { anticipo, durata, fmtData, fuso, SETTIMANA } from './format';
 import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Create.module.css';
@@ -103,18 +103,6 @@ const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'narrow' });
 const fmtNumero = new Intl.DateTimeFormat(lingua, { day: 'numeric' });
 const fmtMese = new Intl.DateTimeFormat(lingua, { month: 'long', year: 'numeric' });
 const fmtSettimana = new Intl.DateTimeFormat(lingua, { weekday: 'long' });
-const anticipo = (min: number) =>
-  min === 0
-    ? t('anticipoInizio')
-    : min === 1440
-      ? t('anticipoGiorno')
-      : min === 60
-        ? t('anticipoOra')
-        : min % 1440 === 0
-          ? t('anticipoGiorni', { n: min / 1440 })
-          : min % 60 === 0
-            ? t('anticipoOre', { n: min / 60 })
-            : t('anticipoMin', { n: min });
 /** Unità dell'anticipo libero (MECC §13.1 «libero fino a 31 giorni», FUNZ §7.2), in minuti. */
 const UNITA_ANTICIPO: { min: number; chiave: Chiave }[] = [
   { min: 1, chiave: 'unitaMinuti' },

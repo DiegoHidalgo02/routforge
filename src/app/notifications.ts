@@ -25,7 +25,7 @@ import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
 import { addLocalDays, localDayKey } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 import type { Clock } from './ports/clock';
-import type { Notifications, PermessiNotifiche } from './ports/notifications';
+import type { Notifications, PermessiNotifiche, SchermoSveglia } from './ports/notifications';
 import { logError, logReconcile } from './diagnostics';
 import { readActiveSession } from './session';
 import { readSettings } from './settings';
@@ -126,6 +126,8 @@ export interface NotificationService {
   permissions(): Promise<PermessiNotifiche>;
   /** Toglie tutte le notifiche armate e svuota il registro: prima dell'azzeramento di MECC §22 (import, «Elimina tutti i dati»). */
   cancelAll(): Promise<void>;
+  /** La schermata della sveglia della piattaforma (S8; T-057), se c'è. */
+  sveglia?: SchermoSveglia;
 }
 
 let registrato: NotificationService | null = null;
@@ -138,6 +140,14 @@ export const cancelAllNotifications = (): Promise<void> => registrato?.cancelAll
 const SENZA_PERMESSI: PermessiNotifiche = { notifiche: null, allarmiEsatti: null };
 export const readNotificationPermissions = (): Promise<PermessiNotifiche> =>
   registrato?.permissions() ?? Promise.resolve(SENZA_PERMESSI);
+/** S8 (T-057): disegnata, si mostra sopra il blocco schermo. */
+export const showAlarm = (): Promise<void> => registrato?.sveglia?.mostra().catch(() => undefined) ?? Promise.resolve();
+/** S8 (T-057): lo sblocco del telefono prima di aprire l'app; senza schermata della sveglia non serve. */
+export const unlockForAlarm = (): Promise<boolean> =>
+  registrato?.sveglia?.sblocca().catch(() => false) ?? Promise.resolve(true);
+/** S8 (T-057): via la sveglia; `inSfondo` rimette il telefono al blocco schermo. */
+export const closeAlarm = (idNativo: number | null, inSfondo: boolean): Promise<void> =>
+  registrato?.sveglia?.chiudi(idNativo, inSfondo).catch(() => undefined) ?? Promise.resolve();
 
 export function createNotifications(db: RoutForgeDb, porta: Notifications, clock: Clock): NotificationService {
   // Dopo un ricaricamento il web non ha più timer e su Android un permesso revocato cancella le notifiche esatte: la
@@ -210,5 +220,6 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
           );
         })
         .catch((e: unknown) => logError('notifiche', e))),
+    ...(porta.sveglia && { sveglia: porta.sveglia }),
   };
 }

@@ -14,6 +14,7 @@ import {
   POSTICIPO_MS,
   reconcilePlan,
   RITARDO_ONE_SHOT_MS,
+  runsInBackground,
   sessionNotification,
   testNotification,
   type ImpostazioniNotifiche,
@@ -233,6 +234,39 @@ describe('Sveglie — SCENARI F2', () => {
       [oggi(20), true],
     ]);
     expect(n.filter((x) => x.istante === oggi(20))).toHaveLength(1);
+  });
+});
+
+describe('«Segna fatto» senza aprire l’app — SCENARI A6 (T-057)', () => {
+  const todo = (checklist: { testo: string; fatta: boolean }[]) =>
+    blocco({ tipo: 'todo', titolo: 'Leggere 20 pagine', inizio: oggi(19), fine: oggi(19, 30), checklist });
+
+  it('con voci aperte «Segna fatto» apre l’app; con tutte spuntate (o senza voci) completa in sfondo; Posticipa in sfondo', () => {
+    const [aperte] = blockNotifications(
+      todo([
+        { testo: 'a', fatta: true },
+        { testo: 'b', fatta: false },
+      ]),
+      undefined,
+      DEF,
+    );
+    const [fatte] = blockNotifications(todo([{ testo: 'a', fatta: true }]), undefined, DEF);
+    const [senza] = blockNotifications(todo([]), undefined, DEF);
+    expect([aperte?.vociAperte, fatte?.vociAperte, senza?.vociAperte]).toEqual([true, false, false]);
+    expect([aperte, fatte].map((v) => v && runsInBackground(v, 'segna_fatto'))).toEqual([false, true]);
+    expect(aperte && runsInBackground(aperte, 'posticipa')).toBe(true);
+    expect(fatte && runsInBackground(fatte, 'inizia')).toBe(false);
+  });
+
+  it('spuntare l’ultima voce cambia le voci armate del todo: il piano le riarma', () => {
+    const prima = blockNotifications(todo([{ testo: 'a', fatta: false }]), undefined, DEF);
+    const dopo = blockNotifications(todo([{ testo: 'a', fatta: true }]), undefined, DEF);
+    const registro = prima.map((v, i) => ({ ...v, idNativo: i + 1 }));
+    const piano = reconcilePlan(dopo, registro, false, oggi(8));
+    expect(piano.daArmare.map((v) => [v.trigger, v.vociAperte])).toEqual([
+      ['pre', false],
+      ['scadenza', false],
+    ]);
   });
 });
 

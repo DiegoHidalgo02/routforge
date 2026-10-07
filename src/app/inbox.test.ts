@@ -79,6 +79,7 @@ describe('Esiti pendenti — SCENARI C6, MECCANISMI §8', () => {
           sveglia: false,
           silenzioso: false,
           azioni: [],
+          vociAperte: false,
           oneShot: false,
           idNativo: 1,
         } as never,

@@ -740,5 +740,15 @@
   "allarmiNegati": "Negati",
   "accessoDato": "Accesso dato",
   "senzaAccesso": "Senza accesso",
-  "widgetVuoto": "Niente per oggi"
+  "widgetVuoto": "Niente per oggi",
+  "svegliaEyebrow": "Sveglia",
+  "svegliaPrima": "{anticipo} prima",
+  "apriIlBlocco": "Apri il blocco",
+  "posticipa": "Posticipa",
+  "piuDieciMin": "+10 min",
+  "corsoUnita": "{corso} · Unità {unita}",
+  "schermoInteroRiga": "Sveglie a schermo intero",
+  "schermoInteroConcesse": "Concesse",
+  "schermoInteroNegate": "Negate",
+  "sopraIlBlocco": "Sopra il blocco schermo"
 }

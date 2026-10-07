@@ -740,5 +740,15 @@
   "allarmiNegati": "No permitidas",
   "accessoDato": "Acceso concedido",
   "senzaAccesso": "Sin acceso",
-  "widgetVuoto": "Nada para hoy"
+  "widgetVuoto": "Nada para hoy",
+  "svegliaEyebrow": "Alarma",
+  "svegliaPrima": "{anticipo} antes",
+  "apriIlBlocco": "Abrir el bloque",
+  "posticipa": "Posponer",
+  "piuDieciMin": "+10 min",
+  "corsoUnita": "{corso} · Unidad {unita}",
+  "schermoInteroRiga": "Alarmas a pantalla completa",
+  "schermoInteroConcesse": "Permitidas",
+  "schermoInteroNegate": "Denegadas",
+  "sopraIlBlocco": "Sobre la pantalla de bloqueo"
 }

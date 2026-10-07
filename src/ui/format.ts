@@ -20,6 +20,20 @@ export const durata = (min: number): string => {
   return m ? t('durata', { h, m: String(m).padStart(2, '0') }) : t('oreBrevi', { h });
 };
 
+/** Un anticipo del promemoria (MECC §13.1): «All’inizio», «5 min», «1 ora», «2 ore», «1 giorno», «3 giorni» (S4, S8). */
+export const anticipo = (min: number): string =>
+  min === 0
+    ? t('anticipoInizio')
+    : min === 1440
+      ? t('anticipoGiorno')
+      : min === 60
+        ? t('anticipoOra')
+        : min % 1440 === 0
+          ? t('anticipoGiorni', { n: min / 1440 })
+          : min % 60 === 0
+            ? t('anticipoOre', { n: min / 60 })
+            : t('anticipoMin', { n: min });
+
 /** Tempo del timer «24:19», «1:05:00»; `perEccesso` per il conto alla rovescia, che mostra 50:00 all'avvio. */
 export const orologio = (ms: number, perEccesso = false): string => {
   const sec = Math.max(0, perEccesso ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));

@@ -245,6 +245,7 @@ describe('Registro notifiche — MECCANISMI §1, INV-14', () => {
       sveglia: false,
       silenzioso: false,
       azioni: [],
+      vociAperte: false,
       oneShot: false,
       idNativo: 42,
     };
