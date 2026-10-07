@@ -77,6 +77,8 @@ export interface Blocco {
   minuti?: number | null;
   /** Solo todo: istante dell'avviso «todo in ritardo» (§6, §13.6), una volta per todo; assente se mai avvisato (D-HOR-1). */
   ritardoIl?: number | null;
+  /** Routine e studio: istante del tocco sulla notifica della verifica di metà durata (§13.2), il «risposto» di §20 (T-021). */
+  toccoVerificaIl?: number | null;
   /**
    * Solo todo con orario: l'ora di parete "HH:MM" scelta dall'utente, ricordata quando un ciclo sposta il todo in un
    * varco perché era occupata (§6, punto 1); `null` o assente quando il todo è al suo orario. Modifica e trascinamento

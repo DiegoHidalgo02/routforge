@@ -9,7 +9,7 @@
  * Criteri: SCENARI C4, C5, C9 (setup), D4, D5 (uscita registrata), D6, D7 (abbandono oltre soglia).
  */
 import type { RoutForgeDb } from '../data/db';
-import { get, inTransaction, list, remove, save, saveBlock } from '../data/repository';
+import { get, inTransaction, list, remove, save, saveBlock, watch } from '../data/repository';
 import { retroactiveBlock, sessionMinutes, type DatiEsito } from '../domain/outcome';
 import { modulePath, sortedUnits } from '../domain/pointer';
 import {
@@ -25,7 +25,9 @@ import { abandonPlan, beat, closeSession, currentStudyUnit, type SessioneChiusa 
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
 import { TABELLE_ESITO, writeOutcome } from './outcome';
+import { logError } from './diagnostics';
 import type { Clock } from './ports/clock';
+import type { SessioneInPrimoPiano } from './ports/device';
 
 /**
  * Riga di `preferenze` della sessione attiva (MECC §1; docs/02_ARCHITETTURA.md §4). Il ciclo ne legge `bloccoId` con
@@ -60,6 +62,30 @@ export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
   batti();
   const stop = [clock.every(MINUTE, batti), clock.onForeground(batti)];
   return () => stop.forEach((smetti) => smetti());
+}
+
+/**
+ * Il servizio in primo piano segue la sessione attiva (§10.4, D-TIMER-2; T-021): parte con lei, col titolo dell'unità o
+ * del blocco e il cronometro dall'avvio, e si ferma quando la sessione si chiude. Un adapter che fallisce non ferma la
+ * sessione (INV-16). Restituisce lo stop.
+ */
+export function followSessionInForeground(db: RoutForgeDb, porta: SessioneInPrimoPiano): () => void {
+  // Avvio e titolo: al cambio d'unità la notifica fissa prende il titolo nuovo
+  let corrente: string | null = null;
+  return watch(
+    () => readSessionView(db),
+    (v) => {
+      const chiave = v ? `${v.sessione.avvio}|${v.unita?.titolo ?? ''}` : null;
+      if (chiave === corrente) return;
+      corrente = chiave;
+      try {
+        if (v) porta.avvia({ titolo: v.unita?.titolo ?? '', avvio: v.sessione.avvio });
+        else porta.ferma();
+      } catch (e) {
+        logError('dispositivo', e);
+      }
+    },
+  );
 }
 
 /** Ciò che mostrano il timer e il banner «Sessione in corso» (S15, S1). */

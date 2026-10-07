@@ -4,7 +4,8 @@
 // Fonte: CLAUDE.md §8 ("mai committare chiavi o .env"; la chiave Gemini vive solo sul dispositivo).
 // Cerca le forme di chiave più probabili in questo progetto in tutti i file di testo, esclusi
 // node_modules, .git, dist, coverage, le uscite di Gradle del progetto Android (build, .gradle: generate e ignorate da
-// git, decine di MB fra APK e intermedi), il lockfile e questo file (che contiene i pattern, non chiavi).
+// git, decine di MB fra APK e intermedi), la copia di dist nel progetto Android, il lockfile e questo file (che contiene
+// i pattern, non chiavi).
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -22,13 +23,18 @@ export const PATTERN = [
 ];
 
 const CARTELLE_ESCLUSE = new Set(['node_modules', '.git', 'dist', 'coverage', 'build', '.gradle']);
+/** La copia di `dist` che `npx cap sync` mette nel progetto Android: generata e ignorata da git come `dist`. */
+const PERCORSI_ESCLUSI = new Set(['android/app/src/main/assets/public']);
 const FILE_ESCLUSI = new Set(['package-lock.json']);
 const BINARI = /\.(png|jpe?g|gif|webp|ico|zip|pdf|woff2?|ttf|otf)$/i;
 
 function fileTesto(dir) {
   return readdirSync(dir).flatMap((n) => {
     const p = join(dir, n);
-    if (statSync(p).isDirectory()) return CARTELLE_ESCLUSE.has(n) ? [] : fileTesto(p);
+    if (statSync(p).isDirectory())
+      return CARTELLE_ESCLUSE.has(n) || PERCORSI_ESCLUSI.has(relative(RADICE, p).split(sep).join('/'))
+        ? []
+        : fileTesto(p);
     return FILE_ESCLUSI.has(n) || BINARI.test(n) || p === QUESTO ? [] : [p];
   });
 }

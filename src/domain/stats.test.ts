@@ -239,6 +239,23 @@ describe('Risposta al trigger — MECCANISMI §20, SCENARI B7', () => {
     );
     expect(t).toEqual({ scattati: 3, risposti: 3, persi: 0, tasso: 1 });
   });
+
+  it('il tocco sulla notifica della verifica risponde anche se poi il blocco si perde (§20 «tocco registrato», T-021)', () => {
+    const routine = (over: Partial<Blocco>) =>
+      blocco({
+        tipo: 'routine',
+        stato: 'perso',
+        inizio: local(2026, 9, 22, 18),
+        fine: local(2026, 9, 22, 20),
+        ...over,
+      });
+    const t = triggerResponse(
+      [routine({ toccoVerificaIl: local(2026, 9, 22, 19, 2) }), routine({ toccoVerificaIl: null })],
+      periodRange(7, ADESSO),
+      ADESSO,
+    );
+    expect(t).toEqual({ scattati: 2, risposti: 1, persi: 2, tasso: 1 / 2 });
+  });
 });
 
 describe('Studio: piano, ritmo, unità e puntualità — MECCANISMI §20', () => {

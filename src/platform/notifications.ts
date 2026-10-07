@@ -64,5 +64,7 @@ export function webNotifications(testi: TestiNotifica, apri: (percorso: string) 
       ids.forEach(togli);
       return Promise.resolve();
     },
+    permissions: () =>
+      Promise.resolve({ notifiche: disponibile() ? Notification.permission : null, allarmiEsatti: null }),
   };
 }

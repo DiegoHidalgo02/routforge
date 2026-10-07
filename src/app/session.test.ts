@@ -25,6 +25,7 @@ import {
   anticipateSession,
   editActiveSession,
   endSession,
+  followSessionInForeground,
   readActiveSession,
   readSessionView,
   setupInputs,
@@ -772,3 +773,26 @@ function unita(id: string, moduloNumero: number, ordine: number, numero: string,
     confidenza: null,
   };
 }
+
+describe('Servizio in primo piano della sessione — MECCANISMI §10.4, D-TIMER-2 (T-021)', () => {
+  it('parte con la sessione, col suo avvio, e si ferma quando si chiude; un adapter che lancia non ferma nulla', async () => {
+    const avvia = vi.fn();
+    const ferma = vi.fn();
+    const smetti = followSessionInForeground(db, { avvia, ferma });
+    await vi.waitFor(() => expect(ferma).toHaveBeenCalledTimes(0));
+    await startSession(db, null, scelta(), oggi(9), FUSO);
+    await vi.waitFor(() => expect(avvia).toHaveBeenCalledWith({ titolo: '', avvio: oggi(9) }));
+    await abandonSession(db, oggi(9, 5), FUSO);
+    await vi.waitFor(() => expect(ferma).toHaveBeenCalledTimes(1));
+    smetti();
+    const rotto = followSessionInForeground(db, {
+      avvia: () => {
+        throw new Error('nativo');
+      },
+      ferma: () => undefined,
+    });
+    await startSession(db, null, scelta(), oggi(10), FUSO);
+    expect(await readActiveSession(db)).not.toBeNull();
+    rotto();
+  });
+});

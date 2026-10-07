@@ -729,5 +729,16 @@
   "unaAttivita": "1 Aktivität",
   "nAttivita": "{n} Aktivitäten",
   "unPdf": "1 PDF",
-  "nPdf": "{n} PDFs"
+  "nPdf": "{n} PDFs",
+  "azioneInizia": "Starten",
+  "azioneSegnaFatto": "Als erledigt markieren",
+  "azionePosticipa": "10′ später",
+  "canaleSveglie": "Wecker",
+  "canaleSessione": "Laufende Sitzung",
+  "sessioneDiStudioNotifica": "Lernsitzung",
+  "allarmiConcessi": "Erlaubt",
+  "allarmiNegati": "Nicht erlaubt",
+  "accessoDato": "Zugriff erteilt",
+  "senzaAccesso": "Kein Zugriff",
+  "widgetVuoto": "Nichts für heute"
 }

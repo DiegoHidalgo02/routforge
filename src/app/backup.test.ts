@@ -30,6 +30,7 @@ registerNotificationService({
   start: () => () => {},
   test: () => Promise.resolve(),
   cancelAll,
+  permissions: () => Promise.resolve({ notifiche: null, allarmiEsatti: null }),
 });
 configurePdf({
   leggi: () => Promise.resolve({ pagine: 1, testi: ['Event loop'] }),

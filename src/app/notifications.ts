@@ -25,7 +25,7 @@ import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
 import { addLocalDays, localDayKey } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 import type { Clock } from './ports/clock';
-import type { Notifications } from './ports/notifications';
+import type { Notifications, PermessiNotifiche } from './ports/notifications';
 import { logError, logReconcile } from './diagnostics';
 import { readActiveSession } from './session';
 import { readSettings } from './settings';
@@ -122,6 +122,8 @@ export interface NotificationService {
   start(): () => void;
   /** La notifica di prova (§13.6): chiede il permesso (qui c'è il gesto dell'utente, D-NOTIF-1 n. 9) e la arma a +6 s. */
   test(now: number): Promise<void>;
+  /** I permessi della piattaforma (Impostazioni, Diagnostica); mai un rifiuto. */
+  permissions(): Promise<PermessiNotifiche>;
   /** Toglie tutte le notifiche armate e svuota il registro: prima dell'azzeramento di MECC §22 (import, «Elimina tutti i dati»). */
   cancelAll(): Promise<void>;
 }
@@ -133,6 +135,9 @@ export const registerNotificationService = (s: NotificationService): void => {
 };
 export const sendTestNotification = (now: number): Promise<void> => registrato?.test(now) ?? Promise.resolve();
 export const cancelAllNotifications = (): Promise<void> => registrato?.cancelAll() ?? Promise.resolve();
+const SENZA_PERMESSI: PermessiNotifiche = { notifiche: null, allarmiEsatti: null };
+export const readNotificationPermissions = (): Promise<PermessiNotifiche> =>
+  registrato?.permissions() ?? Promise.resolve(SENZA_PERMESSI);
 
 export function createNotifications(db: RoutForgeDb, porta: Notifications, clock: Clock): NotificationService {
   // Dopo un ricaricamento il web non ha più timer e su Android un permesso revocato cancella le notifiche esatte: la
@@ -191,6 +196,7 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
         logError('notifiche', e);
       }
     },
+    permissions: () => (porta.permissions?.() ?? Promise.resolve(SENZA_PERMESSI)).catch(() => SENZA_PERMESSI),
     // In coda come le riconciliazioni, così nessuna arma una voce mentre il registro si svuota
     cancelAll: () =>
       (coda = coda

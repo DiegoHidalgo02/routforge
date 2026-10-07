@@ -320,12 +320,15 @@ export function studyStats(
 /**
  * Trigger (§20; SCENARI B7): routine e studi con orario del periodo con la scadenza di recupero (la verifica,
  * `recoveryDeadline`: metà durata, o inizio + 30' senza durata) passata senza avvio né chiusura prima; «risposto» =
- * chiuso o avviato dopo la scadenza, o con l'esito Completata o Continua. Il tocco sulla notifica non è registrato in
- * questa versione (arriva con gli adapter nativi, T-021): conta l'azione che segue. `persi` = scattati e persi comunque;
+ * chiuso o avviato dopo la scadenza, col tocco sulla notifica della verifica (`toccoVerificaIl`, lo scrive l'adapter
+ * nativo di T-021) o con l'esito Completata o Continua. `persi` = scattati e persi comunque;
  * `tasso` = risposti / scattati (S20 «recuperi dopo l'avviso»).
  */
 export function triggerResponse(
-  blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'fine' | 'conOrario' | 'chiusoIl' | 'minutiRitardo'>[],
+  blocchi: readonly Pick<
+    Blocco,
+    'tipo' | 'stato' | 'inizio' | 'fine' | 'conOrario' | 'chiusoIl' | 'minutiRitardo' | 'toccoVerificaIl'
+  >[],
   r: Intervallo,
   now: number,
 ): { scattati: number; risposti: number; persi: number; tasso: number | null } {
@@ -340,7 +343,12 @@ export function triggerResponse(
   const risposti = scattati.filter((b) => {
     const d = recoveryDeadline(b);
     const a = avvio(b);
-    return (b.chiusoIl != null && b.chiusoIl >= d) || (a !== null && a >= d) || fatto(b);
+    return (
+      (b.chiusoIl != null && b.chiusoIl >= d) ||
+      (a !== null && a >= d) ||
+      (b.toccoVerificaIl != null && b.toccoVerificaIl >= d) ||
+      fatto(b)
+    );
   }).length;
   return {
     scattati: scattati.length,

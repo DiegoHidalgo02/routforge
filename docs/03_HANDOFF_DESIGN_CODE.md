@@ -367,8 +367,8 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     Animazioni, Celebrazioni, Feedback aptico e Inizio settimana (oggi il selettore del sistema); il sottotitolo della
     radice («Alex», il nome dell'account, con T-033); il pallino di «Routine di studio» primary nel mock (qui il colore
     del tipo, come nel resto dell'app); la barra in basso nelle viste interne (il mock la mostra solo sulla radice); l'orario del
-    digest senza controllo. Diagnostica come il mock con i valori del web (allarmi precisi e Non Disturbare «Non
-    disponibile», account «Non attivo»); il registro mostra solo gli errori dei servizi, «Spazio locale» divide dati e
+    digest senza controllo. Diagnostica come il mock: permesso, allarmi precisi e accesso a Non
+    Disturbare dalle porte (sul web gli ultimi due «Non disponibile», su Android i valori del sistema: T-021), account «Non attivo»; il registro mostra solo gli errori dei servizi, «Spazio locale» divide dati e
     cache dove il browser lo dice; «Coda notifiche» è un valore solo (armate e prossima, come il mock) dove MECC §23
     vuole pendenti e voci nel registro distinti.
 77. Materiali (T-024, D-MAT-1): «Tuoi» in S12 come il mock (contatore e righe compaiono col primo materiale); la

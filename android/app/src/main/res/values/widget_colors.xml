@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- I colori del widget dai token del design (claude-design/design/tokens.css): il widget nativo non legge il CSS -->
+<resources>
+    <color name="widget_bg">#0A0D13</color>          <!-- token color-bg -->
+    <color name="widget_surface">#141820</color>     <!-- token color-surface -->
+    <color name="widget_border">#292E37</color>      <!-- token color-border -->
+    <color name="widget_testo">#FFFFFF</color>       <!-- token color-text -->
+    <color name="widget_testo_2">#959CA8</color>     <!-- token color-text-2 -->
+    <color name="widget_testo_3">#636975</color>     <!-- token color-text-3 -->
+    <color name="widget_primary">#6E96F2</color>     <!-- token color-primary -->
+    <color name="widget_studio">#9B6CFA</color>      <!-- token color-cat-study -->
+    <color name="widget_routine">#FACC15</color>     <!-- token color-cat-routine -->
+    <color name="widget_todo">#14B8A6</color>        <!-- token color-cat-todo -->
+    <color name="widget_evento">#F43F5E</color>      <!-- token color-cat-event -->
+</resources>

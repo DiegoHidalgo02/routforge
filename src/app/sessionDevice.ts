@@ -40,3 +40,7 @@ export const enableDoNotDisturb = (): Promise<boolean> =>
   });
 
 export const disableDoNotDisturb = (): void => safe(() => nonDisturbare.disable(), undefined);
+
+/** L'accesso a Non disturbare concesso all'app (Diagnostica); `null` dove la piattaforma non lo ha (il web). */
+export const doNotDisturbAccess = (): Promise<boolean | null> =>
+  nonDisturbare.access ? nonDisturbare.access().catch(() => null) : Promise.resolve(null);

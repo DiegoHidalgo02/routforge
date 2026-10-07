@@ -31,3 +31,4 @@ export * from './settings';
 export * from './materials';
 export * from './codeFiles';
 export * from './backup';
+export * from './widget';

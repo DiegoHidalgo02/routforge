@@ -12,7 +12,14 @@ import { appDb, watch } from '../app/db';
 import { logError, readDiagnostics, type Diagnostica } from '../app/diagnostics';
 import { readInbox } from '../app/inbox';
 import { materialsSpace } from '../app/materials';
-import { editNotificationSettings, readNotificationSettings, sendTestNotification } from '../app/notifications';
+import {
+  editNotificationSettings,
+  readNotificationPermissions,
+  readNotificationSettings,
+  sendTestNotification,
+} from '../app/notifications';
+import type { PermessiNotifiche } from '../app/ports/notifications';
+import { doNotDisturbAccess } from '../app/sessionDevice';
 import { saveSettings } from '../app/settings';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
 import type { Impostazioni } from '../domain/settings';
@@ -247,20 +254,21 @@ const salva = (m: Partial<Impostazioni>) => void saveSettings(appDb, m, Date.now
 const cambia = (f: (x: ImpostazioniNotifiche) => ImpostazioniNotifiche) =>
   void editNotificationSettings(appDb, f, Date.now());
 
-type Permesso = NotificationPermission | null;
-// Sul web lo stato del permesso viene dal browser; il nativo lo darà dalla porta delle notifiche (T-021)
-const leggiPermesso = (): Permesso => (typeof Notification === 'undefined' ? null : Notification.permission);
+type Permesso = PermessiNotifiche['notifiche'];
 
 export function NotificationSettings() {
   const [v, setV] = useState<ImpostazioniNotifiche>();
   const [aperto, setAperto] = useState<TipoBlocco | null>(null);
-  const [permesso, setPermesso] = useState<Permesso>(leggiPermesso);
+  // Il permesso viene dalla porta delle notifiche: dal browser sul web, dal sistema su Android (T-021)
+  const [permesso, setPermesso] = useState<Permesso>(null);
+  const rileggi = () => void readNotificationPermissions().then((p) => setPermesso(p.notifiche));
+  useEffect(rileggi, []);
   useEffect(() => watch(() => readNotificationSettings(appDb), setV), []);
   if (!v) return <Section titolo="notifiche" indietro sottotitolo={t('impostazioni')} />;
 
   const tipo = (k: TipoBlocco, f: (x: ImpostazioniTipo) => ImpostazioniTipo) =>
     cambia((x) => ({ ...x, perTipo: { ...x.perTipo, [k]: f(x.perTipo[k]) } }));
-  const prova = () => void sendTestNotification(Date.now()).finally(() => setPermesso(leggiPermesso()));
+  const prova = () => void sendTestNotification(Date.now()).finally(rileggi);
 
   return (
     <div className={s.pagina}>
@@ -649,14 +657,27 @@ async function reinstalla(): Promise<void> {
 /**
  * Diagnostica (S22 `diagnostics`; FUNZ §24, MECC §23): permessi, coda e riconciliazione delle notifiche, account, scala
  * del testo e animazioni, margini dello schermo; spazio locale con «Svuota cache»; gli ultimi errori dei servizi
- * (`app/diagnostics.ts`); rapporto copiabile e «Reinstalla PWA». Sul web allarmi precisi e Non Disturbare non esistono.
+ * (`app/diagnostics.ts`); rapporto copiabile e «Reinstalla PWA». Permesso, allarmi precisi e accesso a Non Disturbare
+ * vengono dalle porte (T-021): sul web gli ultimi due non esistono.
  */
+/** Un permesso che la piattaforma può non avere (il web): «Non disponibile», altrimenti sì o no con la tinta. */
+const sìNo = (x: boolean | null | undefined, sì: Chiave, no: Chiave) => t(x == null ? 'nonDisponibile' : x ? sì : no);
+const tinta = (x: boolean | null | undefined): Riquadro['tinta'] => (x == null ? 'neutro' : x ? 'successo' : 'avviso');
+
 export function Diagnostics() {
   const [d, setD] = useState<Diagnostica>();
   const [notifiche, setNotifiche] = useState<ImpostazioniNotifiche>();
   const [spazio, setSpazio] = useState<Spazio | null>(null);
   const [schermo, setSchermo] = useState({ scala: 1, margini: '0 · 0 · 0 · 0' });
   const [copiata, setCopiata] = useState(false);
+  const [permessi, setPermessi] = useState<PermessiNotifiche & { nonDisturbare: boolean | null }>();
+  useEffect(
+    () =>
+      void Promise.all([readNotificationPermissions(), doNotDisturbAccess()]).then(([p, nonDisturbare]) =>
+        setPermessi({ ...p, nonDisturbare }),
+      ),
+    [],
+  );
   const sonda = useRef<HTMLDivElement>(null);
   // Gli eventi e la riconciliazione stanno in memoria: oltre alle scritture sul registro, si rileggono a ogni minuto
   const minuto = useMinuto();
@@ -673,7 +694,7 @@ export function Diagnostics() {
         .join(' · '),
     });
   }, []);
-  const permesso = leggiPermesso();
+  const permesso = permessi?.notifiche ?? null;
   const attivi = notifiche ? Object.values(notifiche.perTipo).filter((x) => x.attivo).length : 0;
   const errore = d?.riconciliazione?.errore;
   const riquadri: Riquadro[] = [
@@ -691,8 +712,18 @@ export function Diagnostics() {
       meta: !notifiche?.generale || attivi === 0 ? t('notificheSpente') : t('tipiAttivi', { n: attivi }),
       tinta: permesso === 'granted' ? 'successo' : permesso === 'denied' ? 'avviso' : 'neutro',
     },
-    { etichetta: t('allarmiPrecisi'), valore: t('nonDisponibile'), meta: t('comeNotifiche'), tinta: 'neutro' },
-    { etichetta: t('nonDisturbare'), valore: t('nonDisponibile'), meta: t('iperfocus'), tinta: 'neutro' },
+    {
+      etichetta: t('allarmiPrecisi'),
+      valore: sìNo(permessi?.allarmiEsatti, 'allarmiConcessi', 'allarmiNegati'),
+      meta: t('comeNotifiche'),
+      tinta: tinta(permessi?.allarmiEsatti),
+    },
+    {
+      etichetta: t('nonDisturbare'),
+      valore: sìNo(permessi?.nonDisturbare, 'accessoDato', 'senzaAccesso'),
+      meta: t('iperfocus'),
+      tinta: tinta(permessi?.nonDisturbare),
+    },
     {
       etichetta: t('codaNotifiche'),
       valore: t('armate', { n: d?.armate ?? 0 }),

@@ -729,5 +729,16 @@
   "unaAttivita": "1 activity",
   "nAttivita": "{n} activities",
   "unPdf": "1 PDF",
-  "nPdf": "{n} PDFs"
+  "nPdf": "{n} PDFs",
+  "azioneInizia": "Start",
+  "azioneSegnaFatto": "Mark done",
+  "azionePosticipa": "Snooze 10′",
+  "canaleSveglie": "Alarms",
+  "canaleSessione": "Session in progress",
+  "sessioneDiStudioNotifica": "Study session",
+  "allarmiConcessi": "Allowed",
+  "allarmiNegati": "Not allowed",
+  "accessoDato": "Access granted",
+  "senzaAccesso": "No access",
+  "widgetVuoto": "Nothing for today"
 }

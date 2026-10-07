@@ -38,3 +38,25 @@ export const testiNotifica: TestiNotifica = (v) => {
     corpo: t(CORPO[v.trigger], { tempo: durata(v.anticipo), ora }),
   };
 };
+
+/**
+ * Etichette dell'adapter Android (T-021): i canali (MECC §13.3: per tipo + silenzioso; le sveglie a parte) e le azioni
+ * rapide (§13.2), nella lingua dell'app, iniettate dal punto di composizione come i testi.
+ */
+export const etichetteNative = {
+  canali: {
+    todo: t('tipoTodo'),
+    studio: t('tipoStudio'),
+    routine: t('tipoRoutine'),
+    evento: t('tipoEvento'),
+    silenzioso: t('silenzioso'),
+    sveglie: t('canaleSveglie'),
+  },
+  azioni: {
+    inizia: t('azioneInizia'),
+    segna_fatto: t('azioneSegnaFatto'),
+    registra_esito: t('registraEsito'),
+    posticipa: t('azionePosticipa'),
+  },
+  sessione: { canale: t('canaleSessione'), titolo: t('sessioneDiStudioNotifica') },
+};

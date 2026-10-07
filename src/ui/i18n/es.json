@@ -729,5 +729,16 @@
   "unaAttivita": "1 actividad",
   "nAttivita": "{n} actividades",
   "unPdf": "1 PDF",
-  "nPdf": "{n} PDF"
+  "nPdf": "{n} PDF",
+  "azioneInizia": "Empezar",
+  "azioneSegnaFatto": "Marcar hecho",
+  "azionePosticipa": "Posponer 10′",
+  "canaleSveglie": "Alarmas",
+  "canaleSessione": "Sesión en curso",
+  "sessioneDiStudioNotifica": "Sesión de estudio",
+  "allarmiConcessi": "Permitidas",
+  "allarmiNegati": "No permitidas",
+  "accessoDato": "Acceso concedido",
+  "senzaAccesso": "Sin acceso",
+  "widgetVuoto": "Nada para hoy"
 }
