@@ -66,11 +66,16 @@ describe('Backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', () => {
     );
     await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: { bloccoId: null } }, ADESSO);
     await save(db, 'preferenze', { id: CHIAVE_AI, valore: 'chiave-segreta-di-prova' }, ADESSO);
+    await save(db, 'preferenze', { id: 'sync', valore: { userId: 'u', cursore: 9, ultimaSync: null } }, ADESSO);
     await save(db, 'registroNotifiche', { id: 'k', chiave: 'k', idNativo: 1 } as never, ADESSO);
 
     const { nome, testo } = await backupText(db, ADESSO);
     expect(nome).toBe('routforge-2026-09-23.rfbackup');
     expect(testo).not.toContain('chiave-segreta-di-prova');
+    // La coda della sync è del dispositivo, come il registro (T-033): nel file non c'è
+    expect(await db.syncCoda.count()).toBeGreaterThan(0);
+    expect(testo).not.toContain('syncCoda');
+    expect(testo).not.toContain('"id":"sync"');
 
     // L'altro dispositivo ha i suoi dati e la sua chiave: i dati spariscono, la chiave resta
     await saveBlock(

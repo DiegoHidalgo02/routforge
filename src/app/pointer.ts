@@ -18,6 +18,6 @@ export async function recomputePointer(db: RoutForgeDb, corsoId: string, now: nu
     const blocchi = (await listBy(db, 'blocchi', 'stato', 'programmato')).filter((b) => b.corsoId === corsoId);
     const piano = pointerPlan(unita, moduli, blocchi, now);
     for (const b of blocchi)
-      if (piano.has(b.id)) await saveBlock(db, { ...b, unitaId: piano.get(b.id) ?? null }, now, fuso);
+      if (piano.has(b.id)) await saveBlock(db, { ...b, unitaId: piano.get(b.id) ?? null }, now, fuso, 'ciclo');
   });
 }

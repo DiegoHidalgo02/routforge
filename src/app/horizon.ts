@@ -23,7 +23,7 @@ export async function rollTodos(
   return inTransaction(db, ['blocchi'], async () => {
     const blocchi = await blocksBetween(db, shiftPeriod(oggi, 'giorno', -GIORNI_INDIETRO), oggi);
     const piano = rollPlan(blocchi, now, inizioSettimana);
-    for (const b of piano.spostati) await saveBlock(db, b, now, fuso);
+    for (const b of piano.spostati) await saveBlock(db, b, now, fuso, 'ciclo');
     return piano.avvisi;
   });
 }

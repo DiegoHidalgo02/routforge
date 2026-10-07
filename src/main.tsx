@@ -16,6 +16,8 @@ import { appDb } from './app/db';
 import { configureDiagnostics } from './app/diagnostics';
 import { configureBackupFiles } from './app/backup';
 import { configureVoice } from './app/practice';
+import { createSyncService, registerSyncService } from './app/sync';
+import { newId } from './data/repository';
 import { configurePdf } from './app/materials';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
@@ -33,6 +35,8 @@ import { androidNotifications } from './platform/notificationsAndroid';
 import { androidWidget, followLinks } from './platform/widgetAndroid';
 import { geminiClient } from './platform/aiGemini';
 import { webNetwork } from './platform/network';
+import { createSyncStore, memorySyncBackend } from './platform/syncMemory';
+import { deviceDescription, supabaseSyncBackend } from './platform/syncSupabase';
 import { webPdf } from './platform/pdf';
 import { deviceVoice } from './platform/voice';
 import { androidPdfViewer } from './platform/pdfAndroid';
@@ -104,6 +108,23 @@ void Promise.race([android?.pronte, new Promise((r) => setTimeout(r, 3000))]).th
 startHeartbeat(appDb, webClock);
 // I messaggi della chat scritti offline partono al ritorno della rete (MECC §18)
 followPendingMessages(appDb, webNetwork, () => webClock.now());
+// La sincronizzazione fra dispositivi (MECC §25, T-033, D-SYNC-1): Supabase con le chiavi di `.env.local`; senza, il
+// servizio finto in memoria, che si svuota a ogni ricaricamento (Diagnostica: «servizio finto»)
+const urlSync: unknown = import.meta.env.VITE_SUPABASE_URL;
+const chiaveSync: unknown = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const syncFinta = !(typeof urlSync === 'string' && urlSync && typeof chiaveSync === 'string' && chiaveSync);
+const sync = createSyncService(
+  appDb,
+  syncFinta
+    ? memorySyncBackend(createSyncStore(), () => webClock.now(), newId)
+    : supabaseSyncBackend(String(urlSync), String(chiaveSync)),
+  webNetwork,
+  webClock,
+  deviceDescription(eAndroid ? 'android' : 'web'),
+  { finto: syncFinta },
+);
+registerSyncService(sync);
+sync.start();
 if (eAndroid) {
   followSessionInForeground(appDb, androidSession(etichetteNative.sessione));
   // Il widget della schermata Home e i suoi collegamenti diretti (MECC §21; T-023)

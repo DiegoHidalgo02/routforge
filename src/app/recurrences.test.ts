@@ -185,3 +185,15 @@ describe('Modifica ripetuta e occorrenza singola — MECC §7, D-DATA-2, D-TIME-
     expect(await generateOccurrences(db, saltata, local(2026, 9, 23, 9, 10), FUSO)).toBe(0);
   });
 });
+
+describe('Coda della sync — INV-21 (T-033): modificare la routine', () => {
+  it('accoda la definizione e le tombstone degli slot superati, non le occorrenze rigenerate (ognuno le ricrea)', async () => {
+    const r = await creaCorsa();
+    const vecchie = (await occorrenze(r)).filter((b) => b.inizio > NOW).map((b) => `blocchi:${b.id}`);
+    await db.syncCoda.clear();
+    await editRecurrence(db, { ...r, orarioInizio: '18:00', orarioFine: '19:00' }, NOW, FUSO);
+    const voci = (await list(db, 'syncCoda')).map((v) => v.id).sort();
+    expect(voci).toEqual([`ricorrenze:${r.id}`, ...vecchie].sort());
+    expect(voci.some((id) => id.endsWith(':18:00'))).toBe(false);
+  });
+});

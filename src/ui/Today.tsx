@@ -39,6 +39,7 @@ import { dismissAbsenceNotice, readAbsenceNotice } from '../app/absence';
 import { calendarDays, type BloccoCalendario } from '../app/calendar';
 import { checkFromCalendar, reopenBlock } from '../app/completion';
 import { appDb, watch } from '../app/db';
+import { readProfileName } from '../app/sync';
 import { nowInputs, type IngressiAdesso } from '../app/nowBlock';
 import { progressInputs, type IngressiProgresso } from '../app/progress';
 import { reorderTodo } from '../app/reorder';
@@ -197,6 +198,9 @@ export function Today() {
 
   // Il saluto compare una volta per avvio dell'app, in testa alla vista Giorno (FUNZ §2)
   const [saluto, setSaluto] = useState<'in' | 'out' | null>(() => (salutato || vista !== 'giorno' ? null : 'in'));
+  // «Ciao, <nome>» col nome facoltativo dell'account (DATI-UI del design; T-033)
+  const [nome, setNome] = useState<string | null>(null);
+  useEffect(() => watch(() => readProfileName(appDb), setNome), []);
   useEffect(() => {
     salutato = true;
     const a = setTimeout(() => setSaluto((x) => x && 'out'), SALUTO_MS);
@@ -307,7 +311,7 @@ export function Today() {
           <span className={s.soloMobile}>
             {saluto ? (
               <span className={`${s.saluto} ${saluto === 'out' ? s.esce : ''}`}>
-                <span className={s.ciao}>{t('ciao')}</span>
+                <span className={s.ciao}>{nome ? t('ciaoNome', { nome }) : t('ciao')}</span>
                 <span className={s.motto}>{t('motto')}</span>
               </span>
             ) : (

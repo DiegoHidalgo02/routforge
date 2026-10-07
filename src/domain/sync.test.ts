@@ -8,6 +8,7 @@ import {
   serverAccepts,
   stripLocalFields,
   toEnvelope,
+  validEnvelope,
 } from './sync';
 
 const MIO = 'dispositivo-b';
@@ -18,22 +19,25 @@ const remota = (updatedAt: number, over: Partial<{ generata: boolean; dispositiv
   ...over,
 });
 
-describe('Vincitore fra locale e remota — MECCANISMI §25 (D-SYNC-1, D-SYNC-2)', () => {
+describe('Vincitore fra locale e remota — MECCANISMI §25 (D-SYNC-1, D-SYNC-2, D-SYNC-4)', () => {
+  const riga = { id: 'x' };
+  const voce = (updatedAt: number, generata = false) => ({ updatedAt, generata });
   it('senza riga locale vince la remota; senza modifiche in coda pure (il servizio è più avanti)', () => {
-    expect(decide(undefined, false, remota(10), MIO)).toBe('remota');
-    expect(decide({ updatedAt: 20 }, false, remota(10), MIO)).toBe('remota');
+    expect(decide(undefined, undefined, remota(10), MIO)).toBe('remota');
+    expect(decide(riga, undefined, remota(10), MIO)).toBe('remota');
   });
 
-  it('con una modifica in coda vince la più recente; a parità l’id di dispositivo maggiore', () => {
-    expect(decide({ updatedAt: 20 }, true, remota(10), MIO)).toBe('locale');
-    expect(decide({ updatedAt: 10 }, true, remota(20), MIO)).toBe('remota');
-    expect(decide({ updatedAt: 10 }, true, remota(10, { dispositivo: 'dispositivo-a' }), MIO)).toBe('locale');
-    expect(decide({ updatedAt: 10 }, true, remota(10, { dispositivo: 'dispositivo-c' }), MIO)).toBe('remota');
+  it('con una modifica in coda conta l’istante del gesto; a parità l’id di dispositivo maggiore', () => {
+    expect(decide(riga, voce(20), remota(10), MIO)).toBe('locale');
+    expect(decide(riga, voce(10), remota(20), MIO)).toBe('remota');
+    expect(decide(riga, voce(10), remota(10, { dispositivo: 'dispositivo-a' }), MIO)).toBe('locale');
+    expect(decide(riga, voce(10), remota(10, { dispositivo: 'dispositivo-c' }), MIO)).toBe('remota');
   });
 
-  it('un’occorrenza generata non sovrascrive mai una riga esistente; dove manca, si scrive', () => {
-    expect(decide({ updatedAt: 1 }, false, remota(99, { generata: true }), MIO)).toBe('locale');
-    expect(decide(undefined, false, remota(99, { generata: true }), MIO)).toBe('remota');
+  it('un’occorrenza generata non sovrascrive mai una riga esistente; una voce generata della fusione cede', () => {
+    expect(decide(riga, undefined, remota(99, { generata: true }), MIO)).toBe('locale');
+    expect(decide(undefined, undefined, remota(99, { generata: true }), MIO)).toBe('remota');
+    expect(decide(riga, voce(99, true), remota(10), MIO)).toBe('remota');
   });
 
   it('il servizio (specchio dell’SQL): ultimo vince, parità per dispositivo, la generata cede e non sovrascrive', () => {
@@ -79,11 +83,12 @@ describe('Che cosa viaggia — MECCANISMI §25 (D-SYNC-3)', () => {
 
   it('la busta porta la riga intera e i suoi istanti; l’interruttore generale delle notifiche resta qui', () => {
     const blocco = { id: 'b1', updatedAt: 7, deletedAt: null, createdAt: 1, stato: 'completato' };
-    expect(toEnvelope('blocchi', blocco, false)).toEqual({
+    // L'istante della busta è quello del gesto, nella voce (D-SYNC-4)
+    expect(toEnvelope('blocchi', blocco, { updatedAt: 5, generata: false })).toEqual({
       tabella: 'blocchi',
       id: 'b1',
       dati: blocco,
-      updatedAt: 7,
+      updatedAt: 5,
       deletedAt: null,
       generata: false,
     });
@@ -101,7 +106,25 @@ describe('Che cosa viaggia — MECCANISMI §25 (D-SYNC-3)', () => {
       ...ricevuta,
       valore: { x: 2, generale: false },
     });
-    // Senza riga locale l'interruttore resta com'è nella remota (assente: il default)
-    expect(mergeLocalFields('preferenze', ricevuta, undefined)).toBe(ricevuta);
+    // Senza riga locale l'interruttore è acceso: senza il campo la riga non si leggerebbe
+    expect(mergeLocalFields('preferenze', ricevuta, undefined)).toEqual({
+      ...ricevuta,
+      valore: { x: 2, generale: true },
+    });
+  });
+
+  it('una busta ricevuta vale solo nell’ambito e solo per la riga del suo id (servizio compromesso)', () => {
+    const busta = (tabella: string, id: string, dati: unknown, deletedAt: number | null = null) => ({
+      tabella,
+      id,
+      dati,
+      deletedAt,
+      updatedAt: 1,
+    });
+    expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: null }))).toBe(true);
+    expect(validEnvelope(busta('syncCoda', 'preferenze:chiaveAi', { id: 'preferenze:chiaveAi' }))).toBe(false);
+    expect(validEnvelope(busta('preferenze', 'impostazioni', { id: 'chiaveAi', valore: 'AIza-altrui' }))).toBe(false);
+    expect(validEnvelope(busta('materiali', 'm1', { id: 'm1' }))).toBe(false);
+    expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: null }, 5))).toBe(false);
   });
 });

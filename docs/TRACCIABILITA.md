@@ -71,8 +71,8 @@ Un test nuovo che cita uno scenario obbliga ad aggiornare la riga (il gate lo ri
 | I2 | MECC §18 | domain/practice (DevSwipe) · domain/generation (`validDevSwipe`, `practiceResult`) · app/practice (risultato salvato una volta) · ui S19 DevSwipe (swipe o tasti, vibrazione e spiegazione, riproposta a fine mazzo, riepilogo) | T-001, T-028 | src/domain/practice.test.ts, src/domain/generation.test.ts, src/app/practice.test.ts, src/ui/PracticeGames.test.tsx | coperto |
 | I3 | MECC §18 | domain/practice (Bug Hunter, `finito`) · domain/generation (`validBugHunter`, `practiceResult`) · ui S19 Bug Hunter (tentativi sulle righe, soluzione, punti, riepilogo) | T-001, T-028 | src/domain/practice.test.ts, src/domain/generation.test.ts, src/app/practice.test.ts, src/ui/PracticeGames.test.tsx | coperto |
 | I4 | MECC §18 | domain/generation (`validTrivia`, `triviaReturning`, `practiceResult`) · app/practice (playlist successiva, voce) · platform/voice (Android: coda del motore di sintesi, plugin `VoceTrivia`; web: `speechSynthesis`) · ui S19 Trivia; la lettura a schermo spento si prova sul telefono | T-028 | src/domain/generation.test.ts, src/app/practice.test.ts, src/ui/PracticeGames.test.tsx | parziale |
-| J1 | MECC §25 | domain/sync/merge · app/sync · app/notifications | T-033 | — | nessuno |
-| J2 | MECC §7, §25 | domain/sync/merge (ultimo-vince) · app/scheduler dopo la ricezione | T-033 | — | nessuno |
+| J1 | MECC §25 | domain/sync (`decide`, busta) · data (coda `syncCoda`) · app/sync (offline in coda, push e pull) · notifiche: un blocco ricevuto completato non ne arma; con Supabase da collaudare | T-033 | src/sync.test.ts | parziale |
+| J2 | MECC §7, §25 | domain/sync (`decide`, `serverAccepts`) · app/sync (pull prima del push, istante del gesto, D-SYNC-4) · app/recurrences (`followRecurrence`: le occorrenze seguono la definizione ricevuta, le tombstone partono) · il ciclo dopo la ricezione è di T-034 | T-033, T-034 | src/sync.test.ts | parziale |
 | J3 | MECC §25 | app/sync (impronta del corso) · domain/pointer | T-033, T-034 | — | nessuno |
-| J4 | MECC §25 | domain/sync/merge (primo accesso) · app/sync | T-033 | — | nessuno |
-| J5 | MECC §25 | app/sync (uscita dall'account) | T-033 | — | nessuno |
+| J4 | MECC §25 | data (`enqueueAll`: fusione con le occorrenze generate marcate) · app/sync (primo accesso, pull a pagine, preferenze per chiave) | T-033 | src/sync.test.ts | coperto |
+| J5 | MECC §25 | app/sync (uscita: dati e coda restano, cursore a 0; rientro senza fusione) | T-033 | src/sync.test.ts | coperto |

@@ -21,19 +21,40 @@ const occurrencesOf = (db: RoutForgeDb, ricorrenzaId: string) => listBy(db, 'blo
 export async function generateOccurrences(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<number> {
   return inTransaction(db, ['blocchi'], async () => {
     const mancanti = missingOccurrences(r, await listKeyRange(db, 'blocchi', ...horizonSlotRange(r.id, now)), now);
-    for (const b of mancanti) await saveBlock(db, b, now, fuso);
+    for (const b of mancanti) await saveBlock(db, b, now, fuso, 'ciclo');
     return mancanti.length;
   });
 }
 
-/** Modifica la definizione (§7): la salva nel fuso corrente, elimina le future programmate non più previste e rigenera le altre. */
+/**
+ * Le occorrenze seguono la definizione (§7): le future programmate non più previste si eliminano, le altre si
+ * rigenerano. Le eliminazioni sono dell'utente e viaggiano con la sync (le tombstone degli slot superati raggiungono gli
+ * altri dispositivi); le occorrenze riscritte no: ognuno le rigenera dalla definizione (T-033, D-SYNC-4).
+ */
+async function followDefinition(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<void> {
+  const piano = editPlan(r, await occurrencesOf(db, r.id), now);
+  for (const id of piano.daEliminare) await remove(db, 'blocchi', id, now);
+  for (const b of piano.daScrivere) await saveBlock(db, b, now, fuso, 'ciclo');
+}
+
+/** Modifica la definizione (§7): la salva nel fuso corrente e le occorrenze la seguono. */
 export async function editRecurrence(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<void> {
   await inTransaction(db, ['ricorrenze', 'blocchi'], async () => {
     await save(db, 'ricorrenze', { ...r, fuso }, now);
-    const piano = editPlan(r, await occurrencesOf(db, r.id), now);
-    for (const id of piano.daEliminare) await remove(db, 'blocchi', id, now);
-    for (const b of piano.daScrivere) await saveBlock(db, b, now, fuso);
+    await followDefinition(db, r, now, fuso);
   });
+}
+
+/** Una ricorrenza eliminata su un altro dispositivo (T-033): le sue occorrenze programmate di qui spariscono, come in `deleteRecurrence`. */
+export function dropOccurrences(db: RoutForgeDb, ricorrenzaId: string, now: number): Promise<void> {
+  return inTransaction(db, ['blocchi'], async () => {
+    for (const id of removableOccurrences(await occurrencesOf(db, ricorrenzaId))) await remove(db, 'blocchi', id, now);
+  });
+}
+
+/** Una ricorrenza ricevuta dalla sync (T-033, J2): le occorrenze di questo dispositivo seguono la definizione ricevuta. */
+export function followRecurrence(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<void> {
+  return inTransaction(db, ['blocchi'], () => followDefinition(db, r, now, fuso));
 }
 
 /**

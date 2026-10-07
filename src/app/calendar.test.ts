@@ -62,7 +62,8 @@ describe('Settimana e Mese — MECC §24', () => {
   });
 
   it('500 blocchi in un mese: la lettura della griglia del mese sta sotto 0,5 s (HANDOFF §3, T-008)', async () => {
-    await db.transaction('rw', db.blocchi, async () => {
+    // Una transazione sola per i 500 blocchi (con la coda della sync, che `saveBlock` apre con loro, T-033)
+    await db.transaction('rw', [db.blocchi, db.syncCoda], async () => {
       for (let i = 0; i < 500; i++) await blocco(`B${i}`, addLocalDays(local(2026, 9, 1, 7, i % 60), i % 30));
     });
     const t0 = performance.now();

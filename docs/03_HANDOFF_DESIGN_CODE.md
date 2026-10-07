@@ -439,6 +439,16 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     dice «Chiudi» ghost); senza voce una riga d'avviso. «Rifai la pratica» genera una pratica nuova con gli stessi
     parametri (§18; il mock riapre la stessa). S20: «accuratezza · n mazzi», «accuratezza · n serie», «n playlist ·
     completate» e il Quiz «media · n quiz» come il mock.
+85. S22 Account e sincronizzazione, menu del profilo, saluto (T-033, D-SYNC-1…D-SYNC-4): come il mock (confronto del
+    07/10 su `login-code` e `account`). Dove tace: un campo vero sotto le sei celle del codice (incolla, riempimento
+    automatico, tastiera numerica); «Inviami il codice» acceso solo con un'email valida e «Accedi» con sei cifre; gli
+    errori in linea («Codice non valido o scaduto», «Non riesco a mandare il codice…»); col servizio finto, senza chiavi,
+    una nota col codice 000000; il nome facoltativo è un campo nella carta dell'account e l'avatar ha l'iniziale del nome
+    o dell'email; lo stato «in corso» ha il pallino primary e «errore» warning; «Esci» e «Scollega» senza conferma (i dati
+    restano); «Cosa viaggia» non dice «chiave AI» (D-SYNC-3: resta sul dispositivo) e «Cosa resta qui» la aggiunge;
+    `account-conflict` non c'è (D-SYNC-2 risolve da sé, nessun evento lo produce). Diagnostica: la casella Account con
+    la fase e l'email, o «servizio finto». Menu: testa con nome, email e stato; pallino sull'avatar in pari. Oggi: «Ciao,
+    <nome>».
 
 ## 4. Mappa schermata → design → task
 

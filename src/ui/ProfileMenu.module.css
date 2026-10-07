@@ -53,6 +53,7 @@
 }
 
 .avatar {
+  position: relative;
   width: 30px;
   height: 30px;
   flex: none;
@@ -151,4 +152,44 @@
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font: 600 var(--text-sm) var(--font-num);
+}
+
+/* Testa del menu con l'account (CONTROLLI di S1: nome se c'è, email, stato della sync; T-033) */
+.testa {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-1);
+}
+
+.nome {
+  color: var(--color-text);
+  font: 600 var(--text-md) / 18px var(--font-ui);
+}
+
+.email {
+  overflow: hidden;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stato {
+  color: var(--color-text-3);
+  font: 500 var(--text-xs) / 14px var(--font-ui);
+}
+
+/* Il pallino della sync in pari sull'avatar */
+.pallino {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border: 2px solid var(--color-bg);
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
 }

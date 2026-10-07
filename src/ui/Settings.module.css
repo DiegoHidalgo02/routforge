@@ -779,3 +779,278 @@ label.riga:hover {
   color: var(--color-text-2);
   font: 400 var(--text-sm) / 16px var(--font-ui);
 }
+
+/* Account (S22 `login`, `login-code`, `account`, `account-offline`, `account-erase`; T-033). Letterali del mock: gap 6 e
+   14, celle alte 48, pallino 6, avatar 44, bottoni alti 32 con raggio 9, interlinee 14 · 16 · 18 · 20 · 24. */
+.testaAccesso {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.titoloAccesso {
+  margin: 0;
+  font: 600 var(--text-xl) / 24px var(--font-ui);
+}
+
+.sottoAccesso {
+  margin: 0;
+  color: var(--color-text-2);
+  font: 400 var(--text-base) / 18px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.cartaAccesso,
+.cartaIdentita {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-card-inner);
+}
+
+.cartaAccesso {
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.celle {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+/* Il campo vero copre le celle, invisibile: tocco, incolla e tastiera numerica sono i suoi */
+.codiceVero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 16px;
+}
+
+.cella {
+  display: grid;
+  place-items: center;
+  height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 600 var(--text-xl-2) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.celle:focus-within .cella[data-attiva] {
+  border-color: var(--color-primary);
+}
+
+.celle:has(.codiceVero:focus-visible) {
+  border-radius: var(--radius-control);
+  box-shadow: var(--ring-focus);
+}
+
+.notaCodice {
+  margin: 0;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.emailCodice {
+  color: var(--color-text);
+}
+
+.collegamento {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primarioAccount {
+  height: var(--size-control);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.primarioAccount:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.primarioAccount:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.primarioAccount:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.erroreAccount,
+.avvisoAccount {
+  margin: 0;
+  font: 400 var(--text-base) / 18px var(--font-ui);
+}
+
+.erroreAccount {
+  color: var(--color-danger-ink);
+}
+
+.avvisoAccount {
+  color: var(--color-warning);
+}
+
+.notaFinta {
+  margin: 0;
+  color: var(--color-text-3);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.cartaIdentita {
+  align-items: center;
+  gap: 14px;
+}
+
+.avatarAccount {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  font: 600 var(--text-lg-2) var(--font-ui);
+}
+
+.nomeAccount {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+  outline: 0;
+}
+
+.nomeAccount::placeholder {
+  color: var(--color-text-2);
+}
+
+.nomeAccount:focus-visible {
+  border-radius: var(--radius-xs);
+  box-shadow: var(--ring-focus);
+}
+
+.emailAccount {
+  overflow: hidden;
+  color: var(--color-text-2);
+  font: 400 var(--text-base) / 18px var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottone32,
+.scollega {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 32px;
+  border-radius: var(--radius-control-sm);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.bottone32 {
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.bottone32:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+.bottone32:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.scollega {
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.scollega:hover {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
+}
+
+/* Area di tocco 44 per i bottoni da 32 */
+.bottone32::before,
+.scollega::before {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.testaSync {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.statoSync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-2);
+  font: 500 var(--text-sm) var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.pallinoSync {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+}
+
+.statoSync[data-tinta='neutro'] .pallinoSync {
+  background: var(--color-text-3);
+}
+
+.statoSync[data-tinta='primary'] .pallinoSync {
+  background: var(--color-primary);
+}
+
+.statoSync[data-tinta='avviso'] .pallinoSync {
+  background: var(--color-warning);
+}
+
+.iconaDispositivo {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.questo {
+  margin-left: 4px;
+  color: var(--color-primary);
+  font: 500 var(--text-xs) var(--font-ui);
+}

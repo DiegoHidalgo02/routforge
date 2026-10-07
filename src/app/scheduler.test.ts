@@ -590,3 +590,34 @@ describe('Ciclo — MECCANISMI §9 (notifiche dopo la transazione)', () => {
     expect(reconcile).toHaveBeenCalledWith(LUNEDI);
   });
 });
+
+describe('Coda della sync — INV-21 (T-033): il ciclo non accoda', () => {
+  it('generazione, puntatore, persi, ritardo dei todo, orfani e riancoraggio in un altro fuso lasciano la coda vuota', async () => {
+    const { corsoId } = await studioC1();
+    await crea(routine([1, 3, 5], '18:00', '20:00', '2026-09-21'), LUNEDI);
+    const todo = await blocco({
+      tipo: 'todo',
+      orizzonte: 'settimana',
+      inizio: local(2026, 9, 21, 18, 0),
+      fine: local(2026, 9, 21, 18, 30),
+    });
+    // Un orfano: in corso senza una sessione attiva (§8)
+    const orfano = await blocco({
+      stato: 'in_corso',
+      inizio: local(2026, 9, 21, 7, 0),
+      fine: local(2026, 9, 21, 7, 30),
+    });
+    // Le creazioni dell'utente sono in coda: la si svuota per guardare solo il ciclo
+    await db.syncCoda.clear();
+    await runCycle(db, LUNEDI, FUSO);
+    await runCycle(db, local(2026, 9, 21, 10, 31), FUSO);
+    await runCycle(db, local(2026, 9, 23, 9, 0), FUSO);
+    await runCycle(db, local(2026, 9, 24, 9, 0), 'America/New_York');
+    // I passi hanno scritto davvero: orfano giudicato, studio di lunedì perso, todo rotolato, blocchi riancorati
+    expect((await letto(orfano.id)).stato).toBe('perso');
+    expect((await studioDel(corsoId, '2026-09-21')).stato).toBe('perso');
+    expect((await letto(todo.id)).giornoLocale).not.toBe('2026-09-21');
+    expect((await list(db, 'blocchi')).some((b) => b.fuso === 'America/New_York')).toBe(true);
+    expect(await db.syncCoda.count()).toBe(0);
+  });
+});

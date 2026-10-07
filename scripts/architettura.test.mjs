@@ -46,6 +46,7 @@ export const PACCHETTI_DI_STRATO = [
   [/^dexie($|[/-])/, 'data'],
   [/^@capacitor(-community)?\//, 'platform'],
   [/^@google\/genai(\/|$)/, 'platform'],
+  [/^@supabase\//, 'platform'],
   [/^(react|react-dom|react-router|lucide-react)(\/|$)/, 'ui'],
 ];
 

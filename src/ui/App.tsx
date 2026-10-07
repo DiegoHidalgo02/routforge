@@ -15,10 +15,8 @@ import { MaterialsSpace, MaterialViewer } from './Materials';
 import { Notifications } from './Notifications';
 import { DeckScreen, ReviewScreen } from './Practice';
 import { PracticeScreen } from './PracticeGames';
-import { t } from './i18n';
 import { useSettings, watchSettings } from './preferenze';
-import { Section } from './Section';
-import { About, AiSettings, Backup, Diagnostics, NotificationSettings, Settings } from './Settings';
+import { About, Account, AiSettings, Backup, Diagnostics, NotificationSettings, Settings } from './Settings';
 import { ActiveSession, SessionSetup } from './Session';
 import { Stats } from './Stats';
 import { Shell } from './Shell';
@@ -57,7 +55,7 @@ function Rotte() {
           <Route path="impostazioni/ai" element={<AiSettings />} />
           <Route path="impostazioni/backup" element={<Backup />} />
           <Route path="impostazioni/materiali" element={<MaterialsSpace />} />
-          <Route path="account" element={<Section titolo="account" indietro sottotitolo={t('impostazioni')} />} />
+          <Route path="account" element={<Account />} />
           <Route path="diagnostica" element={<Diagnostics />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

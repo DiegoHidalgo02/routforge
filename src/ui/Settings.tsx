@@ -4,7 +4,7 @@
 // (avvisi, anticipo, silenzioso; un tipo aperto per volta), digest del mattino, permesso e notifica di prova, che chiede
 // il permesso col gesto (D-NOTIF-2 n. 6). Informazioni con la versione della build. Account, AI, backup, materiali ed
 // eliminazione dei dati arrivano coi loro task (T-033, T-026, T-030, T-024).
-import { Check, ChevronRight, TriangleAlert, VolumeX } from 'lucide-react';
+import { Check, ChevronRight, Monitor, RefreshCcw, Smartphone, TriangleAlert, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { readMaskedAiKey, readPdfContext, removeAiKey, saveAiKey } from '../app/ai';
@@ -22,6 +22,7 @@ import {
 import type { PermessiNotifiche } from '../app/ports/notifications';
 import { doNotDisturbAccess } from '../app/sessionDevice';
 import { saveSettings } from '../app/settings';
+import { currentSyncService, type StatoSync } from '../app/sync';
 import type { ErroreAi } from '../domain/ai';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
 import type { Impostazioni, LinguaRisposte } from '../domain/settings';
@@ -34,6 +35,7 @@ import { animazioniRidotte, useSettings } from './preferenze';
 import { dimensione } from './Materials';
 import { Section } from './Section';
 import s from './Settings.module.css';
+import { useSync } from './useSync';
 
 /** «Backup · 11 set» della radice (S22). */
 const fmtGiornoBackup = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
@@ -218,7 +220,7 @@ export function Settings() {
           />
         </Gruppo>
         <Gruppo titolo={t('gruppoAccount')}>
-          <RigaLink etichetta={t('account')} to="/account" />
+          <RigaAccount />
           <RigaLink
             etichetta={t('modelloChiaveAi')}
             valore={
@@ -794,6 +796,7 @@ const SORGENTE = {
   materiali: 'sorgenteMateriali',
   backup: 'sorgenteBackup',
   ai: 'sorgenteAi',
+  sync: 'sorgenteSync',
 } as const;
 /** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
 const testoEvento = (e: Diagnostica['eventi'][number]) =>
@@ -846,6 +849,7 @@ export function Diagnostics() {
   const sonda = useRef<HTMLDivElement>(null);
   // Gli eventi e la riconciliazione stanno in memoria: oltre alle scritture sul registro, si rileggono a ogni minuto
   const minuto = useMinuto();
+  const sync = useSync();
   useEffect(() => watch(() => readDiagnostics(appDb, Date.now()), setD), [minuto]);
   useEffect(() => watch(() => readNotificationSettings(appDb), setNotifiche), []);
   useEffect(() => void misuraSpazio().then(setSpazio), []);
@@ -907,7 +911,12 @@ export function Diagnostics() {
       meta: errore ?? t('nessunErrore'),
       tinta: errore ? 'avviso' : d?.riconciliazione ? 'successo' : 'neutro',
     },
-    { etichetta: t('gruppoAccount'), valore: t('nonAttivo'), meta: '—', tinta: 'neutro' },
+    {
+      etichetta: t('gruppoAccount'),
+      valore: sync.account ? maiuscola(syncLabel(sync, minuto).testo) : t('nonAttivo'),
+      meta: sync.finto ? t('servizioFinto') : (sync.account?.email ?? '—'),
+      tinta: sync.account && sync.fase === 'in_pari' ? 'successo' : sync.fase === 'errore' ? 'avviso' : 'neutro',
+    },
     {
       etichetta: t('scalaTesto'),
       valore: `${decimali.format(schermo.scala)}×`,
@@ -1002,5 +1011,292 @@ export function Diagnostics() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Quando è stata l'ultima volta: «adesso», «N min fa», poi l'ora. */
+const quando = (istante: number | null, now: number): string =>
+  istante === null
+    ? t('nonAncora')
+    : now - istante < 60_000
+      ? t('adesso')
+      : now - istante < 3_600_000
+        ? t('minutiFa', { n: Math.floor((now - istante) / 60_000) })
+        : ora(istante);
+
+/** La fase della sync in parole e colore (S22 «Sincronizzazione», Diagnostica, menu): in pari dice da quando. */
+export function syncLabel(
+  stato: StatoSync,
+  now: number,
+): { testo: string; tinta: 'successo' | 'avviso' | 'neutro' | 'primary' } {
+  if (stato.fase === 'in_corso') return { testo: t('faseInCorso'), tinta: 'primary' };
+  if (stato.fase === 'offline') return { testo: t('faseOffline'), tinta: 'neutro' };
+  if (stato.fase === 'errore') return { testo: t('faseErrore'), tinta: 'avviso' };
+  return { testo: quando(stato.ultimaSync, now), tinta: 'successo' };
+}
+
+/**
+ * S22 «Account e sincronizzazione» (T-033; stati `login`, `login-code`, `account`, `account-offline`, `account-erase`):
+ * l'accesso con email e codice, poi la carta dell'account, la sincronizzazione, i dispositivi e la cancellazione dei dati
+ * remoti. Le regole stanno in `app/sync.ts`; senza account la vista è l'accesso, anche dopo uno scollegamento.
+ */
+export function Account() {
+  const stato = useSync();
+  return (
+    <div className={s.pagina}>
+      <Section titolo="account" indietro sottotitolo={t('impostazioni')} />
+      <div className={s.viste}>
+        {stato.account ? (
+          <Conto stato={stato} account={stato.account} />
+        ) : (
+          <Accesso scollegato={stato.fase === 'scollegato'} finto={stato.finto} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Accesso({ scollegato, finto }: { scollegato: boolean; finto: boolean }) {
+  const [email, setEmail] = useState('');
+  const [passo, setPasso] = useState<'email' | 'codice'>('email');
+  const [codice, setCodice] = useState('');
+  const [errore, setErrore] = useState<Chiave | null>(null);
+  const [attesa, setAttesa] = useState(false);
+  const valida = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const invia = async () => {
+    setAttesa(true);
+    setErrore(null);
+    const ok = (await currentSyncService()?.sendCode(email.trim())) ?? false;
+    setAttesa(false);
+    if (!ok) return setErrore('codiceNonInviato');
+    setCodice('');
+    setPasso('codice');
+  };
+  const accedi = async () => {
+    setAttesa(true);
+    setErrore(null);
+    const ok = (await currentSyncService()?.verifyCode(email.trim(), codice)) ?? false;
+    setAttesa(false);
+    if (!ok) setErrore('codiceNonValido');
+  };
+  return (
+    <>
+      {scollegato && (
+        <p className={s.avvisoAccount} role="status">
+          {t('scollegatoTesto')}
+        </p>
+      )}
+      <div className={s.testaAccesso}>
+        <h2 className={s.titoloAccesso}>{t(passo === 'email' ? 'accediEmail' : 'inserisciCodice')}</h2>
+        <p className={s.sottoAccesso}>{t(passo === 'email' ? 'accediSotto' : 'seiCifre')}</p>
+      </div>
+      <form
+        className={s.cartaAccesso}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (attesa) return;
+          if (passo === 'email' && valida) void invia();
+          if (passo === 'codice' && codice.length === 6) void accedi();
+        }}
+      >
+        {passo === 'email' ? (
+          <input
+            className={s.campoChiave}
+            type="email"
+            autoComplete="email"
+            aria-label={t('email')}
+            placeholder={t('emailSegnaposto')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        ) : (
+          <>
+            {/* Un campo vero sotto le sei celle: incolla, riempimento automatico e cancellazione funzionano da sé */}
+            <label className={s.celle}>
+              <input
+                className={s.codiceVero}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                aria-label={t('codiceSeiCifre')}
+                value={codice}
+                onChange={(e) => setCodice(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+              {Array.from({ length: 6 }, (_, i) => (
+                <span
+                  key={i}
+                  className={s.cella}
+                  data-attiva={i === Math.min(codice.length, 5) || undefined}
+                  aria-hidden
+                >
+                  {codice[i] ?? ''}
+                </span>
+              ))}
+            </label>
+            <p className={s.notaCodice}>
+              {t('codiceInviatoA')} <span className={s.emailCodice}>{email.trim()}</span> · {t('valeDieciMinuti')} ·{' '}
+              <button type="button" className={s.collegamento} disabled={attesa} onClick={() => void invia()}>
+                {t('inviaDiNuovo')}
+              </button>
+            </p>
+          </>
+        )}
+        <button
+          type="submit"
+          className={s.primarioAccount}
+          disabled={attesa || (passo === 'email' ? !valida : codice.length < 6)}
+          aria-busy={attesa}
+        >
+          {t(passo === 'email' ? 'inviamiCodice' : 'accedi')}
+        </button>
+        {errore && (
+          <p className={s.erroreAccount} role="alert">
+            {t(errore)}
+          </p>
+        )}
+      </form>
+      {finto && <p className={s.notaFinta}>{t('servizioProva')}</p>}
+    </>
+  );
+}
+
+function Conto({ stato, account }: { stato: StatoSync; account: NonNullable<StatoSync['account']> }) {
+  const now = useMinuto();
+  const sync = currentSyncService();
+  const [nome, setNome] = useState(account.nome ?? '');
+  const [conferma, setConferma] = useState(false);
+  const etichetta = syncLabel(stato, now);
+  const fermo = stato.fase === 'offline' || stato.fase === 'in_corso';
+  return (
+    <>
+      <div className={s.cartaIdentita}>
+        <span className={s.avatarAccount} aria-hidden>
+          {(nome.trim() || account.email).charAt(0).toUpperCase()}
+        </span>
+        <span className={s.testi}>
+          <input
+            className={s.nomeAccount}
+            value={nome}
+            placeholder={t('tuoNome')}
+            aria-label={t('tuoNome')}
+            onChange={(e) => setNome(e.target.value)}
+            onBlur={() => void sync?.setName(nome)}
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+          />
+          <span className={s.emailAccount}>{account.email}</span>
+        </span>
+        <button type="button" className={s.bottone32} onClick={() => void sync?.signOut()}>
+          {t('esci')}
+        </button>
+      </div>
+      <section className={s.gruppo}>
+        <div className={s.testaSync}>
+          <h2 className={s.etichettaGruppo}>{t('sincronizzazione')}</h2>
+          <span className={s.statoSync} data-tinta={etichetta.tinta}>
+            <span className={s.pallinoSync} />
+            {etichetta.testo}
+          </span>
+        </div>
+        <div className={s.card}>
+          <div className={s.riga}>
+            <span className={s.testi}>
+              <span>{t('ultimaSincronizzazione')}</span>
+              <span className={s.sottotitolo}>
+                {stato.fase === 'offline'
+                  ? t('offlineInCoda', { n: stato.inCoda })
+                  : maiuscola(quando(stato.ultimaSync, now))}
+              </span>
+            </span>
+            <button type="button" className={s.bottone32} disabled={fermo} onClick={() => void sync?.run()}>
+              <RefreshCcw size={13} />
+              {t('sincronizzaOra')}
+            </button>
+          </div>
+          <div className={s.riga}>
+            <span className={s.testi}>
+              <span>{t('cosaViaggia')}</span>
+              <span className={s.sottotitolo}>{t('cosaViaggiaTesto')}</span>
+            </span>
+          </div>
+          <div className={s.riga}>
+            <span className={s.testi}>
+              <span>{t('cosaRestaQui')}</span>
+              <span className={s.sottotitolo}>{t('cosaRestaQuiTesto')}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+      {stato.dispositivi.length > 0 && (
+        <Gruppo titolo={t('dispositiviN', { n: stato.dispositivi.length })}>
+          {stato.dispositivi.map((d) => {
+            const Icona = d.piattaforma === 'web' ? Monitor : Smartphone;
+            return (
+              <div key={d.id} className={s.riga} data-alta>
+                <Icona size={18} className={s.iconaDispositivo} />
+                <span className={s.testi}>
+                  <span>
+                    {d.nome}
+                    {d.corrente && <span className={s.questo}>{t('questo')}</span>}
+                  </span>
+                  <span className={s.sottotitolo}>{d.corrente ? t('attivoOra') : quando(d.ultimaAttivita, now)}</span>
+                </span>
+                {!d.corrente && (
+                  <button type="button" className={s.scollega} onClick={() => void sync?.revokeDevice(d.id)}>
+                    {t('scollega')}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </Gruppo>
+      )}
+      <Gruppo titolo={t('datiAccount')}>
+        <button type="button" className={s.riga} onClick={() => setConferma(true)}>
+          <span className={s.etichettaRiga} data-pericolo>
+            {t('cancellaDatiRemoti')}
+          </span>
+        </button>
+      </Gruppo>
+      {conferma && (
+        <div className={s.conferma} role="alertdialog" aria-labelledby="conferma-remoti">
+          <div className={s.testaConferma}>
+            <TriangleAlert size={18} className={s.iconaPericolo} />
+            <span className={s.testi}>
+              <span id="conferma-remoti" className={s.titoloConferma}>
+                {t('cancellareDatiAccount')}
+              </span>
+              <span className={s.corpoConferma}>{t('cancellareDatiAccountTesto')}</span>
+            </span>
+          </div>
+          <div className={s.azioniConferma}>
+            <button type="button" className={s.annullaConferma} onClick={() => setConferma(false)}>
+              {t('annulla')}
+            </button>
+            <button
+              type="button"
+              className={s.pericoloConferma}
+              onClick={() => void sync?.eraseRemote().then(() => setConferma(false))}
+            >
+              {t('cancellaDallAccount')}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** La riga «Account e sincronizzazione» di S22 col valore della sync (in pari in success, offline, errore). */
+function RigaAccount() {
+  const stato = useSync();
+  const now = useMinuto();
+  const valore = !stato.account ? undefined : stato.fase === 'in_pari' ? t('inPari') : syncLabel(stato, now).testo;
+  return (
+    <RigaLink
+      etichetta={t('account')}
+      to="/account"
+      {...(valore && { valore })}
+      {...(stato.fase === 'in_pari' && { tono: 'successo' as const })}
+      {...(stato.fase === 'errore' && { tono: 'avviso' as const })}
+    />
   );
 }

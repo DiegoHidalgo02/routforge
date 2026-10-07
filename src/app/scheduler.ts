@@ -59,7 +59,7 @@ export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Prom
   return inTransaction(db, TABELLE_CICLO, async () => {
     // 0. Riancoraggio (D-TIME-2): i blocchi di oggi e futuri calcolati in un altro fuso, prima di estendere e giudicare
     for (const b of reanchor(await listBy(db, 'blocchi', 'stato', 'programmato'), fuso, now))
-      await saveBlock(db, b, now, fuso);
+      await saveBlock(db, b, now, fuso, 'ciclo');
     // 1. Estensione delle ricorrenze (§7): una ricorrenza scaduta non genera nulla; una definizione che non si legge
     //    (il piano puro fallisce) si salta prima di aprire la sua transazione, che fallendo annullerebbe il ciclo, e si
     //    riporta (D-SCHED-1 n. 8)
@@ -74,10 +74,10 @@ export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Prom
     // Il blocco che la sessione attiva punta (`preferenze.sessioneAttiva`, scritta da `app/session.ts`, D-SCHED-1)
     const attivo = (await readActiveSession(db))?.bloccoId ?? null;
     for (const b of orphanPlan(await listBy(db, 'blocchi', 'stato', 'in_corso'), attivo, now))
-      await saveBlock(db, b, now, fuso);
+      await saveBlock(db, b, now, fuso, 'ciclo');
     // 4. Marcatura dei persi (§8; il todo «non fatto», §6)
     const persi = lostPlan(await listBy(db, 'blocchi', 'stato', 'programmato'), now, inizioSettimana);
-    for (const b of persi.persi) await saveBlock(db, b, now, fuso);
+    for (const b of persi.persi) await saveBlock(db, b, now, fuso, 'ciclo');
     // Puntatore dopo la generazione e la marcatura persa (§11), per ogni corso a ogni ciclo (FUNZ §8; D-SCHED-1)
     for (const c of await list(db, 'corsi')) await recomputePointer(db, c.id, now, fuso);
     return { avvisiRitardo: [...spostati, ...persi.avvisiRitardo], avvisiPerso: persi.avvisiPerso, ricorrenzeSaltate };

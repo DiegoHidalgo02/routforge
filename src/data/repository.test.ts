@@ -8,6 +8,8 @@ import { openDb, type RoutForgeDb } from './db';
 import {
   allRows,
   blocksBetween,
+  dequeue,
+  enqueueAll,
   get,
   inTransaction,
   list,
@@ -15,6 +17,7 @@ import {
   listKeyRange,
   newId,
   purge,
+  putRemote,
   remove,
   replaceAll,
   save,
@@ -375,5 +378,82 @@ describe('Azzeramento del backup — MECCANISMI §22, INV-14 (T-030)', () => {
     // Una riga senza chiave primaria fa fallire bulkPut dopo gli svuotamenti
     await expect(replaceAll(db, { blocchi: [{ titolo: 'senza id' }] })).rejects.toThrow();
     expect(await list(db, 'pratiche')).toEqual([p]);
+  });
+});
+
+describe('Coda della sync — MECCANISMI §25, INV-14 (T-033)', () => {
+  const evento = { tipo: 'evento' as const, stato: 'programmato' as const, inizio: T0, fine: T1, conOrario: true };
+  const coda = () => list(db, 'syncCoda');
+  const voci = async () => (await coda()).map((v) => [v.id, v.updatedAt, v.generata]);
+
+  it('le modifiche dell’utente nell’ambito si accodano con il loro istante; i blocchi scritti dal ciclo no', async () => {
+    const b = await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
+    await saveBlock(db, { ...evento, id: 'b2' }, T0, ROMA, 'ciclo');
+    await save(db, 'ricorrenze', { id: 'r1' } as never, T0);
+    await save(db, 'logFasi', { id: 'b1', ricorrenzaId: null, fasi: [] }, T0);
+    expect(await voci()).toEqual([
+      ['blocchi:b1', T0, false],
+      ['logFasi:b1', T0, false],
+      ['ricorrenze:r1', T0, false],
+    ]);
+    // Un'eliminazione si accoda con la sua tombstone; una modifica successiva aggiorna la stessa voce
+    await remove(db, 'blocchi', b.id, T1);
+    expect((await coda()).find((v) => v.id === 'blocchi:b1')?.updatedAt).toBe(T1);
+  });
+
+  it('fuori dall’ambito niente coda: preferenze fuori elenco (chiave AI, stato della sync), corsi, pratica', async () => {
+    await save(db, 'preferenze', { id: 'chiaveAi', valore: 'x' }, T0);
+    await save(db, 'preferenze', { id: 'sync', valore: {} }, T0);
+    await save(db, 'pratiche', PRATICA, T0);
+    await save(db, 'preferenze', { id: 'impostazioni', valore: {} }, T0);
+    expect(await voci()).toEqual([['preferenze:impostazioni', T0, false]]);
+  });
+
+  it('le righe ricevute si scrivono così come sono, tombstone comprese, senza tornare in coda', async () => {
+    const tomba = { id: 'b9', createdAt: 1, updatedAt: T1, deletedAt: T1 };
+    await putRemote(db, 'blocchi', [tomba]);
+    expect(await db.table('blocchi').get('b9')).toEqual(tomba);
+    expect(await coda()).toEqual([]);
+  });
+
+  it('dopo il push si tolgono le voci spedite, non quelle cambiate nel frattempo', async () => {
+    await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
+    await saveBlock(db, { ...evento, id: 'b2' }, T0, ROMA);
+    await saveBlock(db, { ...evento, id: 'b2', titolo: 'dopo' }, T1, ROMA);
+    await dequeue(db, [
+      { id: 'blocchi:b1', updatedAt: T0 },
+      { id: 'blocchi:b2', updatedAt: T0 },
+    ]);
+    expect(await voci()).toEqual([['blocchi:b2', T1, false]]);
+  });
+
+  it('la fusione accoda tutto l’ambito, tombstone comprese, con le occorrenze generate marcate; l’azzeramento svuota', async () => {
+    const slot = (giorno: string) => ({
+      ...evento,
+      id: `r1:${giorno}:08:00`,
+      tipo: 'routine' as const,
+      ricorrenzaId: 'r1',
+    });
+    await saveBlock(db, slot('2026-09-24'), T0, ROMA, 'ciclo');
+    await saveBlock(db, { ...evento, id: 'b3' }, T0, ROMA, 'ciclo');
+    await putRemote(db, 'blocchi', [{ id: 'b4', createdAt: T0, updatedAt: T1, deletedAt: T1 }]);
+    await save(db, 'preferenze', { id: 'chiaveAi', valore: 'x' }, T0);
+    // Una modifica dell'utente già in coda resta com'è, anche se la riga sembra generata
+    await saveBlock(db, slot('2026-09-25'), T1, ROMA);
+    await enqueueAll(db);
+    expect(await voci()).toEqual([
+      ['blocchi:b3', T0, false],
+      ['blocchi:b4', T1, false],
+      ['blocchi:r1:2026-09-24:08:00', T0, true],
+      ['blocchi:r1:2026-09-25:08:00', T1, false],
+    ]);
+    await replaceAll(db, {});
+    expect(await coda()).toEqual([]);
+  });
+
+  it('la coda si svuota fisicamente (derivata del dispositivo, come il registro delle notifiche)', async () => {
+    await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
+    await purge(db, 'syncCoda', ['blocchi:b1']);
+    expect(await db.syncCoda.count()).toBe(0);
   });
 });

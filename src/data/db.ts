@@ -92,10 +92,17 @@ export interface Tabelle {
    * (T-019, D-NOTIF-1). Si cancella fisicamente con `purge` (INV-14).
    */
   registroNotifiche: Riga<VoceRegistro>;
+  /**
+   * La coda delle modifiche dell'utente da spedire (MECC §25, T-033; versione 2): una voce per record, id
+   * `<tabella>:<id>`, con l'`updatedAt` del record accodato. La scrivono `save`, `saveBlock` e `remove` nella stessa
+   * transazione del record, solo per l'ambito della sync e mai per le scritture del ciclo. Derivata del dispositivo:
+   * fuori da backup e sync, si svuota con `purge`.
+   */
+  syncCoda: Riga<{ tabella: string; recordId: string; generata: boolean }>;
 }
 
 /** Versione 1: chiave primaria `id`, poi gli indici (sintassi Dexie: `[a+b]` composto). */
-export const SCHEMA_V1: { [K in keyof Tabelle]: string } = {
+export const SCHEMA_V1: { [K in Exclude<keyof Tabelle, 'syncCoda'>]: string } = {
   corsi: 'id',
   moduli: 'id, corsoId',
   unita: 'id, corsoId, moduloId',
@@ -119,11 +126,15 @@ export const SCHEMA_V1: { [K in keyof Tabelle]: string } = {
   registroNotifiche: 'id',
 };
 
+/** Versione 2 (T-033), additiva: la coda della sync. */
+export const SCHEMA_V2: { [K in keyof Tabelle]: string } = { ...SCHEMA_V1, syncCoda: 'id' };
+
 export type RoutForgeDb = Dexie & { [K in keyof Tabelle]: Table<Tabelle[K] | Tombstone, string> };
 
 /** Apre (o crea) il database locale. Le versioni successive si aggiungono qui, senza toccare la 1. */
 export function openDb(nome = 'routforge'): RoutForgeDb {
   const db = new Dexie(nome) as RoutForgeDb;
   db.version(1).stores(SCHEMA_V1);
+  db.version(2).stores(SCHEMA_V2);
   return db;
 }

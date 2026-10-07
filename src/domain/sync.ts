@@ -16,6 +16,12 @@ export type TabellaSincronizzata = (typeof TABELLE_SINCRONIZZATE)[number];
  */
 export const PREFERENZE_SINCRONIZZATE: readonly string[] = ['impostazioni', 'notifiche', 'profilo'];
 
+/**
+ * La riga di `preferenze` con lo stato della sync di questo dispositivo (account, cursore, ultima riuscita): mai in sync
+ * né nel backup; dopo l'import di un backup manca, e la sync rifà la fusione (T-033).
+ */
+export const CHIAVE_STATO_SYNC = 'sync';
+
 /** D-SYNC-2: un `updatedAt` oltre 5 minuti dopo l'ora del servizio si ferma lì (un orologio avanti non vince per sempre). */
 export const ANTICIPO_MASSIMO_MS = 5 * 60_000;
 
@@ -54,15 +60,46 @@ export interface BustaRicevuta extends Busta {
 
 type RigaSync = { id: string; updatedAt: number; deletedAt: number | null };
 
-export function toEnvelope(tabella: TabellaSincronizzata, riga: RigaSync, generata: boolean): Busta {
+/** Una voce della coda: l'istante del gesto dell'utente e se la riga è un'occorrenza generata (fusione). */
+export interface VoceCoda {
+  updatedAt: number;
+  generata: boolean;
+}
+
+/**
+ * La busta da spedire: la riga letta adesso, con l'istante del gesto della voce (D-SYNC-4 n. 4: una scrittura del ciclo
+ * venuta dopo non la fa sembrare più recente).
+ */
+export function toEnvelope(tabella: TabellaSincronizzata, riga: RigaSync, voce: VoceCoda): Busta {
   return {
     tabella,
     id: riga.id,
     dati: stripLocalFields(tabella, riga),
-    updatedAt: riga.updatedAt,
+    updatedAt: voce.updatedAt,
     deletedAt: riga.deletedAt,
-    generata,
+    generata: voce.generata,
   };
+}
+
+/**
+ * Una busta ricevuta si applica solo se è dell'ambito della sync, se i dati sono la riga del suo id (con la stessa
+ * eliminazione) e se ha un istante: un servizio compromesso non scrive altrove, né la chiave AI né la coda (T-033).
+ */
+export function validEnvelope(b: {
+  tabella: string;
+  id: string;
+  dati: unknown;
+  deletedAt: number | null;
+  updatedAt: number;
+}): boolean {
+  const dati = typeof b.dati === 'object' && b.dati !== null ? (b.dati as { id?: unknown; deletedAt?: unknown }) : null;
+  return (
+    isSynced(b.tabella, b.id) &&
+    dati !== null &&
+    dati.id === b.id &&
+    (dati.deletedAt ?? null) === b.deletedAt &&
+    Number.isFinite(b.updatedAt)
+  );
 }
 
 /**
@@ -84,30 +121,34 @@ export function stripLocalFields<T extends RigaSync>(tabella: string, riga: T): 
   return { ...riga, valore: resto };
 }
 
-/** La riga ricevuta con i campi di questo dispositivo rimessi dalla riga locale. */
+/**
+ * La riga ricevuta con i campi di questo dispositivo rimessi dalla riga locale; senza riga locale l'interruttore è acceso
+ * (il default di §13.1): una riga senza il campo non si leggerebbe e varrebbero i default.
+ */
 export function mergeLocalFields<T extends RigaSync>(tabella: string, remota: T, locale: RigaSync | undefined): T {
-  const qui = locale && valoreDi(locale);
   const valore = valoreDi(remota);
-  if (tabella !== 'preferenze' || remota.id !== RESTA_QUI.id || !qui || !valore || !(RESTA_QUI.campo in qui))
-    return remota;
-  return { ...remota, valore: { ...valore, [RESTA_QUI.campo]: qui[RESTA_QUI.campo] } };
+  if (tabella !== 'preferenze' || remota.id !== RESTA_QUI.id || !valore) return remota;
+  const qui = locale ? valoreDi(locale) : null;
+  const campo = qui && RESTA_QUI.campo in qui ? qui[RESTA_QUI.campo] : true;
+  return { ...remota, valore: { ...valore, [RESTA_QUI.campo]: campo } };
 }
 
 /**
- * Il vincitore al momento della ricezione (D-SYNC-1, D-SYNC-2): senza riga locale vince la remota; una generata non
- * sovrascrive mai; senza modifiche dell'utente in coda il servizio è più avanti di noi; altrimenti la più recente e, a
- * parità, l'id di dispositivo maggiore (gli id dei record coincidono per definizione).
+ * Il vincitore al momento della ricezione (D-SYNC-1, D-SYNC-2, D-SYNC-4): senza riga locale vince la remota; una generata
+ * non sovrascrive mai; senza una modifica dell'utente in coda, o con una voce `generata` della fusione (che cede come sul
+ * servizio), il servizio è più avanti di noi; altrimenti conta l'istante del gesto della voce contro quello della remota
+ * e, a parità, l'id di dispositivo maggiore (gli id dei record coincidono per definizione).
  */
 export function decide(
-  locale: { updatedAt: number } | undefined,
-  inCoda: boolean,
+  locale: object | undefined,
+  voce: VoceCoda | undefined,
   remota: { updatedAt: number; generata: boolean; dispositivo: string },
   mioDispositivo: string,
 ): 'remota' | 'locale' {
   if (!locale) return 'remota';
   if (remota.generata) return 'locale';
-  if (!inCoda) return 'remota';
-  if (remota.updatedAt !== locale.updatedAt) return remota.updatedAt > locale.updatedAt ? 'remota' : 'locale';
+  if (!voce || voce.generata) return 'remota';
+  if (remota.updatedAt !== voce.updatedAt) return remota.updatedAt > voce.updatedAt ? 'remota' : 'locale';
   return remota.dispositivo > mioDispositivo ? 'remota' : 'locale';
 }
 

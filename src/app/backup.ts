@@ -12,11 +12,14 @@ import { localDayKey } from '../domain/time';
 import { logError } from './diagnostics';
 import { cancelAllNotifications } from './notifications';
 import type { ArchivioFile } from './ports/files';
+import { CHIAVE_STATO_SYNC } from '../domain/sync';
 import { CHIAVE_SESSIONE_ATTIVA } from './session';
+import { currentSyncService } from './sync';
 
 type NomeTabella = keyof Tabelle;
-/** Le tabelle del file: tutte quelle del database tranne il registro delle notifiche (MECC §1, §22). */
-const tabelle = (db: RoutForgeDb): NomeTabella[] => tableNames(db).filter((n) => n !== 'registroNotifiche');
+/** Le tabelle del file: tutte quelle del database tranne le derivate del dispositivo, registro delle notifiche e coda della sync (MECC §1, §22; T-033). */
+const tabelle = (db: RoutForgeDb): NomeTabella[] =>
+  tableNames(db).filter((n) => n !== 'registroNotifiche' && n !== 'syncCoda');
 /** La chiave Gemini dell'utente (la scrive T-026): mai nel file né nella sync, resta sul dispositivo (D-BACKUP-1). */
 export const CHIAVE_AI = 'chiaveAi';
 const CHIAVE_ULTIMO_BACKUP = 'ultimoBackup';
@@ -31,7 +34,9 @@ export function configureBackupFiles(a: ArchivioFile): void {
 export async function backupText(db: RoutForgeDb, now: number): Promise<{ nome: string; testo: string }> {
   const righe: Record<string, object[]> = {};
   for (const nome of tabelle(db)) righe[nome] = await allRows(db, nome);
-  righe.preferenze = (righe.preferenze as RigaBackup[] | undefined)?.filter((r) => r.id !== CHIAVE_AI) ?? [];
+  righe.preferenze =
+    (righe.preferenze as RigaBackup[] | undefined)?.filter((r) => r.id !== CHIAVE_AI && r.id !== CHIAVE_STATO_SYNC) ??
+    [];
   return { nome: `routforge-${localDayKey(now)}.rfbackup`, testo: JSON.stringify(backupFile(righe, now)) };
 }
 
@@ -80,9 +85,17 @@ export function readBackup(db: RoutForgeDb, testo: string): BackupLetto | { erro
  * dati e promemoria di prima; la prima riconciliazione dopo il ricaricamento arma quelle dei dati nuovi (D-BACKUP-2).
  */
 export async function importBackup(db: RoutForgeDb, letto: BackupLetto): Promise<void> {
+  // Si esce dall'account (T-033): il servizio non rimanda a questo dispositivo le righe che ha scritto, e i dati importati
+  // devono ripartire con la fusione di un nuovo accesso
+  await currentSyncService()?.signOutLocal();
   const chiave = await get(db, 'preferenze', CHIAVE_AI);
   const preferenze = (letto.tabelle.preferenze ?? []).filter(
-    (r) => r.id !== CHIAVE_SESSIONE_ATTIVA && r.id !== CHIAVE_AI && r.id !== CHIAVE_ULTIMO_BACKUP,
+    (r) =>
+      r.id !== CHIAVE_SESSIONE_ATTIVA &&
+      r.id !== CHIAVE_AI &&
+      r.id !== CHIAVE_ULTIMO_BACKUP &&
+      // Lo stato della sync è di questo dispositivo: senza, dopo l'import la sync rifà la fusione (T-033)
+      r.id !== CHIAVE_STATO_SYNC,
   );
   const ultimo = { id: CHIAVE_ULTIMO_BACKUP, valore: letto.creatoIl, createdAt: letto.creatoIl };
   await replaceAll(db, {
@@ -94,6 +107,8 @@ export async function importBackup(db: RoutForgeDb, letto: BackupLetto): Promise
 
 /** «Elimina tutti i dati» (MECC §22): azzeramento completo del dispositivo; i dati dell'account restano. */
 export async function eraseAllData(db: RoutForgeDb): Promise<void> {
+  // Prima si esce dall'account: un dispositivo azzerato ma ancora collegato si riscaricherebbe l'account (T-033)
+  await currentSyncService()?.signOutLocal();
   await replaceAll(db, {});
   await cancelAllNotifications();
 }
