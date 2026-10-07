@@ -24,6 +24,7 @@ import {
   Play,
   SquareCheckBig,
   SquarePlay,
+  Sun,
   Target,
   Trash2,
   Video,
@@ -287,8 +288,11 @@ export function Course() {
   );
 }
 
-/** Indietro: alla pagina precedente dell'app, o a `altrimenti` se la pagina è stata aperta da un collegamento. */
-function Indietro({ altrimenti }: { altrimenti: string }) {
+/**
+ * Indietro: alla pagina precedente dell'app, o a `altrimenti` se la pagina è stata aperta da un collegamento; a destra
+ * «Chiedi all'AI» (S11, S12), che apre la chat con l'ambito del modulo o dell'unità (T-026).
+ */
+function Indietro({ altrimenti, chat }: { altrimenti: string; chat?: string }) {
   const navigate = useNavigate();
   const primaSchermata = useLocation().key === 'default';
   return (
@@ -301,6 +305,12 @@ function Indietro({ altrimenti }: { altrimenti: string }) {
       >
         <ChevronLeft size={18} />
       </button>
+      {chat && (
+        <Link to={chat} className={s.chiediAi}>
+          <Sun size={15} />
+          {t('chiediAllAi')}
+        </Link>
+      )}
     </header>
   );
 }
@@ -411,7 +421,7 @@ export function Module() {
   const trasversali = m.trasversali.split('(')[0]?.trim();
   return (
     <div className={s.pagina}>
-      <Indietro altrimenti={`/corsi/${encodeURIComponent(corso)}`} />
+      <Indietro altrimenti={`/corsi/${encodeURIComponent(corso)}`} chat={`/chat?modulo=${encodeURIComponent(m.id)}`} />
       <SessionBannerSlot />
       <div className={s.corpo}>
         <div className={s.intestazione}>
@@ -687,7 +697,10 @@ export function Unit() {
   );
   return (
     <div className={s.pagina} data-larga>
-      <Indietro altrimenti={`/corsi/${encodeURIComponent(corso)}/moduli/${v.modulo.numero}`} />
+      <Indietro
+        altrimenti={`/corsi/${encodeURIComponent(corso)}/moduli/${v.modulo.numero}`}
+        chat={`/chat?unita=${encodeURIComponent(u.id)}`}
+      />
       <SessionBannerSlot />
       <div className={s.corpo}>
         {/* S12 `wide`: da 1024 il materiale del corso a sinistra e una colonna di 320 con video, «Tuoi» e codice */}

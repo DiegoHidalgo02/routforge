@@ -322,7 +322,7 @@ export async function readUnit(db: RoutForgeDb, unitaId: string): Promise<VistaU
  * corso senza routine (retroattivi); mazzi e carte, quiz e pratiche, materiali con i loro file, file di codice delle
  * unità. Un blocco del corso che appartiene a una routine che resta (senza corso, o che ha cambiato corso) e un blocco
  * che non è di studio si staccano dal corso invece di sparire: eliminarli farebbe ricreare lo slot al ciclo. Le sessioni
- * restano nelle statistiche. Le conversazioni entrano con il loro ambito (T-026).
+ * restano nelle statistiche. Le conversazioni del corso, dei moduli e delle unità spariscono coi loro messaggi (T-026).
  */
 async function courseRecords(db: RoutForgeDb, corsoId: string) {
   const [moduli, unita, sezioni, risorse, ricorrenze, delCorso] = await Promise.all([
@@ -342,18 +342,21 @@ async function courseRecords(db: RoutForgeDb, corsoId: string) {
   const staccare = [...tutti.values()].filter((b) => !blocchi.includes(b));
   const perUnita = <K extends 'mazzi' | 'pratiche'>(nome: K) =>
     Promise.all(unita.map((u) => listBy(db, nome, 'unitaId', u.id))).then((x) => x.flat());
-  const [mazzi, pratiche, materiali, fileCodice] = await Promise.all([
+  const [mazzi, pratiche, materiali, fileCodice, conversazioni] = await Promise.all([
     perUnita('mazzi'),
     perUnita('pratiche'),
     // I materiali per corso: anche quelli rimasti senza unità dopo un reimport (T-024)
     list(db, 'materiali').then((xs) => xs.filter((m) => m.corsoId === corsoId)),
     // Anche i file di codice per corso, come i materiali (T-025)
     list(db, 'fileCodice').then((xs) => xs.filter((f) => f.corsoId === corsoId)),
+    // Le conversazioni del corso, dei suoi moduli e delle sue unità (T-026)
+    list(db, 'conversazioni').then((xs) => xs.filter((c) => c.corsoId === corsoId)),
   ]);
-  const [carte, binari, log] = await Promise.all([
+  const [carte, binari, log, messaggi] = await Promise.all([
     Promise.all(mazzi.map((m) => listBy(db, 'carte', 'mazzoId', m.id))).then((x) => x.flat()),
     Promise.all(materiali.map((m) => listBy(db, 'materialiBinari', 'materialeId', m.id))).then((x) => x.flat()),
     Promise.all(ricorrenze.map((r) => listBy(db, 'logFasi', 'ricorrenzaId', r.id))).then((x) => x.flat()),
+    Promise.all(conversazioni.map((c) => listBy(db, 'messaggi', 'conversazioneId', c.id))).then((x) => x.flat()),
   ]);
   return {
     moduli,
@@ -370,6 +373,8 @@ async function courseRecords(db: RoutForgeDb, corsoId: string) {
     binari,
     fileCodice,
     log,
+    conversazioni,
+    messaggi,
   };
 }
 
@@ -394,7 +399,7 @@ export async function courseCascade(db: RoutForgeDb, corsoId: string): Promise<C
     mazzi: r.mazzi.length,
     carte: r.carte.length,
     pratiche: r.pratiche.length,
-    conversazioni: 0,
+    conversazioni: r.conversazioni.length,
     // Come S12 e S22: i file ammessi, non gli esclusi né la riga di una cartella tecnica
     fileCodice: r.fileCodice.filter((f) => !f.motivo).length,
   };
@@ -417,12 +422,16 @@ export async function deleteCourse(db: RoutForgeDb, corsoId: string, now: number
     'materiali',
     'materialiBinari',
     'fileCodice',
+    'conversazioni',
+    'messaggi',
   ] as const;
   await inTransaction(db, tabelle, async () => {
     const r = await courseRecords(db, corsoId);
     const via = async <K extends (typeof tabelle)[number]>(nome: K, righe: readonly { id: string }[]) => {
       for (const x of righe) await remove(db, nome, x.id, now);
     };
+    await via('messaggi', r.messaggi);
+    await via('conversazioni', r.conversazioni);
     await via('carte', r.carte);
     await via('mazzi', r.mazzi);
     await via('pratiche', r.pratiche);

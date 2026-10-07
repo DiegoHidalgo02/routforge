@@ -6,6 +6,7 @@ import { MotionConfig } from 'motion/react';
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, type Location } from 'react-router';
 import { Alarm } from './Alarm';
+import { ChatScreen, Conversations } from './Chat';
 import { Course, Module, Unit } from './Course';
 import { CorsiColonne } from './Courses';
 import { Create } from './Create';
@@ -15,7 +16,7 @@ import { Notifications } from './Notifications';
 import { t } from './i18n';
 import { useSettings, watchSettings } from './preferenze';
 import { Section } from './Section';
-import { About, Backup, Diagnostics, NotificationSettings, Settings } from './Settings';
+import { About, AiSettings, Backup, Diagnostics, NotificationSettings, Settings } from './Settings';
 import { ActiveSession, SessionSetup } from './Session';
 import { Stats } from './Stats';
 import { Shell } from './Shell';
@@ -42,14 +43,13 @@ function Rotte() {
           <Route path="sessione/setup" element={<SessionSetup />} />
           <Route path="sessione" element={<ActiveSession />} />
           <Route path="notifiche" element={<Notifications />} />
+          <Route path="chat" element={<ChatScreen />} />
+          <Route path="chat/conversazioni" element={<Conversations />} />
           <Route path="materiali/:id" element={<MaterialViewer />} />
           <Route path="impostazioni" element={<Settings />} />
           <Route path="impostazioni/notifiche" element={<NotificationSettings />} />
           <Route path="impostazioni/informazioni" element={<About />} />
-          <Route
-            path="impostazioni/ai"
-            element={<Section titolo="modelloChiaveAi" indietro sottotitolo={t('impostazioni')} />}
-          />
+          <Route path="impostazioni/ai" element={<AiSettings />} />
           <Route path="impostazioni/backup" element={<Backup />} />
           <Route path="impostazioni/materiali" element={<MaterialsSpace />} />
           <Route path="account" element={<Section titolo="account" indietro sottotitolo={t('impostazioni')} />} />

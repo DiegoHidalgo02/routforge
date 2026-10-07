@@ -157,6 +157,19 @@ describe('Eliminazione corso — SCENARI H3, MECCANISMI §16', () => {
       },
       now,
     );
+    // Una conversazione con l'AI sull'unità e il suo messaggio (T-026)
+    const c = await save(
+      db,
+      'conversazioni',
+      { ambito: 'unita', corsoId, moduloId: null, unitaId, titolo: 'Perché?', ultimoMessaggio: now },
+      now,
+    );
+    await save(
+      db,
+      'messaggi',
+      { conversazioneId: c.id, ruolo: 'utente', testo: 'Perché?', istante: now, stato: 'inviato' },
+      now,
+    );
   };
 
   it('sparisce tutto ciò che è del corso, con le tombstone; l’altro corso, i todo, le altre routine e le sessioni restano', async () => {
@@ -203,13 +216,23 @@ describe('Eliminazione corso — SCENARI H3, MECCANISMI §16', () => {
       occorrenze: prima.corso,
       mazzi: 1,
       carte: 1,
+      conversazioni: 1,
     });
 
     const via = now + 2;
     await deleteCourse(db, corso!.id, via);
     expect(await conta()).toEqual({ corso: 0, altro: prima.altro, routine: prima.routine });
-    for (const t of ['mazzi', 'carte', 'pratiche', 'materiali', 'materialiBinari', 'fileCodice'] as const)
-      expect(await list(db, t)).toHaveLength(1);
+    const tabelle = [
+      'mazzi',
+      'carte',
+      'pratiche',
+      'materiali',
+      'materialiBinari',
+      'fileCodice',
+      'conversazioni',
+      'messaggi',
+    ] as const;
+    for (const t of tabelle) expect(await list(db, t)).toHaveLength(1);
     expect((await list(db, 'corsi')).map((c) => c.id)).toEqual([altro!.id]);
     expect((await list(db, 'unita')).every((u) => u.corsoId === altro!.id)).toBe(true);
     expect((await list(db, 'ricorrenze')).some((r) => r.corsoId === corso!.id)).toBe(false);

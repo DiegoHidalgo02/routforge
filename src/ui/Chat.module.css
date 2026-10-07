@@ -1,0 +1,609 @@
+/* S19 Chat AI e Conversazioni (claude-design/S19 AI Panel.dc.html; T-026). */
+/* A schermo pieno (la shell non ha padding né BottomNav qui): la conversazione scorre, il campo resta in basso */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+@media (min-width: 1024px) {
+  /* S19 Desktop: la chat è una card larga al più 840 */
+  .pagina {
+    height: calc(100dvh - 2 * var(--space-6));
+    max-width: 840px;
+    margin: var(--space-6) auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card-lg);
+    overflow: hidden;
+  }
+}
+
+.testa {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) 0 var(--space-2);
+  min-height: 48px;
+}
+
+.icona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.icona:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.titoli {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.titolo {
+  font: 600 var(--text-lg) / 18px var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sottotitolo {
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: var(--size-chip);
+  padding: 0 10px 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: var(--color-surface-3);
+}
+
+.chevron {
+  color: var(--color-text-2);
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.conversazione {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: var(--space-4) 20px;
+  overflow-y: auto;
+}
+
+.conversazione[data-compatta] {
+  padding: var(--space-2) 0;
+}
+
+.cronologia {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  font: 500 var(--text-base) var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.cronologia:hover {
+  color: var(--color-text);
+}
+
+.suggerimento {
+  margin: 0;
+  text-align: center;
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  color: var(--color-text-3);
+}
+
+.domanda {
+  align-self: flex-end;
+  max-width: 85%;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font: 400 var(--text-md) / 20px var(--font-ui);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.risposta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-self: flex-start;
+  max-width: 92%;
+}
+
+.bollaAi {
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 400 var(--text-md) / var(--leading-body) var(--font-ui);
+  overflow-wrap: anywhere;
+}
+
+.bollaAi > :first-child {
+  margin-top: 0;
+}
+
+.bollaAi > :last-child {
+  margin-bottom: 0;
+}
+
+.bollaAi p,
+.bollaAi ul,
+.bollaAi ol {
+  margin: 0 0 var(--space-2);
+}
+
+.bollaAi ul,
+.bollaAi ol {
+  padding-left: 20px;
+}
+
+.bollaAi h3 {
+  margin: 0 0 var(--space-1);
+  font: 600 var(--text-md) / 20px var(--font-ui);
+}
+
+.bollaAi code {
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.bollaAi pre {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-3) 14px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  overflow-x: auto;
+  font: 500 var(--text-sm) / 18px var(--font-num);
+}
+
+.numero {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-chip-cite);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) var(--font-num);
+  vertical-align: middle;
+}
+
+.fonti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0 var(--space-1);
+  list-style: none;
+}
+
+.fonte {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.quadrato {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-chip-cite);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font: 600 var(--text-2xs) / 18px var(--font-num);
+  text-align: center;
+}
+
+.etichettaFonte {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pallini e «Interrompi» sulla stessa riga; col testo in arrivo, «Interrompi» sotto la bolla */
+.inArrivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inArrivo[data-testo] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.scrive {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-3) 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--color-surface-2);
+}
+
+.scrive > span {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-2);
+}
+
+.scrive > span:nth-child(2) {
+  background: var(--color-text-3);
+}
+
+.scrive > span:nth-child(3) {
+  background: var(--color-border-strong);
+}
+
+.interrompi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--size-chip-sm);
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 600 var(--text-xs) var(--font-ui);
+  cursor: pointer;
+}
+
+.interrompi:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.offline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: flex-start;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font: 400 var(--text-base) / 18px var(--font-ui);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.offline > svg {
+  flex: none;
+  color: var(--color-danger-ink);
+}
+
+.compositore {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: var(--space-2) 20px var(--space-4);
+}
+
+.compositore[data-spento] {
+  opacity: 0.5;
+}
+
+.campo {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-control);
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 400 var(--text-md) var(--font-ui);
+}
+
+.campo::placeholder {
+  color: var(--color-text-3);
+}
+
+.invia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--size-control);
+  height: var(--size-control);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary);
+  cursor: pointer;
+}
+
+.invia:hover {
+  background: var(--color-primary-hover);
+}
+
+.invia:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.invia:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+/* Senza chiave ed errori: corpo centrato al posto della conversazione e del campo */
+.stato {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  flex: 1;
+  padding: var(--space-6) 20px 60px;
+  text-align: center;
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.disco {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+.disco[data-tono='pericolo'] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
+}
+
+.testiStato {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 300px;
+}
+
+.titoloStato {
+  font: 600 var(--text-xl) / 24px var(--font-ui);
+}
+
+.testoStato {
+  font: 400 var(--text-md) / 20px var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.azioni {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primario,
+.secondario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  padding: 0 20px;
+  border-radius: var(--radius-control-lg);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.primario {
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.primario:hover {
+  background: var(--color-primary-hover);
+}
+
+.secondario {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.secondario:hover {
+  background: var(--color-surface-3);
+}
+
+.collegamento {
+  font: 500 var(--text-base) var(--font-ui);
+  color: var(--color-text-2);
+}
+
+/* Conversazioni (chat-history) */
+.elenco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: var(--space-4) 20px var(--space-6);
+}
+
+.gruppo {
+  display: flex;
+  flex-direction: column;
+}
+
+.etichettaGruppo {
+  margin: 0;
+  padding: 0 2px var(--space-2);
+  font: 500 var(--text-sm) / 14px var(--font-ui);
+  color: var(--color-text-2);
+}
+
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: 10px var(--space-3);
+  color: var(--color-text);
+  transition: background var(--dur-feedback);
+}
+
+.riga + .riga {
+  border-top: 1px solid var(--color-border);
+}
+
+.riga:hover {
+  background: var(--color-surface-hover);
+}
+
+.discoRiga {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.discoRiga[data-globale] {
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+}
+
+.testiRiga {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.titoloRiga {
+  font: 500 var(--text-md) / 18px var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRiga {
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  color: var(--color-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cifra {
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.data {
+  flex: none;
+  font: 500 var(--text-xs) var(--font-num);
+  color: var(--color-text-3);
+}
+
+.chevronRiga {
+  flex: none;
+  color: var(--color-text-3);
+}
+
+.vuoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.vuoto .disco {
+  color: var(--color-text-3);
+}
+
+.titoloVuoto {
+  font: 600 var(--text-lg) / 20px var(--font-ui);
+}
+
+.testoVuoto {
+  max-width: 260px;
+  font: 400 var(--text-base) / 18px var(--font-ui);
+  color: var(--color-text-2);
+}

@@ -403,6 +403,16 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     «90 min prima». La nota sotto i tasti è una didascalia. «Chiudi» toglie la sveglia dalla tendina senza azione (la riga
     resta nel registro per S21). Vince il mock su DESIGN (contesto in ink e non text-2, anticipo in text-3, icona 18 del
     tasto, tre tasti e non due).
+82. S19 Chat e S22 «Modello e chiave AI» (T-026, D-AI-2): come i mock (confronto del 07/10 su chat con citazioni, senza
+    chiave, S22 senza chiave). Dove il mock tace: l'elenco delle conversazioni si apre da «Conversazioni» nella chat
+    vuota (nessun ingresso nel mock, n. 36); la pill gira l'ambito come il mock (CONTROLLI dice menu); in streaming la
+    bolla cresce con «Interrompi» sotto, dopo l'interruzione resta senza etichetta; markdown minimo senza link; errore
+    generico «Risposta non arrivata» con «Riprova» oltre ai quattro del mock; chat a schermo pieno senza BottomNav come la
+    sessione; «Invia» e «Verifica» sempre attivi come il mock. S22: «41 richieste questo mese» non c'è (nessuna fonte),
+    «Ambito predefinito» è informativo, «Lingua delle risposte» col selettore del sistema (Automatica e le sei lingue),
+    il toggle «Testo dei PDF all'AI» di CONTROLLI non è disegnato e non c'è (i PDF con testo entrano sempre), «Come
+    ottenerla» apre Google AI Studio. La pill «Chiedi all'AI» di S11 e S12 usa `Sun` di Lucide (il mock disegna un'icona
+    simile). S15: la scheda AI è il pannello della chat sull'unità della sessione.
 
 ## 4. Mappa schermata → design → task
 

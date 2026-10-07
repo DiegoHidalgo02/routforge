@@ -7,6 +7,7 @@
 import { Check, ChevronRight, TriangleAlert, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { readMaskedAiKey, readPdfContext, removeAiKey, saveAiKey } from '../app/ai';
 import { eraseAllData, exportBackup, importBackup, lastBackup, readBackup, type BackupLetto } from '../app/backup';
 import { appDb, watch } from '../app/db';
 import { logError, readDiagnostics, type Diagnostica } from '../app/diagnostics';
@@ -21,10 +22,12 @@ import {
 import type { PermessiNotifiche } from '../app/ports/notifications';
 import { doNotDisturbAccess } from '../app/sessionDevice';
 import { saveSettings } from '../app/settings';
+import type { ErroreAi } from '../domain/ai';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
-import type { Impostazioni } from '../domain/settings';
+import type { Impostazioni, LinguaRisposte } from '../domain/settings';
 import type { TipoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
+import { CHIAVI_GEMINI } from './Chat';
 import { maiuscola } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { animazioniRidotte, useSettings } from './preferenze';
@@ -142,6 +145,15 @@ export function Settings() {
     [],
   );
   const attivi = notifiche ? Object.values(notifiche.perTipo).filter((x) => x.attivo).length : 0;
+  const [chiaveAi, setChiaveAi] = useState<boolean>();
+  useEffect(
+    () =>
+      watch(
+        () => readMaskedAiKey(appDb),
+        (k) => setChiaveAi(k !== null),
+      ),
+    [],
+  );
 
   return (
     <div className={s.pagina}>
@@ -207,7 +219,18 @@ export function Settings() {
         </Gruppo>
         <Gruppo titolo={t('gruppoAccount')}>
           <RigaLink etichetta={t('account')} to="/account" />
-          <RigaLink etichetta={t('modelloChiaveAi')} valore={t('nessunaChiave')} tono="avviso" to="/impostazioni/ai" />
+          <RigaLink
+            etichetta={t('modelloChiaveAi')}
+            valore={
+              chiaveAi === undefined
+                ? undefined
+                : chiaveAi
+                  ? t(v.modelloAi === 'pro' ? 'valorePro' : 'valoreFlash')
+                  : t('nessunaChiave')
+            }
+            {...(chiaveAi === false && { tono: 'avviso' as const })}
+            to="/impostazioni/ai"
+          />
         </Gruppo>
         <Gruppo titolo={t('gruppoDati')}>
           <RigaLink
@@ -584,6 +607,147 @@ export function Backup() {
   );
 }
 
+const ERRORE_CHIAVE: Partial<Record<ErroreAi, Chiave>> = { chiave: 'chiaveRifiutata', rete: 'chiaveSenzaRete' };
+const LINGUE: [LinguaRisposte, Chiave][] = [
+  ['auto', 'automatica'],
+  ['it', 'nomeLinguaIt'],
+  ['en', 'nomeLinguaEn'],
+  ['es', 'nomeLinguaEs'],
+  ['pt', 'nomeLinguaPt'],
+  ['fr', 'nomeLinguaFr'],
+  ['de', 'nomeLinguaDe'],
+];
+
+/**
+ * Modello e chiave AI (S22 `ai`, `ai-nokey`; MECC §18; T-026; D-BACKUP-1): la chiave si verifica con una chiamata e si
+ * salva solo su questo dispositivo, «Rimuovi» la toglie e le funzioni AI tornano senza chiave; Flash o Pro; il numero di
+ * PDF con testo che entrano nel contesto; la lingua delle risposte (Automatica = quella dell'ultimo messaggio).
+ */
+export function AiSettings() {
+  const v = useSettings();
+  const [chiave, setChiave] = useState<string | null>();
+  useEffect(() => watch(() => readMaskedAiKey(appDb), setChiave), []);
+  const [pdf, setPdf] = useState<{ conTesto: number; totali: number }>();
+  useEffect(() => watch(() => readPdfContext(appDb), setPdf), []);
+  const [verifica, setVerifica] = useState<'ferma' | 'in_corso' | ErroreAi>('ferma');
+  // Il campo non è controllato: la chiave non resta nello stato di React né nell'attributo `value` (revisione di T-026)
+  const verificaChiave = async (form: HTMLFormElement) => {
+    const campo = new FormData(form).get('chiave');
+    if (typeof campo !== 'string' || !campo.trim()) return;
+    setVerifica('in_corso');
+    const e = await saveAiKey(appDb, campo, Date.now()).catch(() => 'generico' as const);
+    setVerifica(e ?? 'ferma');
+    if (!e) form.reset();
+  };
+  return (
+    <div className={s.pagina}>
+      <Section titolo="modelloChiaveAi" indietro sottotitolo={t('impostazioni')} />
+      <div className={s.viste}>
+        <Gruppo titolo={t('chiaveApiGemini')}>
+          <div className={s.chiaveCard}>
+            {chiave ? (
+              <div className={s.chiaveRiga}>
+                <span className={s.puntoChiave} />
+                <span className={s.chiaveMascherata}>{chiave}</span>
+                <button type="button" className={s.rimuovi} onClick={() => void removeAiKey(appDb, Date.now())}>
+                  {t('rimuovi')}
+                </button>
+              </div>
+            ) : (
+              <>
+                <form
+                  className={s.chiaveCampo}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void verificaChiave(e.currentTarget);
+                  }}
+                >
+                  <input
+                    type="password"
+                    name="chiave"
+                    className={s.campoChiave}
+                    placeholder={t('incollaChiave')}
+                    aria-label={t('chiaveApiGemini')}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <button
+                    type="submit"
+                    className={s.verifica}
+                    disabled={verifica === 'in_corso'}
+                    aria-busy={verifica === 'in_corso'}
+                  >
+                    {t('verifica')}
+                  </button>
+                </form>
+                {verifica !== 'ferma' && verifica !== 'in_corso' ? (
+                  <p className={s.notaChiave} data-errore role="alert">
+                    {t(ERRORE_CHIAVE[verifica] ?? 'chiaveNonVerificata')}
+                  </p>
+                ) : (
+                  <p className={s.notaChiave}>
+                    {t('notaChiave')}{' '}
+                    <a href={CHIAVI_GEMINI} target="_blank" rel="noopener noreferrer">
+                      {t('comeOttenerla')}
+                    </a>
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </Gruppo>
+        <Gruppo titolo={t('modello')}>
+          {(
+            [
+              ['flash', 'geminiFlash', 'flashSotto'],
+              ['pro', 'geminiPro', 'proSotto'],
+            ] as const
+          ).map(([m, nome, sotto]) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={v.modelloAi === m}
+              className={s.riga}
+              data-alta
+              onClick={() => salva({ modelloAi: m })}
+            >
+              <span className={s.radio} data-scelto={v.modelloAi === m || undefined} />
+              <span className={s.testiRiga}>
+                <span className={s.etichettaRiga}>{t(nome)}</span>
+                <span className={s.dettaglioRiga}>{t(sotto)}</span>
+              </span>
+            </button>
+          ))}
+        </Gruppo>
+        <Gruppo titolo={t('contestoELingua')}>
+          <div className={s.riga}>
+            <span className={s.etichettaRiga}>{t('ambitoPredefinito')}</span>
+            <span className={s.valore} data-tono="chiaro">
+              {t('unita')}
+            </span>
+          </div>
+          <div className={s.riga}>
+            <span className={s.testiRiga}>
+              <span className={s.etichettaRiga}>{t('pdfConTesto')}</span>
+              <span className={s.dettaglioRiga}>{t('finoA40Pagine')}</span>
+            </span>
+            <span className={s.valore} data-tono="chiaro">
+              {pdf ? t('nDiM', { n: pdf.conTesto, m: pdf.totali }) : ''}
+            </span>
+          </div>
+          <RigaScelta
+            etichetta={t('linguaRisposte')}
+            valore={v.linguaRisposte}
+            opzioni={LINGUE.map(([l, nome]) => [l, t(nome)] as const)}
+            onScegli={(linguaRisposte) => salva({ linguaRisposte })}
+          />
+        </Gruppo>
+      </div>
+    </div>
+  );
+}
+
 export function About() {
   return (
     <div className={s.pagina}>
@@ -629,6 +793,7 @@ const SORGENTE = {
   dispositivo: 'sorgenteDispositivo',
   materiali: 'sorgenteMateriali',
   backup: 'sorgenteBackup',
+  ai: 'sorgenteAi',
 } as const;
 /** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
 const testoEvento = (e: Diagnostica['eventi'][number]) =>

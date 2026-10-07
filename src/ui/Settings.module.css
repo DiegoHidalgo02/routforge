@@ -633,3 +633,149 @@ label.riga:hover {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
+
+/* Modello e chiave AI (S22 `ai`, `ai-nokey`; T-026): la chiave in una card con padding, radio 18 dei modelli */
+.chiaveCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-card-inner);
+}
+
+.chiaveRiga {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.puntoChiave {
+  flex: none;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+}
+
+.chiaveMascherata {
+  flex: 1;
+  min-width: 0;
+  font: 500 var(--text-md) / 18px var(--font-num);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rimuovi {
+  flex: none;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control-sm);
+  background: transparent;
+  color: var(--color-text-2);
+  font: 600 var(--text-sm) var(--font-ui);
+  cursor: pointer;
+}
+
+.rimuovi:hover {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
+}
+
+.rimuovi:focus-visible {
+  box-shadow: var(--ring-focus-danger);
+}
+
+.chiaveCampo {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.campoChiave {
+  flex: 1;
+  min-width: 0;
+  height: var(--size-control);
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control-lg);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: 400 var(--text-md) var(--font-num);
+  outline: 0;
+}
+
+.campoChiave:focus {
+  border-color: var(--color-primary);
+}
+
+.campoChiave::placeholder {
+  color: var(--color-text-3);
+}
+
+.verifica {
+  flex: none;
+  height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control-lg);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-primary);
+  font: 600 var(--text-md) var(--font-ui);
+  cursor: pointer;
+}
+
+.verifica:hover {
+  background: var(--color-primary-hover);
+}
+
+.verifica:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.verifica:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.notaChiave {
+  margin: 0;
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+  text-wrap: pretty;
+}
+
+.notaChiave a {
+  color: var(--color-text);
+}
+
+.notaChiave[data-errore] {
+  color: var(--color-danger-ink);
+}
+
+.radio {
+  flex: none;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--color-text-3);
+  border-radius: var(--radius-pill);
+}
+
+.radio[data-scelto] {
+  border-color: var(--color-selected);
+  background: radial-gradient(circle, var(--color-selected-ink) 4px, var(--color-selected) 4.5px);
+}
+
+.testiRiga {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dettaglioRiga {
+  color: var(--color-text-2);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}

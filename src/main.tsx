@@ -11,6 +11,7 @@ import '../claude-design/design/tokens.css';
 import './ui/styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { configureAi, followPendingMessages } from './app/ai';
 import { appDb } from './app/db';
 import { configureDiagnostics } from './app/diagnostics';
 import { configureBackupFiles } from './app/backup';
@@ -29,6 +30,8 @@ import { backupFiles } from './platform/files';
 import { webNotifications } from './platform/notifications';
 import { androidNotifications } from './platform/notificationsAndroid';
 import { androidWidget, followLinks } from './platform/widgetAndroid';
+import { geminiClient } from './platform/aiGemini';
+import { webNetwork } from './platform/network';
 import { webPdf } from './platform/pdf';
 import { androidPdfViewer } from './platform/pdfAndroid';
 import { App } from './ui/App';
@@ -50,6 +53,8 @@ configureDiagnostics(webClock);
 configurePdf(webPdf, androidPdfViewer);
 // Il file del backup (MECC §22, T-030): scaricato sul web, nella cartella Documenti su Android
 configureBackupFiles(backupFiles);
+// L'assistente AI (MECC §18, T-026): Gemini con la chiave dell'utente, senza proxy (D-AI-1)
+configureAi(geminiClient);
 
 const radice = document.getElementById('root');
 if (radice)
@@ -93,6 +98,8 @@ void Promise.race([android?.pronte, new Promise((r) => setTimeout(r, 3000))]).th
 // Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; su Android il servizio in
 // primo piano della sessione li tiene vivi anche con l'app chiusa (T-021)
 startHeartbeat(appDb, webClock);
+// I messaggi della chat scritti offline partono al ritorno della rete (MECC §18)
+followPendingMessages(appDb, webNetwork, () => webClock.now());
 if (eAndroid) {
   followSessionInForeground(appDb, androidSession(etichetteNative.sessione));
   // Il widget della schermata Home e i suoi collegamenti diretti (MECC §21; T-023)

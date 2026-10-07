@@ -9,12 +9,26 @@ describe('Impostazioni — FUNZIONALITA §23', () => {
       celebrazioni: 'sobria',
       aptico: true,
       inizioSettimana: 1,
+      modelloAi: 'flash',
+      linguaRisposte: 'auto',
     });
     expect(readableSettings({ animazioni: 'mai', celebrazioni: 'festa', aptico: 'no', inizioSettimana: 0 })).toEqual({
+      ...IMPOSTAZIONI_DEFAULT,
       animazioni: 'mai',
-      celebrazioni: 'sobria',
-      aptico: true,
       inizioSettimana: 0,
+    });
+  });
+});
+
+describe('Modello e lingua delle risposte — MECCANISMI §18, FUNZIONALITA §16', () => {
+  it('Gemini 2.5 Flash e risposte «Automatica» di default (S22); Pro e una delle sei lingue si possono scegliere', () => {
+    expect(readableSettings({ modelloAi: 'pro', linguaRisposte: 'en' })).toMatchObject({
+      modelloAi: 'pro',
+      linguaRisposte: 'en',
+    });
+    expect(readableSettings({ modelloAi: 'ultra', linguaRisposte: 'klingon' })).toMatchObject({
+      modelloAi: 'flash',
+      linguaRisposte: 'auto',
     });
   });
 });

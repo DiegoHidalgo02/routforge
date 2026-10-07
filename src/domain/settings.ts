@@ -20,13 +20,23 @@ export interface Impostazioni {
   celebrazioni: Celebrazioni;
   aptico: boolean;
   inizioSettimana: InizioSettimana;
+  /** Il modello Gemini dell'assistente (MECC §18, S22: Flash consigliato, Pro più accurato; T-026). */
+  modelloAi: ModelloAi;
+  /** «Lingua delle risposte» dell'AI (MECC §18): «Automatica» segue l'ultimo messaggio, altrimenti una delle sei lingue. */
+  linguaRisposte: LinguaRisposte;
 }
+
+export type ModelloAi = 'flash' | 'pro';
+export const LINGUE_RISPOSTE = ['auto', 'it', 'en', 'es', 'pt', 'fr', 'de'] as const;
+export type LinguaRisposte = (typeof LINGUE_RISPOSTE)[number];
 
 export const IMPOSTAZIONI_DEFAULT: Impostazioni = {
   animazioni: 'auto',
   celebrazioni: 'sobria',
   aptico: true,
   inizioSettimana: 1,
+  modelloAi: 'flash',
+  linguaRisposte: 'auto',
 };
 
 const fra = <T>(v: unknown, ammessi: readonly T[], predefinito: T): T =>
@@ -41,5 +51,7 @@ export function readableSettings(v: unknown): Impostazioni {
     celebrazioni: fra(x.celebrazioni, ['sobria', 'piena', 'off'] as const, d.celebrazioni),
     aptico: fra(x.aptico, [true, false], d.aptico),
     inizioSettimana: fra(x.inizioSettimana, [0, 1] as const, d.inizioSettimana),
+    modelloAi: fra(x.modelloAi, ['flash', 'pro'] as const, d.modelloAi),
+    linguaRisposte: fra(x.linguaRisposte, LINGUE_RISPOSTE, d.linguaRisposte),
   };
 }

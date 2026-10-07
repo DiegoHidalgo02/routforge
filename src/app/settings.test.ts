@@ -21,7 +21,7 @@ describe('Impostazioni — FUNZIONALITA §23, MECCANISMI §13.1', () => {
   it('due cambi successivi si sommano; le notifiche partono dai default e si rileggono', async () => {
     await saveSettings(db, { celebrazioni: 'piena' }, ADESSO);
     await saveSettings(db, { inizioSettimana: 0 }, ADESSO);
-    expect(await readSettings(db)).toEqual({
+    expect(await readSettings(db)).toMatchObject({
       animazioni: 'auto',
       celebrazioni: 'piena',
       aptico: true,

@@ -1107,3 +1107,25 @@ a.progetto:hover {
     background: var(--color-surface);
   }
 }
+
+/* «Chiedi all'AI» (S11, S12; T-026): pill 36 trasparente col bordo, icona a raggi in primary */
+.chiediAi {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--size-control-sm);
+  margin-right: var(--space-3);
+  padding: 0 var(--space-3) 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font: 600 var(--text-base) var(--font-ui);
+}
+
+.chiediAi > svg {
+  color: var(--color-primary);
+}
+
+.chiediAi:hover {
+  background: var(--color-surface-2);
+}

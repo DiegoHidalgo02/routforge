@@ -10,6 +10,7 @@
  * successiva, sempre additiva).
  */
 import Dexie, { type Table } from 'dexie';
+import type { Conversazione, MessaggioChat } from '../domain/ai';
 import type {
   CorsoImportato,
   ModuloImportato,
@@ -70,8 +71,10 @@ export interface Tabelle {
   mazzi: Riga<{ unitaId: string }>;
   carte: Riga<StatoCarta & { mazzoId: string }>;
   pratiche: Riga<{ unitaId: string; tipo: string; creataIl: number }>;
-  conversazioni: Riga<{ ambito: string; ultimoMessaggio: number }>;
-  messaggi: Riga<{ conversazioneId: string }>;
+  /** Conversazioni con l'AI (MECC §18, T-026): l'ambito con corso, modulo e unità; il titolo dal primo messaggio. */
+  conversazioni: Riga<Conversazione>;
+  /** Messaggi delle conversazioni (T-026): `in_attesa` = scritto offline, parte al ritorno della rete. */
+  messaggi: Riga<MessaggioChat>;
   /** Materiali dell'utente (MECC §17, T-024): link, nota, metadati del PDF; `unitaId` `null` = del corso (dopo un reimport). */
   materiali: Riga<Materiale>;
   /** Il binario del PDF, id = id del materiale (D-DATA-2): resta sul dispositivo, mai nella sync (S13, T-033). */

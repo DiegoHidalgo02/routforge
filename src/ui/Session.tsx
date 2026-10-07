@@ -15,19 +15,18 @@ import {
   ChevronLeft,
   CircleAlert,
   Clock,
-  Key,
   Lock,
   Pause,
   Play,
   RefreshCcw,
   Repeat,
   SkipForward,
-  SlidersVertical,
   Target,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, NavLink, useNavigate, useSearchParams } from 'react-router';
+import { unitScope } from '../app/ai';
 import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { readStreak } from '../app/outcome';
@@ -74,8 +73,10 @@ import {
   timerState,
   type StatoTimer,
 } from '../domain/timer';
+import { GLOBALE, type AmbitoAperto } from '../domain/ai';
 import type { TipoSezione } from '../domain/course/parser';
 import type { Blocco, Esito } from '../domain/types';
+import { ChatPanel } from './Chat';
 import { useMinuto, useSecondo } from './clock';
 import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
@@ -1157,8 +1158,8 @@ const SEZIONE: Record<TipoSezione, Chiave> = {
 };
 
 /**
- * Le schede sotto il timer (S15 `tab`, FUNZ §11.2): il Materiale dell'unità studiata adesso, l'AI (senza client né chiave
- * ancora: lo stato «Serve la chiave API Gemini» di S19, T-026) e le Note della sessione. Su mobile tre schede; da 1024 px
+ * Le schede sotto il timer (S15 `tab`, FUNZ §11.2): il Materiale dell'unità studiata adesso, la chat AI sull'unità (T-026)
+ * e le Note della sessione. Su mobile tre schede; da 1024 px
  * il Materiale a sinistra e AI · Note a destra (S15 Desktop). Ogni pannello è montato una volta sola: due campi delle
  * note si sovrascriverebbero. Il conteggio «2» della scheda AI del mock non dice che cosa conti: non c'è (handoff n. 65).
  */
@@ -1201,7 +1202,7 @@ function Schede({ unitaId, note }: { unitaId: string | null; note: string }) {
           </div>
           {/* Montati una volta sola: rimontare le note le farebbe ripartire da un valore forse non ancora salvato */}
           <div className={s.contenutoScheda} data-scheda="ai" hidden={lato !== 'ai'}>
-            <SenzaChiave />
+            <ChatSessione unitaId={unitaId} />
           </div>
           <div className={s.contenutoScheda} data-scheda="note" hidden={lato !== 'note'}>
             <Note note={note} />
@@ -1299,21 +1300,17 @@ function Note({ note }: { note: string }) {
   );
 }
 
-/** La scheda AI senza chiave Gemini (S19 `chat-nokey`): la chat arriva con il client di T-026. */
-function SenzaChiave() {
-  return (
-    <div className={s.senzaChiave}>
-      <span className={s.iconaChiave}>
-        <Key size={24} />
-      </span>
-      <span className={s.testiChiave}>
-        <span className={s.titoloChiave}>{t('chiaveGeminiTitolo')}</span>
-        <span className={s.testoChiave}>{t('chiaveGeminiTesto')}</span>
-      </span>
-      <Link to="/impostazioni" className={s.secondario}>
-        <SlidersVertical size={16} />
-        {t('impostazioniModelloAi')}
-      </Link>
-    </div>
-  );
+/**
+ * La scheda AI della sessione (S15 `tab=ai`; CONTROLLI: ambito = unità della sessione, senza unità la chat globale): il
+ * pannello della chat di S19 senza la riga dell'ambito; una conversazione nuova a ogni apertura della sessione (T-026).
+ */
+function ChatSessione({ unitaId }: { unitaId: string | null }) {
+  const [ambito, setAmbito] = useState<AmbitoAperto>();
+  const [conversazione, setConversazione] = useState<string | null>(null);
+  useEffect(() => {
+    void (unitaId ? unitScope(appDb, unitaId) : Promise.resolve(null)).then((a) => setAmbito(a ?? GLOBALE));
+  }, [unitaId]);
+  return ambito ? (
+    <ChatPanel ambito={ambito} conversazioneId={conversazione} onConversazione={setConversazione} compatta />
+  ) : null;
 }
