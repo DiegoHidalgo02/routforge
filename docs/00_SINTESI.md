@@ -85,7 +85,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | # | Dove | Problema | Risoluzione (vedi `01_DECISIONI.md`) |
 |---|---|---|---|
 | 1 | FORMATO §4 vs MECC §11 | Il puntatore §11 non menziona i moduli bloccati | D-PTR-1: il puntatore non entra in un modulo bloccato; senza criteri tutti aperti (coerente con C1) |
-| 2 | FORMATO §2 | Criterio "auto" soddisfatto dal "quiz del modulo", ma i quiz si generano per unità (FUNZ §14) | D-QUIZ-1 (**da confermare**): qualsiasi quiz sulle unità del modulo o ad ambito modulo ≥ soglia |
+| 2 | FORMATO §2 | Criterio "auto" soddisfatto dal "quiz del modulo", ma i quiz si generano per unità (FUNZ §14) | D-QUIZ-1 (applicata col default del CP5, T-027): qualsiasi quiz sulle unità del modulo o ad ambito modulo ≥ soglia |
 | 3 | MECC §19 | "Facile": facilità prima o dopo l'aggiornamento | D-SM2-1: dopo (imposto da I1) |
 | 4 | MECC §19 | "Niente": intervallo successivo non definito | D-SM2-2: azzerato |
 | 5 | MECC §10.3 | "senza durata: 4 cicli" | D-POMO-1: 8 segmenti (studio+pausa ×4) |

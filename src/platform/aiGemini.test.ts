@@ -47,6 +47,25 @@ describe('Lettore SSE di Gemini — MECCANISMI §18 (T-026)', () => {
     expect(chiamata?.[1]?.headers).toMatchObject({ 'x-goog-api-key': 'AIza-prova' });
   });
 
+  it('generazione della pratica (T-027): JSON chiesto al servizio, le parti unite; un blocco è un errore', async () => {
+    const risposta = (corpo: unknown) =>
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve(new Response(JSON.stringify(corpo)))),
+      );
+    risposta({ candidates: [{ content: { parts: [{ text: '[{"fronte":' }, { text: '"a","retro":"b"}]' }] } }] });
+    expect(await geminiClient.generate(richiesta, new AbortController().signal)).toBe('[{"fronte":"a","retro":"b"}]');
+    const corpo = JSON.parse(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)) as {
+      generationConfig?: { responseMimeType?: string };
+    };
+    expect(corpo.generationConfig?.responseMimeType).toBe('application/json');
+    risposta({ candidates: [{ finishReason: 'SAFETY' }] });
+    await expect(geminiClient.generate(richiesta, new AbortController().signal)).rejects.toMatchObject({
+      status: null,
+      message: 'SAFETY SAFETY',
+    });
+  });
+
   it('una risposta HTTP d’errore porta lo status e il messaggio del servizio', async () => {
     vi.stubGlobal(
       'fetch',

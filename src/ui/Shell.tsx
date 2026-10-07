@@ -12,10 +12,10 @@ import s from './Shell.module.css';
 
 export function Shell() {
   // S20 Shell Mobile: niente BottomNav su Notifiche e sulle viste interne di Impostazioni (Account, Diagnostica), che hanno
-  // l'indietro; Impostazioni stessa la tiene. La sessione (S15 Mobile) e la chat AI (S19 Mobile) sono a schermo pieno
+  // l'indietro; Impostazioni stessa la tiene. La sessione (S15 Mobile), la chat AI e la pratica (S19) sono a schermo pieno
   const location = useLocation();
   const sessione = location.pathname.startsWith('/sessione');
-  const piena = sessione || location.pathname.startsWith('/chat');
+  const piena = sessione || /^\/(chat|pratica|mazzo|ripasso)(\/|$)/.test(location.pathname);
   const barra = !['/notifiche', '/account', '/diagnostica'].includes(location.pathname) && !piena;
   // Con una sessione attiva, fuori dalla sessione: banner in testa su mobile e card nella sidebar su desktop (T-017)
   const vista = useSessionView();

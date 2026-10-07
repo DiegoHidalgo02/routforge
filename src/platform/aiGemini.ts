@@ -2,7 +2,7 @@
 // streaming (SSE, `alt=sse`), senza SDK: servono una chiamata e un lettore di righe. La chiave va nell'intestazione
 // `x-goog-api-key`, mai nell'indirizzo (resterebbe nei log). Un blocco di sicurezza (`blockReason`, `finishReason`)
 // diventa un errore col messaggio «SAFETY»; nessuna risposta HTTP (offline, rete) un errore con `status` `null`.
-import type { AiClient, ErroreServizio } from '../app/ports/ai';
+import type { AiClient, ErroreServizio, RichiestaAi } from '../app/ports/ai';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const BLOCCATA = new Set(['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'RECITATION']);
@@ -28,17 +28,35 @@ interface Pezzo {
   error?: { code?: number; message?: string; status?: string };
 }
 
+/** La richiesta a un modello: regole, turni e, per la pratica, la risposta in JSON. */
+const richiesta = ({ chiave, sistema, turni }: RichiestaAi, segnale: AbortSignal, json = false): RequestInit => ({
+  method: 'POST',
+  signal: segnale,
+  headers: { 'content-type': 'application/json', 'x-goog-api-key': chiave },
+  body: JSON.stringify({
+    systemInstruction: { parts: [{ text: sistema }] },
+    contents: turni.map((t) => ({ role: t.ruolo === 'utente' ? 'user' : 'model', parts: [{ text: t.testo }] })),
+    ...(json && { generationConfig: { responseMimeType: 'application/json' } }),
+  }),
+});
+
 export const geminiClient: AiClient = {
-  async *stream({ chiave, modello, sistema, turni }, segnale) {
-    const r = await chiama(`${BASE}/models/${encodeURIComponent(modello)}:streamGenerateContent?alt=sse`, {
-      method: 'POST',
-      signal: segnale,
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': chiave },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: sistema }] },
-        contents: turni.map((t) => ({ role: t.ruolo === 'utente' ? 'user' : 'model', parts: [{ text: t.testo }] })),
-      }),
-    });
+  async generate(r, segnale) {
+    const risposta = await chiama(
+      `${BASE}/models/${encodeURIComponent(r.modello)}:generateContent`,
+      richiesta(r, segnale, true),
+    );
+    const p = (await risposta.json()) as Pezzo;
+    if (p.promptFeedback?.blockReason) throw errore(null, `SAFETY ${p.promptFeedback.blockReason}`);
+    const c = p.candidates?.[0];
+    if (c?.finishReason && BLOCCATA.has(c.finishReason)) throw errore(null, `SAFETY ${c.finishReason}`);
+    return c?.content?.parts?.map((x) => x.text ?? '').join('') ?? '';
+  },
+  async *stream(rq, segnale) {
+    const r = await chiama(
+      `${BASE}/models/${encodeURIComponent(rq.modello)}:streamGenerateContent?alt=sse`,
+      richiesta(rq, segnale),
+    );
     if (!r.body) return;
     const lettore = r.body.pipeThrough(new TextDecoderStream()).getReader();
     let resto = '';

@@ -46,6 +46,7 @@ import {
   type VistaUnita,
 } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { quizCriterion } from '../domain/generation';
 import { local } from '../domain/time';
 import type { Esito, StatoUnita } from '../domain/types';
 import { durata as durataCorso } from './Courses';
@@ -53,6 +54,7 @@ import { durata as durataBreve, fuso, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './Session';
 import { CodiceUnita, TuoiMateriali } from './Materials';
+import { PraticaUnita } from './Practice';
 import s from './Course.module.css';
 
 const fmtGiornoBreve = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
@@ -545,30 +547,36 @@ export function Module() {
               </span>
             </span>
             <div className={s.criteri}>
-              {m.criteri.map((c, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={c.fatto}
-                  aria-disabled={c.auto || undefined}
-                  className={s.criterio}
-                  onClick={() =>
-                    !c.auto && void setCriterion(appDb, m.id, i, !c.fatto, Date.now(), fuso()).catch(() => null)
-                  }
-                >
-                  <span className={s.casella}>{c.fatto && <Check size={13} strokeWidth={2.25} />}</span>
-                  <span className={s.testiCriterio}>
-                    <span className={s.testoCriterio}>{c.testo}</span>
-                    {c.auto && (
-                      <span className={s.metaCriterio}>
-                        <span className={s.badgeAuto}>{t('auto')}</span>
-                        {t(c.fatto ? 'autoFatto' : 'autoQuiz')}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))}
+              {m.criteri.map((c, i) => {
+                const auto = quizCriterion(c);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={c.fatto}
+                    aria-disabled={auto || undefined}
+                    className={s.criterio}
+                    onClick={() =>
+                      !auto && void setCriterion(appDb, m.id, i, !c.fatto, Date.now(), fuso()).catch(() => null)
+                    }
+                  >
+                    <span className={s.casella}>{c.fatto && <Check size={13} strokeWidth={2.25} />}</span>
+                    <span className={s.testiCriterio}>
+                      <span className={s.testoCriterio}>{c.testo}</span>
+                      {auto && (
+                        <span className={s.metaCriterio}>
+                          <span className={s.badgeAuto}>{t('auto')}</span>
+                          {t(c.fatto ? 'autoFatto' : 'autoQuiz')}
+                          {!c.fatto &&
+                            v.ultimoQuiz &&
+                            ` · ${t('ultimoQuiz', { g: v.ultimoQuiz.giuste, t: v.ultimoQuiz.totali })}`}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <span className={s.nota}>
               {t('tuttiBinari')}
@@ -751,6 +759,7 @@ export function Unit() {
             <VideoStudio key={u.id} m={v.materiale} />
             <TuoiMateriali corsoId={corso} unitaId={u.id} />
             <CodiceUnita corsoId={corso} unitaId={u.id} />
+            <PraticaUnita key={u.id} unitaId={u.id} />
           </div>
         </div>
         <div className={s.piede}>

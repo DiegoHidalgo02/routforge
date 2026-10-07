@@ -2,12 +2,14 @@
 // 7g · 30g · 90g · tutto (90 all'apertura, come il mock). I numeri li calcola `app/stats.ts` con le definizioni di
 // `domain/stats.ts` (D-STATS-1); le card sono di sola lettura (CONTROLLI S20). Lo stato vuoto del mock compare finché non
 // c'è nessuna sessione e nessun blocco giudicato; un dato che manca nel periodo si scrive sulla sua riga (TESTI). La
-// Pratica arriva con quiz, giochi e flashcard (T-027, T-028): fino ad allora le sue card non hanno dati.
+// Pratica ha quiz e flashcard (T-027); DevSwipe, Bug Hunter e Trivia arrivano con T-028.
 import { Check, ChartColumn } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { appDb, watch } from '../app/db';
+import { readPracticeStats } from '../app/practice';
 import { readStats, type Panoramica, type Statistiche } from '../app/stats';
-import { GIORNI_MAPPA, SOGLIA_PUNTUALITA, SOGLIA_QUASI_TUTTI, type Periodo } from '../domain/stats';
+import { GIORNI_MAPPA, periodRange, SOGLIA_PUNTUALITA, SOGLIA_QUASI_TUTTI, type Periodo } from '../domain/stats';
 import type { TipoBlocco } from '../domain/types';
 import { durata, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
@@ -505,22 +507,44 @@ function Study({ st, p }: { st: Statistiche['studio']; p: Panoramica }) {
   );
 }
 
-/** Pratica (§20): quiz, DevSwipe, Bug Hunter, Trivia e flashcard arrivano con T-027 e T-028; per ora nessun dato. */
-function Practice() {
-  const kpi: [Chiave, boolean][] = [
-    ['praticaQuiz', false],
-    ['praticaDevSwipe', false],
-    ['praticaBugHunter', false],
-    ['praticaTrivia', false],
-    ['carteDovuteOggi', true],
-  ];
+/**
+ * Pratica (§20): quiz = media delle percentuali dei quiz finiti nel periodo; flashcard = valutazioni date nel periodo e
+ * carte scadute adesso, con l'ingresso al ripasso trasversale (T-027); DevSwipe, Bug Hunter e Trivia arrivano con T-028.
+ */
+function Practice({ periodo }: { periodo: Periodo }) {
+  const [p, setP] = useState<Awaited<ReturnType<typeof readPracticeStats>>>();
+  useEffect(() => {
+    const { da, a } = periodRange(periodo, Date.now());
+    // Le carte scadute adesso: l'istante di ogni lettura, non quello dell'apertura
+    return watch(() => readPracticeStats(appDb, da, a, Date.now()), setP);
+  }, [periodo]);
+  const altre: Chiave[] = ['praticaDevSwipe', 'praticaBugHunter', 'praticaTrivia'];
   return (
     <div className={s.griglia}>
-      {kpi.map(([k, larga]) => (
-        <KpiCard key={k} etichetta={t(k)} larga={larga} valore={<Valore testo="—" />} meta={<SenzaDati />} />
+      <KpiCard
+        etichetta={t('praticaQuiz')}
+        valore={<Valore testo={p?.quiz == null ? '—' : String(p.quiz)} {...(p?.quiz != null && { unita: '%' })} />}
+        meta={p?.quizFatti ? t('quizFatti', { n: p.quizFatti }) : <SenzaDati />}
+      />
+      {altre.map((k) => (
+        <KpiCard key={k} etichetta={t(k)} valore={<Valore testo="—" />} meta={<SenzaDati />} />
       ))}
+      <KpiCard
+        etichetta={t('carteDovuteOggi')}
+        larga
+        valore={<Valore testo={p ? String(p.scaduteOggi) : '—'} />}
+        meta={
+          p?.scaduteOggi ? (
+            <Link to="/ripasso" className={s.collegamentoRipasso}>
+              {t('ripassoTrasversale')}
+            </Link>
+          ) : (
+            <SenzaDati />
+          )
+        }
+      />
       <Card etichetta={t('valutazioniFlashcard')} className={s.larga}>
-        <SenzaDati />
+        {p?.valutazioni ? <Valore testo={String(p.valutazioni)} /> : <SenzaDati />}
       </Card>
     </div>
   );
@@ -581,7 +605,7 @@ export function Stats() {
               {scheda === 'panoramica' && <Overview p={v.panoramica} />}
               {scheda === 'comportamenti' && <Behaviour c={v.comportamenti} trigger={v.trigger} />}
               {scheda === 'studio' && <Study st={v.studio} p={v.panoramica} />}
-              {scheda === 'pratica' && <Practice />}
+              {scheda === 'pratica' && <Practice periodo={periodo} />}
             </div>
           )
         )}

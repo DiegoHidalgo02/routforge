@@ -413,6 +413,16 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     il toggle «Testo dei PDF all'AI» di CONTROLLI non è disegnato e non c'è (i PDF con testo entrano sempre), «Come
     ottenerla» apre Google AI Studio. La pill «Chiedi all'AI» di S11 e S12 usa `Sun` di Lucide (il mock disegna un'icona
     simile). S15: la scheda AI è il pannello della chat sull'unità della sessione.
+83. S19 quiz e flashcard, S12 «Pratica» (T-027, D-QUIZ-2): come i mock (confronto del 07/10 su S12, quiz con la
+    risposta, punteggio, retro della carta). Vince il mock su CONTROLLI: «Conferma» → «Prossima domanda» (all'ultima
+    «Vedi il punteggio», che il mock non disegna), righe delle opzioni alte 52, gradi alti 48 tutti uguali, «Mostra
+    risposta» e «Torna all'unità» primari; la spiegazione dopo la risposta si genera (non è nella tabella di §18). Dove il
+    mock tace: in S12 solo Quiz e Flashcard finché T-028 non porta gli altri tre; la difficoltà solo per il quiz; i Recenti
+    riaprono il quiz finito sul suo punteggio (CONTROLLI di S12, D-QUIZ-4) e del mazzo le carte scadute (§19); «Rivedi le
+    sbagliate» rifà le sole sbagliate senza cambiare il punteggio salvato; un criterio automatico senza soglia si spunta a
+    mano (D-QUIZ-3); l'ingresso al ripasso trasversale è il collegamento sotto «Carte dovute oggi» in S20 Pratica (il mock lo
+    documenta solo come collegamento del widget); la nota sulla lingua non nomina la lingua (l'app non la conosce); S11
+    mostra «ultimo 6/10» accanto al criterio automatico; quiz e flashcard a schermo pieno senza BottomNav come la chat.
 
 ## 4. Mappa schermata → design → task
 

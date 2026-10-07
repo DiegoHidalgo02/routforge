@@ -630,3 +630,9 @@
     grid-column: auto;
   }
 }
+
+/* «Ripasso trasversale» sotto «Carte dovute oggi» (T-027): l'unico ingresso nell'app al ripasso, non disegnato nel mock */
+.collegamentoRipasso {
+  color: var(--color-primary);
+  font: 500 var(--text-sm) var(--font-ui);
+}

@@ -26,6 +26,8 @@ export interface ErroreServizio {
 export interface AiClient {
   /** I pezzi della risposta man mano che arrivano (streaming, §18); il segnale la interrompe. */
   stream(richiesta: RichiestaAi, segnale: AbortSignal): AsyncIterable<string>;
+  /** La risposta intera in JSON: la pratica generata (§18 «Generazione», T-027); il segnale la interrompe. */
+  generate(richiesta: RichiestaAi, segnale: AbortSignal): Promise<string>;
   /** Una chiamata leggera che rifiuta una chiave non valida («Verifica» di S22). */
   verify(chiave: string): Promise<void>;
 }

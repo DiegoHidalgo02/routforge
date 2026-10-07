@@ -12,6 +12,7 @@ import {
   aiError,
   chatContext,
   chatTurns,
+  generationInstruction,
   systemInstruction,
   type AmbitoAperto,
   type ContestoChat,
@@ -372,4 +373,32 @@ export function takeBackLastMessage(db: RoutForgeDb, conversazioneId: string, no
 export async function readPdfContext(db: RoutForgeDb): Promise<{ conTesto: number; totali: number }> {
   const pdf = (await list(db, 'materiali')).filter((m) => m.tipo === 'pdf');
   return { conTesto: pdf.filter(isGroundable).length, totali: pdf.length };
+}
+
+/**
+ * Una generazione dal materiale dell'ambito (§18 «Generazione»; T-027): le regole della generazione e la richiesta, la
+ * risposta intera in JSON. Restituisce il testo del modello o l'errore di §18; la chiave resta qui (INV-17).
+ */
+export async function generateFromScope(
+  db: RoutForgeDb,
+  ambito: AmbitoAperto,
+  richiesta: string,
+  segnale: AbortSignal,
+): Promise<{ testo: string } | { errore: ErroreAi }> {
+  try {
+    const chiave = await readAiKey(db);
+    if (!chiave) return { errore: 'chiave' };
+    if (!client) return { errore: 'generico' };
+    const { modelloAi } = await readSettings(db);
+    const sistema = generationInstruction(chatContext(await contextOf(db, ambito)));
+    const testo = await client.generate(
+      { chiave, modello: MODELLI[modelloAi], sistema, turni: [{ ruolo: 'utente', testo: richiesta }] },
+      segnale,
+    );
+    return { testo };
+  } catch (e) {
+    const errore = erroreDi(e);
+    if (errore === 'generico') logError('ai', e);
+    return { errore };
+  }
 }

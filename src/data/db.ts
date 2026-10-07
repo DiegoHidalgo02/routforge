@@ -11,6 +11,7 @@
  */
 import Dexie, { type Table } from 'dexie';
 import type { Conversazione, MessaggioChat } from '../domain/ai';
+import type { CartaGenerata, DatiPratica } from '../domain/generation';
 import type {
   CorsoImportato,
   ModuloImportato,
@@ -68,9 +69,12 @@ export interface Tabelle {
   // Tabelle dei passi successivi: per ora solo i campi indicizzati; il task che le usa aggiunge il resto.
   /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2); `fasi` è la fotografia al Conferma (T-009). */
   logFasi: Riga<{ ricorrenzaId: string | null; fasi: FaseLog[] }>;
-  mazzi: Riga<{ unitaId: string }>;
-  carte: Riga<StatoCarta & { mazzoId: string }>;
-  pratiche: Riga<{ unitaId: string; tipo: string; creataIl: number }>;
+  /** Mazzi di flashcard generati (MECC §18, T-027): uno per generazione, sull'unità. */
+  mazzi: Riga<{ unitaId: string; creatoIl?: number }>;
+  /** Le carte con lo stato SM-2 (§19) e le valutazioni date (S20 Pratica); i testi mancano solo nelle righe di prova. */
+  carte: Riga<StatoCarta & { mazzoId: string } & Partial<CartaGenerata>>;
+  /** Quiz e pratiche generate (§18, T-027, T-028): parametri, elementi validati e risultato. */
+  pratiche: Riga<{ unitaId: string; tipo: string; creataIl: number } & Partial<DatiPratica>>;
   /** Conversazioni con l'AI (MECC §18, T-026): l'ambito con corso, modulo e unità; il titolo dal primo messaggio. */
   conversazioni: Riga<Conversazione>;
   /** Messaggi delle conversazioni (T-026): `in_attesa` = scritto offline, parte al ritorno della rete. */

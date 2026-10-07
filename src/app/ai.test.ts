@@ -41,6 +41,7 @@ const finto: AiClient = {
       yield await Promise.resolve(p);
     }
   },
+  generate: () => Promise.resolve('[]'),
   verify: (chiave) =>
     chiave === 'AIza-buona'
       ? Promise.resolve()

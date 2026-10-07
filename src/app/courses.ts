@@ -15,6 +15,7 @@ import {
   type RisorsaImportata,
   type SezioneImportata,
 } from '../domain/course/parser';
+import { quizCriterion } from '../domain/generation';
 import { criteriaMet, currentUnit, modulePath, sortedUnits, statiModuli } from '../domain/pointer';
 import { STATI_UNITA_PENDENTI } from '../domain/types';
 import { sessionMinutes } from '../domain/outcome';
@@ -216,6 +217,8 @@ export interface VistaModulo {
    * del modulo; «Riprendi» se una del modulo è fatta o se quella è parziale (come S12). `null` a modulo finito.
    */
   cta: { id: string; numero: string; riprendi: boolean } | null;
+  /** L'ultimo quiz fatto sulle unità del modulo, per il criterio automatico (S11 «ultimo 6/10»; D-QUIZ-1, T-027). */
+  ultimoQuiz: { giuste: number; totali: number } | null;
 }
 
 export async function readModule(db: RoutForgeDb, corsoId: string, numero: number): Promise<VistaModulo | null> {
@@ -229,6 +232,10 @@ export async function readModule(db: RoutForgeDb, corsoId: string, numero: numbe
     listBy(db, 'risorse', 'corsoId', corsoId),
   ]);
   const fatte = m.unita.filter((u) => u.stato === 'completata').length;
+  const delModulo = new Set(m.unita.map((u) => u.id));
+  const ultimo = (await list(db, 'pratiche'))
+    .flatMap((p) => (p.tipo === 'quiz' && p.risultato && delModulo.has(p.unitaId) ? [p.risultato] : []))
+    .sort((a, b) => b.istante - a.istante)[0];
   const prossima =
     m.unita.find((u) => u.id === v.puntatore?.id) ?? m.unita.find((u) => STATI_UNITA_PENDENTI.has(u.stato));
   return {
@@ -245,11 +252,13 @@ export async function readModule(db: RoutForgeDb, corsoId: string, numero: numbe
       return { ...u, sezioni: sue.size, link: risorse.filter((r) => sue.has(r.sezioneId)).length };
     }),
     puntatore: v.puntatore,
+    ultimoQuiz: ultimo ? { giuste: ultimo.giuste, totali: ultimo.totali } : null,
   };
 }
 
 /**
- * Spunta a mano un criterio Go/No-Go (S11; MECC §11, §16): solo quelli non automatici, che spunta il quiz (D-QUIZ-1).
+ * Spunta a mano un criterio Go/No-Go (S11; MECC §11, §16): non quelli che spunta il quiz (D-QUIZ-1); un automatico
+ * senza soglia si spunta a mano (D-QUIZ-3).
  * Gli stati dei moduli cambiano, quindi si ricalcola il puntatore del corso.
  */
 export async function setCriterion(
@@ -263,7 +272,7 @@ export async function setCriterion(
   await inTransaction(db, ['moduli', 'unita', 'blocchi'], async () => {
     const m = await get(db, 'moduli', moduloId);
     const c = m?.criteri[indice];
-    if (!m || !c || c.auto || c.fatto === fatto) return;
+    if (!m || !c || quizCriterion(c) || c.fatto === fatto) return;
     await save(db, 'moduli', { ...m, criteri: m.criteri.map((x, i) => (i === indice ? { ...x, fatto } : x)) }, now);
     await recomputePointer(db, m.corsoId, now, fuso);
   });
