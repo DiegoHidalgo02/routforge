@@ -13,6 +13,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { appDb } from './app/db';
 import { configureDiagnostics } from './app/diagnostics';
+import { configureBackupFiles } from './app/backup';
 import { configurePdf } from './app/materials';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
@@ -20,6 +21,7 @@ import { startHeartbeat } from './app/session';
 import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
+import { backupFiles } from './platform/files';
 import { webNotifications } from './platform/notifications';
 import { webPdf } from './platform/pdf';
 import { androidPdfViewer } from './platform/pdfAndroid';
@@ -35,6 +37,8 @@ configureDiagnostics(webClock);
 // Lettore dei PDF dei materiali (MECC §17, D-MAT-1): pdf.js, caricato solo al primo PDF; su Android il PDF si guarda
 // col visore del sistema (D-MAT-2)
 configurePdf(webPdf, androidPdfViewer);
+// Il file del backup (MECC §22, T-030): scaricato sul web, nella cartella Documenti su Android
+configureBackupFiles(backupFiles);
 
 const radice = document.getElementById('root');
 if (radice)

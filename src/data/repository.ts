@@ -125,6 +125,34 @@ export async function purge(db: RoutForgeDb, nome: 'registroNotifiche', ids: rea
   await tabella(db, nome).bulkDelete([...ids]);
 }
 
+/** I nomi delle tabelle del database aperto: il backup le porta tutte, anche quelle di una versione futura (T-030). */
+export const tableNames = (db: RoutForgeDb): NomeTabella[] => db.tables.map((t) => t.name as NomeTabella);
+
+/** Tutte le righe di una tabella, tombstone comprese: il backup le porta tutte (MECC §22, T-030). */
+export const allRows = <K extends NomeTabella>(db: RoutForgeDb, nome: K): Promise<(Tabelle[K] | Tombstone)[]> =>
+  tabella(db, nome).toArray();
+
+/**
+ * Azzeramento (MECC §22, T-030): l'import di un backup e «Elimina tutti i dati» svuotano ogni tabella e scrivono le
+ * righe date, in una sola transazione (se fallisce, resta tutto com'era). L'altra cancellazione fisica oltre a `purge`:
+ * l'azzeramento è totale per spec e i dati remoti restano finché l'utente non li cancella dall'account (INV-14). Il
+ * registro delle notifiche resta: lo svuota dopo il servizio delle notifiche, che toglie anche quelle armate, così un
+ * azzeramento fallito non le perde (D-BACKUP-2).
+ */
+export async function replaceAll(
+  db: RoutForgeDb,
+  righe: Partial<Record<NomeTabella, readonly object[]>>,
+): Promise<void> {
+  await db.transaction('rw', db.tables, async () => {
+    for (const t of db.tables) {
+      if (t.name === 'registroNotifiche') continue;
+      await t.clear();
+      const nuove = righe[t.name as NomeTabella];
+      if (nuove?.length) await t.bulkPut([...nuove]);
+    }
+  });
+}
+
 /** Crea o aggiorna un blocco; `fuso` è il fuso corrente del dispositivo (D-TIME-2). */
 export async function saveBlock(db: RoutForgeDb, dati: DatiBlocco, now: number, fuso: string): Promise<RigaBlocco> {
   return db.transaction('rw', db.blocchi, async () => {

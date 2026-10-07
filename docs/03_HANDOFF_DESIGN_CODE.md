@@ -385,6 +385,16 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     CONTROLLI dice «max 500 file», S12 «max 500 KB per file»: vale S12 (§17). I caricamenti si eliminano da Impostazioni
     → Spazio dei materiali. La riga «Carica il codice prodotto» della chiusura di S15 carica nei «Tuoi» dell'unità e
     poi dice «N file · M esclusi» in text-2; senza unità non compare (D-CODE-1 punto 11).
+79. Backup e dati S22 (T-030, D-BACKUP-2): gruppo «Backup» con «Esporta backup» (sottotitolo con la stima «~ N MB»,
+    i PDF contati un terzo in più per il base64) e «Importa backup», «Ultimo backup · ven 11 set · 22:10», esito in linea
+    in success-soft, conferme in linea in surface-2 come il mock, «Zona pericolosa» con «Elimina tutti i dati». Sul web
+    l'esito dice «Backup scaricato» (il mock disegna solo Documenti); lo spazio dei materiali resta la sua vista dalla
+    radice, che il mock disegna anche dentro «Backup e dati»; la riga «Elimina tutti i dati» della radice apre questa vista.
+80. Scelte del council del 07/10/2026 (delegate dall'utente; `.claude/council-cache/council-1791340507.md`): la conferma
+    «Elimina corso» resta il `<dialog>` modale nativo sulla finestra, eccezione di accessibilità a S11 che la ancora al
+    pannello (fuoco intrappolato, Esc, sfondo inerte); la CTA del pannello desktop di modulo e unità sta in un piede
+    sticky come il mock (n. 71); `rf-land` non c'è (layout animation fragile fra due liste, n. 59): al suo posto il
+    contatore «Completate» pulsa come `rf-bump`.
 
 ## 4. Mappa schermata → design → task
 

@@ -516,3 +516,120 @@ label.riga:hover {
     max-width: 640px;
   }
 }
+
+/* Backup e dati (S22 `backup`): «Ultimo backup» in text-3 con la data chiara; l'esito dell'export in una striscia
+   success-soft alta 44; le conferme in linea in surface-2 (padding 14, gap 12) con l'avviso danger-ink, i tasti alti 36 a
+   destra, «Annulla» ghost e l'azione danger */
+.num {
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.numChiaro {
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-num);
+}
+
+.ultimoBackup {
+  padding: 0 2px;
+  margin-top: calc(-1 * var(--space-4));
+  color: var(--color-text-3);
+  font: 400 var(--text-sm) / 16px var(--font-ui);
+}
+
+.esitoBackup {
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font: 600 var(--text-base) var(--font-ui);
+}
+
+.avvisoBackup {
+  color: var(--color-danger-ink);
+  font: 500 var(--text-base) / 18px var(--font-ui);
+}
+
+.conferma {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-2);
+  animation: global(rf-in) var(--dur-reveal) var(--ease-out);
+}
+
+.testaConferma {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.iconaPericolo {
+  flex: none;
+  color: var(--color-danger-ink);
+}
+
+.titoloConferma {
+  font: 600 var(--text-md) / 18px var(--font-ui);
+}
+
+.corpoConferma {
+  color: var(--color-text-2);
+  font: 400 var(--text-base) / 18px var(--font-ui);
+}
+
+.azioniConferma {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.annullaConferma,
+.pericoloConferma {
+  position: relative;
+  height: var(--size-control-sm);
+  border: 0;
+  border-radius: var(--radius-control);
+  font: 600 var(--text-base) var(--font-ui);
+  cursor: pointer;
+}
+
+.annullaConferma::after,
+.pericoloConferma::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--size-touch)) / 2) 0;
+}
+
+.annullaConferma {
+  padding: 0 var(--space-3);
+  background: transparent;
+  color: var(--color-text-2);
+}
+
+.annullaConferma:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
+.pericoloConferma {
+  padding: 0 var(--space-card-inner);
+  background: var(--color-danger);
+  color: var(--color-text);
+}
+
+.pericoloConferma:focus-visible {
+  box-shadow: var(--ring-focus-danger);
+}
+
+.pericoloConferma:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}

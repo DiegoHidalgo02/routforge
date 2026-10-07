@@ -4,11 +4,12 @@
 // (avvisi, anticipo, silenzioso; un tipo aperto per volta), digest del mattino, permesso e notifica di prova, che chiede
 // il permesso col gesto (D-NOTIF-2 n. 6). Informazioni con la versione della build. Account, AI, backup, materiali ed
 // eliminazione dei dati arrivano coi loro task (T-033, T-026, T-030, T-024).
-import { ChevronRight, VolumeX } from 'lucide-react';
+import { Check, ChevronRight, TriangleAlert, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { eraseAllData, exportBackup, importBackup, lastBackup, readBackup, type BackupLetto } from '../app/backup';
 import { appDb, watch } from '../app/db';
-import { readDiagnostics, type Diagnostica } from '../app/diagnostics';
+import { logError, readDiagnostics, type Diagnostica } from '../app/diagnostics';
 import { readInbox } from '../app/inbox';
 import { materialsSpace } from '../app/materials';
 import { editNotificationSettings, readNotificationSettings, sendTestNotification } from '../app/notifications';
@@ -23,6 +24,9 @@ import { animazioniRidotte, useSettings } from './preferenze';
 import { dimensione } from './Materials';
 import { Section } from './Section';
 import s from './Settings.module.css';
+
+/** «Backup · 11 set» della radice (S22). */
+const fmtGiornoBackup = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 
 const giornoSettimana = (g: 0 | 1) =>
   maiuscola(new Intl.DateTimeFormat(lingua, { weekday: 'long' }).format(new Date(2026, 8, 20 + g)));
@@ -119,6 +123,8 @@ export function Settings() {
       ),
     [],
   );
+  const [ultimoBackup, setUltimoBackup] = useState<number | null>(null);
+  useEffect(() => watch(() => lastBackup(appDb), setUltimoBackup), []);
   const [spazio, setSpazio] = useState<number>();
   useEffect(
     () =>
@@ -197,13 +203,17 @@ export function Settings() {
           <RigaLink etichetta={t('modelloChiaveAi')} valore={t('nessunaChiave')} tono="avviso" to="/impostazioni/ai" />
         </Gruppo>
         <Gruppo titolo={t('gruppoDati')}>
-          <RigaLink etichetta={t('backupRiga')} to="/impostazioni/backup" />
+          <RigaLink
+            etichetta={t('backupRiga')}
+            valore={ultimoBackup === null ? undefined : fmtGiornoBackup.format(ultimoBackup)}
+            to="/impostazioni/backup"
+          />
           <RigaLink
             etichetta={t('spazioMateriali')}
             valore={spazio ? dimensione(spazio) : undefined}
             to="/impostazioni/materiali"
           />
-          <RigaLink etichetta={t('eliminaTuttiIDati')} pericolo />
+          <RigaLink etichetta={t('eliminaTuttiIDati')} pericolo to="/impostazioni/backup" />
         </Gruppo>
         <Gruppo titolo={t('avanzate')}>
           <RigaLink etichetta={t('diagnostica')} to="/diagnostica" />
@@ -368,6 +378,204 @@ export function NotificationSettings() {
   );
 }
 
+/** Conferma in linea di S22 (import, «Elimina tutti i dati»): avviso, titolo, corpo, «Annulla» e l'azione distruttiva. */
+function Conferma(p: {
+  titolo: string;
+  corpo: ReactNode;
+  azione: string;
+  lavoro: boolean;
+  onAnnulla: () => void;
+  onConferma: () => void;
+}) {
+  return (
+    <div className={s.conferma} role="alertdialog" aria-label={p.titolo}>
+      <span className={s.testaConferma}>
+        <TriangleAlert size={18} className={s.iconaPericolo} />
+        <span className={s.testi}>
+          <span className={s.titoloConferma}>{p.titolo}</span>
+          <span className={s.corpoConferma}>{p.corpo}</span>
+        </span>
+      </span>
+      <span className={s.azioniConferma}>
+        <button type="button" className={s.annullaConferma} onClick={p.onAnnulla}>
+          {t('annulla')}
+        </button>
+        <button type="button" className={s.pericoloConferma} disabled={p.lavoro} onClick={p.onConferma}>
+          {p.azione}
+        </button>
+      </span>
+    </div>
+  );
+}
+
+/** «ven 11 set · 22:10» (S22). */
+const fmtBackup = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
+
+/**
+ * Backup e dati (S22 `backup`, CONTROLLI; MECC §22; T-030): «Esporta backup» salva il file (Documenti su Android, download
+ * sul web) e lo dice in linea con l'ora; «Importa backup» sceglie il file, lo valida e chiede in linea «Sostituire tutti
+ * i dati locali?» coi suoi numeri, poi sostituisce e ricarica; «Elimina tutti i dati» chiede in linea e azzera.
+ */
+export function Backup() {
+  const [ultimo, setUltimo] = useState<number | null>(null);
+  const [stima, setStima] = useState(0);
+  const [esito, setEsito] = useState<{ dove: 'documenti' | 'download'; ora: number } | null>(null);
+  const [scelto, setScelto] = useState<{ nome: string; letto: BackupLetto } | null>(null);
+  const [avviso, setAvviso] = useState<Chiave | null>(null);
+  const [elimina, setElimina] = useState(false);
+  const [lavoro, setLavoro] = useState(false);
+  const file = useRef<HTMLInputElement>(null);
+  useEffect(() => watch(() => lastBackup(appDb), setUltimo), []);
+  // «~ 14 MB»: i PDF pesano un terzo in più nel file (base64), il resto dei dati è poca cosa
+  useEffect(
+    () =>
+      watch(
+        () => materialsSpace(appDb),
+        (x) => setStima((x.pdf * 4) / 3 + x.altri + x.codice),
+      ),
+    [],
+  );
+
+  const esporta = async () => {
+    setLavoro(true);
+    setAvviso(null);
+    const ora = Date.now();
+    const dove = await exportBackup(appDb, ora);
+    setEsito(dove && { dove, ora });
+    if (!dove) setAvviso('backupNonSalvato');
+    setLavoro(false);
+  };
+  const leggi = async (f: File | undefined) => {
+    if (!f) return;
+    setEsito(null);
+    let testo: string;
+    try {
+      testo = await f.text();
+    } catch {
+      // Un file che il dispositivo non riesce a leggere (per esempio su un servizio cloud non scaricato)
+      return setAvviso('backupIlleggibile');
+    }
+    const letto = readBackup(appDb, testo);
+    if ('errore' in letto) {
+      setScelto(null);
+      setAvviso(letto.errore === 'versione' ? 'backupVersione' : 'backupIlleggibile');
+    } else {
+      setAvviso(null);
+      setScelto({ nome: f.name, letto });
+    }
+  };
+  // Dopo la sostituzione o l'azzeramento l'app riparte da capo coi dati nuovi (MECC §22: «ricarica»)
+  const esegui = async (azione: () => Promise<void>, errore: Chiave) => {
+    setLavoro(true);
+    try {
+      await azione();
+      location.reload();
+    } catch (e) {
+      logError('backup', e);
+      setAvviso(errore);
+      setLavoro(false);
+    }
+  };
+
+  return (
+    <div className={s.pagina}>
+      <Section titolo="backupDati" indietro sottotitolo={t('impostazioni')} />
+      <div className={s.viste}>
+        <Gruppo titolo={t('backupRiga')}>
+          <button type="button" className={s.riga} data-alta disabled={lavoro} onClick={() => void esporta()}>
+            <span className={s.testi}>
+              <span className={s.etichettaRiga}>{t('esportaBackup')}</span>
+              <span className={s.sottotitolo}>
+                {t('unSoloFilePdf')}
+                {stima > 0 && (
+                  <>
+                    {' · '}
+                    <span className={s.num}>~ {dimensione(stima)}</span>
+                  </>
+                )}
+              </span>
+            </span>
+          </button>
+          <button type="button" className={s.riga} data-alta disabled={lavoro} onClick={() => file.current?.click()}>
+            <span className={s.testi}>
+              <span className={s.etichettaRiga}>{t('importaBackup')}</span>
+              <span className={s.sottotitolo}>{t('sostituisceDatiLocali')}</span>
+            </span>
+            <ChevronRight size={16} className={s.chevron} />
+          </button>
+        </Gruppo>
+        {ultimo !== null && (
+          <span className={s.ultimoBackup}>
+            {t('ultimoBackup')} ·{' '}
+            <span className={s.numChiaro}>
+              {fmtBackup.format(ultimo)} · {ora(ultimo)}
+            </span>
+          </span>
+        )}
+        {esito && (
+          <span className={s.esitoBackup} role="status">
+            <Check size={16} strokeWidth={2} />
+            {t(esito.dove === 'documenti' ? 'backupSalvatoDocumenti' : 'backupScaricato')}
+            <span className={s.num}>{ora(esito.ora)}</span>
+          </span>
+        )}
+        {avviso && (
+          <span className={s.avvisoBackup} role="alert">
+            {t(avviso)}
+          </span>
+        )}
+        {scelto && (
+          <Conferma
+            titolo={t('sostituireTitolo')}
+            corpo={
+              <>
+                <span className={s.numChiaro}>{scelto.nome}</span> ·{' '}
+                {t('sostituireCorpo', {
+                  corsi: scelto.letto.corsi === 1 ? t('unCorso') : t('nCorsi', { n: scelto.letto.corsi }),
+                  attivita:
+                    scelto.letto.attivita === 1 ? t('unaAttivita') : t('nAttivita', { n: scelto.letto.attivita }),
+                  pdf: scelto.letto.pdf === 1 ? t('unPdf') : t('nPdf', { n: scelto.letto.pdf }),
+                })}
+              </>
+            }
+            azione={t('sostituisciRicarica')}
+            lavoro={lavoro}
+            onAnnulla={() => setScelto(null)}
+            onConferma={() => void esegui(() => importBackup(appDb, scelto.letto), 'backupNonImportato')}
+          />
+        )}
+        <Gruppo titolo={t('zonaPericolosa')}>
+          <button type="button" className={s.riga} disabled={lavoro} onClick={() => setElimina(true)}>
+            <span className={s.etichettaRiga} data-pericolo>
+              {t('eliminaTuttiIDati')}
+            </span>
+          </button>
+        </Gruppo>
+        {elimina && (
+          <Conferma
+            titolo={t('eliminareTuttiTitolo')}
+            corpo={t('eliminareTuttiCorpo')}
+            azione={t('eliminaTuttiIDati')}
+            lavoro={lavoro}
+            onAnnulla={() => setElimina(false)}
+            onConferma={() => void esegui(() => eraseAllData(appDb), 'eliminaTuttiNonRiuscito')}
+          />
+        )}
+        <input
+          ref={file}
+          type="file"
+          // Nessun filtro: il selettore di Android scarta le estensioni che non conosce (.rfbackup); valida parseBackup
+          hidden
+          onChange={(e) => {
+            void leggi(e.currentTarget.files?.[0]);
+            e.currentTarget.value = '';
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function About() {
   return (
     <div className={s.pagina}>
@@ -412,6 +620,7 @@ const SORGENTE = {
   notifiche: 'sorgenteNotifiche',
   dispositivo: 'sorgenteDispositivo',
   materiali: 'sorgenteMateriali',
+  backup: 'sorgenteBackup',
 } as const;
 /** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
 const testoEvento = (e: Diagnostica['eventi'][number]) =>

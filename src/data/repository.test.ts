@@ -6,6 +6,7 @@ import type { Blocco } from '../domain/types';
 import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
 import {
+  allRows,
   blocksBetween,
   get,
   inTransaction,
@@ -15,6 +16,7 @@ import {
   newId,
   purge,
   remove,
+  replaceAll,
   save,
   saveBlock,
   saveCourse,
@@ -350,5 +352,27 @@ describe('newId fuori dal contesto sicuro (http su IP di rete, D-DATA-1)', () =>
     const ids = Array.from({ length: 50 }, newId);
     for (const id of ids) expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     expect(new Set(ids).size).toBe(50);
+  });
+});
+
+describe('Azzeramento del backup — MECCANISMI §22, INV-14 (T-030)', () => {
+  it('allRows porta anche le tombstone; replaceAll svuota ogni tabella tranne il registro delle notifiche e scrive solo le righe date', async () => {
+    await save(db, 'pratiche', PRATICA, T0);
+    const via = await save(db, 'pratiche', PRATICA, T0);
+    await remove(db, 'pratiche', via.id, T1);
+    await save(db, 'registroNotifiche', { id: 'k', chiave: 'k', idNativo: 1, quando: T1 } as never, T0);
+    const righe = await allRows(db, 'pratiche');
+    expect(righe.map((r) => r.deletedAt)).toEqual(expect.arrayContaining([null, T1]));
+    await replaceAll(db, { pratiche: [righe[0]!] });
+    expect(await allRows(db, 'pratiche')).toEqual([righe[0]]);
+    // Il registro lo svuota il servizio delle notifiche dopo l'azzeramento, togliendo anche le notifiche armate (D-BACKUP-2)
+    expect(await allRows(db, 'registroNotifiche')).toHaveLength(1);
+  });
+
+  it('una scrittura che fallisce lascia tutto com’era (una sola transazione)', async () => {
+    const p = await save(db, 'pratiche', PRATICA, T0);
+    // Una riga senza chiave primaria fa fallire bulkPut dopo gli svuotamenti
+    await expect(replaceAll(db, { blocchi: [{ titolo: 'senza id' }] })).rejects.toThrow();
+    expect(await list(db, 'pratiche')).toEqual([p]);
   });
 });

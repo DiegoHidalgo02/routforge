@@ -14,7 +14,7 @@ import { Notifications } from './Notifications';
 import { t } from './i18n';
 import { useSettings, watchSettings } from './preferenze';
 import { Section } from './Section';
-import { About, Diagnostics, NotificationSettings, Settings } from './Settings';
+import { About, Backup, Diagnostics, NotificationSettings, Settings } from './Settings';
 import { ActiveSession, SessionSetup } from './Session';
 import { Stats } from './Stats';
 import { Shell } from './Shell';
@@ -49,10 +49,7 @@ function Rotte() {
             path="impostazioni/ai"
             element={<Section titolo="modelloChiaveAi" indietro sottotitolo={t('impostazioni')} />}
           />
-          <Route
-            path="impostazioni/backup"
-            element={<Section titolo="backupDati" indietro sottotitolo={t('impostazioni')} />}
-          />
+          <Route path="impostazioni/backup" element={<Backup />} />
           <Route path="impostazioni/materiali" element={<MaterialsSpace />} />
           <Route path="account" element={<Section titolo="account" indietro sottotitolo={t('impostazioni')} />} />
           <Route path="diagnostica" element={<Diagnostics />} />

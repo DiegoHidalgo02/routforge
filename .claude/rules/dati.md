@@ -10,8 +10,8 @@ paths:
   fasi = blocco, preferenze e registro notifiche = chiave, dato dal chiamante; nessun indice univoco), `createdAt`,
   `updatedAt` (epoch ms), `deletedAt | null`; si scrive e si elimina solo con `src/data/repository.ts` (`save`,
   `saveBlock`, `saveCourse`, `remove`): l'eliminazione è una tombstone minima, mai una cancellazione fisica, salvo `registroNotifiche`
-  (derivato, mai in backup né sync: T-019) (D-DATA-1, D-DATA-2, INV-14; nel gate: `src/data/db.test.ts`; Dexie diretto
-  solo nei test).
+  (derivato, mai in backup né sync: T-019) e l'azzeramento di MECC §22 (`replaceAll`: import del backup ed «Elimina
+  tutti i dati», T-030) (D-DATA-1, D-DATA-2, INV-14; nel gate: `src/data/db.test.ts`; Dexie diretto solo nei test).
 - Nomi di tabelle e campi in italiano come nel dominio (`facilita`, `scadenza`, `giornoLocale`); elenco in
   `docs/02_ARCHITETTURA.md` §3, schema in `src/data/db.ts`.
 - Le migrazioni sono versionate (`db.version(n)`) e additive; la versione 1 non si modifica. Una migrazione che perde

@@ -122,6 +122,8 @@ export interface NotificationService {
   start(): () => void;
   /** La notifica di prova (§13.6): chiede il permesso (qui c'è il gesto dell'utente, D-NOTIF-1 n. 9) e la arma a +6 s. */
   test(now: number): Promise<void>;
+  /** Toglie tutte le notifiche armate e svuota il registro: prima dell'azzeramento di MECC §22 (import, «Elimina tutti i dati»). */
+  cancelAll(): Promise<void>;
 }
 
 let registrato: NotificationService | null = null;
@@ -130,6 +132,7 @@ export const registerNotificationService = (s: NotificationService): void => {
   registrato = s;
 };
 export const sendTestNotification = (now: number): Promise<void> => registrato?.test(now) ?? Promise.resolve();
+export const cancelAllNotifications = (): Promise<void> => registrato?.cancelAll() ?? Promise.resolve();
 
 export function createNotifications(db: RoutForgeDb, porta: Notifications, clock: Clock): NotificationService {
   // Dopo un ricaricamento il web non ha più timer e su Android un permesso revocato cancella le notifiche esatte: la
@@ -188,5 +191,18 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
         logError('notifiche', e);
       }
     },
+    // In coda come le riconciliazioni, così nessuna arma una voce mentre il registro si svuota
+    cancelAll: () =>
+      (coda = coda
+        .then(async () => {
+          const voci = await list(db, 'registroNotifiche');
+          if (voci.length > 0) await porta.cancel(voci.map((v) => v.idNativo));
+          await purge(
+            db,
+            'registroNotifiche',
+            voci.map((v) => v.id),
+          );
+        })
+        .catch((e: unknown) => logError('notifiche', e))),
   };
 }
