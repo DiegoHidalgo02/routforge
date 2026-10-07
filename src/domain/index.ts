@@ -34,3 +34,4 @@ export * from './backup';
 export * from './widget';
 export * from './ai';
 export * from './generation';
+export * from './sync';

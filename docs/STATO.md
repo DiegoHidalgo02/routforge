@@ -9,7 +9,7 @@
 - **05/10/2026**: T-052 primo incremento; import e verifica del nuovo design (D-DESIGN-3, D-DESIGN-4: `claude-design/`, `docs/spec/` = `spec/` del pacchetto, 60 scenari; `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`). **04/10**: pulizia (D-DESIGN-2, vecchio export in `3c60512`). **Fino al 02/10**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
 
 ## In corso
-- Nessun task in corso.
+- **T-033** sync, a passi (piano in `docs/piani/T-033.md` §7): 1 dominio (`domain/sync.ts`) fatto; poi 2 coda e schema v2, 3 servizio e backend in memoria, 4 Supabase, 5 Account, 6 documenti.
 
 ## Problemi aperti
 **Da decidere con l'utente, non bloccanti**
