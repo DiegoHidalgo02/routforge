@@ -346,3 +346,8 @@
     font-size: var(--text-sm);
   }
 }
+
+/* Il numero che pulsa (rf-bump): la scala vuole un elemento in linea a blocco */
+.pulsa {
+  display: inline-block;
+}

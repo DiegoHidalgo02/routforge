@@ -5,6 +5,8 @@
 // il tipo che pesa di più. Le barre del Focus aspettano la risposta sulla loro scala (handoff §3 n. 11): la card ha solo
 // i numeri. Decisione: D-PROG-1.
 import { ChevronRight, CircleCheck } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState } from 'react';
 import type { IngressiProgresso } from '../app/progress';
 import type { BloccoCalendario } from '../app/calendar';
 import { shiftPeriod } from '../domain/calendar';
@@ -12,6 +14,7 @@ import { dayProgress, focusDelta, heaviestType, isDone } from '../domain/progres
 import { localInstant, MINUTE } from '../domain/time';
 import { maiuscola, TIPO, titolo } from './format';
 import { lingua, t } from './i18n';
+import { animazioniRidotte, useSettings } from './preferenze';
 import s from './Progress.module.css';
 
 const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) =>
@@ -31,6 +34,35 @@ function Andamento({ valori, larga }: { valori: number[]; larga: number }) {
       <path className={s.area} d={`${linea} L${larga} ${alta} L0 ${alta} Z`} />
       <path className={s.linea} d={linea} />
     </svg>
+  );
+}
+
+/**
+ * Il numero delle completate pulsa quando cresce (S1 `rf-bump`: 1,18 e success al 35 %, 450 ms), non all'apertura;
+ * con Celebrazioni off o animazioni ridotte cambia e basta (council del 07/10, handoff n. 80: al posto di `rf-land`).
+ */
+function Pulsa({ n }: { n: number }) {
+  const { celebrazioni } = useSettings();
+  const [prima, setPrima] = useState(n);
+  const [colpi, setColpi] = useState(0);
+  if (n !== prima) {
+    setPrima(n);
+    if (n > prima && celebrazioni !== 'off' && !animazioniRidotte()) setColpi((c) => c + 1);
+  }
+  return (
+    <motion.span
+      key={colpi}
+      className={s.pulsa}
+      initial={colpi ? { scale: 1 } : false}
+      animate={
+        colpi
+          ? { scale: [1, 1.18, 1], color: ['var(--color-text)', 'var(--color-success)', 'var(--color-text)'] }
+          : undefined
+      }
+      transition={{ duration: 0.45, times: [0, 0.35, 1], ease: 'easeOut' }}
+    >
+      {n}
+    </motion.span>
   );
 }
 
@@ -59,7 +91,7 @@ export function ProgressoOggi({ ingressi, oggi }: { ingressi: IngressiProgresso;
             </span>
           </span>
           <span className={s.valore}>
-            {p.fatte}
+            <Pulsa n={p.fatte} />
             <span className={s.unita}> / {p.totale}</span>
           </span>
           <span className={s.sub}>

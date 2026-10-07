@@ -597,10 +597,12 @@ export function Module() {
         )}
 
         {cta && (
-          <Link to={`/sessione/setup?unita=${encodeURIComponent(cta.id)}`} className={s.cta}>
-            <Play size={14} fill="currentColor" />
-            {t(cta.riprendi ? 'riprendiDa' : 'iniziaDa')} <span className={s.num}>{cta.numero}</span>
-          </Link>
+          <div className={s.piede}>
+            <Link to={`/sessione/setup?unita=${encodeURIComponent(cta.id)}`} className={s.cta}>
+              <Play size={14} fill="currentColor" />
+              {t(cta.riprendi ? 'riprendiDa' : 'iniziaDa')} <span className={s.num}>{cta.numero}</span>
+            </Link>
+          </div>
         )}
       </div>
     </div>
@@ -738,12 +740,18 @@ export function Unit() {
             <CodiceUnita corsoId={corso} unitaId={u.id} />
           </div>
         </div>
-        <Link to={`/sessione/setup?unita=${encodeURIComponent(u.id)}`} className={s.cta}>
-          <Play size={14} fill="currentColor" />
-          {t(
-            u.stato === 'completata' ? 'ripassoLibera' : u.stato === 'parziale' ? 'riprendiSessione' : 'iniziaSessione',
-          )}
-        </Link>
+        <div className={s.piede}>
+          <Link to={`/sessione/setup?unita=${encodeURIComponent(u.id)}`} className={s.cta}>
+            <Play size={14} fill="currentColor" />
+            {t(
+              u.stato === 'completata'
+                ? 'ripassoLibera'
+                : u.stato === 'parziale'
+                  ? 'riprendiSessione'
+                  : 'iniziaSessione',
+            )}
+          </Link>
+        </div>
       </div>
     </div>
   );
