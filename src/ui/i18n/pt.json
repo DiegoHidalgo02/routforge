@@ -993,5 +993,8 @@
   "cancellareDatiAccountTesto": "Atividades, rotinas, resultados e configurações somem do serviço de sincronização. Neste dispositivo ficam todos.",
   "cancellaDallAccount": "Apagar da conta",
   "ciaoNome": "Olá, {nome}",
-  "servizioFinto": "serviço de teste"
+  "servizioFinto": "serviço de teste",
+  "recuperoTitolo": "Não é possível mostrar este ecrã",
+  "recuperoTesto": "Há um dado neste dispositivo que não se consegue ler. Tenta de novo; se voltar a acontecer, podes apagar os dados deste dispositivo: os da conta ficam.",
+  "sorgenteInterfaccia": "Interface"
 }

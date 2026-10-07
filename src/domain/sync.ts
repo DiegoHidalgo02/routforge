@@ -83,9 +83,73 @@ export function toEnvelope(tabella: TabellaSincronizzata, riga: RigaSync, voce: 
   };
 }
 
+type Campi = Record<string, unknown>;
+const oggetto = (v: unknown): v is Campi => typeof v === 'object' && v !== null && !Array.isArray(v);
+const testo = (v: unknown) => v === undefined || typeof v === 'string';
+const testoONull = (v: unknown) => v === null || testo(v);
+const istante = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+/** Un elenco facoltativo di oggetti che rispettano `voce`. */
+const elenco = (v: unknown, voce: (x: Campi) => boolean) =>
+  v === undefined || (Array.isArray(v) && v.every((x) => oggetto(x) && voce(x)));
+const promemoria = (v: unknown) =>
+  v === undefined || (oggetto(v) && (v.modo !== 'personalizzato' || Array.isArray(v.anticipi)));
+const conEtichetta = (f: Campi) => typeof f.etichetta === 'string';
+const TIPI: ReadonlySet<unknown> = new Set(['todo', 'evento', 'routine', 'studio']);
+const STATI: ReadonlySet<unknown> = new Set([
+  'programmato',
+  'in_corso',
+  'completato',
+  'parziale',
+  'indietro',
+  'saltato',
+  'perso',
+]);
+
+/**
+ * La forma dei campi che le schermate mostrano o scorrono, per tabella (T-059, security review del 07/10): una riga viva
+ * ricevuta che non la rispetta si scarta, invece di far cadere il disegno di Oggi o del Dettaglio.
+ */
+const FORMA: Record<TabellaSincronizzata, (d: Campi) => boolean> = {
+  blocchi: (d) =>
+    TIPI.has(d.tipo) &&
+    STATI.has(d.stato) &&
+    istante(d.inizio) &&
+    (d.fine === null || istante(d.fine)) &&
+    typeof d.conOrario === 'boolean' &&
+    typeof d.giornoLocale === 'string' &&
+    typeof d.orarioInizio === 'string' &&
+    testoONull(d.orarioFine) &&
+    testo(d.titolo) &&
+    testo(d.note) &&
+    testo(d.luogo) &&
+    testoONull(d.notaEsito) &&
+    elenco(d.checklist, (v) => typeof v.testo === 'string' && typeof v.fatta === 'boolean') &&
+    elenco(d.fasi, conEtichetta) &&
+    promemoria(d.promemoria),
+  ricorrenze: (d) =>
+    (d.tipo === 'routine' || d.tipo === 'studio') &&
+    typeof d.titolo === 'string' &&
+    testo(d.note) &&
+    Array.isArray(d.giorni) &&
+    d.giorni.every(istante) &&
+    typeof d.dataInizio === 'string' &&
+    testoONull(d.dataFine) &&
+    Array.isArray(d.dateSaltate) &&
+    d.dateSaltate.every((g) => typeof g === 'string') &&
+    typeof d.orarioInizio === 'string' &&
+    testoONull(d.orarioFine) &&
+    testoONull(d.corsoId) &&
+    testoONull(d.impronta) &&
+    elenco(d.fasi, conEtichetta) &&
+    promemoria(d.promemoria),
+  logFasi: (d) => Array.isArray(d.fasi) && elenco(d.fasi, conEtichetta),
+  preferenze: (d) => oggetto(d.valore),
+};
+
 /**
  * Una busta ricevuta si applica solo se è dell'ambito della sync, se i dati sono la riga del suo id (con la stessa
- * eliminazione) e se ha un istante: un servizio compromesso non scrive altrove, né la chiave AI né la coda (T-033).
+ * eliminazione), se ha un istante e, viva, se i campi mostrati hanno la loro forma: un servizio compromesso non scrive
+ * altrove, né la chiave AI né la coda (T-033), e non lascia l'app a schermo vuoto (T-059).
  */
 export function validEnvelope(b: {
   tabella: string;
@@ -94,13 +158,14 @@ export function validEnvelope(b: {
   deletedAt: number | null;
   updatedAt: number;
 }): boolean {
-  const dati = typeof b.dati === 'object' && b.dati !== null ? (b.dati as { id?: unknown; deletedAt?: unknown }) : null;
+  const dati = oggetto(b.dati) ? b.dati : null;
   return (
     isSynced(b.tabella, b.id) &&
     dati !== null &&
     dati.id === b.id &&
     (dati.deletedAt ?? null) === b.deletedAt &&
-    Number.isFinite(b.updatedAt)
+    Number.isFinite(b.updatedAt) &&
+    (b.deletedAt !== null || FORMA[b.tabella as TabellaSincronizzata](dati))
   );
 }
 

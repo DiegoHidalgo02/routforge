@@ -1,0 +1,11 @@
+/* La pagina di recupero (T-059): fuori dalla shell, coi margini della pagina della shell (safe area compresa) e la
+   larghezza di Impostazioni su desktop (640, letterale come in Settings.module.css). Nessun mock: il resto viene dai
+   pezzi di Impostazioni → Backup. */
+.cornice {
+  box-sizing: border-box;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + var(--space-5)) max(var(--space-page), env(safe-area-inset-right))
+    var(--space-8) max(var(--space-page), env(safe-area-inset-left));
+  color: var(--color-text);
+}

@@ -449,6 +449,10 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
     `account-conflict` non c'è (D-SYNC-2 risolve da sé, nessun evento lo produce). Diagnostica: la casella Account con
     la fase e l'email, o «servizio finto». Menu: testa con nome, email e stato; pallino sull'avatar in pari. Oggi: «Ciao,
     <nome>».
+86. Pagina di recupero (T-059, security review del 07/10): il design non ha uno stato per un errore di disegno
+    (una riga malformata arrivata con la sync o con un backup). Scelta minima, da confermare col design: fuori dalla
+    shell, coi margini della pagina, i pezzi di Impostazioni → Backup (gruppo col titolo «Questa schermata non si riesce
+    a mostrare», righe «Riprova» ed «Elimina tutti i dati» in rosso, nota sotto, conferma in linea di S22).
 
 ## 4. Mappa schermata → design → task
 

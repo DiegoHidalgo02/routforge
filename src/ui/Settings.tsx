@@ -43,7 +43,7 @@ const fmtGiornoBackup = new Intl.DateTimeFormat(lingua, { day: 'numeric', month:
 const giornoSettimana = (g: 0 | 1) =>
   maiuscola(new Intl.DateTimeFormat(lingua, { weekday: 'long' }).format(new Date(2026, 8, 20 + g)));
 
-function Gruppo({ titolo, children, spento }: { titolo?: string; children: ReactNode; spento?: boolean }) {
+export function Gruppo({ titolo, children, spento }: { titolo?: string; children: ReactNode; spento?: boolean }) {
   return (
     <section className={s.gruppo} data-spento={spento || undefined}>
       {titolo && <h2 className={s.etichettaGruppo}>{titolo}</h2>}
@@ -411,8 +411,11 @@ export function NotificationSettings() {
   );
 }
 
-/** Conferma in linea di S22 (import, «Elimina tutti i dati»): avviso, titolo, corpo, «Annulla» e l'azione distruttiva. */
-function Conferma(p: {
+/**
+ * Conferma in linea di S22 (import, «Elimina tutti i dati»; anche la pagina di recupero, T-059): avviso, titolo, corpo,
+ * «Annulla» e l'azione distruttiva.
+ */
+export function Conferma(p: {
   titolo: string;
   corpo: ReactNode;
   azione: string;
@@ -797,6 +800,7 @@ const SORGENTE = {
   backup: 'sorgenteBackup',
   ai: 'sorgenteAi',
   sync: 'sorgenteSync',
+  interfaccia: 'sorgenteInterfaccia',
 } as const;
 /** Il testo di un evento: quelli noti hanno un codice e si scrivono nella lingua dell'app. */
 const testoEvento = (e: Diagnostica['eventi'][number]) =>

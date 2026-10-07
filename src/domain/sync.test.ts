@@ -124,13 +124,70 @@ describe('Che cosa viaggia — MECCANISMI §25 (D-SYNC-3)', () => {
       deletedAt,
       updatedAt: 1,
     });
-    expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: null }))).toBe(true);
+    expect(validEnvelope(busta('blocchi', 'b1', { ...BLOCCO, id: 'b1' }))).toBe(true);
+    expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: 5 }, 5))).toBe(true);
     expect(validEnvelope(busta('syncCoda', 'preferenze:chiaveAi', { id: 'preferenze:chiaveAi' }))).toBe(false);
     expect(validEnvelope(busta('preferenze', 'impostazioni', { id: 'chiaveAi', valore: 'AIza-altrui' }))).toBe(false);
     expect(validEnvelope(busta('materiali', 'm1', { id: 'm1' }))).toBe(false);
-    expect(validEnvelope(busta('blocchi', 'b1', { id: 'b1', deletedAt: null }, 5))).toBe(false);
+    expect(validEnvelope(busta('blocchi', 'b1', { ...BLOCCO, id: 'b1' }, 5))).toBe(false);
+  });
+
+  it('una riga viva con un campo mostrato della forma sbagliata si scarta: non arriva a far cadere il disegno (T-059)', () => {
+    const viva = (tabella: string, dati: Record<string, unknown>) =>
+      validEnvelope({ tabella, id: 'x', dati: { ...dati, id: 'x' }, deletedAt: null, updatedAt: 1 });
+    expect(viva('blocchi', BLOCCO)).toBe(true);
+    for (const rotto of [
+      { titolo: { malformato: true } },
+      { tipo: 'altro' },
+      { stato: 'sconosciuto' },
+      { inizio: '18:00' },
+      { checklist: 'compra il latte' },
+      { checklist: [{ testo: 1, fatta: false }] },
+      { fasi: [{ etichetta: null }] },
+      { promemoria: { modo: 'personalizzato', anticipi: 5 } },
+    ])
+      expect(viva('blocchi', { ...BLOCCO, ...rotto })).toBe(false);
+    expect(viva('ricorrenze', RICORRENZA)).toBe(true);
+    for (const rotto of [{ giorni: '1,3,5' }, { dateSaltate: [1] }, { impronta: { a: 1 } }, { titolo: undefined }])
+      expect(viva('ricorrenze', { ...RICORRENZA, ...rotto })).toBe(false);
+    expect(viva('logFasi', { ricorrenzaId: null, fasi: [{ id: 'f', etichetta: 'Stretching', stato: 'fatta' }] })).toBe(
+      true,
+    );
+    expect(viva('logFasi', { ricorrenzaId: null, fasi: 'tutte' })).toBe(false);
   });
 });
+
+/** Righe vive come le scrive l'app (T-059). */
+const BLOCCO = {
+  tipo: 'todo',
+  stato: 'programmato',
+  inizio: 1,
+  fine: 2,
+  conOrario: true,
+  giornoLocale: '2026-09-22',
+  orarioInizio: '18:00',
+  orarioFine: '18:30',
+  titolo: 'Chiama Marco',
+  checklist: [{ testo: 'Numero', fatta: false }],
+  promemoria: { modo: 'auto' },
+  deletedAt: null,
+};
+const RICORRENZA = {
+  tipo: 'routine',
+  titolo: 'Corsa',
+  note: '',
+  giorni: [1, 3, 5],
+  dataInizio: '2026-09-22',
+  dataFine: null,
+  dateSaltate: [],
+  orarioInizio: '07:00',
+  orarioFine: '08:00',
+  fuso: 'Europe/Rome',
+  corsoId: null,
+  fasi: [],
+  promemoria: { modo: 'auto' },
+  deletedAt: null,
+};
 
 describe('Corsi e routine di studio — MECCANISMI §25 (impronta del corso, D-SYNC-5)', () => {
   const moduli = [

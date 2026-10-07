@@ -993,5 +993,8 @@
   "cancellareDatiAccountTesto": "Aktivitäten, Routinen, Ergebnisse und Einstellungen verschwinden aus dem Sync-Dienst. Auf diesem Gerät bleibt alles.",
   "cancellaDallAccount": "Aus dem Konto löschen",
   "ciaoNome": "Hallo, {nome}",
-  "servizioFinto": "Testdienst"
+  "servizioFinto": "Testdienst",
+  "recuperoTitolo": "Dieser Bildschirm lässt sich nicht anzeigen",
+  "recuperoTesto": "Ein Eintrag auf diesem Gerät ist nicht lesbar. Versuche es erneut; passiert es wieder, kannst du die Daten auf diesem Gerät löschen – die Kontodaten bleiben.",
+  "sorgenteInterfaccia": "Oberfläche"
 }

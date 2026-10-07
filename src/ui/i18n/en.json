@@ -993,5 +993,8 @@
   "cancellareDatiAccountTesto": "Activities, routines, outcomes and settings disappear from the sync service. On this device they all stay.",
   "cancellaDallAccount": "Delete from the account",
   "ciaoNome": "Hi, {nome}",
-  "servizioFinto": "test service"
+  "servizioFinto": "test service",
+  "recuperoTitolo": "This screen can't be shown",
+  "recuperoTesto": "Some data on this device can't be read. Try again; if it keeps happening, you can delete the data on this device: your account's data stays.",
+  "sorgenteInterfaccia": "Interface"
 }

@@ -993,5 +993,8 @@
   "cancellareDatiAccountTesto": "Actividades, rutinas, resultados y ajustes desaparecen del servicio de sincronización. En este dispositivo se quedan todos.",
   "cancellaDallAccount": "Borrar de la cuenta",
   "ciaoNome": "Hola, {nome}",
-  "servizioFinto": "servicio de prueba"
+  "servizioFinto": "servicio de prueba",
+  "recuperoTitolo": "No se puede mostrar esta pantalla",
+  "recuperoTesto": "Hay un dato en este dispositivo que no se puede leer. Reinténtalo; si vuelve a pasar, puedes borrar los datos de este dispositivo: los de la cuenta se quedan.",
+  "sorgenteInterfaccia": "Interfaz"
 }

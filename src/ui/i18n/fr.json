@@ -993,5 +993,8 @@
   "cancellareDatiAccountTesto": "Activités, routines, résultats et réglages disparaissent du service de synchronisation. Sur cet appareil, tout reste.",
   "cancellaDallAccount": "Effacer du compte",
   "ciaoNome": "Salut, {nome}",
-  "servizioFinto": "service de test"
+  "servizioFinto": "service de test",
+  "recuperoTitolo": "Impossible d'afficher cet écran",
+  "recuperoTesto": "Une donnée de cet appareil est illisible. Réessaie ; si ça se reproduit, tu peux effacer les données de cet appareil : celles du compte restent.",
+  "sorgenteInterfaccia": "Interface"
 }

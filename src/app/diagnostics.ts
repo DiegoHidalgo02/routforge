@@ -8,7 +8,7 @@ import type { RoutForgeDb } from '../data/db';
 import { list } from '../data/repository';
 import type { Clock } from './ports/clock';
 
-export type Sorgente = 'ciclo' | 'notifiche' | 'dispositivo' | 'materiali' | 'backup' | 'ai' | 'sync';
+export type Sorgente = 'ciclo' | 'notifiche' | 'dispositivo' | 'materiali' | 'backup' | 'ai' | 'sync' | 'interfaccia';
 export interface EventoDiagnostica {
   istante: number;
   sorgente: Sorgente;

@@ -20,6 +20,7 @@ import { About, Account, AiSettings, Backup, Diagnostics, NotificationSettings, 
 import { ActiveSession, SessionSetup } from './Session';
 import { Stats } from './Stats';
 import { Shell } from './Shell';
+import { Recupero } from './Recupero';
 import { Today } from './Today';
 
 function Rotte() {
@@ -85,7 +86,10 @@ export function App() {
     <MotionConfig reducedMotion={RIDUZIONE[animazioni]}>
       <LucideProvider strokeWidth={1.75}>
         <BrowserRouter>
-          <Rotte />
+          {/* Un errore di disegno mostra la pagina di recupero, non il vuoto (T-059) */}
+          <Recupero>
+            <Rotte />
+          </Recupero>
         </BrowserRouter>
       </LucideProvider>
     </MotionConfig>
