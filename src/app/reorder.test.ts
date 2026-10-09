@@ -79,9 +79,11 @@ describe('Riordino — SCENARI G3 (servizio)', () => {
     ]);
   });
 
-  it('non scende sotto «Chiama Marco»; un todo con orario o un id sconosciuto non si riordinano', async () => {
+  it('non scende sotto «Chiama Marco»: fuori dal gruppo torna al suo posto senza scrivere; un todo con orario o un id sconosciuto non si riordinano', async () => {
+    const prima = await get(db, 'blocchi', valigia);
     await reorderTodo(db, valigia, 5, oggi(10), FUSO);
-    expect(await fascia()).toEqual(['Prenota il treno', 'Prepara la valigia', 'Chiama Marco']);
+    expect(await fascia()).toEqual(['Prepara la valigia', 'Prenota il treno', 'Chiama Marco']);
+    expect(await get(db, 'blocchi', valigia)).toEqual(prima);
     const spesa = await crea(todo('Spesa', 'normale', { inizio: '18:00', durata: 30 }), oggi(8, 3));
     expect(await reorderTodo(db, spesa, 0, oggi(10), FUSO)).toBe(false);
     expect(await reorderTodo(db, 'nessuno', 0, oggi(10), FUSO)).toBe(false);

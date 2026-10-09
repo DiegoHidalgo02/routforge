@@ -50,9 +50,11 @@ export function reorderGroup<B extends Riordinabile>(giorno: readonly B[], id: s
 }
 
 /**
- * Il todo `id` alla posizione `a` del suo gruppo (§15): la posizione resta dentro il gruppo, e le chiavi del gruppo si
- * riscrivono distinte a partire dalla più piccola, così chi entra dopo resta in fondo. Restituisce solo le chiavi che
- * cambiano; `null` se il todo non si riordina.
+ * Il todo `id` alla posizione `a` del suo gruppo (§15; D-RIORD-1 n. 3, n. 5): fuori dal gruppo resta dov'era. Cambia solo
+ * la sua chiave, scelta fra quelle dei nuovi vicini (prima del successivo in cima, dopo il precedente in fondo, in mezzo
+ * altrimenti): gli altri, e ciò che sta fra loro senza riordinarsi (l'evento tutto il giorno), restano dove sono. Solo
+ * senza spazio fra i due vicini le chiavi del gruppo si riscrivono distinte dalla più piccola, così chi entra dopo resta
+ * in fondo. Restituisce solo le chiavi che cambiano; `null` se il todo non si riordina.
  */
 export function reorder<B extends Riordinabile>(
   giorno: readonly B[],
@@ -62,11 +64,14 @@ export function reorder<B extends Riordinabile>(
   const gruppo = reorderGroup(giorno, id);
   const da = gruppo.findIndex((x) => x.id === id);
   if (da < 0) return null;
-  const verso = Math.max(0, Math.min(a, gruppo.length - 1));
-  if (verso === da) return new Map();
+  if (a === da || a < 0 || a >= gruppo.length) return new Map();
   const nuovo = [...gruppo];
   const [b] = nuovo.splice(da, 1);
-  nuovo.splice(verso, 0, b!);
+  nuovo.splice(a, 0, b!);
+  const prima = nuovo[a - 1];
+  const dopo = nuovo[a + 1];
+  const k = !prima ? chiave(dopo!) - 1 : !dopo ? chiave(prima) + 1 : Math.floor((chiave(prima) + chiave(dopo)) / 2);
+  if ((!prima || k > chiave(prima)) && (!dopo || k < chiave(dopo))) return new Map([[id, k]]);
   const base = Math.min(...gruppo.map(chiave));
   const chiavi = new Map<string, number>();
   nuovo.forEach((x, i) => {

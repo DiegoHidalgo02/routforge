@@ -1,7 +1,7 @@
 /**
  * Riordino dei todo senza orario nella vista Giorno (MECC §15, §6; FUNZ §2; S1 `drag=lift`, `move`): il todo va a una
- * posizione del suo gruppo di priorità e si riscrivono solo le chiavi d'ordine del gruppo (`reorder` del dominio), in
- * una transazione. Nessun orario, giorno, stato, orizzonte o notifica cambia (G3): la riconciliazione delle notifiche
+ * posizione del suo gruppo di priorità e si scrive la sua chiave d'ordine (quelle del gruppo solo se fra i nuovi vicini
+ * non c'è spazio: `reorder` del dominio), in una transazione. Nessun orario, giorno, stato, orizzonte o notifica cambia (G3): la riconciliazione delle notifiche
  * segue la scrittura e non trova differenze. Nessun «Annulla» (§15).
  */
 import type { RoutForgeDb } from '../data/db';

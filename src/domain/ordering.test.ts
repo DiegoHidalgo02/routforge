@@ -68,11 +68,12 @@ describe('Riordino — SCENARI G3 (dominio)', () => {
     expect(ordina(null)).toEqual(['valigia', 'treno', 'persa', 'marco']);
     const chiavi = reorder(giorno, 'valigia', 1);
     expect(ordina(chiavi)).toEqual(['treno', 'valigia', 'persa', 'marco']);
-    expect([...(chiavi?.keys() ?? [])].sort()).toEqual(['treno', 'valigia']);
+    expect([...(chiavi?.keys() ?? [])]).toEqual(['valigia']);
   });
 
-  it('non scende sotto «Chiama Marco»: la posizione resta dentro il gruppo; ferma al suo posto non scrive nulla', () => {
-    expect(ordina(reorder(giorno, 'valigia', 9))).toEqual(['treno', 'valigia', 'persa', 'marco']);
+  it('non scende sotto «Chiama Marco»: rilasciata fuori dal gruppo torna al suo posto; ferma al suo posto non scrive nulla', () => {
+    expect(reorder(giorno, 'valigia', 9)).toEqual(new Map());
+    expect(reorder(giorno, 'treno', -1)).toEqual(new Map());
     expect(reorder(giorno, 'treno', 1)).toEqual(new Map());
     expect(reorderGroup(giorno, 'treno').map((b) => b.id)).toEqual(['valigia', 'treno']);
   });
@@ -87,5 +88,34 @@ describe('Riordino — SCENARI G3 (dominio)', () => {
     const nuovo = enterGroup(todo('nuovo', 'alta'), local(2026, 9, 25, 9, 0));
     const tutti = [...giorno.map((b) => ({ ...b, ordine: riordinato.get(b.id) ?? b.ordine ?? null })), nuovo];
     expect(reorderGroup(tutti, 'nuovo').map((b) => b.id)).toEqual(['treno', 'valigia', 'nuovo']);
+  });
+});
+
+describe('Riordino senza comprimere il gruppo — MECCANISMI §15, D-RIORD-1 n. 3 (audit P2-11)', () => {
+  const conOrdine = (id: string, ordine: number) => ({ ...todo(id, 'normale'), ordine });
+
+  it('si scrive solo la chiave del todo spostato: l’evento tutto il giorno resta fra i todo che non si sono mossi', () => {
+    const evento: Blocco = { ...timed('E', 0), tipo: 'evento', conOrario: false, inizio: local(2026, 10, 9, 0, 0) };
+    const giorno = [
+      conOrdine('C', local(2026, 10, 9, 9, 0)),
+      conOrdine('A', local(2026, 10, 8, 10, 0)),
+      evento,
+      conOrdine('B', local(2026, 10, 9, 8, 0)),
+    ];
+    expect(sortDay(giorno).map((b) => b.id)).toEqual(['A', 'E', 'B', 'C']);
+    const chiavi = reorder(giorno, 'C', 0)!;
+    expect([...chiavi.keys()]).toEqual(['C']);
+    const dopo = giorno.map((b) => ({ ...b, ordine: chiavi.get(b.id) ?? b.ordine ?? null }));
+    expect(sortDay(dopo).map((b) => b.id)).toEqual(['C', 'A', 'E', 'B']);
+  });
+
+  it('in mezzo prende una chiave fra i vicini; senza spazio fra i due il gruppo si riscrive dalla più piccola', () => {
+    expect(reorder([conOrdine('a', 10), conOrdine('b', 20), conOrdine('c', 21)], 'c', 1)).toEqual(new Map([['c', 15]]));
+    expect(reorder([conOrdine('a', 10), conOrdine('b', 11), conOrdine('c', 12)], 'c', 1)).toEqual(
+      new Map([
+        ['c', 11],
+        ['b', 12],
+      ]),
+    );
   });
 });
