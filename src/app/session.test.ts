@@ -822,3 +822,14 @@ describe('Non Disturbare dopo un arresto — MECCANISMI §10.4 (audit P1-5)', ()
     expect(disable).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('Unità del blocco assente qui — MECCANISMI §10.1, §25 (audit P2-3)', () => {
+  it('la scelta del setup vale per la sessione; il blocco tiene la sua unità, che sull’altro dispositivo esiste', async () => {
+    await save(db, 'unita', { id: 'u-qui', corsoId: 'c-qui', moduloId: 'm1', stato: 'non_iniziata' } as never, oggi(7));
+    // Il blocco è arrivato con l'unità del corso importato sull'altro dispositivo, che qui ha altri id
+    await studio('s1', { corsoId: 'c-altrove', unitaId: 'u-altrove' });
+    const s = await startSession(db, 's1', scelta({ unitaId: 'u-qui', corsoId: 'c-qui' }), oggi(15, 5), FUSO);
+    expect(s).toMatchObject({ contesto: 'routine', bloccoId: 's1', unitaId: 'u-qui', corsoId: 'c-qui' });
+    expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'in_corso', unitaId: 'u-altrove' });
+  });
+});

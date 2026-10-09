@@ -195,12 +195,16 @@ export function startSession(
   now: number,
   fuso: string,
 ): Promise<SessioneAttiva> {
-  return inTransaction(db, ['blocchi', 'preferenze'], async () => {
+  return inTransaction(db, ['blocchi', 'preferenze', 'unita'], async () => {
     const gia = await readActiveSession(db);
     if (gia) return gia;
     const b = bloccoId ? ((await get(db, 'blocchi', bloccoId)) ?? null) : null;
-    const piano = startPlan(b, scelta, now);
-    if (piano.blocco) await saveBlock(db, piano.blocco, now, fuso);
+    // Un'unità del blocco che qui non c'è vale come nessuna, come nel setup: la sessione prende quella scelta. Il blocco
+    // la conserva, perché sull'altro dispositivo esiste e il cambio di stato viaggia (MECC §25; audit P2-3)
+    const altrove = b?.unitaId ? !(await get(db, 'unita', b.unitaId)) : false;
+    const piano = startPlan(b && altrove ? { ...b, unitaId: null } : b, scelta, now);
+    if (piano.blocco)
+      await saveBlock(db, altrove ? { ...piano.blocco, unitaId: b?.unitaId ?? null } : piano.blocco, now, fuso);
     await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: piano.sessione }, now);
     return piano.sessione;
   });
