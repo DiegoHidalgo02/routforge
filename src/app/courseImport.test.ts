@@ -1,7 +1,13 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { strToU8, zipSync } from 'fflate';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { strToU8, unzipSync, zipSync } from 'fflate';
+
+// `unzipSync` vero, contato: lo ZIP di un corso si decomprime una volta sola (audit P3-25)
+vi.mock('fflate', async (originale) => {
+  const m = await originale<typeof import('fflate')>();
+  return { ...m, unzipSync: vi.fn(m.unzipSync) };
+});
 import { openDb, type RoutForgeDb } from '../data/db';
 import { list, save } from '../data/repository';
 import { local } from '../domain/time';
@@ -215,5 +221,15 @@ describe('Import ZIP salvato — SCENARI H1; MECC §16', () => {
     await expect(importZip(db, soloReadme, T0)).rejects.toThrow(ErroreImportCorso);
     expect(() => zipNeedsTitle(strToU8('non è uno zip'))).toThrow(ErroreImportCorso);
     expect(await courseCards(db)).toEqual([]);
+  });
+});
+
+describe('Una lettura dello ZIP — MECCANISMI §16 (audit P3-25)', () => {
+  it('chiedere se serve il titolo e poi importare lo stesso file lo decomprime una volta', () => {
+    const zip = zipSync({ 'M1-Tooling.md': strToU8(M1) });
+    vi.mocked(unzipSync).mockClear();
+    expect(zipNeedsTitle(zip)).toBe(true);
+    importCourseFromZip(zip, { corsoId: 'c1', now: 0, titolo: 'Corso' });
+    expect(unzipSync).toHaveBeenCalledTimes(1);
   });
 });

@@ -130,7 +130,11 @@ export async function codeUploads(db: RoutForgeDb) {
   const [file, unita] = await Promise.all([list(db, 'fileCodice'), list(db, 'unita')]);
   const numero = new Map(unita.map((u) => [u.id, u.numero]));
   const gruppi = new Map<string, FileCodice[]>();
-  for (const f of file) gruppi.set(f.caricamento, [...(gruppi.get(f.caricamento) ?? []), f]);
+  for (const f of file) {
+    const g = gruppi.get(f.caricamento);
+    if (g) g.push(f);
+    else gruppi.set(f.caricamento, [f]);
+  }
   return [...gruppi].map(([caricamento, xs]) => {
     const ammessi = xs.filter((f) => !f.motivo);
     const primo = xs[0]!;

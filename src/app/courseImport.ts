@@ -26,7 +26,12 @@ import {
   type RisultatoImportCorso,
 } from '../domain/course/parser';
 
+/** Gli ZIP già letti: la UI chiede prima se serve il titolo e poi importa lo stesso file (audit P3-25). */
+const letti = new WeakMap<Uint8Array, FileCorso[]>();
+
 function readZip(zip: Uint8Array): FileCorso[] {
+  const gia = letti.get(zip);
+  if (gia) return gia;
   let entries: Record<string, Uint8Array>;
   let byte = 0;
   let troppo = false;
@@ -47,7 +52,9 @@ function readZip(zip: Uint8Array): FileCorso[] {
     throw new ErroreImportCorso('ZIP non leggibile o corrotto');
   }
   if (troppo) throw new ErroreImportCorso('corso troppo grande');
-  return Object.entries(entries).map(([name, data]) => ({ name, content: strFromU8(data) }));
+  const file = Object.entries(entries).map(([name, data]) => ({ name, content: strFromU8(data) }));
+  letti.set(zip, file);
+  return file;
 }
 
 /** Importa un corso da uno ZIP grezzo. `ErroreImportCorso` se lo ZIP è illeggibile o senza moduli. */

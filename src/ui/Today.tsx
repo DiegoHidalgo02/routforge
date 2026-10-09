@@ -138,15 +138,19 @@ type Verso = 'avanti' | 'indietro';
 type Sfondo = { sfondo: Location };
 /** Da 1024 px la giornata segue l'ordine desktop (D-UI-1). */
 
-const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(lingua, o).format(localInstant(giorno, '00:00'));
+/** I formattatori per opzioni, creati una volta: nei cicli sui giorni e sulle celle si ricreavano a ogni disegno (audit P3-25). */
+const formattatori = new Map<string, Intl.DateTimeFormat>();
+const formattatore = (o: Intl.DateTimeFormatOptions): Intl.DateTimeFormat => {
+  const chiave = JSON.stringify(o);
+  let f = formattatori.get(chiave);
+  if (!f) formattatori.set(chiave, (f = new Intl.DateTimeFormat(lingua, o)));
+  return f;
+};
+const fmt = (giorno: string, o: Intl.DateTimeFormatOptions) => formattatore(o).format(localInstant(giorno, '00:00'));
 const fmtParti = (giorno: string, o: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(lingua, o).formatToParts(localInstant(giorno, '00:00'));
+  formattatore(o).formatToParts(localInstant(giorno, '00:00'));
 const intervallo = (da: string, a: string) =>
-  new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'long' }).formatRange(
-    localInstant(da, '00:00'),
-    localInstant(a, '00:00'),
-  );
+  formattatore({ day: 'numeric', month: 'long' }).formatRange(localInstant(da, '00:00'), localInstant(a, '00:00'));
 const orario = (b: BloccoCalendario) => (b.conOrario ? b.orarioInizio : '—');
 const terminale = (b: BloccoCalendario) => STATI_TERMINALI.has(b.stato);
 /** Il periodo che una vista mostra per un giorno: il giorno, il primo giorno della settimana o il mese. */
