@@ -250,9 +250,9 @@ export const SOGLIA_QUASI_TUTTI = 0.75;
  * più persi) e delle sessioni libere che hanno un esito; iperfocus (sessioni su totali, minuti, uscite d'emergenza =
  * interruzioni «iperfocus», abbandoni, tempo extra in iperfocus); tempo extra; focus e piano delle sessioni con una
  * durata pianificata (efficienza); pause, interruzioni, pomodoro e segmenti; sessioni per settimana e la loro media;
- * minuti per unità con l'ultima sessione; puntualità dei blocchi avviati prima della loro fine (D-STATS-1: dopo la fine
- * è un recupero, come per il contesto della sessione): scarto medio (anticipo negativo), quota entro 5', ritardi oltre
- * 5', anticipi e anticipo medio.
+ * minuti per unità con l'ultima sessione; puntualità dei blocchi avviati, recuperi dopo la fine compresi (SCENARI C5:
+ * «in ritardo > 5'»; D-STATS-1 n. 10, audit P1-10): scarto medio (anticipo negativo), quota entro 5', ritardi oltre 5',
+ * anticipi e anticipo medio.
  */
 export function studyStats(
   blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'fine' | 'minutiRitardo' | 'minutiAnticipo'>[],
@@ -282,7 +282,7 @@ export function studyStats(
       });
     }
   const scarti = studi
-    .filter((b) => b.minutiRitardo != null && (b.fine === null || b.inizio + b.minutiRitardo * MINUTE < b.fine))
+    .filter((b) => b.minutiRitardo != null)
     .map((b) => ((b.minutiAnticipo ?? 0) > 0 ? -(b.minutiAnticipo ?? 0) : (b.minutiRitardo ?? 0)));
   const anticipi = scarti.filter((x) => x < 0);
   const media = (xs: readonly number[]) => (xs.length ? Math.round(somma(xs, (x) => x) / xs.length) : null);

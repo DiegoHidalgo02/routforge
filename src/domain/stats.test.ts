@@ -258,14 +258,15 @@ describe('Risposta al trigger — MECCANISMI §20, SCENARI B7', () => {
   });
 });
 
-describe('Studio: piano, ritmo, unità e puntualità — MECCANISMI §20', () => {
-  it('efficienza sulle sessioni con piano; pause, pomodoro, minuti per unità; puntualità senza i recuperi', () => {
+describe('Studio: piano, ritmo, unità e puntualità — MECCANISMI §20, SCENARI C5', () => {
+  it('efficienza sulle sessioni con piano; pause, pomodoro, minuti per unità; puntualità con i recuperi (C5)', () => {
     const s = studyStats(
       [
         blocco({ minutiRitardo: 3 }), // entro 5'
         blocco({ minutiRitardo: 12 }), // ritardo oltre 5'
         blocco({ minutiRitardo: 0, minutiAnticipo: 10 }), // «Anticipa sessione» di 10'
-        blocco({ minutiRitardo: 90 }), // avviato dopo la fine (09–10): recupero, non conta (D-STATS-1)
+        // Recupero avviato dopo la fine (09–10 alle 10:30): SCENARI C5 lo conta «in ritardo > 5'» (audit P1-10)
+        blocco({ minutiRitardo: 90 }),
         blocco({ minutiRitardo: null }), // mai avviato
       ],
       [
@@ -289,7 +290,8 @@ describe('Studio: piano, ritmo, unità e puntualità — MECCANISMI §20', () =>
       { unitaId: 'u1', minuti: 60, ultima: local(2026, 9, 23, 9), sessioni: 2 },
       { unitaId: 'u2', minuti: 30, ultima: local(2026, 9, 22, 9), sessioni: 1 },
     ]);
-    expect(s.puntualita).toEqual({ scarto: 2, entro: 2 / 3, ritardi: 1, anticipi: 1, anticipoMedio: 10 });
+    // Scarti 3, 12, −10, 90: media 23,75 → 24; entro 5' due su quattro; oltre 5' il 12 e il recupero
+    expect(s.puntualita).toEqual({ scarto: 24, entro: 2 / 4, ritardi: 2, anticipi: 1, anticipoMedio: 10 });
   });
 });
 
