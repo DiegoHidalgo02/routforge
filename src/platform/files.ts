@@ -23,6 +23,9 @@ const web: ArchivioFile = {
 
 const android: ArchivioFile = {
   async salva(nome, testo) {
+    // Si scrive su un nome a parte e si rinomina solo a file completo: un export fallito non tocca il backup che ha
+    // già quel nome (lo stesso giorno) e non lascia file troncati col nome giusto (audit P0-1)
+    const parziale = `${nome}.parziale`;
     try {
       await Filesystem.requestPermissions();
       for (let i = 0; i === 0 || i < testo.length;) {
@@ -30,7 +33,7 @@ const android: ArchivioFile = {
         let fine = Math.min(i + PEZZO, testo.length);
         if (fine < testo.length && /[\uD800-\uDBFF]/.test(testo.charAt(fine - 1))) fine--;
         const dove = {
-          path: nome,
+          path: parziale,
           data: testo.slice(i, fine),
           directory: Directory.Documents,
           encoding: Encoding.UTF8,
@@ -39,10 +42,10 @@ const android: ArchivioFile = {
         i = fine;
         if (fine === 0) break;
       }
+      await Filesystem.rename({ from: parziale, to: nome, directory: Directory.Documents });
       return 'documenti';
     } catch {
-      // Niente file troncati col nome giusto in Documenti
-      await Filesystem.deleteFile({ path: nome, directory: Directory.Documents }).catch(() => undefined);
+      await Filesystem.deleteFile({ path: parziale, directory: Directory.Documents }).catch(() => undefined);
       return null;
     }
   },
