@@ -14,7 +14,7 @@ import { appDb, watch } from '../app/db';
 import { cifre } from './Cifre';
 import { useDesktop } from './desktop';
 import { durataCorso } from './format';
-import { t, type Chiave } from './i18n';
+import { t, tn, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
 import { SessionBannerSlot } from './SessionBanner';
 import s from './Courses.module.css';
@@ -56,8 +56,7 @@ function Testa({ schede, importa }: { schede: SchedaCorso[] | undefined; importa
           <h1 className={s.titoloPagina}>{t('corsi')}</h1>
           {schede && schede.length > 0 && (
             <span className={s.sottotitolo}>
-              {t(schede.length === 1 ? 'unCorso' : 'nCorsi', { n: schede.length })} ·{' '}
-              {t('unitaCompletateN', { n: completate })}
+              {tn('unCorso', 'nCorsi', schede.length)} · {t('unitaCompletateN', { n: completate })}
             </span>
           )}
         </span>

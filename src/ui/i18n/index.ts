@@ -13,5 +13,12 @@ const DIZIONARI: Record<Lingua, Record<Chiave, string>> = { it, en, es, pt, fr, 
 
 export const lingua = pickLanguage(navigator.languages);
 /** Testo della chiave; `{nome}` si sostituisce con `parametri.nome`. */
+/** `true` se nella lingua la quantità vuole la forma «uno» (regole CLDR): in francese e portoghese anche lo zero (audit P3-22). */
+export const formaPlurale = (l: Lingua, n: number): boolean => new Intl.PluralRules(l).select(n) === 'one';
+
 export const t = (chiave: Chiave, parametri: Record<string, string | number> = {}): string =>
   DIZIONARI[lingua][chiave].replace(/\{(\w+)\}/g, (tutto, nome: string) => String(parametri[nome] ?? tutto));
+
+/** Una quantità con la chiave della sua forma nella lingua dell'app: `{n}` è la quantità (prima `n === 1 ? … : …`). */
+export const tn = (uno: Chiave, altri: Chiave, n: number, parametri: Record<string, string | number> = {}): string =>
+  t(formaPlurale(lingua, n) ? uno : altri, { n, ...parametri });

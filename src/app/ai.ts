@@ -21,7 +21,7 @@ import {
   type FonteUnita,
 } from '../domain/ai';
 import { isGroundable, type Materiale } from '../domain/materials';
-import type { LinguaRisposte, ModelloAi } from '../domain/settings';
+import type { ModelloAi } from '../domain/settings';
 import { CHIAVE_AI } from './backup';
 import { logError } from './diagnostics';
 import type { AiClient } from './ports/ai';
@@ -35,14 +35,8 @@ export const configureAi = (c: AiClient): void => {
 };
 
 const MODELLI: Record<ModelloAi, string> = { flash: 'gemini-2.5-flash', pro: 'gemini-2.5-pro' };
-const LINGUE: Record<Exclude<LinguaRisposte, 'auto'>, string> = {
-  it: 'Italian',
-  en: 'English',
-  es: 'Spanish',
-  pt: 'Portuguese',
-  fr: 'French',
-  de: 'German',
-};
+/** Il nome inglese della lingua delle risposte per il prompt (MECC §18), da `Intl` invece che scritto a mano (audit P3-22). */
+const NOME_INGLESE = new Intl.DisplayNames(['en'], { type: 'language' });
 
 const erroreDi = (e: unknown): ErroreAi =>
   aiError((e as { status?: number | null } | null)?.status ?? null, e instanceof Error ? e.message : String(e));
@@ -270,7 +264,7 @@ export async function answer(
     const messaggi = await listBy(db, 'messaggi', 'conversazioneId', conversazioneId);
     const sistema = systemInstruction(
       chatContext(await contextOf(db, conv)),
-      linguaRisposte === 'auto' ? null : LINGUE[linguaRisposte],
+      linguaRisposte === 'auto' ? null : (NOME_INGLESE.of(linguaRisposte) ?? linguaRisposte),
     );
     let testo = '';
     try {

@@ -27,12 +27,12 @@ import { ANTICIPI } from '../domain/activity';
 import type { ErroreAi } from '../domain/ai';
 import { backupSizeEstimate } from '../domain/backup';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
-import type { Impostazioni, LinguaRisposte } from '../domain/settings';
+import { LINGUE_RISPOSTE, type Impostazioni, type LinguaRisposte } from '../domain/settings';
 import type { TipoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
 import { CHIAVI_GEMINI } from './Chat';
 import { dimensione, fmtData, fmtGiornoMese, fmtOra, maiuscola, nomeGiorno } from './format';
-import { lingua, t, type Chiave } from './i18n';
+import { lingua, t, tn, type Chiave } from './i18n';
 import { animazioniRidotte, useSettings } from './preferenze';
 import { Section } from './Section';
 import s from './Settings.module.css';
@@ -551,10 +551,9 @@ export function Backup() {
               <>
                 <span className={s.numChiaro}>{scelto.nome}</span> ·{' '}
                 {t('sostituireCorpo', {
-                  corsi: scelto.letto.corsi === 1 ? t('unCorso') : t('nCorsi', { n: scelto.letto.corsi }),
-                  attivita:
-                    scelto.letto.attivita === 1 ? t('unaAttivita') : t('nAttivita', { n: scelto.letto.attivita }),
-                  pdf: scelto.letto.pdf === 1 ? t('unPdf') : t('nPdf', { n: scelto.letto.pdf }),
+                  corsi: tn('unCorso', 'nCorsi', scelto.letto.corsi),
+                  attivita: tn('unaAttivita', 'nAttivita', scelto.letto.attivita),
+                  pdf: tn('unPdf', 'nPdf', scelto.letto.pdf),
                 })}
               </>
             }
@@ -597,15 +596,9 @@ export function Backup() {
 }
 
 const ERRORE_CHIAVE: Partial<Record<ErroreAi, Chiave>> = { chiave: 'chiaveRifiutata', rete: 'chiaveSenzaRete' };
-const LINGUE: [LinguaRisposte, Chiave][] = [
-  ['auto', 'automatica'],
-  ['it', 'nomeLinguaIt'],
-  ['en', 'nomeLinguaEn'],
-  ['es', 'nomeLinguaEs'],
-  ['pt', 'nomeLinguaPt'],
-  ['fr', 'nomeLinguaFr'],
-  ['de', 'nomeLinguaDe'],
-];
+/** Il nome di ogni lingua nella lingua stessa («Italiano», «English», «Español»…), da `Intl` (audit P3-22). */
+const nomeProprio = (l: LinguaRisposte): string =>
+  l === 'auto' ? t('automatica') : maiuscola(new Intl.DisplayNames([l], { type: 'language' }).of(l) ?? l);
 
 /**
  * Modello e chiave AI (S22 `ai`, `ai-nokey`; MECC §18; T-026; D-BACKUP-1): la chiave si verifica con una chiamata e si
@@ -728,7 +721,7 @@ export function AiSettings() {
           <RigaScelta
             etichetta={t('linguaRisposte')}
             valore={v.linguaRisposte}
-            opzioni={LINGUE.map(([l, nome]) => [l, t(nome)] as const)}
+            opzioni={LINGUE_RISPOSTE.map((l) => [l, nomeProprio(l)] as const)}
             onScegli={(linguaRisposte) => salva({ linguaRisposte })}
           />
         </Gruppo>

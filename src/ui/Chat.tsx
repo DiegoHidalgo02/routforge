@@ -35,7 +35,7 @@ import { appDb, watch } from '../app/db';
 import { citations, conversationGroups, GLOBALE, nextScope, type AmbitoAperto, type ErroreAi } from '../domain/ai';
 import { useMinuto } from './clock';
 import { fmtData, fmtGiornoMese, fmtOra, FONTE } from './format';
-import { t, type Chiave } from './i18n';
+import { t, tn, type Chiave } from './i18n';
 import { Markdown } from './Markdown';
 import { useSettings } from './preferenze';
 import { useIndietro } from './useIndietro';
@@ -458,7 +458,7 @@ export function Conversations() {
                       <span className={s.titoloRiga}>{c.titolo}</span>
                       <span className={s.metaRiga}>
                         {LISTA[c.nome.ambito](c.nome)} · <span className={s.cifra}>{c.messaggi}</span>{' '}
-                        {t(c.messaggi === 1 ? 'messaggioUno' : 'messaggiMolti')}
+                        {tn('messaggioUno', 'messaggiMolti', c.messaggi)}
                       </span>
                     </span>
                     <span className={s.data}>{data(c.ultimoMessaggio, g.gruppo)}</span>

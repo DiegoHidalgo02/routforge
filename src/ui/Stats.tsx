@@ -12,7 +12,7 @@ import { readStats, type Panoramica, type Statistiche } from '../app/stats';
 import { GIORNI_MAPPA, periodRange, SOGLIA_PUNTUALITA, SOGLIA_QUASI_TUTTI, type Periodo } from '../domain/stats';
 import type { TipoBlocco } from '../domain/types';
 import { durata, nomeGiorno, SETTIMANA } from './format';
-import { lingua, t, type Chiave } from './i18n';
+import { lingua, t, tn, type Chiave } from './i18n';
 import { useSettings } from './preferenze';
 import { Section } from './Section';
 import s from './Stats.module.css';
@@ -149,7 +149,7 @@ function Overview({ p }: { p: Panoramica }) {
         valore={
           <Valore
             testo={String(p.costanza.attuale)}
-            unita={` ${t(p.costanza.attuale === 1 ? 'unitaGiorno' : 'unitaGiorni')}`}
+            unita={` ${tn('unitaGiorno', 'unitaGiorni', p.costanza.attuale)}`}
           />
         }
         meta={<span className={s.meta}>{t('recordN', { n: p.costanza.record })}</span>}
@@ -528,13 +528,7 @@ function Practice({ periodo }: { periodo: Periodo }) {
         valore={
           <Valore testo={p?.devswipe == null ? '—' : String(p.devswipe)} {...(p?.devswipe != null && { unita: '%' })} />
         }
-        meta={
-          p?.devswipeFatti ? (
-            t(p.devswipeFatti === 1 ? 'accuratezzaMazzo' : 'accuratezzaMazzi', { n: p.devswipeFatti })
-          ) : (
-            <SenzaDati />
-          )
-        }
+        meta={p?.devswipeFatti ? tn('accuratezzaMazzo', 'accuratezzaMazzi', p.devswipeFatti) : <SenzaDati />}
       />
       <KpiCard
         etichetta={t('praticaBugHunter')}
@@ -544,20 +538,14 @@ function Practice({ periodo }: { periodo: Periodo }) {
             {...(p?.bughunter != null && { unita: '%' })}
           />
         }
-        meta={
-          p?.bughunterFatti ? (
-            t(p.bughunterFatti === 1 ? 'accuratezzaSerieUna' : 'accuratezzaSerie', { n: p.bughunterFatti })
-          ) : (
-            <SenzaDati />
-          )
-        }
+        meta={p?.bughunterFatti ? tn('accuratezzaSerieUna', 'accuratezzaSerie', p.bughunterFatti) : <SenzaDati />}
       />
       <KpiCard
         etichetta={t('praticaTrivia')}
         valore={
           <Valore
             testo={p?.trivia ? String(p.trivia) : '—'}
-            {...(p?.trivia && { unita: t(p.trivia === 1 ? 'playlistUnitaUna' : 'playlistUnita') })}
+            {...(p?.trivia && { unita: tn('playlistUnitaUna', 'playlistUnita', p.trivia) })}
           />
         }
         meta={p?.trivia ? t('completateMinuscolo') : <SenzaDati />}
