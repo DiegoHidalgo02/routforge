@@ -96,7 +96,11 @@ const gesto = (voce: VoceToccata, g: GestoNotifica, istante?: number) =>
 const android = eAndroid
   ? androidNotifications(testiNotifica, etichetteNative, gesto, (s) => apri('/sveglia', s))
   : null;
-const notifiche = createNotifications(appDb, android ?? webNotifications(testiNotifica, apri), webClock);
+const notifiche = createNotifications(
+  appDb,
+  android ?? webNotifications(testiNotifica, (v, g) => void gesto(v, g)),
+  webClock,
+);
 registerNotificationService(notifiche);
 // Su Android prima i gesti fatti ad app chiusa (T-057, A6): il primo ciclo altrimenti troverebbe il todo ancora da fare
 // e lo sposterebbe in ritardo. Al più 3 s: un ponte che non risponde non ferma scheduler e notifiche

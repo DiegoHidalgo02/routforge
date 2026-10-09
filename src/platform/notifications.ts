@@ -4,12 +4,17 @@
  * sostituiscono invece di duplicare). La sveglia degrada a notifica che resta finché non la si tocca; il clic porta al
  * blocco (al timer per il tempo scaduto, a Oggi per il digest e la prova). Senza `Notification` (contesto non sicuro,
  * iOS non installato) tutto è un no-op; nessun ramo lancia (INV-16). L'adapter nativo, con le azioni rapide, è di T-021.
+ * Il clic passa il tocco all'app come su Android (`notificationGesture`): la rotta e la risposta alla verifica (§13.2,
+ * §20) le decide lei, non l'adapter (audit P3-23).
  */
-import type { Notifications, TestiNotifica } from '../app/ports/notifications';
+import type { GestoNotifica, Notifications, TestiNotifica, VoceToccata } from '../app/ports/notifications';
 
 const disponibile = () => typeof Notification !== 'undefined';
 
-export function webNotifications(testi: TestiNotifica, apri: (percorso: string) => void): Notifications {
+export function webNotifications(
+  testi: TestiNotifica,
+  gesto: (voce: VoceToccata, g: GestoNotifica) => void,
+): Notifications {
   const timer = new Map<number, ReturnType<typeof setTimeout>>();
   const togli = (id: number) => {
     clearTimeout(timer.get(id));
@@ -41,13 +46,7 @@ export function webNotifications(testi: TestiNotifica, apri: (percorso: string) 
               });
               n.onclick = () => {
                 window.focus();
-                apri(
-                  v.bloccoId
-                    ? `/attivita/${encodeURIComponent(v.bloccoId)}`
-                    : v.trigger === 'tempo_scaduto'
-                      ? '/sessione'
-                      : '/',
-                );
+                gesto({ chiave: v.chiave, trigger: v.trigger, bloccoId: v.bloccoId }, 'tocco');
                 n.close();
               };
             } catch {

@@ -50,9 +50,9 @@ afterEach(() => {
 });
 
 describe('Adapter web — MECCANISMI §13.3 (solo con la scheda aperta), INV-16', () => {
-  it('schedule arma un timer che mostra la notifica con tag e silent; il clic apre il blocco', async () => {
-    const apri = vi.fn();
-    await webNotifications(testi, apri).schedule([voce()]);
+  it('schedule arma un timer che mostra la notifica con tag e silent; il clic passa il tocco all’app, come su Android (audit P3-23)', async () => {
+    const gesto = vi.fn();
+    await webNotifications(testi, gesto).schedule([voce()]);
     vi.advanceTimersByTime(59_999);
     expect(create).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
@@ -62,19 +62,23 @@ describe('Adapter web — MECCANISMI §13.3 (solo con la scheda aperta), INV-16'
       expect.anything(),
     );
     (create.mock.calls[0]![2] as { onclick: () => void }).onclick();
-    expect(apri).toHaveBeenCalledWith('/attivita/s1');
+    expect(gesto).toHaveBeenCalledWith({ chiave: 'pre:5:s1', trigger: 'pre', bloccoId: 's1' }, 'tocco');
   });
 
-  it('il clic sul digest e sulla prova apre Oggi, sul tempo scaduto il timer (T-020)', async () => {
-    const apri = vi.fn();
-    await webNotifications(testi, apri).schedule([
+  it('il clic sul digest, sulla prova e sul tempo scaduto passa il tocco con la sua voce: la rotta la decide l’app (T-020)', async () => {
+    const gesto = vi.fn();
+    await webNotifications(testi, gesto).schedule([
       voce({ chiave: 'digest:0:2026-09-28', trigger: 'digest', bloccoId: null, idNativo: 8 }),
       voce({ chiave: 'prova:0:prova', trigger: 'prova', bloccoId: null, idNativo: 9 }),
       voce({ chiave: 'tempo_scaduto:0:sessione', trigger: 'tempo_scaduto', bloccoId: null, idNativo: 10 }),
     ]);
     vi.advanceTimersByTime(60_000);
     for (const c of create.mock.calls) (c[2] as { onclick: () => void }).onclick();
-    expect(apri.mock.calls.map(([percorso]) => percorso)).toEqual(['/', '/', '/sessione']);
+    expect(gesto.mock.calls.map(([v, g]) => [v.trigger, v.bloccoId, g])).toEqual([
+      ['digest', null, 'tocco'],
+      ['prova', null, 'tocco'],
+      ['tempo_scaduto', null, 'tocco'],
+    ]);
   });
 
   it('cancel toglie il timer; lo stesso id riarmato sostituisce; la sveglia resta finché la si tocca', async () => {
