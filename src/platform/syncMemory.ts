@@ -115,6 +115,8 @@ export function memorySyncBackend(
     push(buste: readonly Busta[]) {
       try {
         const s = attivo();
+        // Come push_records: un lotto oltre 500 righe (l'app ne manda 200) si rifiuta intero (audit P2-21)
+        if (buste.length > 500) throw new Error('lotto_troppo_grande');
         // Il `check` di `records` e il `jsonb` del parametro fanno fallire tutta la chiamata, prima di ogni scrittura
         if (!buste.every((b) => sendable(b.dati))) throw new Error('new row violates check constraint');
         // La `where` di push_records: fuori ambito, id dei dati diverso o istante mancante si scartano in silenzio

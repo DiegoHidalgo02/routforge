@@ -7,16 +7,32 @@ import { createClient, type Session } from '@supabase/supabase-js';
 import { RevocatoError, type Dispositivo, type Sessione, type SyncBackend } from '../app/ports/sync';
 import type { BustaRicevuta, TabellaSincronizzata } from '../domain/sync';
 
-/** Il `session_id` dai claim del token (base64url del payload), che lega il dispositivo alla sessione dell'accesso. */
-function sessionId(token: string): string | null {
+/** I claim di un JWT (base64url del payload); `null` se non si leggono. */
+function claims(token: string): { session_id?: unknown; role?: unknown } | null {
   try {
     const payload = token.split('.')[1] ?? '';
-    const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as { session_id?: unknown };
-    return typeof claims.session_id === 'string' ? claims.session_id : null;
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as {
+      session_id?: unknown;
+      role?: unknown;
+    } | null;
   } catch {
     return null;
   }
 }
+
+/** Il `session_id` dai claim del token, che lega il dispositivo alla sessione dell'accesso. */
+function sessionId(token: string): string | null {
+  const id = claims(token)?.session_id;
+  return typeof id === 'string' ? id : null;
+}
+
+/**
+ * La chiave è quella anonima di Supabase, pubblica per costruzione: una «publishable» o un JWT col ruolo `anon`. Una
+ * segreta (`sb_secret_`, `service_role`) scavalca l'RLS per chiunque abbia l'app: il build la rifiuta (`vite.config.ts`,
+ * audit P2-21).
+ */
+export const isAnonKey = (chiave: string): boolean =>
+  chiave.startsWith('sb_publishable_') || claims(chiave)?.role === 'anon';
 
 const sessioneDa = (s: Session | null): Sessione | null => {
   const dispositivo = s && sessionId(s.access_token);

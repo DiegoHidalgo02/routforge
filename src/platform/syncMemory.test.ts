@@ -50,3 +50,14 @@ describe('Servizio in memoria come l’SQL — MECCANISMI §25, D-SYNC-3, D-SYNC
     expect((await tablet.pull(0, 100)).buste.map((b) => b.id)).toEqual(['b1']);
   });
 });
+
+describe('Tetto del lotto — MECCANISMI §25, D-SYNC-4 n. 10 (audit P2-21)', () => {
+  it('un lotto oltre 500 righe si rifiuta intero, come push_records; 500 passano', async () => {
+    const { telefono, tablet } = await dueDispositivi();
+    const lotto = (n: number) => Array.from({ length: n }, (_, i) => busta('blocchi', `b${i}`));
+    await expect(telefono.push(lotto(501))).rejects.toThrow('lotto_troppo_grande');
+    expect((await tablet.pull(0, 1000)).buste).toEqual([]);
+    await telefono.push(lotto(500));
+    expect((await tablet.pull(0, 1000)).buste).toHaveLength(500);
+  });
+});

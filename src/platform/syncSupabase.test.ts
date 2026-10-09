@@ -18,7 +18,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-const { supabaseSyncBackend } = await import('./syncSupabase');
+const { isAnonKey, supabaseSyncBackend } = await import('./syncSupabase');
 const servizio = () => supabaseSyncBackend('https://x.supabase.co', 'chiave-anonima');
 
 describe('Adapter Supabase della sync — MECCANISMI §25, T-033 (audit P2-7)', () => {
@@ -97,5 +97,16 @@ describe('Adapter Supabase della sync — MECCANISMI §25, T-033 (audit P2-7)', 
     expect(payload).toMatch(/[-_]/);
     sb.ascolto?.('INITIAL_SESSION', { access_token: `h.${payload}.f`, user: { id: 'u1', email: 'a@b.it' } });
     expect(s.session()).toEqual({ userId: 'u1', email: 'a@b.it', dispositivo: 's?~>' });
+  });
+});
+
+describe('Chiave della build — CLAUDE.md §8, D-SYNC-4 n. 10 (audit P2-21)', () => {
+  const jwt = (claims: object) => `h.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.f`;
+  it('solo la chiave anonima: una «publishable» o un JWT con ruolo anon; mai una segreta o service_role', () => {
+    expect(isAnonKey(jwt({ role: 'anon', iss: 'supabase' }))).toBe(true);
+    expect(isAnonKey(`${'sb_publishable_'}abc123`)).toBe(true);
+    expect(isAnonKey(jwt({ role: 'service_role' }))).toBe(false);
+    expect(isAnonKey(`${'sb_secret_'}abc123`)).toBe(false);
+    expect(isAnonKey('qualcosa-di-sconosciuto')).toBe(false);
   });
 });

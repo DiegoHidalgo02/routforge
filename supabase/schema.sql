@@ -72,6 +72,9 @@ create policy records_update on public.records for update
 grant select, delete on public.records to authenticated;
 revoke insert, update on public.records from authenticated;
 grant select, insert on public.devices to authenticated;
+-- Il ruolo anonimo (la chiave pubblica della build, prima dell'accesso) non ha privilegi sulle tabelle: oggi lo ferma già
+-- l'RLS, così non dipende solo da lei (audit P2-21)
+revoke all on public.records, public.devices from anon;
 create policy records_delete on public.records for delete
   using (user_id = auth.uid() and public.device_active());
 
@@ -142,6 +145,10 @@ declare
   v_dispositivo uuid := (auth.jwt() ->> 'session_id')::uuid;
 begin
   perform public.assert_device();
+  -- Un lotto oltre 500 righe non viene dall'app (ne manda 200 per volta): si rifiuta intero (audit P2-21)
+  if jsonb_array_length(p_righe) > 500 then
+    raise exception 'lotto_troppo_grande' using errcode = 'P0001';
+  end if;
   insert into public.records as r (user_id, tabella, id, dati, updated_at, deleted_at, generata, device_id)
   select auth.uid(), e.tabella, e.id, e.dati, least(e.updated_at, v_ora + 300000), e.deleted_at,
          coalesce(e.generata, false), v_dispositivo
