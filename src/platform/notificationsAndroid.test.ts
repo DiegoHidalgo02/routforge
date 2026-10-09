@@ -7,15 +7,22 @@ type Azione = { actionId: string; notification: { extra?: unknown } };
 const plugin = vi.hoisted(() => ({
   azione: null as ((a: Azione) => void) | null,
   extra: [] as unknown[],
+  /** Le chiamate ai due plugin che armano e tolgono, in ordine (audit P2-13). */
+  chiamate: [] as string[],
+  gesti: [] as unknown[],
+  rifiuta: false,
 }));
 
 vi.mock('@capacitor/core', () => ({
   registerPlugin: () => ({
     addListener: () => Promise.resolve({ remove: () => Promise.resolve() }),
-    prendiGesti: () => Promise.resolve({ gesti: [] }),
-    programma: (o: { voci: { extra: unknown }[] }) =>
-      Promise.resolve(void plugin.extra.push(...o.voci.map((v) => v.extra))),
-    annulla: () => Promise.resolve(),
+    prendiGesti: () =>
+      plugin.rifiuta ? Promise.reject(new Error('ponte')) : Promise.resolve({ gesti: plugin.gesti.splice(0) }),
+    programma: (o: { voci: { id: number; canale: string; extra: unknown }[] }) => {
+      plugin.chiamate.push(`nativo.programma ${o.voci.map((v) => `${v.id}:${v.canale}`).join(' ')}`);
+      return Promise.resolve(void plugin.extra.push(...o.voci.map((v) => v.extra)));
+    },
+    annulla: (o: { ids: number[] }) => Promise.resolve(void plugin.chiamate.push(`nativo.annulla ${o.ids.join(' ')}`)),
   }),
 }));
 vi.mock('@capacitor/local-notifications', () => ({
@@ -26,9 +33,13 @@ vi.mock('@capacitor/local-notifications', () => ({
     },
     createChannel: () => Promise.resolve(),
     registerActionTypes: () => Promise.resolve(),
-    schedule: (o: { notifications: { extra: unknown }[] }) =>
-      Promise.resolve(void plugin.extra.push(...o.notifications.map((n) => n.extra))),
-    cancel: () => Promise.resolve(),
+    schedule: (o: { notifications: { id: number; channelId: string; extra: unknown }[] }) => {
+      if (plugin.rifiuta) return Promise.reject(new Error('schedule'));
+      plugin.chiamate.push(`plugin.schedule ${o.notifications.map((n) => `${n.id}:${n.channelId}`).join(' ')}`);
+      return Promise.resolve(void plugin.extra.push(...o.notifications.map((n) => n.extra)));
+    },
+    cancel: (o: { notifications: { id: number }[] }) =>
+      Promise.resolve(void plugin.chiamate.push(`plugin.cancel ${o.notifications.map((n) => n.id).join(' ')}`)),
     checkPermissions: () => Promise.resolve({ display: 'granted' }),
   },
 }));
@@ -106,5 +117,61 @@ describe('Gesti delle notifiche su Android — MECCANISMI §13.2, D-NATIVO-2 (au
     adapter(altra);
     plugin.azione!({ actionId: 'tap', notification: { extra } });
     expect(altra).not.toHaveBeenCalled();
+  });
+});
+
+describe('Smistamento, gesti in sfondo ed errori su Android — MECCANISMI §13.3, D-NATIVO-3, D-NOTIF-1 n. 12 (audit P2-13)', () => {
+  const adapter = (onGesto: Parameters<typeof androidNotifications>[2] = () => undefined) =>
+    androidNotifications(
+      () => ({ titolo: '', corpo: '' }),
+      etichette,
+      onGesto,
+      () => undefined,
+    );
+  beforeEach(() => {
+    plugin.chiamate = [];
+    plugin.gesti = [];
+    plugin.rifiuta = false;
+  });
+
+  it('una voce che diventa sveglia si toglie dal plugin e si arma in proprio, e viceversa: non suona due volte', async () => {
+    const porta = adapter();
+    await porta.schedule([voce({ sveglia: true, idNativo: 7 })]);
+    expect(plugin.chiamate).toEqual(['plugin.cancel 7', 'nativo.programma 7:sveglie']);
+    plugin.chiamate = [];
+    await porta.schedule([voce({ idNativo: 7 }), voce({ chiave: 'pre:5:b2', azioni: ['segna_fatto'], idNativo: 8 })]);
+    expect(plugin.chiamate).toEqual([
+      'nativo.annulla 7',
+      'plugin.schedule 7:studio',
+      'plugin.cancel 8',
+      'nativo.programma 8:studio',
+    ]);
+  });
+
+  it('i gesti fatti ad app chiusa arrivano uno dopo l’altro, in ordine e col loro istante', async () => {
+    plugin.gesti = [
+      { chiave: 'pre:5:a', trigger: 'pre', bloccoId: 'a', gesto: 'segna_fatto', istante: 100 },
+      { chiave: 'inizio:0:b', trigger: 'inizio', bloccoId: null, gesto: 'posticipa', istante: 200 },
+    ];
+    const visti: string[] = [];
+    const porta = adapter(async (v, g, istante) => {
+      visti.push(`inizio ${v.chiave} ${g} ${istante}`);
+      await new Promise((r) => setTimeout(r, 5));
+      visti.push(`fine ${v.chiave}`);
+    });
+    await porta.pronte;
+    expect(visti).toEqual([
+      'inizio pre:5:a segna_fatto 100',
+      'fine pre:5:a',
+      'inizio inizio:0:b posticipa 200',
+      'fine inizio:0:b',
+    ]);
+  });
+
+  it('un armamento rifiutato arriva al servizio, che riprova; il ponte che non risponde non blocca l’avvio', async () => {
+    plugin.rifiuta = true;
+    const porta = adapter();
+    await expect(porta.pronte).resolves.toBeUndefined();
+    await expect(porta.schedule([voce()])).rejects.toThrow('schedule');
   });
 });
