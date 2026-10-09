@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { canCheckRoutine, lostAtInstant, recoveryDeadline, shouldMarkLost } from '../lost';
 import { statusOf } from '../nowBlock';
-import { HOUR, local, localDayKey, localTimeKey } from '../time';
+import { addLocalDays, HOUR, local, localDayKey, localInstant, localTimeKey, MINUTE } from '../time';
 import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 import {
   editPlan,
@@ -342,5 +342,54 @@ describe('Riancoraggio al cambio di fuso — D-TIME-2 (INV-18)', () => {
   it("un'occorrenza spostata dall'utente (14:40 memorizzato) resta alle 14:40 nel fuso nuovo", () => {
     const [b] = reanchor([ancorato({ orarioInizio: '14:40', orarioFine: '15:40' })], 'Europe/Rome', NOW);
     expect([b!.inizio, b!.fine]).toEqual([local(2026, 9, 30, 14, 40), local(2026, 9, 30, 15, 40)]);
+  });
+});
+
+/**
+ * Il primo orario «HH:30» che nel fuso del processo c'è zero volte (buco) o due volte (sovrapposizione) in un giorno del
+ * 2027, letto coi soli getter di `Date`; `null` in un fuso senza ora legale, dove i test qui sotto non hanno nulla da provare.
+ */
+function oraLegale(tipo: 'buco' | 'sovrapposizione'): { giorno: string; orario: string } | null {
+  for (let i = 0; i < 365; i++) {
+    const giorno = localDayKey(addLocalDays(local(2027, 1, 1, 12, 0), i));
+    for (let h = 0; h < 24; h++) {
+      const orario = `${String(h).padStart(2, '0')}:30`;
+      const t = localInstant(giorno, orario);
+      if (tipo === 'buco' ? localTimeKey(t) !== orario : localTimeKey(t + HOUR) === orario) return { giorno, orario };
+    }
+  }
+  return null;
+}
+/** L'orario di parete `minuti` dopo uno «HH:30». */
+const dopo = (orario: string, minuti: number) => {
+  const m = Number(orario.slice(0, 2)) * 60 + 30 + minuti;
+  return `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+};
+
+describe('Ora legale: buco e sovrapposizione — CONTESTO §3, D-TIME-3 (audit P2-22)', () => {
+  const ogniGiorno = [0, 1, 2, 3, 4, 5, 6];
+  const generate = (giorno: string, orarioInizio: string, orarioFine: string) => {
+    const r = ricorrenza({ giorni: ogniGiorno, dataInizio: '2027-01-01', orarioInizio, orarioFine });
+    const occ = missingOccurrences(r, [], addLocalDays(localInstant(giorno, '12:00'), -1));
+    return { r, b: occ.find((x) => x.id === occurrenceId(r.id, giorno, orarioInizio))! };
+  };
+
+  it('nel buco l’inizio va avanti come l’orologio e il blocco lo segue con la sua durata; non risulta spostato', () => {
+    const buco = oraLegale('buco');
+    if (!buco) return;
+    const { r, b } = generate(buco.giorno, buco.orario, dopo(buco.orario, 45));
+    expect(b.inizio).toBe(localInstant(buco.giorno, buco.orario));
+    expect(b.fine! - b.inizio).toBe(45 * MINUTE);
+    const ancorato = { id: b.id, giornoLocale: buco.giorno, orarioInizio: localTimeKey(b.inizio) };
+    expect(isMovedOccurrence(ancorato, r.id)).toBe(false);
+  });
+
+  it('nella sovrapposizione vale la prima delle due ore uguali', () => {
+    const doppia = oraLegale('sovrapposizione');
+    if (!doppia) return;
+    const { b } = generate(doppia.giorno, doppia.orario, dopo(doppia.orario, 15));
+    // Un'ora dopo l'inizio l'orologio segna di nuovo lo stesso orario: l'inizio è la prima volta
+    expect(localTimeKey(b.inizio + HOUR)).toBe(doppia.orario);
+    expect(localTimeKey(b.inizio)).toBe(doppia.orario);
   });
 });

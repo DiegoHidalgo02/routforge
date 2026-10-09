@@ -9,8 +9,8 @@
  * differenza. Gli istanti nascono dall'ora di parete con il costruttore `Date` locale, cioè nel fuso corrente del
  * dispositivo (D-TIME-2).
  */
-import { endsNextDay } from '../activity';
-import { addLocalDays, localDayKey, localInstant, localWeekday, startOfLocalDay } from '../time';
+import { endsNextDay, wallDuration } from '../activity';
+import { addLocalDays, localDayKey, localInstant, localTimeKey, localWeekday, MINUTE, startOfLocalDay } from '../time';
 import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 
 /** Orizzonte della generazione: da oggi a oggi + 28 giorni, ultimo giorno incluso (§7, B1; D-OCC-1). */
@@ -43,12 +43,17 @@ export const occurrenceDay = (id: string, ricorrenzaId: string): string =>
 /**
  * Un'occorrenza spostata dall'utente (C4, «Anticipa»): giorno o orario di parete diversi dal suo slot, che resta
  * nell'id (D-DATA-2). È un dato dell'utente: una definizione ricevuta non la riscrive né la toglie, e riportarla allo
- * slot con una modifica fatta qui è un gesto che viaggia (D-SYNC-6).
+ * slot con una modifica fatta qui è un gesto che viaggia (D-SYNC-6). Lo slot nel buco dell'ora legale ha l'orario che
+ * gli dà l'orologio (02:30 → 03:30, D-TIME-3): lì non è spostata.
  */
 export const isMovedOccurrence = (
   b: Pick<BloccoAncorato, 'id' | 'giornoLocale' | 'orarioInizio'>,
   ricorrenzaId: string,
-): boolean => occurrenceId(ricorrenzaId, b.giornoLocale, b.orarioInizio) !== b.id;
+): boolean => {
+  const giorno = occurrenceDay(b.id, ricorrenzaId);
+  const orario = b.id.slice(ricorrenzaId.length + 12);
+  return b.giornoLocale !== giorno || b.orarioInizio !== localTimeKey(localInstant(giorno, orario));
+};
 
 /** Differenza da applicare a una modifica (§7): blocchi da scrivere (nuovi o riscritti), id da eliminare. */
 export interface PianoOccorrenze {
@@ -56,7 +61,11 @@ export interface PianoOccorrenze {
   daEliminare: string[];
 }
 
-/** Istanti di parete nel giorno dato: fine ≤ inizio → il giorno dopo; senza fine → `null` (§2, §7). */
+/**
+ * Istanti di parete nel giorno dato: fine ≤ inizio → il giorno dopo; senza fine → `null` (§2, §7). Nel buco dell'ora
+ * legale (un orario che quel giorno non esiste) l'inizio va avanti come l'orologio e il blocco lo segue con la sua
+ * durata; nella sovrapposizione vale la prima delle due ore uguali (D-TIME-3).
+ */
 export function wallInstants(
   giorno: string,
   orarioInizio: string,
@@ -64,6 +73,8 @@ export function wallInstants(
 ): Pick<Blocco, 'inizio' | 'fine'> {
   const inizio = localInstant(giorno, orarioInizio);
   if (orarioFine === null) return { inizio, fine: null };
+  if (localTimeKey(inizio) !== orarioInizio)
+    return { inizio, fine: inizio + (wallDuration(orarioInizio, orarioFine) ?? 0) * MINUTE };
   const fine = localInstant(giorno, orarioFine);
   return { inizio, fine: endsNextDay(orarioInizio, orarioFine) ? addLocalDays(fine, 1) : fine };
 }
