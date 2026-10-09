@@ -3,8 +3,9 @@
  * coda delle modifiche locali spedita al servizio, le righe degli altri dispositivi ricevute con «ultimo vince» per
  * record (`decide`, D-SYNC-1, D-SYNC-2), la fusione al primo accesso (J4), l'uscita che lascia i dati (J5), «Scollega»
  * e «Cancella i dati remoti». Una sincronizzazione alla volta (una richiesta durante la riesegue alla fine); parte
- * all'avvio, al ritorno in primo piano, al ritorno della rete, all'accesso e dopo 3 s da una modifica locale. Gli errori
- * vanno in Diagnostica, mai alla UI (INV-16). Dopo ogni ricezione i cicli dello scheduler (`dopoRicezione`, §25); le
+ * all'avvio, al ritorno in primo piano, al ritorno della rete, all'accesso e dopo 3 s da una modifica locale; poi 6 s
+ * dopo un push e, dopo un errore, a intervalli crescenti (D-SYNC-4 n. 9). Gli errori vanno in Diagnostica, mai alla UI
+ * (INV-16). Dopo ogni ricezione i cicli dello scheduler (`dopoRicezione`, §25); le
  * routine di studio partono con l'impronta del loro corso (T-034, D-SYNC-5). Criteri: SCENARI J1–J5.
  */
 import type { RoutForgeDb } from '../data/db';
@@ -46,6 +47,13 @@ import { dropOccurrences, followRecurrence } from './recurrences';
 export const CHIAVE_PROFILO = 'profilo';
 /** «Raggruppata entro pochi secondi» (piano §2.9): la sync parte 3 s dopo l'ultima modifica locale. */
 const RITARDO_MS = 3000;
+/**
+ * Un giro dopo un push, oltre i 5 s in cui il servizio trattiene le righe appena ricevute (D-SYNC-4 n. 2): la riga
+ * vincente rimandata a chi ha perso (D-SYNC-6 n. 2) arriva senza aspettare un altro innesco (D-SYNC-4 n. 9).
+ */
+const DOPO_PUSH_MS = 6000;
+/** Il nuovo tentativo dopo l'n-esimo giro fallito di fila con la rete accesa: 30 s, poi il quadruplo fino a 10'. */
+const ritenta = (errori: number) => Math.min(30_000 * 4 ** errori, 10 * 60_000);
 const LOTTO = 200;
 
 /** Lo stato della sync su questo dispositivo (`CHIAVE_STATO_SYNC`): account e cursore. Mai in sync né nel backup. */
@@ -158,13 +166,14 @@ function applyPage(
  * fuori dall'ambito non parte mai; si tolgono le voci non cambiate durante il push. Le ricorrenze partono prima dei
  * blocchi: chi le riceve rigenera le occorrenze dalla definizione e poi applica quelle toccate dall'utente (uno
  * spostamento, C4), che altrimenti la definizione arrivata dopo riscriverebbe. Una routine di studio parte con
- * l'impronta del suo corso di qui (§25, D-SYNC-5); se il corso qui non c'è tiene quella che ha.
+ * l'impronta del suo corso di qui (§25, D-SYNC-5); se il corso qui non c'è tiene quella che ha. `true` se ha spedito.
  */
-async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<void> {
+async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<boolean> {
   const voci = (await list(db, 'syncCoda')).sort(
     (a, b) => Number(b.tabella === 'ricorrenze') - Number(a.tabella === 'ricorrenze'),
   );
   let impronte: Map<string, string> | undefined;
+  let spedito = false;
   for (let i = 0; i < voci.length; i += LOTTO) {
     const buste = [];
     const spedite = [];
@@ -189,9 +198,13 @@ async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<void> {
       }
       buste.push(busta);
     }
-    if (buste.length) await backend.push(buste);
+    if (buste.length) {
+      await backend.push(buste);
+      spedito = true;
+    }
     await dequeue(db, spedite);
   }
+  return spedito;
 }
 
 export interface SyncService {
@@ -254,6 +267,8 @@ export function createSyncService(
   let accedendo = false;
   // Un tentativo di registrazione per un dispositivo che il servizio non conosce, fino al prossimo giro riuscito
   let registrando = false;
+  // I giri falliti di fila, per l'attesa del prossimo tentativo
+  let errori = 0;
 
   const scollegato = async () => {
     await signOutLocal();
@@ -300,11 +315,12 @@ export function createSyncService(
         // pagina successiva non arriva
         if (ricevute) dopoRicezione?.();
       }
-      await pushQueue(db, backend);
+      if (await pushQueue(db, backend)) programma(DOPO_PUSH_MS);
       // Il cursore è già salvato con ogni pagina; l'ultima riuscita resta in memoria (nessuna scrittura qui: durante il
       // push un import potrebbe aver sostituito i dati)
       registrando = false;
       aggiorna({ fase: 'in_pari', ultimaSync: clock.now(), dispositivi: await backend.devices() });
+      errori = 0;
       await conta();
     } catch (e) {
       if (e instanceof Fermata) return;
@@ -321,6 +337,8 @@ export function createSyncService(
       }
       logError('sync', e);
       aggiorna({ fase: 'errore' });
+      // Servizio giù o rete «accesa» senza Internet: nessun innesco arriverebbe da sé (D-SYNC-4 n. 9)
+      programma(ritenta(errori++));
     }
   }
 
@@ -356,13 +374,16 @@ export function createSyncService(
     await conta();
   }
 
-  // La sync dopo l'ultima modifica locale: un controllo al secondo finché non passano 3 s senza modifiche
-  let ultimaModifica = 0;
+  // Il prossimo giro: 3 s dopo l'ultima modifica locale, 6 s dopo un push, dopo un errore (D-SYNC-4 n. 9); vale l'ultimo
+  // programmato. Un controllo al secondo finché non arriva; dopo lo stop di `start()` nemmeno un giro in volo lo arma
+  let scadenza = 0;
   let fermaAttesa: (() => void) | null = null;
-  const programma = () => {
-    ultimaModifica = clock.now();
+  let fermato = false;
+  const programma = (ritardo: number) => {
+    if (fermato) return;
+    scadenza = clock.now() + ritardo;
     fermaAttesa ??= clock.every(1000, () => {
-      if (clock.now() - ultimaModifica < RITARDO_MS) return;
+      if (clock.now() < scadenza) return;
       fermaAttesa?.();
       fermaAttesa = null;
       void run();
@@ -372,6 +393,7 @@ export function createSyncService(
   let ultimaSessione = backend.session();
   return {
     start() {
+      fermato = false;
       const stop = [
         clock.onForeground(() => void run()),
         rete.onOnline(() => void run()),
@@ -379,7 +401,7 @@ export function createSyncService(
           () => contaCoda(db),
           (n) => {
             aggiorna({ inCoda: n });
-            if (n > 0 && backend.session()) programma();
+            if (n > 0 && backend.session()) programma(RITARDO_MS);
           },
         ),
         // Una sessione che arriva (quella salvata, all'avvio) fa partire la sync; una che si chiude dal servizio (revoca,
@@ -395,6 +417,7 @@ export function createSyncService(
       void run();
       return () => {
         for (const f of stop) f();
+        fermato = true;
         fermaAttesa?.();
         fermaAttesa = null;
       };

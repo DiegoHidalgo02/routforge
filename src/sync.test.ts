@@ -45,13 +45,24 @@ interface Dispositivo {
 let archivio: ArchivioSync;
 let n = 0;
 const aperti: RoutForgeDb[] = [];
-/** `avvolgi`: il servizio finto con un guasto iniettato (la rete che cade a metà di un giro). */
+/**
+ * `avvolgi`: il servizio finto con un guasto iniettato (la rete che cade a metà di un giro); `trattieniMs`: la finestra
+ * di `pull_records`; `orologio`: uno con i controlli al secondo (audit P2-6).
+ */
 function dispositivo(
   nome: string,
   {
     avvolgi = (b) => b,
+    trattieniMs = 0,
+    orologio = clock,
     ...opzioni
-  }: { pagina?: number; dopoRicezione?: () => void; avvolgi?: (b: SyncBackend) => SyncBackend } = {},
+  }: {
+    pagina?: number;
+    dopoRicezione?: () => void;
+    avvolgi?: (b: SyncBackend) => SyncBackend;
+    trattieniMs?: number;
+    orologio?: Clock;
+  } = {},
 ): Dispositivo {
   const db = openDb(`test-sync-${nome}-${++n}`);
   aperti.push(db);
@@ -59,13 +70,31 @@ function dispositivo(
   const rete = { online: () => d.online, onOnline: () => () => undefined };
   d.sync = createSyncService(
     db,
-    avvolgi(memorySyncBackend(archivio, () => ora, newId)),
+    avvolgi(memorySyncBackend(archivio, () => ora, newId, { trattieniMs })),
     rete,
-    clock,
+    orologio,
     { nome, piattaforma: 'web' },
     opzioni,
   );
   return d;
+}
+/** Un orologio coi controlli al secondo del servizio (`every(1000)`), che girano solo con `avanza` (audit P2-6). */
+function orologioFinto() {
+  const timer = new Set<() => void>();
+  const orologio: Clock = {
+    ...clock,
+    every: (_ms, f) => {
+      timer.add(f);
+      return () => void timer.delete(f);
+    },
+  };
+  const avanza = (ms: number) => {
+    for (const fine = ora + ms; ora < fine;) {
+      ora += 1000;
+      for (const f of [...timer]) f();
+    }
+  };
+  return { orologio, timer, avanza };
 }
 const accedi = async (d: Dispositivo) => {
   expect(await d.sync.verifyCode(EMAIL, CODICE_FINTO)).toBe(true);
@@ -777,5 +806,108 @@ describe('Rete che cade a metà di un giro — MECCANISMI §25, INV-16 (audit P1
     cade = false;
     await tablet.sync.run();
     expect(await titoli(tablet.db)).toEqual(['Due', 'Tre', 'Uno']);
+  });
+});
+
+describe('Giri programmati — MECCANISMI §25, D-SYNC-4 n. 9 (audit P2-6)', () => {
+  it('chi perde col push riceve la riga vincente 6 s dopo, oltre la finestra del servizio, senza un altro innesco', async () => {
+    const { orologio, timer, avanza } = orologioFinto();
+    const telefono = dispositivo('telefono', { orologio, trattieniMs: 5000 });
+    const tablet = dispositivo('tablet', { trattieniMs: 5000 });
+    await accedi(telefono);
+    await accedi(tablet);
+    const id = await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    ora += 10_000;
+    await tablet.sync.run();
+    // Alle 10:30 il tablet lo rinomina; alle 11:00 il telefono riceve e poi applica un «Segna fatto» delle 10:00 dato ad
+    // app chiusa (D-NATIVO-3): il servizio tiene le 10:30 e la rimanda al telefono, trattenuta 5 s
+    ora = ADESSO + 90 * MINUTE;
+    await saveBlock(tablet.db, { ...(await get(tablet.db, 'blocchi', id))!, titolo: 'Chiama Marco e Anna' }, ora, FUSO);
+    await tablet.sync.run();
+    ora = ADESSO + 120 * MINUTE;
+    await telefono.sync.run();
+    expect(await completeBlock(telefono.db, id, ADESSO + 60 * MINUTE, FUSO)).toBe(true);
+    await telefono.sync.run();
+    expect(await get(telefono.db, 'blocchi', id)).toMatchObject({ stato: 'completato' });
+    // Il giro non parte prima che il servizio mostri la riga rimandata
+    avanza(5000);
+    expect(timer.size).toBe(1);
+    avanza(2000);
+    await vi.waitFor(async () =>
+      expect(await get(telefono.db, 'blocchi', id)).toMatchObject({
+        titolo: 'Chiama Marco e Anna',
+        stato: 'programmato',
+      }),
+    );
+  });
+
+  it('dopo un errore con la rete accesa riprova da sola, a intervalli crescenti: 30 s, poi 2 minuti', async () => {
+    const { orologio, timer, avanza } = orologioFinto();
+    let tentativi = 0;
+    let cade = true;
+    const telefono = dispositivo('telefono', {
+      orologio,
+      avvolgi: (b) => ({
+        ...b,
+        push: (buste) => {
+          tentativi++;
+          return cade ? Promise.reject(new Error('servizio giù')) : b.push(buste);
+        },
+      }),
+    });
+    await accedi(telefono);
+    await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    expect(telefono.sync.snapshot().fase).toBe('errore');
+    avanza(29_000);
+    expect(timer.size).toBe(1);
+    avanza(2_000);
+    await vi.waitFor(() => expect(tentativi).toBe(2));
+    // Il secondo errore aspetta 2 minuti: dopo uno il controllo è ancora lì
+    await vi.waitFor(() => expect(timer.size).toBe(1));
+    avanza(60_000);
+    expect(timer.size).toBe(1);
+    cade = false;
+    avanza(61_000);
+    await vi.waitFor(async () => expect(await list(telefono.db, 'syncCoda')).toEqual([]));
+    expect(tentativi).toBe(3);
+  });
+
+  it('anche un errore dopo un push riuscito (l’elenco dei dispositivi) allunga l’attesa: 30 s, poi 2 minuti', async () => {
+    const { orologio, timer, avanza } = orologioFinto();
+    let falliti = 0;
+    let cade = false;
+    const telefono = dispositivo('telefono', {
+      orologio,
+      avvolgi: (b) => ({
+        ...b,
+        devices: () => {
+          if (!cade) return b.devices();
+          falliti++;
+          return Promise.reject(new Error('servizio giù'));
+        },
+      }),
+    });
+    await accedi(telefono);
+    cade = true;
+    await telefono.sync.run();
+    avanza(31_000);
+    await vi.waitFor(() => expect(falliti).toBe(2));
+    await vi.waitFor(() => expect(timer.size).toBe(1));
+    avanza(60_000);
+    expect(timer.size).toBe(1);
+  });
+
+  it('dopo lo stop di start() un giro ancora possibile non arma altri controlli', async () => {
+    const { orologio, timer } = orologioFinto();
+    const telefono = dispositivo('telefono', { orologio });
+    await accedi(telefono);
+    const stop = telefono.sync.start();
+    await telefono.sync.run();
+    stop();
+    await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    expect(timer.size).toBe(0);
   });
 });
