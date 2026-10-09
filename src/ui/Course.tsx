@@ -7,7 +7,6 @@
 // la pratica generata (T-024, T-027).
 import {
   ArrowUpRight,
-  Book,
   Building,
   Calendar,
   Check,
@@ -15,15 +14,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Code,
-  Globe,
   GraduationCap,
   Layers,
   List,
   Lock,
   Play,
   SquareCheckBig,
-  SquarePlay,
   Sun,
   Target,
   Trash2,
@@ -49,10 +45,10 @@ import { appDb, watch } from '../app/db';
 import { quizCriterion } from '../domain/generation';
 import { local } from '../domain/time';
 import type { Esito, StatoUnita } from '../domain/types';
-import { durata as durataCorso } from './Courses';
-import { durata as durataBreve, fuso, SETTIMANA } from './format';
+import { durata as durataBreve, durataCorso, fuso, SETTIMANA } from './format';
+import { IconaLink } from './IconaLink';
 import { lingua, t, type Chiave } from './i18n';
-import { SessionBannerSlot } from './Session';
+import { SessionBannerSlot } from './SessionBanner';
 import { CodiceUnita, TuoiMateriali } from './Materials';
 import { PraticaUnita } from './Practice';
 import s from './Course.module.css';
@@ -316,13 +312,6 @@ function Indietro({ altrimenti, chat }: { altrimenti: string; chat?: string }) {
     </header>
   );
 }
-
-const DOCUMENTAZIONE = /javascript\.info|git-scm|missing\.csail|developer\.mozilla/;
-/** L'icona del link per dominio, come nel mock (S11 Modulo `linkIcon`): video, codice, documentazione, web. */
-export const IconaLink = ({ host, youtube }: { host: string; youtube: boolean }) => {
-  const Icona = youtube ? SquarePlay : /github/.test(host) ? Code : DOCUMENTAZIONE.test(host) ? Book : Globe;
-  return <Icona size={16} className={s.iconaLink} />;
-};
 
 const STATO_SEZIONE: Record<MaterialeUnita['sezioni'][number]['stato'], Chiave> = {
   da_fare: 'sezioneDaFare',

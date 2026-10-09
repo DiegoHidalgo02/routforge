@@ -25,7 +25,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, Navigate, NavLink, useNavigate, useSearchParams } from 'react-router';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { unitScope } from '../app/ai';
 import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
@@ -37,7 +37,6 @@ import {
   editActiveSession,
   endSession,
   startSession,
-  readSessionView,
   setupInputs,
   type SessioneRegistrata,
   type CorsoSetup,
@@ -72,7 +71,6 @@ import {
   skipSegment,
   summary,
   timerState,
-  type StatoTimer,
 } from '../domain/timer';
 import { GLOBALE, type AmbitoAperto } from '../domain/ai';
 import type { TipoSezione } from '../domain/course/parser';
@@ -82,6 +80,7 @@ import { useMinuto, useSecondo } from './clock';
 import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { CaricaCodice } from './Materials';
+import { testoTimer, useSessionView } from './SessionBanner';
 import s from './Session.module.css';
 
 /** L'istante del clic (fuori dal render: `react-hooks/purity`). */
@@ -435,20 +434,7 @@ function SchedaNessuna(p: { premuta: boolean | undefined; onScegli: (id: null) =
   );
 }
 
-/** La sessione attiva con unità e orario; `undefined` fino alla prima lettura. */
-export function useSessionView(): VistaSessione | null | undefined {
-  const [vista, setVista] = useState<VistaSessione | null>();
-  useEffect(() => watch(() => readSessionView(appDb), setVista), []);
-  return vista;
-}
-
 const minutiDi = (ms: number) => Math.round(ms / MINUTE);
-
-/** Il numero del timer: conto alla rovescia, «+04:12» nel tempo extra, focus trascorso nel cronometro (FUNZ §11.2). */
-function testoTimer(st: StatoTimer): string {
-  if (st.restante === null) return orologio(st.focus);
-  return st.finita ? `+${orologio(st.extra)}` : orologio(st.restante, true);
-}
 
 /** «Modulo 00 · Unità 0.7 · routine 16:00» (S15). */
 function Sottotitolo({ v }: { v: VistaSessione }) {
@@ -467,50 +453,6 @@ function Sottotitolo({ v }: { v: VistaSessione }) {
       {origine}
     </span>
   );
-}
-
-/**
- * «Sessione in corso» (S1 SessionShell, S15 Desktop): banner in testa al contenuto su mobile, card nella sidebar su
- * desktop; «Riprendi» riporta al timer (FUNZ §11.2, D4).
- */
-export function SessionBanner({ vista, variante }: { vista: VistaSessione; variante: 'banner' | 'sidebar' }) {
-  const now = useSecondo();
-  const tempo = testoTimer(timerState(vista.sessione, now));
-  const titolo = vista.unita?.titolo ?? t('sessioneDiStudio');
-  if (variante === 'sidebar')
-    return (
-      <NavLink to="/sessione" end className={s.bannerSidebar}>
-        <span className={s.bannerEtichetta}>
-          <span className={s.pallino} />
-          {t('sessioneInCorso')}
-        </span>
-        <span className={s.bannerRiga}>
-          <span className={s.bannerTempo}>{tempo}</span>
-          <span className={s.bannerAzione}>{t('riprendi')}</span>
-        </span>
-        <span className={s.bannerTitolo}>{titolo}</span>
-      </NavLink>
-    );
-  return (
-    <div className={s.banner}>
-      <span className={s.pallinoLive} />
-      <span className={s.bannerTesto}>
-        {t('sessioneInCorso')} · <span className={s.bannerCifre}>{tempo}</span> · {titolo}
-      </span>
-      <Link to="/sessione" className={s.bannerRiprendi}>
-        {t('riprendi')}
-      </Link>
-    </div>
-  );
-}
-
-/**
- * Banner «Sessione in corso» sotto l'intestazione di ogni schermata mobile e sopra la striscia dei giorni
- * (`claude-design/CLAUDE.md` «Oggi», NAVIGAZIONE §2); su desktop c'è la carta della sidebar e il banner è nascosto.
- */
-export function SessionBannerSlot() {
-  const vista = useSessionView();
-  return vista ? <SessionBanner vista={vista} variante="banner" /> : null;
 }
 
 /** Tempo del messaggio «Interruzione iperfocus registrata», come il toast del trascinamento (D-DRAG-1). */

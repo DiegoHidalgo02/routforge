@@ -12,6 +12,8 @@
 // 4. I pacchetti che parlano con la persistenza o con la piattaforma si importano solo nel loro strato (`dexie` e i
 //    suoi add-on in data; Capacitor e client AI in platform): da ui o app salterebbero data o le porte. React e le
 //    librerie della UI solo in ui: i servizi di app restano senza framework.
+// 5. Nessun ciclo d'importazione fra i moduli di src (test esclusi): un valore usato al caricamento di un modulo del ciclo
+//    darebbe un ReferenceError all'avvio, che senza `lazy()` ferma l'intera app (audit P2-17).
 // =============================================================================
 import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -117,7 +119,44 @@ export function moduliNonEsportati(indexCodice, percorsi) {
     .filter((mod) => !indexCodice.includes(`'${mod}'`));
 }
 
-describe('Architettura — regole del progetto (docs/INVARIANTI.md INV-1, INV-2, INV-3)', () => {
+/** I cicli del grafo degli import (modulo → moduli importati): uno per arco all'indietro della visita in profondità. */
+export function cicli(archi) {
+  const stato = new Map();
+  const percorso = [];
+  const out = [];
+  const visita = (v) => {
+    stato.set(v, 'aperto');
+    percorso.push(v);
+    for (const w of archi.get(v) ?? []) {
+      if (stato.get(w) === 'aperto') out.push([...percorso.slice(percorso.indexOf(w)), w].join(' → '));
+      else if (!stato.has(w)) visita(w);
+    }
+    percorso.pop();
+    stato.set(v, 'chiuso');
+  };
+  for (const v of archi.keys()) if (!stato.has(v)) visita(v);
+  return out;
+}
+
+/** Gli import relativi di ogni modulo di src verso altri moduli (test esclusi), coi percorsi relativi a src. */
+function grafoImport() {
+  const moduli = fileTs(SRC).filter((p) => !isTest(p));
+  const noti = new Set(moduli);
+  const bersaglio = (da, spec) =>
+    ['', '.ts', '.tsx', `${sep}index.ts`].map((e) => resolve(dirname(da), spec) + e).find((p) => noti.has(p));
+  return new Map(
+    moduli.map((p) => [
+      relative(SRC, p),
+      importDi(senzaCommenti(readFileSync(p, 'utf8')))
+        .filter((spec) => spec.startsWith('.'))
+        .map((spec) => bersaglio(p, spec))
+        .filter((t) => t !== undefined)
+        .map((t) => relative(SRC, t)),
+    ]),
+  );
+}
+
+describe('Architettura — regole del progetto (docs/INVARIANTI.md INV-1, INV-2, INV-3, INV-22)', () => {
   it('nessuna violazione negli strati esistenti (direzione delle dipendenze e purezza del dominio, test inclusi)', () => {
     const trovate = fileTs(SRC).flatMap((p) =>
       violazioni(p, readFileSync(p, 'utf8')).map((v) => `${relative(SRC, p)}: ${v}`),
@@ -128,6 +167,10 @@ describe('Architettura — regole del progetto (docs/INVARIANTI.md INV-1, INV-2,
   it('ogni modulo di dominio è esportato da src/domain/index.ts', () => {
     const index = readFileSync(join(SRC, 'domain', 'index.ts'), 'utf8');
     expect(moduliNonEsportati(index, fileTs(join(SRC, 'domain')))).toEqual([]);
+  });
+
+  it('nessun ciclo d’importazione fra i moduli di src (audit P2-17)', () => {
+    expect(cicli(grafoImport())).toEqual([]);
   });
 
   it('il controllo riconosce davvero le violazioni (autotest)', () => {
@@ -172,5 +215,8 @@ describe('Architettura — regole del progetto (docs/INVARIANTI.md INV-1, INV-2,
       join(domain, 'index.ts'),
     ];
     expect(moduliNonEsportati("export * from './a';", file)).toEqual(['./corso/b']);
+    const grafo = (archi) => new Map(Object.entries(archi));
+    expect(cicli(grafo({ a: ['b'], b: ['c'], c: ['a'], d: ['a'] }))).toEqual(['a → b → c → a']);
+    expect(cicli(grafo({ a: ['b'], b: [], c: ['a', 'b'] }))).toEqual([]);
   });
 });

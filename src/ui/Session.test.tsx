@@ -13,7 +13,8 @@ import { editActiveSession, readActiveSession, startSession } from '../app/sessi
 import type { SceltaSessione } from '../domain/session';
 import { local } from '../domain/time';
 import { beat, pauseSession, resumeSession } from '../domain/timer';
-import { ActiveSession, SessionBanner, SessionSetup, useSessionView } from './Session';
+import { ActiveSession, SessionSetup } from './Session';
+import { SessionBanner, useSessionView } from './SessionBanner';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Lunedì 28 settembre 2026 alle 10:20 (C5).

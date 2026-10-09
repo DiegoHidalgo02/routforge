@@ -8,7 +8,7 @@ import { t } from './i18n';
 import { Logomark } from './Logomark';
 import { ProfileMenu } from './ProfileMenu';
 import { Recupero } from './Recupero';
-import { SessionBanner, useSessionView } from './Session';
+import { SessionBanner, useSessionView } from './SessionBanner';
 import s from './Shell.module.css';
 
 export function Shell() {

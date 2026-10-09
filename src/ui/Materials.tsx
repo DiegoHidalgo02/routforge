@@ -37,7 +37,7 @@ import {
 } from '../app/materials';
 import { hostOf } from '../domain/course/parser';
 import { isGroundable, type Materiale } from '../domain/materials';
-import { IconaLink } from './Course';
+import { IconaLink } from './IconaLink';
 import { lingua, t } from './i18n';
 import { Section } from './Section';
 import s from './Materials.module.css';

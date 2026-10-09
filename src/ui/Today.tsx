@@ -72,7 +72,7 @@ import { animazioniRidotte, impostazioni, useSettings, vibra } from './preferenz
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
-import { SessionBannerSlot } from './Session';
+import { SessionBannerSlot } from './SessionBanner';
 import s from './Today.module.css';
 
 // Forme brevi nella colonna dell'orario («Norm.», S1)

@@ -12,9 +12,10 @@ import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { useDesktop } from './desktop';
+import { durataCorso } from './format';
 import { t, type Chiave } from './i18n';
 import { ProfileMenu } from './ProfileMenu';
-import { SessionBannerSlot } from './Session';
+import { SessionBannerSlot } from './SessionBanner';
 import s from './Courses.module.css';
 
 type Avvisi = Awaited<ReturnType<typeof importZip>>;
@@ -33,8 +34,6 @@ type Esito =
   | { tipo: 'errore'; file: string | null }
   | ({ tipo: 'avvisi' } & Avvisi);
 
-/** Tempo dedicato «11h 40m», uguale in S10 e S11. */
-export const durata = (min: number) => t('durata', { h: Math.floor(min / 60), m: String(min % 60).padStart(2, '0') });
 /** Le cifre di un testo nel font dei numeri (S10: «5 moduli · 13 unità · 11h 40m»). */
 const cifre = (testo: string) =>
   testo.split(/(\d[\d:.,]*)/).map((x, i) =>
@@ -271,7 +270,7 @@ export function Courses() {
                 <span className={s.cardTesto}>
                   {cifre(t('corsoNumeri', { moduli: c.moduli, unita: c.unita }))}
                   {/* Il tempo dedicato solo su mobile: S10 Desktop non lo mostra (D-DESIGN-1 n. 18) */}
-                  <span className={s.tempo}>{cifre(t('corsoTempo', { tempo: durata(c.minuti) }))}</span>
+                  <span className={s.tempo}>{cifre(t('corsoTempo', { tempo: durataCorso(c.minuti) }))}</span>
                 </span>
               </span>
               {c.esempio && <span className={s.badge}>{t('esempio')}</span>}

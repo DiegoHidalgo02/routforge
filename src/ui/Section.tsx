@@ -5,7 +5,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { t, type Chiave } from './i18n';
-import { SessionBannerSlot } from './Session';
+import { SessionBannerSlot } from './SessionBanner';
 import s from './Section.module.css';
 
 export function Section({

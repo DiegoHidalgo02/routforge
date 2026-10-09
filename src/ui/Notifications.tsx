@@ -12,7 +12,7 @@ import { ascolta, type Tono } from './avvisi';
 import { useMinuto } from './clock';
 import { durata, fmtData } from './format';
 import { t, type Chiave } from './i18n';
-import { SessionBannerSlot } from './Session';
+import { SessionBannerSlot } from './SessionBanner';
 import s from './Notifications.module.css';
 
 /** Ms del messaggio con «Annulla» dopo l'esito (come Oggi, §3). */

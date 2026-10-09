@@ -20,6 +20,10 @@ export const durata = (min: number): string => {
   return m ? t('durata', { h, m: String(m).padStart(2, '0') }) : t('oreBrevi', { h });
 };
 
+/** Tempo dedicato a un corso «11h 40m», sempre ore e minuti, uguale in S10 e S11 (`durata` è la forma breve). */
+export const durataCorso = (min: number): string =>
+  t('durata', { h: Math.floor(min / 60), m: String(min % 60).padStart(2, '0') });
+
 /** Un anticipo del promemoria (MECC §13.1): «All’inizio», «5 min», «1 ora», «2 ore», «1 giorno», «3 giorni» (S4, S8). */
 export const anticipo = (min: number): string =>
   min === 0
