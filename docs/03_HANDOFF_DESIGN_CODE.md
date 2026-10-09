@@ -24,9 +24,11 @@ d'implementazione della UI: `.claude/rules/ui.md`.*
   preparativo dell'utente adattato al repository; la prima schermata implementata va al CP2 (`docs/06_SUPERVISIONE.md`).
   Finché una schermata non è mappata qui, il suo riferimento visivo non è attivo.
 - **Token**: dal T-052 l'app importa `claude-design/design/tokens.css` così com'è da `src/main.tsx`, senza copia
-  (INV-20); i token a segnaposto sono risolti per tipo in `src/ui/styles/global.css` (§3 n. 1).
+  (INV-20); i token a segnaposto sono risolti per tipo in `src/ui/styles/global.css` (§3 n. 1). Fa eccezione `iconColor`
+  di `capacitor.config.ts`, copia a mano di `--color-primary` (la config di Capacitor non legge il CSS): al reimport
+  si riallinea.
 - **L'export si versiona così com'è** in `claude-design/` (D-DESIGN-1); si cambia in Claude Design e si reimporta, mai
-  a mano. `.gitignore`, `.prettierignore` ed `eslint.config.js` lo escludono già (ZIP, formato, lint). I `.dc.html`
+  a mano. `.prettierignore` ed `eslint.config.js` lo escludono già (formato, lint). I `.dc.html`
   caricano React 18 e i font da internet solo per l'anteprima dei mock: non è prodotto.
 
 ## 1. Da confrontare con il nuovo design (inventario al 04/10/2026)

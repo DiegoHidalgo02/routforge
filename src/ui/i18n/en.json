@@ -967,7 +967,6 @@
   "faseOffline": "offline",
   "faseErrore": "error",
   "inPari": "up to date",
-  "inPariTitolo": "Up to date",
   "ultimaSincronizzazione": "Last sync",
   "nonAncora": "Not yet",
   "offlineInCoda": "Offline · {n} changes queued, they leave at the first connection",

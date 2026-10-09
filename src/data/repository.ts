@@ -407,13 +407,13 @@ export function watch<T>(
   return () => s.unsubscribe();
 }
 
-/** Blocchi vivi dei giorni locali "YYYY-MM-DD" da `primo` a `ultimo` inclusi, per giorno e poi per inizio (indice `[giornoLocale+inizio]`). */
 /** Le sessioni chiuse con l'avvio in [da, a) (MECC §20: sessioni del periodo = avvio nel periodo), indice `avvio`. */
 export async function sessionsBetween(db: RoutForgeDb, da: number, a: number): Promise<Tabelle['sessioni'][]> {
   const righe = await tabella(db, 'sessioni').where('avvio').between(da, a, true, false).toArray();
   return righe.filter((x): x is Tabelle['sessioni'] => vivo(x));
 }
 
+/** Blocchi vivi dei giorni locali "YYYY-MM-DD" da `primo` a `ultimo` inclusi, per giorno e poi per inizio (indice `[giornoLocale+inizio]`). */
 export async function blocksBetween(db: RoutForgeDb, primo: string, ultimo: string): Promise<RigaBlocco[]> {
   const righe = await db.blocchi
     .where('[giornoLocale+inizio]')

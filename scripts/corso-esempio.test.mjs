@@ -3,7 +3,8 @@
 // -----------------------------------------------------------------------------
 // I due moduli in src/data/sample-course/ sono i file di riferimento di FORMATO §0: il parser li legge senza avvisi
 // e produce il corso di course-data.js, nella stessa cartella, il risultato atteso (FORMATO §0 e §5, D-DESIGN-1). Il
-// fixture viene dal vecchio export del design ed è l'unica copia rimasta (D-DESIGN-2). Il test resta in scripts/:
+// fixture è identico a claude-design/design/course-data.js del pacchetto (D-DESIGN-3): un reimport che li separa ferma
+// il gate, e si riallinea la copia di src (il pacchetto non si modifica). Il test resta in scripts/:
 // course-data.js è JavaScript senza tipi, che il typecheck strict di src non accetta come import.
 // =============================================================================
 import { describe, expect, it } from 'vitest';
@@ -85,6 +86,14 @@ describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-
     );
     // M1 bloccato finché i criteri di M0 non sono tutti sì (FORMATO §4)
     expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
+  });
+
+  it('course-data.js di src coincide con quello del pacchetto di design (audit P3-28)', () => {
+    const pacchetto = readFileSync(join(ROOT, 'claude-design', 'design', 'course-data.js'));
+    expect(
+      readFileSync(join(COPIA, 'course-data.js')).equals(pacchetto),
+      'le due copie di course-data.js differiscono',
+    ).toBe(true);
   });
 
   it('il corso letto dal parser coincide con course-data.js', () => {

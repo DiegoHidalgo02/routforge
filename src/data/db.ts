@@ -72,7 +72,6 @@ export interface Tabelle {
    * nelle righe scritte prima di T-018); la sessione attiva sta in `preferenze`.
    */
   sessioni: Riga<SessioneChiusa & { esito?: DatiEsito | null }>;
-  // Tabelle dei passi successivi: per ora solo i campi indicizzati; il task che le usa aggiunge il resto.
   /** id = id del blocco dell'occorrenza (MECC §5: un log per occorrenza, ricompletare sovrascrive; D-DATA-2); `fasi` è la fotografia al Conferma (T-009). */
   logFasi: Riga<{ ricorrenzaId: string | null; fasi: FaseLog[] }>;
   /** Mazzi di flashcard generati (MECC §18, T-027): uno per generazione, sull'unità. */

@@ -7,7 +7,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": ["vite/client"],
-    "resolveJsonModule": true,
     "exactOptionalPropertyTypes": false
   },
   "include": ["src/ui", "src/platform", "src/main.tsx"],
