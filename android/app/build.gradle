@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// Una sola versione (audit P3-30): quella di package.json, che l'app mostra in Impostazioni → Informazioni
+// (`__VERSIONE__` di vite.config.ts); versionCode = maggiore·10000 + minore·100 + patch (0.1.0 → 100)
+def versioneApp = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
+
 android {
     namespace = "com.routforge.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +11,8 @@ android {
         applicationId "com.routforge.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode versioneApp.tokenize('.').inject(0) { n, parte -> n * 100 + parte.toInteger() }
+        versionName versioneApp
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
