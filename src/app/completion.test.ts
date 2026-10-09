@@ -359,7 +359,7 @@ describe('Checklist su un todo «non fatto» — MECCANISMI §4, §6 (servizio)'
 });
 
 describe('Evento con fasi e follow-up — SCENARI E1 (servizio)', () => {
-  it('«Completa evento» con «stampare le analisi» saltata e follow-up «Stampa analisi»: evento completato, log 1 fatta + 1 saltata, todo senza orario per oggi con orizzonte mese', async () => {
+  it('«Completa evento» con «stampare le analisi» saltata e follow-up: evento completato, log 1 fatta + 1 saltata, todo «Stampare le analisi» senza orario nel giorno dell’evento, orizzonte giorno (audit P3-7)', async () => {
     const id = await crea(eventoDentista());
     const stampare = (await blocco(id)).fasi!.find((f) => f.etichetta === 'Stampare le analisi')!.id;
     const giovedi = local(2026, 9, 24, 11, 5);

@@ -715,3 +715,21 @@ describe('Blocchi che non si leggono — MECCANISMI §13.3, CONTESTO §3 (audit 
     expect(unreadableBlocks([blocco({ ricorrenzaId: 'r1' })], [ricorrenza(pers([5]))], DEF)).toEqual([]);
   });
 });
+
+describe("L'esito non è mai una sveglia — SCENARI F7", () => {
+  it('studio 16:00–16:45 con «5 min prima» e «all’inizio» come sveglia: sveglie alle 15:55 e alle 16:00, verifica ed esito normali', () => {
+    const n = blockNotifications(
+      blocco({ tipo: 'studio', inizio: oggi(16), fine: oggi(16, 45), promemoria: pers([5, true], [0, true]) }),
+      undefined,
+      DEF,
+    );
+    expect(Object.fromEntries(n.map((x) => [x.trigger, x.sveglia]))).toEqual({
+      pre: true,
+      inizio: true,
+      verifica: false,
+      esito: false,
+    });
+    expect(n.find((x) => x.trigger === 'pre')?.istante).toBe(oggi(15, 55));
+    expect(n.find((x) => x.trigger === 'esito')?.istante).toBe(oggi(16, 55));
+  });
+});

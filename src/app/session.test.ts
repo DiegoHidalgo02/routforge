@@ -782,7 +782,6 @@ describe('Servizio in primo piano della sessione — MECCANISMI §10.4, D-TIMER-
     const avvia = vi.fn();
     const ferma = vi.fn();
     const smetti = followSessionInForeground(db, { avvia, ferma });
-    await vi.waitFor(() => expect(ferma).toHaveBeenCalledTimes(0));
     await startSession(db, null, scelta(), oggi(9), FUSO);
     await vi.waitFor(() => expect(avvia).toHaveBeenCalledWith({ titolo: '', avvio: oggi(9) }));
     await abandonSession(db, oggi(9, 5), FUSO);

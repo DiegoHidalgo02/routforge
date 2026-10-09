@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
-import { get, list, listBy, save, saveBlock, type DatiBlocco } from '../data/repository';
+import { get, list, save, saveBlock, type DatiBlocco } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import {
   CHIAVE_PROVA,
@@ -644,15 +644,22 @@ describe('Inneschi — MECCANISMI §13.3 (ogni mutazione)', () => {
     );
     await vi.waitFor(() => expect(p.vista()).toContain(`${CHIAVE_TEMPO_SCADUTO}@08:50`));
     stop();
-    await blocco({ id: 's2', inizio: oggi(15), fine: oggi(16) });
-    await new Promise<void>((fatto) => setTimeout(fatto, 50));
-    expect(p.armate.size).toBe(5);
-    expect(await listBy(db, 'blocchi', 'tipo', 'studio')).toHaveLength(2);
+    // Un testimone ancora acceso vede la stessa scrittura: quando ha riarmato il tempo scaduto, un servizio ancora
+    // iscritto l'avrebbe fatto anche lui. Prima si attendevano 50 ms dopo la scrittura di un blocco a cui nemmeno un
+    // servizio acceso avrebbe dato voci, durante la sessione (audit P3-7)
+    const q = portaFinta();
+    const smettiTestimone = createNotifications(db, q.porta, orologio(oggi(8))).start();
+    await vi.waitFor(() => expect(q.vista()).toContain(`${CHIAVE_TEMPO_SCADUTO}@08:50`));
+    const sessione = { ...scelta, avvio: oggi(8), fine: oggi(8, 55), bloccoId: null };
+    await save(db, 'preferenze', { id: CHIAVE_SESSIONE_ATTIVA, valore: sessione }, oggi(8));
+    await vi.waitFor(() => expect(q.vista()).toContain(`${CHIAVE_TEMPO_SCADUTO}@08:55`));
+    smettiTestimone();
+    expect(p.vista()).toContain(`${CHIAVE_TEMPO_SCADUTO}@08:50`);
+    expect(p.vista()).not.toContain(`${CHIAVE_TEMPO_SCADUTO}@08:55`);
   });
 });
 
 // La lib della radice è ES2022 senza DOM né Node (D-TS-1): si dichiarano i soli globali che servono ai test
-declare const setTimeout: (fatto: () => void, ms: number) => unknown;
 declare function structuredClone<T>(v: T): T;
 
 describe('Cancella tutto — MECCANISMI §22, D-BACKUP-2 (audit P2-12)', () => {
@@ -668,3 +675,4 @@ describe('Cancella tutto — MECCANISMI §22, D-BACKUP-2 (audit P2-12)', () => {
     expect(await list(db, 'registroNotifiche')).toEqual([]);
   });
 });
+

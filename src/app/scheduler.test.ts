@@ -436,6 +436,8 @@ function orologioFinto(inizio: number) {
     primoPiano() {
       for (const fn of inPrimoPiano) fn();
     },
+    /** Battiti e ascoltatori del primo piano ancora registrati: dopo lo stop nessuno (audit P3-7). */
+    attivi: () => battiti.size + inPrimoPiano.size,
   };
 }
 
@@ -481,10 +483,11 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
     const o = orologioFinto(local(2026, 9, 23, 20, 0));
     const s = createScheduler(db, o.clock);
     s.start()();
+    // Senza battiti né ascoltatori nessun innesco può partire: il controllo non dipende da un'attesa (audit P3-7)
+    expect(o.attivi()).toBe(0);
     await s.run();
     o.avanza(60 * 60_000);
     o.primoPiano();
-    await new Promise<void>((fatto) => setTimeout(fatto, 50));
     expect(await stato(r.id)).toBe('programmato');
     expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 0));
   });
