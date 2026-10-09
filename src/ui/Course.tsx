@@ -46,8 +46,8 @@ import { youtubeId } from '../domain/course/parser';
 import { quizCriterion } from '../domain/generation';
 import { completedUnits } from '../domain/pointer';
 import { local } from '../domain/time';
-import type { Esito, StatoUnita } from '../domain/types';
-import { durata as durataBreve, durataCorso, fuso, SETTIMANA } from './format';
+import type { StatoUnita } from '../domain/types';
+import { durata as durataBreve, durataCorso, fuso, NOME_ESITO, NOME_SEZIONE, SETTIMANA } from './format';
 import { IconaLink } from './IconaLink';
 import { lingua, t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
@@ -320,12 +320,6 @@ const STATO_SEZIONE: Record<MaterialeUnita['sezioni'][number]['stato'], Chiave> 
   in_corso: 'sezioneInCorso',
   fatta: 'sezioneFatta',
 };
-const BADGE_SEZIONE: Record<MaterialeUnita['sezioni'][number]['tipo'], Chiave> = {
-  teoria: 'sezioneTeoria',
-  studio: 'sezioneStudio',
-  pratica: 'sezionePratica',
-  progetto: 'sezioneProgetto',
-};
 
 /**
  * Concetto core e sezioni dell'unità con le risorse (S11 Modulo, unità aperta; S12): intestazione intera della sezione
@@ -343,7 +337,7 @@ function Sezioni({ m, conStato }: { m: MaterialeUnita; conStato?: boolean }) {
       {m.sezioni.map((x) => (
         <div key={x.id} className={s.blocco} data-sezione>
           <span className={s.testaSezione}>
-            <span className={s.badgeSezione}>{t(BADGE_SEZIONE[x.tipo])}</span>
+            <span className={s.badgeSezione}>{t(NOME_SEZIONE[x.tipo])}</span>
             <span className={s.intestazioneSezione}>{x.intestazione}</span>
             {conStato && (
               <span className={s.statoSezione} data-stato={x.stato}>
@@ -625,12 +619,6 @@ const STATO_UNITA: Record<StatoUnita, Chiave> = {
   completata: 'statoCompletata',
   saltata: 'statoSaltata',
 };
-const ESITO: Record<Esito, Chiave> = {
-  completata: 'esitoCompletata',
-  continua: 'esitoContinua',
-  indietro: 'esitoIndietro',
-  salta: 'esitoSalta',
-};
 const fmtUltima = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
 /**
@@ -731,7 +719,7 @@ export function Unit() {
                         <span className={s.num}>
                           {fmtUltima.format(ultima.avvio)} · {durataBreve(ultima.minuti)}
                         </span>
-                        {ultima.esito && ` · ${t('esitoBreve', { esito: t(ESITO[ultima.esito]) })}`}
+                        {ultima.esito && ` · ${t('esitoBreve', { esito: t(NOME_ESITO[ultima.esito]) })}`}
                       </>
                     ) : (
                       t('nessunaSessione')

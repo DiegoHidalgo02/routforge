@@ -32,17 +32,9 @@ import {
   type NomeAmbito,
 } from '../app/ai';
 import { appDb, watch } from '../app/db';
-import {
-  citations,
-  conversationGroups,
-  GLOBALE,
-  nextScope,
-  type AmbitoAperto,
-  type ErroreAi,
-  type TipoFonte,
-} from '../domain/ai';
+import { citations, conversationGroups, GLOBALE, nextScope, type AmbitoAperto, type ErroreAi } from '../domain/ai';
 import { useMinuto } from './clock';
-import { fmtData } from './format';
+import { fmtData, FONTE } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { Markdown } from './Markdown';
 import { useSettings } from './preferenze';
@@ -62,14 +54,6 @@ function useOnline(): boolean {
     () => navigator.onLine,
   );
 }
-
-const FONTE: Record<TipoFonte, Chiave> = {
-  TEORIA: 'fonteCorso',
-  CODICE: 'fonteCodice',
-  NOTA: 'fonteTuoi',
-  LINK: 'fonteTuoi',
-  PDF: 'fonteTuoi',
-};
 
 /** La risposta col markdown, i numeri delle citazioni al loro posto e le fonti sotto (§18). */
 function Risposta({ testo }: { testo: string }) {

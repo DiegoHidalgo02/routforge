@@ -54,7 +54,16 @@ import { shownPhases } from '../domain/phases';
 import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
 import type { StatoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
-import { durata, fmtData, fuso as fusoCorrente, maiuscola, SETTIMANA, TIPO, titolo as titoloDi } from './format';
+import {
+  durata,
+  fmtData,
+  fuso as fusoCorrente,
+  maiuscola,
+  NOME_ESITO,
+  SETTIMANA,
+  TIPO,
+  titolo as titoloDi,
+} from './format';
 import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
@@ -97,18 +106,11 @@ const AZIONE_STUDIO: Record<AzioneStudio, Chiave> = {
   ripasso: 'ripassoLibera',
 };
 /** Esito dello studio nella OutcomeRow di S5 (§11), per stato del blocco. */
-/** Il nome dell'esito nel messaggio di Oggi («Esito registrato · … · Continua», TESTI). */
-const NOME_ESITO: Record<DatiEsito['esito'], Chiave> = {
-  completata: 'esitoCompletata',
-  continua: 'esitoContinua',
-  indietro: 'esitoIndietro',
-  salta: 'esitoSalta',
-};
 const ESITO_STUDIO: Partial<Record<StatoBlocco, Chiave>> = {
-  completato: 'esitoCompletata',
-  parziale: 'esitoContinua',
-  indietro: 'esitoIndietro',
-  saltato: 'esitoSalta',
+  completato: NOME_ESITO.completata,
+  parziale: NOME_ESITO.continua,
+  indietro: NOME_ESITO.indietro,
+  saltato: NOME_ESITO.salta,
 };
 /** Suggerimenti di S5 per lo studio: anticipo, ripasso e sessione libera di un altro giorno. */
 const suggerimentoStudio = (azione: AzioneStudio | undefined): string | null =>

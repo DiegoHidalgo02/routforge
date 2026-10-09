@@ -23,7 +23,7 @@ import {
 import { citations, type ErroreAi } from '../domain/ai';
 import { QUANTITA, quizScore, type DifficoltaPratica, type Quantita, type TipoPratica } from '../domain/generation';
 import type { Valutazione } from '../domain/sm2';
-import { fmtData, fuso } from './format';
+import { fmtData, FONTE, fuso } from './format';
 import { t, type Chiave } from './i18n';
 import s from './Practice.module.css';
 
@@ -269,18 +269,10 @@ export function Testa(p: { titolo: string; sottotitolo: string; progresso?: [num
 export function Fonte({ citazione }: { citazione: string }) {
   if (!citazione) return null;
   const f = citations(citazione.startsWith('[') ? citazione : `[${citazione}]`).fonti[0];
-  const tipo: Record<string, Chiave> = {
-    CODICE: 'fonteCodice',
-    NOTA: 'fonteTuoi',
-    LINK: 'fonteTuoi',
-    PDF: 'fonteTuoi',
-  };
   return (
     <span className={s.fonte}>
       <span className={s.quadrato}>1</span>
-      <span className={s.etichettaFonte}>
-        {f ? t(tipo[f.tipo] ?? 'fonteCorso', { etichetta: f.etichetta }) : citazione}
-      </span>
+      <span className={s.etichettaFonte}>{f ? t(FONTE[f.tipo], { etichetta: f.etichetta }) : citazione}</span>
     </span>
   );
 }

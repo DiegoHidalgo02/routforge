@@ -35,6 +35,7 @@ export interface RisorsaImportata {
 export interface SezioneImportata {
   id: string;
   tipo: TipoSezione;
+  /** Il testo del file (INV-19); le schermate mostrano il nome del tipo nella lingua dell'app (`NOME_SEZIONE`). */
   etichetta: string;
   intestazione: string;
   risorse: RisorsaImportata[];

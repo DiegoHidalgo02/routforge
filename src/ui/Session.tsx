@@ -74,11 +74,10 @@ import {
   timerState,
 } from '../domain/timer';
 import { GLOBALE, type AmbitoAperto } from '../domain/ai';
-import type { TipoSezione } from '../domain/course/parser';
 import type { Blocco, Esito } from '../domain/types';
 import { ChatPanel } from './Chat';
 import { useMinuto, useSecondo } from './clock';
-import { durata as durataBreve, fuso, orologio, titolo as titoloBlocco } from './format';
+import { durata as durataBreve, fuso, NOME_ESITO, NOME_SEZIONE, orologio, titolo as titoloBlocco } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { CaricaCodice } from './Materials';
 import { testoTimer, useSessionView } from './SessionBanner';
@@ -882,14 +881,15 @@ export function ActiveSession() {
   );
 }
 
-const ESITI: { id: Esito; chiave: Chiave; Icona: LucideIcon }[] = [
-  { id: 'completata', chiave: 'esitoCompletata', Icona: Check },
-  { id: 'continua', chiave: 'esitoContinua', Icona: ArrowRight },
-  { id: 'indietro', chiave: 'esitoIndietro', Icona: ArrowLeft },
-  { id: 'salta', chiave: 'esitoSalta', Icona: SkipForward },
+/** Gli esiti nell'ordine del foglio, con le icone; i nomi da `NOME_ESITO` (audit P3-12). */
+const ESITI: { id: Esito; Icona: LucideIcon }[] = [
+  { id: 'completata', Icona: Check },
+  { id: 'continua', Icona: ArrowRight },
+  { id: 'indietro', Icona: ArrowLeft },
+  { id: 'salta', Icona: SkipForward },
 ];
 const CONFIDENZA: Chiave[] = ['confidenza1', 'confidenza2', 'confidenza3', 'confidenza4', 'confidenza5'];
-export const etichettaEsito = (e: Esito): string => t(ESITI.find((x) => x.id === e)?.chiave ?? 'esitoCompletata');
+export const etichettaEsito = (e: Esito): string => t(NOME_ESITO[e]);
 export const etichettaConfidenza = (c: number | null): string => {
   const chiave = c ? CONFIDENZA[c - 1] : undefined;
   return chiave ? t(chiave) : '—';
@@ -994,11 +994,11 @@ export function SchedaEsito(p: {
         </div>
       )}
       <div className={s.esiti}>
-        {ESITI.map(({ id, chiave, Icona }) => (
+        {ESITI.map(({ id, Icona }) => (
           <button key={id} type="button" className={s.esito} aria-pressed={esito === id} onClick={() => setEsito(id)}>
             <span className={s.esitoTesta}>
               <Icona size={16} strokeWidth={2} />
-              {t(chiave)}
+              {t(NOME_ESITO[id])}
             </span>
             {sotto[id] && <span className={s.esitoSotto}>{sotto[id]}</span>}
           </button>
@@ -1104,12 +1104,6 @@ const LATI: { id: Lato; chiave: Chiave }[] = [
   { id: 'ai', chiave: 'ai' },
   { id: 'note', chiave: 'note' },
 ];
-const SEZIONE: Record<TipoSezione, Chiave> = {
-  teoria: 'sezioneTeoria',
-  studio: 'sezioneStudio',
-  pratica: 'sezionePratica',
-  progetto: 'sezioneProgetto',
-};
 
 /**
  * Le schede sotto il timer (S15 `tab`, FUNZ §11.2): il Materiale dell'unità studiata adesso, la chat AI sull'unità (T-026)
@@ -1183,7 +1177,7 @@ function Materiale({ unitaId }: { unitaId: string }) {
       {m.sezioni.map((x) => (
         <div key={x.id} className={s.gruppoMateriale}>
           <span className={s.testaSezione}>
-            <span className={s.badgeSezione}>{t(SEZIONE[x.tipo])}</span>
+            <span className={s.badgeSezione}>{t(NOME_SEZIONE[x.tipo])}</span>
             {x.titolo}
           </span>
           {x.risorse.map((r, i) => (

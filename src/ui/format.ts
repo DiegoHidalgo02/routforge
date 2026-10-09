@@ -1,6 +1,8 @@
 // Formattazioni condivise dalle schermate (lingua di `pickLanguage`, MECC §23).
 import type { BloccoCalendario } from '../app/calendar';
-import type { Blocco, TipoBlocco } from '../domain/types';
+import type { TipoFonte } from '../domain/ai';
+import type { TipoSezione } from '../domain/course/parser';
+import type { Blocco, Esito, TipoBlocco } from '../domain/types';
 import { lingua, t, type Chiave } from './i18n';
 
 /** Fuso corrente del dispositivo per le scritture delle schermate (la porta `Clock` è dei servizi, D-SCHED-1 n. 9). */
@@ -56,6 +58,31 @@ export const TIPO: Record<TipoBlocco, Chiave> = {
   studio: 'tipoStudio',
   routine: 'tipoRoutine',
   evento: 'tipoEvento',
+};
+
+/** Il nome dell'esito (MECC §11), lo stesso in Corso, Dettaglio e Sessione (audit P3-12). */
+export const NOME_ESITO: Record<Esito, Chiave> = {
+  completata: 'esitoCompletata',
+  continua: 'esitoContinua',
+  indietro: 'esitoIndietro',
+  salta: 'esitoSalta',
+};
+
+/** Il nome del tipo di sezione dell'unità (FORMATO §3): l'`etichetta` del parser è il testo del file, non si mostra. */
+export const NOME_SEZIONE: Record<TipoSezione, Chiave> = {
+  teoria: 'sezioneTeoria',
+  studio: 'sezioneStudio',
+  pratica: 'sezionePratica',
+  progetto: 'sezioneProgetto',
+};
+
+/** Il nome della fonte di una citazione dell'AI (MECC §18), lo stesso nella chat e nella pratica. */
+export const FONTE: Record<TipoFonte, Chiave> = {
+  TEORIA: 'fonteCorso',
+  CODICE: 'fonteCodice',
+  NOTA: 'fonteTuoi',
+  LINK: 'fonteTuoi',
+  PDF: 'fonteTuoi',
 };
 
 /** Titolo di un blocco sul calendario: il suo, o il nome del tipo. */
