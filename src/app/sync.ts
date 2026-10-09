@@ -26,6 +26,7 @@ import {
   decide,
   isSynced,
   mergeLocalFields,
+  sendable,
   TABELLE_SINCRONIZZATE,
   toEnvelope,
   validEnvelope,
@@ -178,7 +179,15 @@ async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<void> {
       if (corsoId) impronte ??= new Map((await courseFingerprints(db)).map((c) => [c.id, c.impronta]));
       const impronta = corsoId ? impronte?.get(corsoId) : undefined;
       const spedita = impronta ? { ...riga, impronta } : riga;
-      buste.push(toEnvelope(tabella, spedita, v));
+      const busta = toEnvelope(tabella, spedita, v);
+      // Una riga che il servizio rifiuterebbe sempre fermerebbe tutta la coda: non parte, va in Diagnostica e la sua voce
+      // resta in coda, perché senza voce una versione remota più vecchia la sovrascriverebbe (`decide`; audit P1-11)
+      if (!sendable(busta.dati)) {
+        spedite.pop();
+        logError('sync', new Error(`riga non spedita, il servizio la rifiuterebbe: ${tabella}:${v.recordId}`));
+        continue;
+      }
+      buste.push(busta);
     }
     if (buste.length) await backend.push(buste);
     await dequeue(db, spedite);

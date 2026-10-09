@@ -242,6 +242,31 @@ export function serverAccepts(
   );
 }
 
+/**
+ * Il tetto di una riga sul servizio (audit P1-11): il `check` di `records` in `supabase/schema.sql` rifiuta l'intero
+ * lotto se una riga supera 1 MiB del suo testo `jsonb`, e `jsonb` rifiuta il carattere nullo e i surrogati UTF-16 soli:
+ * ogni giro rispedirebbe lo stesso lotto e la coda si fermerebbe lì.
+ */
+export const MAX_BYTE_RIGA = 1024 * 1024;
+/** Un escape `\u0000` o di un surrogato solo vero, cioè non preceduto da un backslash a sua volta scritto come `\\`. */
+const ESCAPE_RIFIUTATO = /(?:^|[^\\])(?:\\\\)*\\u(?:0000|d[89a-f][0-9a-f]{2})/;
+
+/**
+ * `false` per una riga che il servizio rifiuterebbe sempre. I byte si misurano sul JSON indentato di uno spazio, mai
+ * più corto del testo `jsonb` (uno spazio dopo ogni `:` e `,`), salvo i numeri con esponente che i dati dell'app non hanno.
+ */
+export function sendable(dati: unknown): boolean {
+  const testo = JSON.stringify(dati, null, 1);
+  if (ESCAPE_RIFIUTATO.test(testo)) return false;
+  let byte = 0;
+  for (const c of testo) {
+    const punto = c.codePointAt(0) ?? 0;
+    byte += punto < 0x80 ? 1 : punto < 0x800 ? 2 : punto < 0x10000 ? 3 : 4;
+    if (byte > MAX_BYTE_RIGA) return false;
+  }
+  return true;
+}
+
 /** D-SYNC-2: l'istante salvato dal servizio non supera di più di 5 minuti la sua ora. */
 export const clampUpdatedAt = (updatedAt: number, oraServizio: number): number =>
   Math.min(updatedAt, oraServizio + ANTICIPO_MASSIMO_MS);

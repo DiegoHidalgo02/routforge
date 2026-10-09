@@ -19,6 +19,7 @@ import type { Clock } from './app/ports/clock';
 import type { SyncBackend } from './app/ports/sync';
 import { deleteRecurrence, editRecurrence, generateOccurrences } from './app/recurrences';
 import { eraseAllData } from './app/backup';
+import { readDiagnostics } from './app/diagnostics';
 import { runCycle } from './app/scheduler';
 import { setupInputs } from './app/session';
 import { createSyncService, registerSyncService, type SyncService } from './app/sync';
@@ -674,5 +675,43 @@ describe('Fusione dopo l’import di un backup — MECCANISMI §25, D-SYNC-4 n. 
     await accedi(tablet);
     await telefono.sync.run();
     for (const d of [telefono, tablet]) expect(await get(d.db, 'blocchi', id)).toMatchObject({ stato: 'completato' });
+  });
+});
+
+describe('Righe che il servizio rifiuta sempre — MECCANISMI §25 (audit P1-11)', () => {
+  it('una nota oltre il tetto del servizio non ferma la coda: le altre modifiche partono, la riga va in Diagnostica e resta', async () => {
+    const db = openDb(`test-sync-tetto-${++n}`);
+    aperti.push(db);
+    const base = memorySyncBackend(archivio, () => ora, newId);
+    // Come `push_records` nell'SQL: una riga oltre 1 MB viola il `check` di `records` e fa fallire l'intero lotto
+    const severo: SyncBackend = {
+      ...base,
+      push: (buste) =>
+        buste.some((b) => JSON.stringify(b.dati).length > 1024 * 1024)
+          ? Promise.reject(new Error('violates check constraint "records_dati_check"'))
+          : base.push(buste),
+    };
+    const rete = { online: () => true, onOnline: () => () => undefined };
+    const sync = createSyncService(db, severo, rete, clock, { nome: 'telefono', piattaforma: 'web' });
+    expect(await sync.verifyCode(EMAIL, CODICE_FINTO)).toBe(true);
+    await sync.run();
+    // «Appunti» è già sul servizio; poi la sua nota diventa enorme
+    const grande = await crea(db, todo('Appunti'));
+    await sync.run();
+    ora = ADESSO + 10 * MINUTE;
+    const nota = 'x'.repeat(1100 * 1024);
+    await saveBlock(db, { ...(await get(db, 'blocchi', grande))!, note: nota }, ora, FUSO);
+    await crea(db, todo('Chiama Marco'));
+    await sync.run();
+    const tablet = dispositivo('tablet');
+    await accedi(tablet);
+    expect(await titoli(tablet.db)).toEqual(['Appunti', 'Chiama Marco']);
+    const { eventi } = await readDiagnostics(db, ora);
+    expect(eventi.some((e) => e.sorgente === 'sync' && e.messaggio.includes(grande))).toBe(true);
+    // La voce resta in coda: uscendo e rientrando (cursore da 0) la versione più vecchia del servizio non la sovrascrive
+    await sync.signOut();
+    expect(await sync.verifyCode(EMAIL, CODICE_FINTO)).toBe(true);
+    await sync.run();
+    expect((await get(db, 'blocchi', grande))?.note).toBe(nota);
   });
 });

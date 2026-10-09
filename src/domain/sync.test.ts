@@ -7,7 +7,9 @@ import {
   isSynced,
   mergeLocalFields,
   needsFingerprints,
+  MAX_BYTE_RIGA,
   relinkPlan,
+  sendable,
   serverAccepts,
   stripLocalFields,
   toEnvelope,
@@ -267,5 +269,19 @@ describe('Corsi e routine di studio — MECCANISMI §25 (impronta del corso, D-S
     expect(needsFingerprints([ricorrenza('c-fuori'), ricorrenza('c-qui', 'i1'), ricorrenza(null, 'i1')], qui)).toBe(
       false,
     );
+  });
+});
+
+describe('Righe che il servizio rifiuta sempre — MECCANISMI §25 (audit P1-11)', () => {
+  it('oltre il tetto in byte UTF-8, col carattere nullo o un surrogato solo una riga non si spedisce; le altre sì', () => {
+    expect(sendable({ id: 'b1', note: 'x'.repeat(1000) })).toBe(true);
+    expect(sendable({ id: 'b1', note: 'x'.repeat(MAX_BYTE_RIGA) })).toBe(false);
+    // 360 000 «€» sono 360 000 caratteri, sotto il tetto di 1 048 576, ma 1 080 000 byte UTF-8: oltre
+    expect(sendable({ id: 'b1', note: '€'.repeat(360_000) })).toBe(false);
+    expect(sendable({ id: 'b1', note: `a${String.fromCharCode(0)}b` })).toBe(false);
+    expect(sendable({ id: 'b1', note: `a${String.fromCharCode(0xd800)}b` })).toBe(false);
+    // Il testo «\u0000» scritto dall'utente (un esercizio di programmazione) e una coppia valida (un'emoji) partono
+    expect(sendable({ id: 'b1', note: 'stampa \\u0000 e \\\\u0000' })).toBe(true);
+    expect(sendable({ id: 'b1', note: 'fatto 😀' })).toBe(true);
   });
 });
