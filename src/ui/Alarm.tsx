@@ -14,12 +14,9 @@ import { closeAlarm, showAlarm, unlockForAlarm } from '../app/notifications';
 import type { GestoNotifica, SvegliaAperta } from '../app/ports/notifications';
 import type { TipoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
-import { anticipo, fuso, maiuscola, TIPO, titolo } from './format';
-import { lingua, t, type Chiave } from './i18n';
+import { anticipo, fmtGiornoLungo, fmtOra, fuso, maiuscola, TIPO, titolo } from './format';
+import { t, type Chiave } from './i18n';
 import s from './Alarm.module.css';
-
-const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'long', day: 'numeric', month: 'long' });
-const fmtOra = new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' });
 
 /** Il tasto principale per tipo (MECC §13.2: le azioni del trigger, «Apri il blocco» = tocco dove non ce n'è una). */
 const PRINCIPALE: Record<TipoBlocco, { gesto: GestoNotifica; testo: Chiave; Icona: typeof Play }> = {
@@ -97,7 +94,7 @@ export function Alarm() {
       <section className={s.corpo}>
         <div className={s.quando}>
           <span className={s.ora}>{fmtOra.format(adesso)}</span>
-          <span className={s.data}>{maiuscola(fmtGiorno.format(adesso))}</span>
+          <span className={s.data}>{maiuscola(fmtGiornoLungo.format(adesso))}</span>
         </div>
         <div className={s.blocco}>
           <span className={s.badge}>{t(TIPO[b.tipo])}</span>

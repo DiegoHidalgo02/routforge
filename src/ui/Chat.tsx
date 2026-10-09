@@ -34,8 +34,8 @@ import {
 import { appDb, watch } from '../app/db';
 import { citations, conversationGroups, GLOBALE, nextScope, type AmbitoAperto, type ErroreAi } from '../domain/ai';
 import { useMinuto } from './clock';
-import { fmtData, FONTE } from './format';
-import { lingua, t, type Chiave } from './i18n';
+import { fmtData, fmtGiornoMese, fmtOra, FONTE } from './format';
+import { t, type Chiave } from './i18n';
 import { Markdown } from './Markdown';
 import { useSettings } from './preferenze';
 import s from './Chat.module.css';
@@ -412,8 +412,6 @@ const LISTA: Record<NomeAmbito['ambito'], (n: NomeAmbito) => string> = {
   corso: (n) => (n.ambito === 'corso' ? t('listaCorso', { corso: n.corso }) : ''),
   globale: () => t('listaGlobale'),
 };
-const fmtOra = new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' });
-const fmtGiornoMese = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 
 /** S19 Conversazioni (`chat-history`): per età, con l'ambito, i messaggi e la data; il tocco riapre la conversazione. */
 export function Conversations() {

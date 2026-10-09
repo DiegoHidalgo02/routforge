@@ -45,18 +45,25 @@ import { appDb, watch } from '../app/db';
 import { youtubeId } from '../domain/course/parser';
 import { quizCriterion } from '../domain/generation';
 import { completedUnits } from '../domain/pointer';
-import { local } from '../domain/time';
 import type { StatoUnita } from '../domain/types';
-import { durata as durataBreve, durataCorso, fuso, NOME_ESITO, NOME_SEZIONE, SETTIMANA } from './format';
+import {
+  durata as durataBreve,
+  durataCorso,
+  fmtData,
+  fmtGiornoMese,
+  fuso,
+  NOME_ESITO,
+  NOME_SEZIONE,
+  nomeGiorno,
+  SETTIMANA,
+} from './format';
 import { IconaLink } from './IconaLink';
-import { lingua, t, type Chiave } from './i18n';
+import { t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
 import { CodiceUnita, TuoiMateriali } from './Materials';
 import { PraticaUnita } from './Practice';
 import s from './Course.module.css';
 
-const fmtGiornoBreve = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
-const fmtImport = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 /** «CONSOLIDAMENTO» del file → «Consolidamento» (S11). */
 const frase = (x: string) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase();
 
@@ -118,7 +125,7 @@ export function Course() {
         <div className={s.intestazione}>
           <span className={s.eyebrow}>
             {primaData}
-            <span className={s.num}>{fmtImport.format(v.importatoIl)}</span>
+            <span className={s.num}>{fmtGiornoMese.format(v.importatoIl)}</span>
             {dopoData}
           </span>
           <h1 className={s.titolo}>{c.titolo}</h1>
@@ -145,7 +152,7 @@ export function Course() {
                     {t('routineDiStudio')} ·{' '}
                     <span className={s.num}>
                       {SETTIMANA.filter((g) => v.routine?.giorni.includes(g))
-                        .map((g) => frase(fmtGiornoBreve.format(local(2026, 9, 20 + (g || 7)))))
+                        .map((g) => frase(nomeGiorno(g, 'short')))
                         .join(' · ')}{' '}
                       · {v.routine.orarioInizio}
                     </span>
@@ -619,7 +626,6 @@ const STATO_UNITA: Record<StatoUnita, Chiave> = {
   completata: 'statoCompletata',
   saltata: 'statoSaltata',
 };
-const fmtUltima = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
 /**
  * VideoCard (S12; FORMATO §3, CONTROLLI): il primo video YouTube della sezione Studio, che si riproduce qui e non nel
@@ -717,7 +723,7 @@ export function Unit() {
                       <>
                         {t('ultimaSessione')} ·{' '}
                         <span className={s.num}>
-                          {fmtUltima.format(ultima.avvio)} · {durataBreve(ultima.minuti)}
+                          {fmtData.format(ultima.avvio)} · {durataBreve(ultima.minuti)}
                         </span>
                         {ultima.esito && ` · ${t('esitoBreve', { esito: t(NOME_ESITO[ultima.esito]) })}`}
                       </>

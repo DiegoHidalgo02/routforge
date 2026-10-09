@@ -38,20 +38,11 @@ import {
 import { hostOf, youtubeId } from '../domain/course/parser';
 import { isGroundable, type Materiale } from '../domain/materials';
 import { IconaLink } from './IconaLink';
-import { lingua, t } from './i18n';
+import { dimensione, fmtGiornoMese, unDecimale } from './format';
+import { t } from './i18n';
 import { Section } from './Section';
 import s from './Materials.module.css';
 
-const unDecimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
-/**
- * Dimensione di un file come nei mock: «0,4 MB», «84 KB» (base 1024, come il limite di 20 MB); `perEccesso` per il
- * rifiuto, così un file appena oltre il limite non si legge «20 MB».
- */
-export const dimensione = (byte: number, perEccesso = false) =>
-  byte >= 1024 * 1024
-    ? `${unDecimale.format((perEccesso ? Math.ceil : Math.round)((byte / (1024 * 1024)) * 10) / 10)} MB`
-    : `${byte > 0 ? Math.max(1, Math.round(byte / 1024)) : 0} KB`;
-const fmtGiorno = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
 /** L'istante delle scritture, letto al gesto (fuori dal render). */
 const adesso = () => Date.now();
 
@@ -124,7 +115,7 @@ function Riga({ m }: { m: RigaMateriale }) {
         {m.tipo === 'nota' ? (
           <>
             <span className={s.titolo}>
-              {m.titolo} · <span className={s.num}>{fmtGiorno.format(m.createdAt)}</span>
+              {m.titolo} · <span className={s.num}>{fmtGiornoMese.format(m.createdAt)}</span>
             </span>
             <span className={s.sotto}>{m.testo?.split('\n').find((x) => x.trim())}</span>
           </>

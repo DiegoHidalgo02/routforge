@@ -29,19 +29,12 @@ import type { Impostazioni, LinguaRisposte } from '../domain/settings';
 import type { TipoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
 import { CHIAVI_GEMINI } from './Chat';
-import { maiuscola } from './format';
+import { dimensione, fmtData, fmtGiornoMese, fmtOra, maiuscola, nomeGiorno } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { animazioniRidotte, useSettings } from './preferenze';
-import { dimensione } from './Materials';
 import { Section } from './Section';
 import s from './Settings.module.css';
 import { useSync } from './useSync';
-
-/** «Backup · 11 set» della radice (S22). */
-const fmtGiornoBackup = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
-
-const giornoSettimana = (g: 0 | 1) =>
-  maiuscola(new Intl.DateTimeFormat(lingua, { weekday: 'long' }).format(new Date(2026, 8, 20 + g)));
 
 export function Gruppo({ titolo, children, spento }: { titolo?: string; children: ReactNode; spento?: boolean }) {
   return (
@@ -213,8 +206,8 @@ export function Settings() {
             etichetta={t('inizioSettimana')}
             valore={v.inizioSettimana}
             opzioni={[
-              [1, giornoSettimana(1)],
-              [0, giornoSettimana(0)],
+              [1, maiuscola(nomeGiorno(1, 'long'))],
+              [0, maiuscola(nomeGiorno(0, 'long'))],
             ]}
             onScegli={(inizioSettimana) => salva({ inizioSettimana })}
           />
@@ -237,7 +230,7 @@ export function Settings() {
         <Gruppo titolo={t('gruppoDati')}>
           <RigaLink
             etichetta={t('backupRiga')}
-            valore={ultimoBackup === null ? undefined : fmtGiornoBackup.format(ultimoBackup)}
+            valore={ultimoBackup === null ? undefined : fmtGiornoMese.format(ultimoBackup)}
             to="/impostazioni/backup"
           />
           <RigaLink
@@ -444,9 +437,6 @@ export function Conferma(p: {
   );
 }
 
-/** «ven 11 set · 22:10» (S22). */
-const fmtBackup = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
-
 /**
  * Backup e dati (S22 `backup`, CONTROLLI; MECC §22; T-030): «Esporta backup» salva il file (Documenti su Android, download
  * sul web) e lo dice in linea con l'ora; «Importa backup» sceglie il file, lo valida e chiede in linea «Sostituire tutti
@@ -544,7 +534,7 @@ export function Backup() {
           <span className={s.ultimoBackup}>
             {t('ultimoBackup')} ·{' '}
             <span className={s.numChiaro}>
-              {fmtBackup.format(ultimo)} · {ora(ultimo)}
+              {fmtData.format(ultimo)} · {ora(ultimo)}
             </span>
           </span>
         )}
@@ -783,15 +773,7 @@ interface Spazio {
 }
 
 const decimali = new Intl.NumberFormat(lingua, { maximumFractionDigits: 2 });
-const unDecimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
-const memoria = (byte: number) =>
-  byte >= 1e9
-    ? `${unDecimale.format(byte / 1e9)} GB`
-    : byte >= 1e6
-      ? `${unDecimale.format(byte / 1e6)} MB`
-      : `${unDecimale.format(byte / 1e3)} KB`;
-const ora = (istante: number) =>
-  new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' }).format(istante);
+const ora = (istante: number) => fmtOra.format(istante);
 const SORGENTE = {
   ciclo: 'sorgenteCiclo',
   notifiche: 'sorgenteNotifiche',
@@ -934,8 +916,8 @@ export function Diagnostics() {
     const righe = [
       ...riquadri.map((r) => `${r.etichetta}: ${r.valore} · ${r.meta}`),
       spazio &&
-        `${t('spazioLocale')}: ${t('datiSpazio', { spazio: memoria(spazio.dati) })} · ${t('cacheSpazio', {
-          spazio: memoria(spazio.cache),
+        `${t('spazioLocale')}: ${t('datiSpazio', { spazio: dimensione(spazio.dati) })} · ${t('cacheSpazio', {
+          spazio: dimensione(spazio.cache),
         })} · ${t(spazio.persistente ? 'persistente' : 'nonPersistente')}`,
       `${t('versione')}: ${__VERSIONE__}`,
       ...(d?.eventi ?? []).map((e) => `${ora(e.istante)} · ${t(SORGENTE[e.sorgente])} · ${testoEvento(e)}`),
@@ -970,11 +952,11 @@ export function Diagnostics() {
               <div className={s.legendaSpazio}>
                 <span>
                   <span className={s.quadratino} data-dati />
-                  {t('datiSpazio', { spazio: memoria(spazio.dati) })}
+                  {t('datiSpazio', { spazio: dimensione(spazio.dati) })}
                 </span>
                 <span>
                   <span className={s.quadratino} />
-                  {t('cacheSpazio', { spazio: memoria(spazio.cache) })}
+                  {t('cacheSpazio', { spazio: dimensione(spazio.cache) })}
                 </span>
                 <span className={s.metaRiquadro}>{t(spazio.persistente ? 'persistente' : 'nonPersistente')}</span>
                 <button

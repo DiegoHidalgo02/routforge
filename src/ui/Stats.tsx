@@ -11,7 +11,7 @@ import { readPracticeStats } from '../app/practice';
 import { readStats, type Panoramica, type Statistiche } from '../app/stats';
 import { GIORNI_MAPPA, periodRange, SOGLIA_PUNTUALITA, SOGLIA_QUASI_TUTTI, type Periodo } from '../domain/stats';
 import type { TipoBlocco } from '../domain/types';
-import { durata, SETTIMANA } from './format';
+import { durata, nomeGiorno, SETTIMANA } from './format';
 import { lingua, t, type Chiave } from './i18n';
 import { useSettings } from './preferenze';
 import { Section } from './Section';
@@ -58,9 +58,6 @@ const minuti = (m: number) => (m < 60 ? `${m} ${t('unitaMinuti')}` : durata(m));
 /** Delta col segno: «+» attaccato, meno tipografico; `null` se zero. */
 const segno = (n: number, f: (x: number) => string = String) => (n > 0 ? `+${f(n)}` : n < 0 ? `−${f(-n)}` : null);
 const decimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
-/** Giorno della settimana per indice (0 = domenica): il 20/9/2026 è una domenica. */
-const giornoSettimana = (g: number, weekday: 'long' | 'narrow') =>
-  new Intl.DateTimeFormat(lingua, { weekday }).format(new Date(2026, 8, 20 + g));
 
 /** Valore di una StatCard: cifre, segno e spazi nel font dei numeri, lettere e unità piccole in text-2 («38h 20m», «−4 min»). */
 function Valore({ testo, unita }: { testo: string; unita?: string }) {
@@ -288,7 +285,7 @@ function Behaviour({ c, trigger }: { c: Statistiche['comportamenti']; trigger: S
         </div>
         <div className={s.etichetteGiorni} aria-hidden>
           {SETTIMANA.map((g) => (
-            <span key={g}>{giornoSettimana(g, 'narrow')}</span>
+            <span key={g}>{nomeGiorno(g, 'narrow')}</span>
           ))}
         </div>
       </Card>
@@ -301,7 +298,7 @@ function Behaviour({ c, trigger }: { c: Statistiche['comportamenti']; trigger: S
         {momento && (
           <p className={s.frase}>
             {t(momento.quota >= SOGLIA_QUASI_TUTTI ? 'persiQuasiTutti' : 'persiPiuSpesso', {
-              giorno: giornoSettimana(momento.giorno, 'long'),
+              giorno: nomeGiorno(momento.giorno, 'long'),
               fascia: t(FASCE_FRASE[momento.fascia]!),
             })}
           </p>

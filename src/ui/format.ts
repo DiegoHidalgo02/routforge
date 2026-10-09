@@ -8,8 +8,36 @@ import { lingua, t, type Chiave } from './i18n';
 /** Fuso corrente del dispositivo per le scritture delle schermate (la porta `Clock` è dei servizi, D-SCHED-1 n. 9). */
 export const fuso = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-/** «mar 22 set»: sigla del giorno, numero e mese breve (S4, S5, S15). */
+/** «mar 22 set»: sigla del giorno, numero e mese breve (S4, S5, S15, S22). */
 export const fmtData = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
+/** «22 set» (S11, S13, S22, chat). */
+export const fmtGiornoMese = new Intl.DateTimeFormat(lingua, { day: 'numeric', month: 'short' });
+/** «martedì 22 settembre» (S5, S8). */
+export const fmtGiornoLungo = new Intl.DateTimeFormat(lingua, { weekday: 'long', day: 'numeric', month: 'long' });
+/** «16:08». */
+export const fmtOra = new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' });
+const FMT_SETTIMANA = {
+  long: new Intl.DateTimeFormat(lingua, { weekday: 'long' }),
+  short: new Intl.DateTimeFormat(lingua, { weekday: 'short' }),
+  narrow: new Intl.DateTimeFormat(lingua, { weekday: 'narrow' }),
+};
+/** Il nome del giorno della settimana per indice (0 = domenica: il 20/9/2026 è una domenica). */
+export const nomeGiorno = (g: number, forma: keyof typeof FMT_SETTIMANA): string =>
+  FMT_SETTIMANA[forma].format(new Date(2026, 8, 20 + g));
+
+export const unDecimale = new Intl.NumberFormat(lingua, { maximumFractionDigits: 1 });
+const MIB = 1024 * 1024;
+/**
+ * Una dimensione come nei mock: «84 KB», «0,4 MB», «1,2 GB», sempre in base 1024 come il limite di 20 MB dei PDF (prima
+ * la Diagnostica contava in base 1000: audit P3-14); `perEccesso` per il rifiuto, così un file appena oltre il limite
+ * non si legge «20 MB».
+ */
+export const dimensione = (byte: number, perEccesso = false): string =>
+  byte >= 1024 * MIB
+    ? `${unDecimale.format(byte / (1024 * MIB))} GB`
+    : byte >= MIB
+      ? `${unDecimale.format((perEccesso ? Math.ceil : Math.round)((byte / MIB) * 10) / 10)} MB`
+      : `${byte > 0 ? Math.max(1, Math.round(byte / 1024)) : 0} KB`;
 
 /** Lunedì → domenica come nei mock; 0 = domenica (`localWeekday`). */
 export const SETTIMANA = [1, 2, 3, 4, 5, 6, 0];

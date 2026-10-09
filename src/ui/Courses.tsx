@@ -11,6 +11,7 @@ import { ErroreImportCorso, type CodiceAvviso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { cifre } from './Cifre';
 import { useDesktop } from './desktop';
 import { durataCorso } from './format';
 import { t, type Chiave } from './i18n';
@@ -34,17 +35,6 @@ type Esito =
   | { tipo: 'errore'; file: string | null }
   | ({ tipo: 'avvisi' } & Avvisi);
 
-/** Le cifre di un testo nel font dei numeri (S10: «5 moduli · 13 unità · 11h 40m»). */
-const cifre = (testo: string) =>
-  testo.split(/(\d[\d:.,]*)/).map((x, i) =>
-    i % 2 ? (
-      <span key={i} className={s.num}>
-        {x}
-      </span>
-    ) : (
-      x
-    ),
-  );
 const errore = (file: string, e: unknown): Esito => ({
   tipo: 'errore',
   file: e instanceof ErroreImportCorso ? file : null,
@@ -268,9 +258,9 @@ export function Courses() {
               <span className={s.colonna}>
                 <h2 className={s.titoloCorso}>{c.titolo}</h2>
                 <span className={s.cardTesto}>
-                  {cifre(t('corsoNumeri', { moduli: c.moduli, unita: c.unita }))}
+                  {cifre(t('corsoNumeri', { moduli: c.moduli, unita: c.unita }), s.num)}
                   {/* Il tempo dedicato solo su mobile: S10 Desktop non lo mostra (D-DESIGN-1 n. 18) */}
-                  <span className={s.tempo}>{cifre(t('corsoTempo', { tempo: durataCorso(c.minuti) }))}</span>
+                  <span className={s.tempo}>{cifre(t('corsoTempo', { tempo: durataCorso(c.minuti) }), s.num)}</span>
                 </span>
               </span>
               {c.esempio && <span className={s.badge}>{t('esempio')}</span>}

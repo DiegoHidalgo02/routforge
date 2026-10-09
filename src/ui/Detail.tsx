@@ -51,15 +51,18 @@ import { studyActions, type AzioneStudio, type SessioneAttiva } from '../domain/
 import { canCheckFromCalendar, canComplete, directCheckStep, shownState } from '../domain/completion';
 import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
-import { MINUTE, local, localInstant, sameLocalDay } from '../domain/time';
+import { MINUTE, localInstant, sameLocalDay } from '../domain/time';
 import type { StatoBlocco } from '../domain/types';
 import { useMinuto } from './clock';
 import {
   durata,
   fmtData,
+  fmtGiornoLungo,
+  fmtOra,
   fuso as fusoCorrente,
   maiuscola,
   NOME_ESITO,
+  nomeGiorno,
   SETTIMANA,
   TIPO,
   titolo as titoloDi,
@@ -74,21 +77,18 @@ const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bas
 /** Il toast con «Annulla» resta 5 s, come l'annulla del trascinamento (MECC §15). */
 const TOAST_MS = 5000;
 
-const fmtOra = new Intl.DateTimeFormat(lingua, { hour: '2-digit', minute: '2-digit' });
 const fmtGiornoOra = new Intl.DateTimeFormat(lingua, {
   day: 'numeric',
   month: 'short',
   hour: '2-digit',
   minute: '2-digit',
 });
-const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'long', day: 'numeric', month: 'long' });
-const fmtSigla = new Intl.DateTimeFormat(lingua, { weekday: 'short' });
 const quando = (ms: number, now: number) => (sameLocalDay(ms, now) ? fmtOra : fmtGiornoOra).format(ms);
 const sigle = (giorni: readonly number[]) =>
   giorni.length === 7
     ? t('ogniGiorno')
     : SETTIMANA.filter((g) => giorni.includes(g))
-        .map((g) => maiuscola(fmtSigla.format(local(2026, 9, 20 + (g || 7)))))
+        .map((g) => maiuscola(nomeGiorno(g, 'short')))
         .join(' · ');
 const inverti = (insieme: ReadonlySet<string>, id: string): Set<string> => {
   const n = new Set(insieme);
@@ -268,15 +268,15 @@ export function Detail() {
       tono: 'ink',
       testo:
         orizzonte === 'giorno'
-          ? maiuscola(fmtGiorno.format(b.inizio))
+          ? maiuscola(fmtGiornoLungo.format(b.inizio))
           : t('entroIl', {
-              data: fmtGiorno.format(horizonLastDay(b.inizio, orizzonte, impostazioni().inizioSettimana)),
+              data: fmtGiornoLungo.format(horizonLastDay(b.inizio, orizzonte, impostazioni().inizioSettimana)),
             }),
     });
     if (b.conOrario) meta.push({ Icona: Clock, tono: 'num', testo: orari });
     else if (b.priorita) meta.push({ Icona: Flag, testo: t(PRIORITA[b.priorita]) });
   } else if (tipo === 'evento') {
-    meta.push({ Icona: Calendar, tono: 'testo', testo: maiuscola(fmtGiorno.format(b.inizio)) });
+    meta.push({ Icona: Calendar, tono: 'testo', testo: maiuscola(fmtGiornoLungo.format(b.inizio)) });
     meta.push(b.conOrario ? { Icona: Clock, tono: 'num', testo: orari } : { Icona: Clock, testo: t('tuttoIlGiorno') });
     if (b.luogo) meta.push({ Icona: MapPin, testo: b.luogo });
   } else {

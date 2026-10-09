@@ -76,9 +76,18 @@ import {
 import { GLOBALE, type AmbitoAperto } from '../domain/ai';
 import type { Blocco, Esito } from '../domain/types';
 import { ChatPanel } from './Chat';
+import { cifre } from './Cifre';
 import { useMinuto, useSecondo } from './clock';
-import { durata as durataBreve, fuso, NOME_ESITO, NOME_SEZIONE, orologio, titolo as titoloBlocco } from './format';
-import { lingua, t, type Chiave } from './i18n';
+import {
+  durata as durataBreve,
+  fmtData,
+  fuso,
+  NOME_ESITO,
+  NOME_SEZIONE,
+  orologio,
+  titolo as titoloBlocco,
+} from './format';
+import { t, type Chiave } from './i18n';
 import { CaricaCodice } from './Materials';
 import { testoTimer, useSessionView } from './SessionBanner';
 import s from './Session.module.css';
@@ -92,7 +101,6 @@ const traccia =
     logError('interfaccia', e);
     return ripiego;
   };
-const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
 /**
  * Esegue un'azione di sessione di un blocco di studio (S1 card Adesso, S5 footer): la ripresa porta al timer,
@@ -120,18 +128,6 @@ const MODALITA: { id: Modalita; num?: string }[] = [
   { id: 'p90', num: '90 · 20' },
 ];
 const DURATA_PREDEFINITA = 50;
-
-/** Le cifre di un testo nel font dei numeri (DESIGN: cifre in `--font-num`). */
-const cifre = (testo: string) =>
-  testo.split(/(\d[\d:.,]*)/).map((x, i) =>
-    i % 2 ? (
-      <span key={i} className={s.num}>
-        {x}
-      </span>
-    ) : (
-      x
-    ),
-  );
 
 /** Durata come la scrive il mock: «45 min», «1h», «1h 30m». */
 const inMinuti = (min: number) => (min < 60 ? `${min} ${t('minutiUnita')}` : durataBreve(min));
@@ -204,7 +200,7 @@ export function SessionSetup() {
                 ? 'origineRecuperoPersa'
                 : 'origineRecupero',
             {
-              data: fmtGiorno.format(b.inizio),
+              data: fmtData.format(b.inizio),
             },
           )
         : t(params.get('unita') ? 'origineLiberaUnita' : 'origineLibera');
@@ -658,6 +654,7 @@ export function ActiveSession() {
                 residuo === null
                   ? t('nonVerificatoSenzaFine', dati)
                   : t('nonVerificato', { ...dati, restante: residuo }),
+                s.num,
               )}
             </span>
           </span>
