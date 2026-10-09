@@ -122,6 +122,10 @@ export function canCheckRoutine(block: Pick<Blocco, 'inizio' | 'fine'>, now: num
   return sameLocalDay(block.inizio, now) || (block.fine !== null && now >= block.inizio && now <= block.fine);
 }
 
+/** Un blocco nato dopo la propria fine (un'attività scritta per un orario già passato, D-OCC-1): niente avvisi. */
+export const createdAfterEnd = (block: Blocco & { createdAt?: number }): boolean =>
+  block.createdAt !== undefined && block.createdAt > effectiveEnd(block);
+
 /**
  * Notifica "blocco perso" (§8): solo routine/studio, solo se la fine è entro le ultime 2 ore. Non se sul blocco era
  * partita una sessione (`minutiRitardo`, D-SESS-1: l'utente l'ha già gestito, C8; «conta nel piano» spento, D-ESITO-1)
@@ -130,9 +134,8 @@ export function canCheckRoutine(block: Pick<Blocco, 'inizio' | 'fine'>, now: num
 export function lostNotificationDue(block: Blocco & { createdAt?: number }, now: number): boolean {
   if (block.tipo !== 'routine' && block.tipo !== 'studio') return false;
   if (block.minutiRitardo != null) return false;
-  const fine = effectiveEnd(block);
-  if (block.createdAt !== undefined && block.createdAt > fine) return false;
-  return now - fine <= 2 * HOUR;
+  if (createdAfterEnd(block)) return false;
+  return now - effectiveEnd(block) <= 2 * HOUR;
 }
 
 /**

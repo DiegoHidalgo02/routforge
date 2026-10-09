@@ -138,3 +138,22 @@ describe('Marcatura persi — MECCANISMI §8 (solo i blocchi `programmati`)', ()
     expect(lostPlan(blocchi, local(2026, 9, 23, 12, 0)).persi).toEqual([]);
   });
 });
+
+describe('Todo scritto già in ritardo — MECCANISMI §6, D-OCC-1 (audit P3-5)', () => {
+  it('un todo scritto alle 15:00 per le 09:00 di oggi è «non fatto» senza l’avviso «in ritardo»; uno scritto prima sì', () => {
+    const todo = (createdAt: number) => ({
+      ...ancorato({
+        id: 't',
+        tipo: 'todo',
+        inizio: local(2026, 9, 23, 9, 0),
+        fine: local(2026, 9, 23, 9, 30),
+        orizzonte: 'giorno',
+      }),
+      createdAt,
+    });
+    const tardi = lostPlan([todo(local(2026, 9, 23, 15, 0))], local(2026, 9, 23, 15, 1));
+    expect(tardi.persi.map((b) => [b.id, b.ritardoIl ?? null])).toEqual([['t', null]]);
+    expect(tardi.avvisiRitardo).toEqual([]);
+    expect(lostPlan([todo(local(2026, 9, 23, 8, 0))], local(2026, 9, 23, 15, 1)).avvisiRitardo).toEqual(['t']);
+  });
+});

@@ -10,7 +10,7 @@
  * ogni giudizio sta in `lost.ts` (`isOrphan`, `shouldMarkLost`, `lostNotificationDue`) e in `horizon.ts`
  * (`lateNoticeDue`): qui si compongono soltanto.
  */
-import { isOrphan, lostNotificationDue, shouldMarkLost } from '../lost';
+import { createdAfterEnd, isOrphan, lostNotificationDue, shouldMarkLost } from '../lost';
 import type { InizioSettimana } from '../settings';
 import type { Blocco } from '../types';
 import { lateNoticeDue } from './horizon';
@@ -46,7 +46,8 @@ export function lostPlan<B extends Blocco & { giornoLocale?: string }>(
   const piano: PianoPersi<B> = { persi: [], avvisiRitardo: [], avvisiPerso: [] };
   for (const b of blocchi) {
     if (!shouldMarkLost(b, now, inizioSettimana)) continue;
-    const ritardo = lateNoticeDue(b);
+    // Un todo scritto per un orario già passato non riceve l'avviso «in ritardo» appena scritto (audit P3-5)
+    const ritardo = lateNoticeDue(b) && !createdAfterEnd(b);
     piano.persi.push({ ...b, stato: 'perso', persoIl: now, ...(ritardo && { ritardoIl: now }) });
     if (ritardo) piano.avvisiRitardo.push(b.id);
     if (lostNotificationDue(b, now)) piano.avvisiPerso.push(b.id);
