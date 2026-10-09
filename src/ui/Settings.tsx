@@ -778,9 +778,9 @@ const testoEvento = (e: Diagnostica['eventi'][number]) =>
 /** Spazio del browser (FUNZ §24): dati dell'app e cache; il dettaglio per categoria c'è solo dove il browser lo dà. */
 async function misuraSpazio(): Promise<Spazio | null> {
   if (!navigator.storage?.estimate) return null;
-  const s: StorageEstimate & { usageDetails?: Record<string, number> } = await navigator.storage.estimate();
-  const cache = s.usageDetails?.caches ?? 0;
-  return { dati: (s.usage ?? 0) - cache, cache, persistente: (await navigator.storage.persisted?.()) ?? false };
+  const stima: StorageEstimate & { usageDetails?: Record<string, number> } = await navigator.storage.estimate();
+  const cache = stima.usageDetails?.caches ?? 0;
+  return { dati: (stima.usage ?? 0) - cache, cache, persistente: (await navigator.storage.persisted?.()) ?? false };
 }
 
 /** Svuota cache (FUNZ §24): solo la cache dell'app web, mai i dati dell'utente. */

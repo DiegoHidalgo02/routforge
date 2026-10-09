@@ -188,7 +188,8 @@ anche gli avvisi (D-LINT-1). Per la UI, Vitest + Testing Library solo dove uno s
 
 `docs/INVARIANTI.md` elenca ogni proprietà da preservare con la sua verifica. Nel gate oggi: direzione delle dipendenze e
 purezza del dominio (`scripts/architettura.test.mjs`), tracciabilità scenari ↔ test (`scripts/tracciabilita.test.mjs`),
-registro delle dipendenze (`scripts/dipendenze.test.mjs`), assenza di segreti (`scripts/segreti.test.mjs`), campi
+registro delle dipendenze (`scripts/dipendenze.test.mjs`), assenza di segreti (`scripts/segreti.test.mjs`), classi dei CSS Modules
+(`scripts/classi-css.test.mjs`, INV-23), campi
 comuni e tombstone in ogni tabella (`src/data/db.test.ts`, INV-14), lint e formato. Da automatizzare nei task che li
 introducono: idempotenza dello scheduler (T-013), adapter che non propagano errori (T-019, T-021). Prima di aggiungere
 una regola solo scritta: può essere un test?

@@ -83,7 +83,7 @@ export function ProgressoOggi({ ingressi, oggi }: { ingressi: IngressiProgresso;
         {t('progressoOggi')}
       </h2>
       <div className={s.terna}>
-        <div className={`${s.card} ${s.completate}`} data-tipo={tipoOggi ?? undefined}>
+        <div className={s.card} data-tipo={tipoOggi ?? undefined}>
           <span className={s.testa}>
             <span className={s.etichetta}>{t('completate')}</span>
             <span className={`${s.disco} ${s.soloDesktop}`} aria-hidden>
