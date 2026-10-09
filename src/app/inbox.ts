@@ -5,7 +5,7 @@
  * registra l'istante in `preferenze`: il contatore si svuota, le pendenti restano finché non c'è l'esito (CONTROLLI).
  */
 import type { RoutForgeDb } from '../data/db';
-import { blocksBetween, get, list, save } from '../data/repository';
+import { blocksBetween, get, list, listBy, save } from '../data/repository';
 import { effectiveEnd, pendingOutcomes } from '../domain/lost';
 import type { TriggerNotifica } from '../domain/notifications/desiredSet';
 import { addLocalDays, localDayKey, startOfLocalDay } from '../domain/time';
@@ -46,9 +46,13 @@ export interface Inbox {
 
 export async function readInbox(db: RoutForgeDb, now: number): Promise<Inbox> {
   const oggi = startOfLocalDay(now);
-  // pendingOutcomes guarda gli ultimi 3 giorni: un giorno in più copre i persi marcati dopo mezzanotte
-  const blocchi = await blocksBetween(db, localDayKey(addLocalDays(oggi, -4)), localDayKey(now));
-  const pendenti = pendingOutcomes(blocchi, now);
+  // pendingOutcomes guarda i persi marcati negli ultimi 3 giorni: si leggono per stato, perché dopo un'assenza uno
+  // marcato oggi può essere di una settimana fa (audit P3-2); per i programmati con la fine passata basta la finestra
+  const [finestra, persi] = await Promise.all([
+    blocksBetween(db, localDayKey(addLocalDays(oggi, -4)), localDayKey(now)),
+    listBy(db, 'blocchi', 'stato', 'perso'),
+  ]);
+  const pendenti = pendingOutcomes([...new Map([...finestra, ...persi].map((b) => [b.id, b])).values()], now);
   const lette = Number((await get(db, 'preferenze', CHIAVE_LETTE))?.valore ?? 0);
   const esiti = await Promise.all(
     pendenti.map(async (b) => {

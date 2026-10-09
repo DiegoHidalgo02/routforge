@@ -97,3 +97,26 @@ describe('Esiti pendenti — SCENARI C6, MECCANISMI §8', () => {
     expect((await readInbox(db, ADESSO)).prossimo).toEqual({ istante: local(2026, 9, 23, 17), titolo: 'dopo' });
   });
 });
+
+describe('Esiti pendenti dopo un’assenza — MECCANISMI §8 (audit P3-2)', () => {
+  it('lo studio di lunedì marcato perso al ritorno di sabato è pendente, anche fuori dalla finestra dei giorni', async () => {
+    const sabato = local(2026, 10, 10, 9, 0);
+    await saveBlock(
+      db,
+      {
+        id: 'lunedi',
+        tipo: 'studio',
+        stato: 'perso',
+        conOrario: true,
+        inizio: local(2026, 10, 5, 10, 0),
+        fine: local(2026, 10, 5, 11, 0),
+        titolo: 'Ripasso Modulo 0',
+        corsoId: null,
+        persoIl: sabato,
+      },
+      sabato,
+      FUSO,
+    );
+    expect((await readInbox(db, sabato)).esiti.map((e) => e.id)).toEqual(['lunedi']);
+  });
+});
