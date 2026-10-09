@@ -53,7 +53,9 @@ non rispetto al fuso (D-TIME-1; al cambio di fuso vale l'ora locale di parete e 
 ## 3. Modello di persistenza (T-004 — Dexie, D-DATA-1, D-DATA-2)
 
 Schema v1 in `src/data/db.ts`, repository in `src/data/repository.ts`. Tabelle Dexie (una per entità di MECC §1), chiave
-primaria `id`; campi comuni `id`, `createdAt`, `updatedAt`, `deletedAt|null` (INV-14). `id` è un UUID v4 generato dal
+primaria `id`; campi comuni `id`, `createdAt`, `updatedAt`, `deletedAt|null` (INV-14), più `gestoIl` nei record vivi
+che viaggiano (istante dell'ultimo gesto dell'utente, conservato dalle scritture del ciclo; lo usa la fusione della
+sync, D-SYNC-4 n. 4). `id` è un UUID v4 generato dal
 repository, oppure deterministico dove l'identità è logica: albero del corso (D-PARSE-2), occorrenze di routine (slot:
 ricorrenza + giorno locale + orario della ricorrenza, T-011), log fasi (id del blocco), preferenze (id = chiave),
 registro notifiche (id = chiave logica). Eliminare lascia una **tombstone minima** `{id, createdAt, updatedAt,

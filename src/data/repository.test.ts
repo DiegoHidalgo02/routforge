@@ -412,6 +412,38 @@ describe('Coda della sync — MECCANISMI §25, INV-14 (T-033)', () => {
     expect(await voci()).toEqual([['preferenze:notifiche', T1, false]]);
   });
 
+  it('la fusione usa l’istante dell’ultimo gesto, non quello del ciclo né dell’interruttore generale (audit P0-2)', async () => {
+    const [T2, T3, T4] = [local(2026, 9, 25, 9, 0), local(2026, 9, 25, 10, 0), local(2026, 9, 26, 9, 0)];
+    const b1 = async () => (await get(db, 'blocchi', 'b1'))!;
+    // Coda vuota, come dopo un push o un import, poi la fusione
+    const fondi = async () => {
+      await purge(db, 'syncCoda', ['blocchi:b1', 'preferenze:notifiche']);
+      await enqueueAll(db);
+      return voci();
+    };
+    await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
+    // Il giorno dopo il ciclo lo segna perso: l'ultimo gesto resta quello delle 8:00
+    await saveBlock(db, { ...(await b1()), stato: 'perso' }, T2, ROMA, 'ciclo');
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: true, x: 1 } }, T0);
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: false, x: 1 } }, T2);
+    expect(await fondi()).toEqual([
+      ['blocchi:b1', T0, false],
+      ['preferenze:notifiche', T0, false],
+    ]);
+    // Un gesto vero lo porta avanti; una scrittura del ciclo dopo, o il solo interruttore, non lo toccano
+    await saveBlock(db, { ...(await b1()), stato: 'completato' }, T3, ROMA);
+    await saveBlock(db, await b1(), T4, ROMA, 'ciclo');
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: false, x: 2 } }, T3);
+    await save(db, 'preferenze', { id: 'notifiche', valore: { generale: true, x: 2 } }, T4);
+    expect(await fondi()).toEqual([
+      ['blocchi:b1', T3, false],
+      ['preferenze:notifiche', T3, false],
+    ]);
+    // Un istante che non è un numero intero (backup modificato a mano) non entra in coda: vale `updatedAt`
+    await putRemote(db, 'blocchi', [{ ...(await b1()), gestoIl: 'x' } as never]);
+    expect((await fondi())[0]).toEqual(['blocchi:b1', T4, false]);
+  });
+
   it('fuori dall’ambito niente coda: preferenze fuori elenco (chiave AI, stato della sync), corsi, pratica', async () => {
     await save(db, 'preferenze', { id: 'chiaveAi', valore: 'x' }, T0);
     await save(db, 'preferenze', { id: 'sync', valore: {} }, T0);

@@ -141,7 +141,9 @@ function applyPage(
         b.dati as { id: string; updatedAt: number; deletedAt: number | null },
         locale,
       );
-      await putRemote(db, b.tabella, [riga as never]);
+      // L'ultimo gesto di una riga viva è l'istante della busta, già controllato e limitato dal servizio (D-SYNC-2), non
+      // il campo scritto dal mittente; la tombstone resta minima (INV-14; audit P0-2)
+      await putRemote(db, b.tabella, [(b.deletedAt === null ? { ...riga, gestoIl: b.updatedAt } : riga) as never]);
       scritte++;
       if (b.tabella === 'ricorrenze') await followReceived(db, b, now, fuso);
     }

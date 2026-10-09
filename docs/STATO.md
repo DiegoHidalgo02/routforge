@@ -9,7 +9,7 @@
 - **05/10/2026**: T-052 primo incremento; import e verifica del nuovo design (D-DESIGN-3, D-DESIGN-4: `claude-design/`, `docs/spec/` = `spec/` del pacchetto, 60 scenari; `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`). **04/10**: pulizia (D-DESIGN-2, vecchio export in `3c60512`). **Fino al 02/10**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
 
 ## In corso
-- Nessun task in corso.
+- Correzioni dell'audit del 09/10/2026 (roadmap in `audit/04-sintesi.md` §3, registro in `audit/05-correzioni.md`), un commit per ID. P0-2 cambia la fusione della sync: il campo `gestoIl` dei record che viaggiano (D-SYNC-4 n. 4), con revisione indipendente.
 
 ## Problemi aperti
 **Da decidere con l'utente, non bloccanti**

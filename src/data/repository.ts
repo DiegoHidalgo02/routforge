@@ -132,8 +132,23 @@ export async function listKeyRange<K extends NomeTabella>(
 }
 
 /** La parte di una riga che viaggia con la sync, senza i suoi istanti: uguale prima e dopo, non c'è nulla da spedire. */
-const parteCheViaggia = (nome: NomeTabella, r: Tabelle[NomeTabella] | Tombstone) =>
-  JSON.stringify({ ...stripLocalFields(nome, r), createdAt: 0, updatedAt: 0 });
+const parteCheViaggia = (nome: NomeTabella, r: Tabelle[NomeTabella] | Tombstone) => {
+  const { gestoIl: _gesto, ...resto } = stripLocalFields(nome, r) as { gestoIl?: number };
+  return JSON.stringify({ ...resto, createdAt: 0, updatedAt: 0 });
+};
+
+/**
+ * L'istante dell'ultimo gesto (`CampiComuni.gestoIl`, audit P0-2): adesso per un gesto dell'utente che cambia la parte che
+ * viaggia; altrimenti quello del record di prima, o il suo `updatedAt` se la riga è di prima del campo.
+ */
+const ultimoGesto = (prev: CampiComuni | Tombstone | undefined, gesto: boolean, now: number): { gestoIl?: number } =>
+  gesto ? { gestoIl: now } : vivo(prev) ? { gestoIl: prev.gestoIl ?? prev.updatedAt } : {};
+
+/** I dati da scrivere senza un `gestoIl` arrivato con la riga letta: lo decide solo `ultimoGesto`. */
+const senzaGesto = <T extends object>(dati: T): T => {
+  const { gestoIl: _gesto, ...resto } = dati as T & { gestoIl?: number };
+  return resto as T;
+};
 
 /**
  * Crea o aggiorna un record (i blocchi passano da `saveBlock`). Salvare l'id di una tombstone la rianima. Una scrittura
@@ -151,12 +166,14 @@ export async function save<K extends Exclude<NomeTabella, 'blocchi'>>(
   const id = dati.id ?? newId();
   return db.transaction('rw', conCoda(db, t, nome, id), async () => {
     const prev = await t.get(id);
-    const rec = { ...dati, id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null } as Tabelle[K];
-    await t.put(rec);
+    const base = { ...senzaGesto(dati), id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null };
     // Il confronto solo per le righe che viaggiano: le altre possono essere grandi (il binario di un PDF)
     const viaggia = isSynced(nome, id);
-    if (viaggia && (!vivo(prev) || parteCheViaggia(nome, prev) !== parteCheViaggia(nome, rec)))
-      await accoda(db, nome, rec, origine);
+    const cambia =
+      viaggia && (!vivo(prev) || parteCheViaggia(nome, prev) !== parteCheViaggia(nome, base as Tabelle[K]));
+    const rec = (viaggia ? { ...base, ...ultimoGesto(prev, cambia && origine === 'utente', now) } : base) as Tabelle[K];
+    await t.put(rec);
+    if (cambia) await accoda(db, nome, rec, origine);
     return rec;
   });
 }
@@ -219,23 +236,25 @@ export async function dequeue(db: RoutForgeDb, spedite: readonly { id: string; u
 /**
  * La fusione al primo accesso (T-033, J4): accoda ogni riga dell'ambito della sync, tombstone comprese (un'eliminazione
  * fatta prima dell'accesso deve arrivare all'account), con le occorrenze generate marcate perché non sovrascrivano. Una
- * modifica dell'utente già in coda resta com'è.
+ * modifica dell'utente già in coda resta com'è. L'istante della voce è l'ultimo gesto della riga (`gestoIl`), non il suo
+ * `updatedAt`: un «non fatto» scritto dal ciclo dopo un import non batte un completamento remoto più vecchio (audit P0-2).
  */
-// ponytail: la voce della fusione prende l'`updatedAt` della riga, che può essere di una scrittura del ciclo (un «non
-// fatto» dopo un import batte un completamento remoto più vecchio); se serve, l'istante dell'ultimo gesto nella riga.
 export async function enqueueAll(db: RoutForgeDb): Promise<void> {
   await db.transaction('rw', [...TABELLE_SINCRONIZZATE, 'syncCoda'], async () => {
     for (const nome of TABELLE_SINCRONIZZATE)
       for (const r of await allRows(db, nome)) {
         const id = `${nome}:${r.id}`;
         if (!isSynced(nome, r.id) || (await db.syncCoda.get(id))) continue;
+        // Da un backup modificato a mano può arrivare qualunque valore: il servizio vuole un istante intero
+        const gesto = (r as { gestoIl?: unknown }).gestoIl;
+        const istante = Number.isSafeInteger(gesto) ? (gesto as number) : r.updatedAt;
         await db.syncCoda.put({
           id,
           tabella: nome,
           recordId: r.id,
           generata: nome === 'blocchi' && isGenerata(r),
-          createdAt: r.updatedAt,
-          updatedAt: r.updatedAt,
+          createdAt: istante,
+          updatedAt: istante,
           deletedAt: null,
         });
       }
@@ -317,7 +336,15 @@ export async function saveBlock(
             fuso: stessi.fuso,
           }
         : derivato;
-    const rec: RigaBlocco = { ...dati, ...ora, id, createdAt: prev?.createdAt ?? now, updatedAt: now, deletedAt: null };
+    const rec: RigaBlocco = {
+      ...senzaGesto(dati),
+      ...ora,
+      id,
+      createdAt: prev?.createdAt ?? now,
+      updatedAt: now,
+      deletedAt: null,
+      ...ultimoGesto(prev, origine === 'utente', now),
+    };
     await db.blocchi.put(rec);
     await accoda(db, 'blocchi', rec, origine);
     return rec;

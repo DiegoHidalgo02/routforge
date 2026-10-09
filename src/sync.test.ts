@@ -653,3 +653,26 @@ describe('Casi limite della sync — MECCANISMI §25 (T-033)', () => {
     expect(await get(db, 'preferenze', CHIAVE_STATO_SYNC)).toBeUndefined();
   });
 });
+
+describe('Fusione dopo l’import di un backup — MECCANISMI §25, D-SYNC-4 n. 4 (audit P0-2)', () => {
+  it('una scrittura del ciclo sul tablet non batte il completamento fatto prima sul telefono: completato su entrambi', async () => {
+    const telefono = dispositivo('telefono');
+    await accedi(telefono);
+    const id = await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    // Il tablet nuovo prende i dati dal backup del telefono (l'import azzera e scrive le righe), ancora senza account
+    const tablet = dispositivo('tablet');
+    await replaceAll(tablet.db, { blocchi: await allRows(telefono.db, 'blocchi') });
+    // Alle 19:00 il telefono completa il todo e sincronizza
+    ora = ADESSO + 600 * MINUTE;
+    expect(await completeBlock(telefono.db, id, ora, FUSO)).toBe(true);
+    await telefono.sync.run();
+    // Il giorno dopo il ciclo del tablet giudica il todo rimasto programmato nel backup, poi il tablet entra nell'account
+    ora = local(2026, 9, 23, 9, 0);
+    await runCycle(tablet.db, ora, FUSO);
+    expect((await get(tablet.db, 'blocchi', id))?.stato).not.toBe('programmato');
+    await accedi(tablet);
+    await telefono.sync.run();
+    for (const d of [telefono, tablet]) expect(await get(d.db, 'blocchi', id)).toMatchObject({ stato: 'completato' });
+  });
+});

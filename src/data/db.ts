@@ -34,6 +34,12 @@ export interface CampiComuni {
   createdAt: number;
   updatedAt: number;
   deletedAt: null;
+  /**
+   * Istante dell'ultimo gesto dell'utente sulla parte che viaggia, solo nei record sincronizzati (D-SYNC-4 n. 4, audit
+   * P0-2): lo scrivono `save` e `saveBlock`, le scritture del ciclo lo conservano; la fusione lo usa al posto di
+   * `updatedAt`, che può essere del ciclo. Non indicizzato; assente nelle righe scritte prima (vale `updatedAt`).
+   */
+  gestoIl?: number;
 }
 
 /** Record eliminato: registrato, non sparito, perché la cancellazione si propaghi (MECC §25). */
