@@ -8,9 +8,6 @@ import { addLocalDays, local } from '../domain/time';
 import type { Blocco, Priorita } from '../domain/types';
 import { calendarDays } from './calendar';
 
-// La lib della radice è ES2022 senza DOM (D-TS-1): Node ha `performance` globale.
-declare const performance: { now(): number };
-
 const NOW = local(2026, 9, 22, 8, 0);
 const FUSO = 'Europe/Rome';
 let db: RoutForgeDb;
@@ -61,18 +58,17 @@ describe('Settimana e Mese — MECC §24', () => {
     expect(giorni.get('2026-09-23')?.map((b) => b.titolo)).toEqual(['Senza orario', 'Presto']);
   });
 
-  it('500 blocchi in un mese: la lettura della griglia del mese sta sotto 0,5 s (HANDOFF §3, T-008)', async () => {
+  // Il tempo (0,5 s, HANDOFF §3) vale sul dispositivo: su fake-indexeddb, scritto in JavaScript, non lo dice e sotto
+  // carico rende il gate rosso senza un errore (audit P2-14)
+  it('500 blocchi in un mese: la griglia del mese li legge tutti (HANDOFF §3, T-008)', async () => {
     // Una transazione sola per i 500 blocchi (con la coda della sync, che `saveBlock` apre con loro, T-033)
     await db.transaction('rw', [db.blocchi, db.syncCoda], async () => {
       for (let i = 0; i < 500; i++) await blocco(`B${i}`, addLocalDays(local(2026, 9, 1, 7, i % 60), i % 30));
     });
-    const t0 = performance.now();
     const giorni = await calendarDays(
       db,
       monthGrid('2026-09-01').map((c) => c.giorno),
     );
-    const ms = performance.now() - t0;
     expect([...giorni.values()].reduce((s, g) => s + g.length, 0)).toBe(500);
-    expect(ms).toBeLessThan(500);
   });
 });

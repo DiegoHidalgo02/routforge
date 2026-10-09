@@ -18,9 +18,6 @@ import { t } from './i18n';
 import { Today } from './Today';
 
 const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone;
-// Un flusso della UI qui scrive in IndexedDB e aspetta il ridisegno di giornata, progresso e card Adesso: su una macchina
-// carica supera i 5 s di Vitest anche quando è corretto
-vi.setConfig({ testTimeout: 20_000 });
 /**
  * Lunedì 28 settembre 2026 alle 08:58: oggi nei test. L'orologio finto di Vitest qui scorre con il tempo reale: da
  * adesso il primo aggancio è comunque alle 09:00, il multiplo di 5' successivo (§15).

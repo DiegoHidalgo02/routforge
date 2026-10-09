@@ -15,5 +15,8 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
     environment: 'node',
+    // I flussi della UI e dei servizi scrivono in IndexedDB e aspettano il ridisegno: su una macchina carica superano i
+    // 5 s predefiniti anche quando sono corretti (audit P2-14)
+    testTimeout: 20_000,
   },
 });
