@@ -237,6 +237,23 @@ describe('Offline — MECCANISMI §18', () => {
     expect(await get(db, 'conversazioni', id)).toBeTruthy();
     smetti();
   });
+
+  it('con la rete «accesa» che non risponde il messaggio esce dall’attesa: la chat offre «Riprova» (audit P2-4)', async () => {
+    await saveAiKey(db, 'AIza-buona', ADESSO);
+    await sendMessage(
+      db,
+      { ambito: 'globale', corsoId: null, moduloId: null, unitaId: null },
+      null,
+      'x',
+      ADESSO,
+      false,
+    );
+    // Wi-Fi con la pagina d'accesso, DNS non pronto: `navigator.onLine` è vero ma la richiesta fallisce senza risposta
+    risposta = { pezzi: [], errore: { status: null, message: 'Failed to fetch' } };
+    const smetti = followPendingMessages(db, { online: () => true, onOnline: () => () => undefined }, ora);
+    await expect.poll(async () => (await messaggi()).map((m) => [m.ruolo, m.stato])).toEqual([['utente', 'inviato']]);
+    smetti();
+  });
 });
 
 describe('Elenco delle conversazioni — MECCANISMI §18', () => {

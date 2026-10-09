@@ -327,8 +327,9 @@ export function followPendingMessages(db: RoutForgeDb, rete: Rete, ora: () => nu
       for (const m of (await list(db, 'messaggi')).filter((x) => x.stato === 'in_attesa')) {
         // Resta in attesa finché la risposta non arriva: intanto l'invio della chat è spento e non parte un doppione
         const e = await answer(db, m.conversazioneId, ora, () => undefined, new AbortController().signal);
-        // Di nuovo senza rete resta in attesa; con un altro errore esce dall'attesa e la chat offre «Riprova»
-        if (e === 'rete') continue;
+        // Di nuovo senza rete resta in attesa; con un altro errore, o con la rete «accesa» che non risponde (Wi-Fi con la
+        // pagina d'accesso), esce dall'attesa e la chat offre «Riprova»: aspettare il prossimo `online` la bloccava (audit P2-4)
+        if (e === 'rete' && !rete.online()) continue;
         if (e) logError('ai', new Error(e));
         const dopo = await get(db, 'messaggi', m.id);
         if (dopo?.stato === 'in_attesa') await save(db, 'messaggi', { ...dopo, stato: 'inviato' }, ora());
