@@ -69,6 +69,7 @@ import {
 } from './format';
 import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
+import { useIndietro } from './useIndietro';
 import s from './Detail.module.css';
 import { ANNULLA_MS, lascia, type Tono } from './avvisi';
 import { SchedaEsito, useStudyAction } from './Session';
@@ -138,7 +139,6 @@ export function Detail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const primaSchermata = location.key === 'default';
   const rotta = location.state as { sfondo?: Location; vista?: Vista } | null;
   const sfondo = rotta?.sfondo;
   const vistaDaOggi = rotta?.vista;
@@ -150,7 +150,7 @@ export function Detail() {
   // Dal cerchio il foglio sta da solo sopra Oggi, senza il pannello (S1 `sheet`, T-056): annullarlo chiude, confermarlo
   // torna a Oggi con il messaggio e «Annulla». Se una scrittura fallisce si mostra il pannello, con l'errore
   const [soloFoglio, setSoloFoglio] = useState(() => vistaDaOggi !== undefined);
-  const chiudi = () => (primaSchermata ? navigate('/') : navigate(-1));
+  const chiudi = useIndietro();
   const dialogo = useRef<HTMLDialogElement>(null);
   const [d, setD] = useState<DettaglioAttivita>();
   const [sparito, setSparito] = useState(false);

@@ -17,7 +17,7 @@ import {
   User,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { deleteUpload, readCode, restoreUpload, uploadCode } from '../app/codeFiles';
 import { appDb, watch } from '../app/db';
 import { logError } from '../app/diagnostics';
@@ -43,6 +43,7 @@ import { dimensione, fmtGiornoMese, unDecimale } from './format';
 import { t } from './i18n';
 import { Section } from './Section';
 import { Toast } from './Toast';
+import { useIndietro } from './useIndietro';
 import s from './Materials.module.css';
 
 /** L'istante delle scritture, letto al gesto (fuori dal render). */
@@ -505,8 +506,7 @@ function Pagina({ dati, numero, onVista }: { dati: Uint8Array; numero: number; o
 /** Il visualizzatore (S13, `/materiali/:id`): le pagine del PDF, o il testo della nota. */
 export function MaterialViewer() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
-  const primaSchermata = useLocation().key === 'default';
+  const indietro = useIndietro();
   const [m, setM] = useState<Vista>();
   const [dati, setDati] = useState<Uint8Array | null>(null);
   const [corrente, setCorrente] = useState(1);
@@ -544,12 +544,7 @@ export function MaterialViewer() {
     <div className={s.visore}>
       <div className={s.cimaVisore}>
         <header className={s.testaVisore}>
-          <button
-            type="button"
-            className={s.iconaBottone}
-            aria-label={t('indietro')}
-            onClick={() => (primaSchermata ? navigate('/') : navigate(-1))}
-          >
+          <button type="button" className={s.iconaBottone} aria-label={t('indietro')} onClick={indietro}>
             <ChevronLeft size={18} />
           </button>
           <span className={s.testiVisore}>

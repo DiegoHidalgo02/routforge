@@ -17,7 +17,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   answer,
   moduleScope,
@@ -38,6 +38,7 @@ import { fmtData, fmtGiornoMese, fmtOra, FONTE } from './format';
 import { t, type Chiave } from './i18n';
 import { Markdown } from './Markdown';
 import { useSettings } from './preferenze';
+import { useIndietro } from './useIndietro';
 import s from './Chat.module.css';
 
 /** In linea o no (§18 «Offline»): gli eventi del browser, gli stessi nella WebView. */
@@ -334,13 +335,6 @@ const PILL: Record<NomeAmbito['ambito'], (n: NomeAmbito) => string> = {
   corso: () => t('ambitoCorso'),
   globale: () => t('ambitoGlobale'),
 };
-
-function useIndietro() {
-  const navigate = useNavigate();
-  // Aperta da un collegamento diretto non c'è una schermata precedente nell'app: si torna a Oggi
-  const primaSchermata = useLocation().key === 'default';
-  return () => void (primaSchermata ? navigate('/') : navigate(-1));
-}
 
 /** S19 Chat: intestazione con l'ambito e il pannello. */
 export function ChatScreen() {

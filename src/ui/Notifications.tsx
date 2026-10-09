@@ -4,7 +4,7 @@
 // foglio del Dettaglio sopra questa schermata; il messaggio con «Annulla» torna qui.
 import { Check, ChevronLeft } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { appDb, watch } from '../app/db';
 import { markAllRead, readInbox, type EsitoPendente, type Inbox, type VoceIeri } from '../app/inbox';
 import { addLocalDays, localDayKey, localTimeKey, startOfLocalDay } from '../domain/time';
@@ -14,6 +14,7 @@ import { durata, fmtData } from './format';
 import { t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
 import { Toast } from './Toast';
+import { useIndietro } from './useIndietro';
 import s from './Notifications.module.css';
 
 const giorno = (istante: number, now: number): string => {
@@ -41,9 +42,8 @@ const sottotitolo = (v: VoceIeri): string =>
       : t(SOTTO[v.trigger] ?? 'avvisoInizio');
 
 export function Notifications() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const primaSchermata = location.key === 'default';
+  const indietro = useIndietro();
   const now = useMinuto();
   const [v, setV] = useState<Inbox>();
   useEffect(() => watch(() => readInbox(appDb, Date.now()), setV), []);
@@ -127,12 +127,7 @@ export function Notifications() {
   return (
     <div className={s.pagina}>
       <header className={s.testa}>
-        <button
-          type="button"
-          className={s.indietro}
-          aria-label={t('indietro')}
-          onClick={() => (primaSchermata ? navigate('/') : navigate(-1))}
-        >
+        <button type="button" className={s.indietro} aria-label={t('indietro')} onClick={indietro}>
           <ChevronLeft size={18} />
         </button>
         <span className={s.titoli}>

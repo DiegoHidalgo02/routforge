@@ -6,7 +6,7 @@
 // `app/practice` e nel dominio: qui si mostra e si passa il gesto.
 import { Check, ChevronLeft, Layers, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { appDb, watch } from '../app/db';
 import {
   generatePractice,
@@ -25,6 +25,7 @@ import { QUANTITA, quizScore, type DifficoltaPratica, type Quantita, type TipoPr
 import type { Valutazione } from '../domain/sm2';
 import { fmtData, FONTE, fuso } from './format';
 import { t, type Chiave } from './i18n';
+import { useIndietro } from './useIndietro';
 import s from './Practice.module.css';
 
 /** I cinque tipi di S12, nell'ordine del mock, col loro nome; il sostantivo dell'errore «nessun … valido» (TESTI). */
@@ -418,11 +419,8 @@ export function QuizScreen({ q }: { q: Extract<PraticaAperta, { tipo: 'quiz' }> 
   );
 }
 
-export function Indietro() {
-  const navigate = useNavigate();
-  useEffect(() => void navigate('/', { replace: true }), [navigate]);
-  return null;
-}
+/** Senza un'attività da mostrare si torna a Oggi, senza lasciare la rotta nella cronologia (audit P3-18). */
+export const Indietro = () => <Navigate to="/" replace />;
 
 // L'istante si legge al gesto, fuori dal componente (il compilatore di React lo scambia per una lettura nel render)
 const valutaCarta = (id: string, v: Valutazione) => gradeCard(appDb, id, v, Date.now());
@@ -540,8 +538,7 @@ export function DeckScreen() {
 
 /** Il ripasso trasversale (§19, `/ripasso`): le carte scadute di tutti i mazzi, dalle più scadute. */
 export function ReviewScreen() {
-  const navigate = useNavigate();
-  const primaSchermata = useLocation().key === 'default';
+  const indietro = useIndietro();
   const [carte, setCarte] = useState<CartaDaRipassare[]>();
   useEffect(() => {
     void readDueCards(appDb, Date.now()).then(setCarte);
@@ -556,7 +553,7 @@ export function ReviewScreen() {
           : t('ripassoNessuna')
       }
       carte={carte}
-      indietro={() => void (primaSchermata ? navigate('/') : navigate(-1))}
+      indietro={indietro}
       fine={{
         titolo: 'ripassoFinito',
         testo: t(carte.length === 1 ? 'ripassoFinitoTestoUna' : 'ripassoFinitoTesto', { n: carte.length }),

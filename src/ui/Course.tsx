@@ -26,7 +26,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useParams } from 'react-router';
 import {
   courseCascade,
   deleteCourse,
@@ -62,6 +62,7 @@ import { t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
 import { CodiceUnita, TuoiMateriali } from './Materials';
 import { PraticaUnita } from './Practice';
+import { useIndietro } from './useIndietro';
 import s from './Course.module.css';
 
 /** «CONSOLIDAMENTO» del file → «Consolidamento» (S11). */
@@ -69,8 +70,7 @@ const frase = (x: string) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase(
 
 export function Course() {
   const { corso = '' } = useParams();
-  const navigate = useNavigate();
-  const primaSchermata = useLocation().key === 'default';
+  const indietro = useIndietro('/corsi');
   const [v, setV] = useState<VistaCorso | null>();
   // Moduli aperti: all'inizio il primo (S11), qualunque sia il suo numero
   const [scelti, setAperti] = useState<ReadonlySet<number> | null>(null);
@@ -103,7 +103,7 @@ export function Course() {
           // Su desktop l'elenco dei corsi è accanto: S10 Desktop non ha l'indietro del corso
           className={`${s.icona} ${s.indietroCorso}`}
           aria-label={t('indietro')}
-          onClick={() => (primaSchermata ? navigate('/corsi') : navigate(-1))}
+          onClick={indietro}
         >
           <ChevronLeft size={18} />
         </button>
@@ -300,16 +300,10 @@ export function Course() {
  * «Chiedi all'AI» (S11, S12), che apre la chat con l'ambito del modulo o dell'unità (T-026).
  */
 function Indietro({ altrimenti, chat }: { altrimenti: string; chat?: string }) {
-  const navigate = useNavigate();
-  const primaSchermata = useLocation().key === 'default';
+  const indietro = useIndietro(altrimenti);
   return (
     <header className={s.testa}>
-      <button
-        type="button"
-        className={s.icona}
-        aria-label={t('indietro')}
-        onClick={() => (primaSchermata ? navigate(altrimenti) : navigate(-1))}
-      >
+      <button type="button" className={s.icona} aria-label={t('indietro')} onClick={indietro}>
         <ChevronLeft size={18} />
       </button>
       {chat && (

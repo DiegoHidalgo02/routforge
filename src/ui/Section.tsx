@@ -3,9 +3,9 @@
 // Sotto l'intestazione il banner «Sessione in corso» (NAVIGAZIONE §2). Le viste di Impostazioni hanno il sottotitolo
 // «Impostazioni» (S20 Shell Mobile).
 import { ChevronLeft } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router';
 import { t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
+import { useIndietro } from './useIndietro';
 import s from './Section.module.css';
 
 export function Section({
@@ -17,19 +17,12 @@ export function Section({
   indietro?: boolean;
   sottotitolo?: string;
 }) {
-  const navigate = useNavigate();
-  // Aperta da un collegamento diretto non c'è una schermata precedente nell'app: si torna a Oggi
-  const primaSchermata = useLocation().key === 'default';
+  const torna = useIndietro();
   return (
     <>
       <header className={s.intestazione}>
         {indietro && (
-          <button
-            type="button"
-            className={`${s.indietro} ${s.soloMobile}`}
-            aria-label={t('indietro')}
-            onClick={() => (primaSchermata ? navigate('/') : navigate(-1))}
-          >
+          <button type="button" className={`${s.indietro} ${s.soloMobile}`} aria-label={t('indietro')} onClick={torna}>
             <ChevronLeft size={18} />
           </button>
         )}
