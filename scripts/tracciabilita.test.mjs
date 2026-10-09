@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { senzaCommenti } from './codice.mjs';
 
 const QUESTO = import.meta.filename;
 const RADICE = join(import.meta.dirname, '..');
@@ -21,9 +22,9 @@ const posix = (p) => p.split(sep).join('/');
 
 export const STATI = ['nessuno', 'parziale', 'coperto'];
 
-/** Titoli di describe/it/test, anche con .skip/.only/.todo e .each(...): [tipo, titolo]. */
+/** Titoli di describe/it/test, anche con .skip/.only/.todo e .each(...): [tipo, modificatore, virgolette, titolo]. */
 const TITOLI =
-  /\b(describe|it|test)(?:\.(?:skip|only|todo|concurrent|sequential))?(?:\.each\([^)]*\))?\(\s*(['"`])(.*?)\2/g;
+  /\b(describe|it|test)(?:\.(skip|only|todo|concurrent|sequential))?(?:\.each\([^)]*\))?\(\s*(['"`])(.*?)\3/g;
 
 /** ID degli scenari dichiarati nella spec: righe `**A1 — …`. */
 export const scenariSpec = (testo) => [...testo.matchAll(/^\*\*([A-J]\d+) —/gm)].map((m) => m[1]);
@@ -52,21 +53,28 @@ export function righeMatrice(testo) {
   return out;
 }
 
-/** Scenari nominati nei titoli che contengono la parola SCENARI. */
+/**
+ * Scenari nominati nei titoli che contengono la parola SCENARI. Un test saltato, da fare o commentato non verifica nulla:
+ * non conta (audit P2-15).
+ */
 export function scenariCitati(codice) {
   const ids = new Set();
-  for (const m of codice.matchAll(TITOLI)) {
-    if (!/SCENARI/.test(m[3])) continue;
-    for (const id of m[3].match(/\b[A-J]\d+\b/g) ?? []) ids.add(id);
+  for (const m of senzaCommenti(codice).matchAll(TITOLI)) {
+    if (m[2] === 'skip' || m[2] === 'todo' || !/SCENARI/.test(m[4])) continue;
+    for (const id of m[4].match(/\b[A-J]\d+\b/g) ?? []) ids.add(id);
   }
   return [...ids];
 }
+
+/** I test saltati, isolati o da fare (`.skip`, `.only`, `.todo`): nel repository non ne restano (.claude/rules/test.md). */
+export const modificatoriVietati = (codice) =>
+  [...senzaCommenti(codice).matchAll(/\b(?:describe|it|test)\.(?:skip|only|todo)\b/g)].map((m) => m[0]);
 
 /** Titoli dei `describe` senza riferimento a spec, scenario, decisione, invariante o documento. */
 export const describeSenzaFonte = (codice) =>
   [...codice.matchAll(TITOLI)]
     .filter((m) => m[1] === 'describe')
-    .map((m) => m[3])
+    .map((m) => m[4])
     .filter((t) => !/§|SCENARI|MECC|FORMATO|CONTESTO|FUNZ|D-[A-Z]+-\d+|INV-\d+|docs\/|CLAUDE\.md/.test(t));
 
 const fileTest = (dir, re) =>
@@ -136,6 +144,13 @@ describe('Tracciabilità — CONTESTO §3, docs/TRACCIABILITA.md (INV-6, INV-7)'
     expect(problemi).toEqual([]);
   });
 
+  it('nessun test saltato, isolato o da fare (.skip, .only, .todo) resta nel repository (.claude/rules/test.md)', () => {
+    const problemi = testTutti.flatMap((p) =>
+      modificatoriVietati(readFileSync(p, 'utf8')).map((m) => `${posix(relative(RADICE, p))}: ${m}`),
+    );
+    expect(problemi).toEqual([]);
+  });
+
   it('i lettori riconoscono davvero il formato (autotest)', () => {
     expect(scenariSpec('**A1 — Uno**\n**J5 — Due**\n*A9 no*')).toEqual(['A1', 'J5']);
     expect(taskBacklog('| T-001 | x |\n| T-037 **R** | y |\n| ID |')).toEqual(['T-001', 'T-037']);
@@ -152,9 +167,18 @@ describe('Tracciabilità — CONTESTO §3, docs/TRACCIABILITA.md (INV-6, INV-7)'
       "it('D3: pomodoro', () => {});",
       "test('Timer — SCENARI D1', () => {});",
       "it.each([[1, 2]])('Streak — SCENARI C2', () => {});",
+      // Saltati, da fare o commentati non contano (audit P2-15)
       "describe.skip('Adesso — SCENARI G1', () => {});",
+      "it.todo('Da fare — SCENARI A2');",
+      "// it('Vecchio — SCENARI A1', () => {});",
+      "/* test('Spento — SCENARI A3', () => {}); */",
     ].join('\n');
-    expect(scenariCitati(codice)).toEqual(['B2', 'B3', 'D1', 'C2', 'G1']);
+    expect(scenariCitati(codice)).toEqual(['B2', 'B3', 'D1', 'C2']);
+    expect(
+      modificatoriVietati(
+        "it.only('a', f);\ndescribe.skip('b', f);\n// it.todo('c');\nit.skipIf(x)('d', f);\nit('e', f);",
+      ),
+    ).toEqual(['it.only', 'describe.skip']);
     expect(describeSenzaFonte("describe('Adesso — MECCANISMI §14', f); describe('Senza fonte', f);")).toEqual([
       'Senza fonte',
     ]);

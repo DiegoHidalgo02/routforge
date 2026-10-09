@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
+import { senzaCommenti } from './codice.mjs';
 
 const SRC = join(import.meta.dirname, '..', 'src');
 
@@ -52,8 +53,6 @@ export const PACCHETTI_DI_STRATO = [
 
 /** Unico pacchetto esterno ammesso nei test del dominio. */
 const PACCHETTI_AMMESSI_NEI_TEST = ['vitest'];
-
-export const senzaCommenti = (codice) => codice.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
 
 export const importDi = (codice) =>
   [...codice.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/g)].map((m) => m[1]);
