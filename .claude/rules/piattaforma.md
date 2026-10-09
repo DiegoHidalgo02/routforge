@@ -14,4 +14,4 @@ paths:
   (CONTESTO §3, INV-16).
 - Vincoli noti da rispettare: id delle notifiche interi a 32 bit su Android, permesso «sveglie esatte» revocabile,
   Doze, archiviazione del browser rimovibile (`docs/02_ARCHITETTURA.md` §8).
-- Codice nativo (Kotlin, Swift) e plugin nuovi sono task **R**: snapshot prima, checkpoint CP3, revisione indipendente.
+- Codice nativo (Java, Swift) e plugin nuovi sono task **R**: snapshot prima, checkpoint CP3, revisione indipendente.

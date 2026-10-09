@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/**/*.test.ts"
+  - "src/**/*.test.tsx"
   - "scripts/**/*.test.mjs"
 ---
 # Regole per i test

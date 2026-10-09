@@ -13,32 +13,26 @@ cambia (`docs/03_HANDOFF_DESIGN_CODE.md`). Il resto del documento descrive lo st
 
 ```
 src/
-├── domain/      Meccanismi puri (TS senza I/O). Già presenti: time, types, sm2, streak, pomodoro,
-│                practice, pointer, lost, nowBlock, course/parser, activity, ordering, calendar, language,
-│                checklist, completion, phases, drag, session, timer, outcome, scheduler/ (occurrences, horizon,
-│                cycle, absence), notifications/ (desiredSet, digest). In arrivo: stats, sync/ (merge).
-│                Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
+├── domain/      Meccanismi puri (TS senza I/O). L'elenco dei moduli è `src/domain/index.ts`, che li esporta tutti
+│                (il gate lo verifica, INV-3). Nomi di file in inglese, vocabolario del modello in italiano (D-NAMING-1)
 ├── data/        Persistenza locale (Dexie/IndexedDB, D-DATA-1): schema, repository, migrazioni. Nessuna regola di business.
 │                Già presente: sample-course/ (M0 e M1 del corso di esempio e il risultato atteso del parser
 │                `course-data.js`, FORMATO §0 e §5: D-SAMPLE-1, D-DESIGN-2).
-├── app/         Servizi: SchedulerService (cicli §9), SessionService (timer §10), NotificationPlanner (§13),
-│                CoursePointer (§11), StatsService (§20), SyncService (§25). Orchestrano domain + data + platform.
-│   └── ports/   Interfacce verso la piattaforma (Clock, Notifications, DoNotDisturb, Widget, FileSystem,
-│                TextToSpeech, Haptics, Network, SyncTransport, AiClient, Storage) + adapter finti per i test.
-│                Già presente: clock (T-013; l'orologio finto sta nel test che lo usa); device (ScreenAwake,
-│                DoNotDisturb, T-017: tenute da `app/sessionDevice.ts`, iniettate da `main.tsx`); notifications
-│                (T-019, D-NOTIF-1: la sveglia è un attributo della voce, nessuna porta Alarms; adapter web
-│                `platform/notifications.ts`, testi da `ui/notificationTexts.ts` iniettati da `main.tsx`)
+├── app/         Servizi, un modulo per area (`src/app/*.ts`): orchestrano domain + data + porte. I quattro chiave
+│                (scheduler, sessione, notifiche, puntatore) sono in §4; poi statistiche (`stats.ts`, §20),
+│                sincronizzazione (`sync.ts`, §25), AI, backup, materiali, import del corso.
+│   └── ports/   Interfacce verso la piattaforma, un file per area (`src/app/ports/*.ts`: orologio, dispositivo,
+│                notifiche, file, rete, PDF, voce, widget, AI, sync); i test usano adapter finti. Nessuna porta Alarms:
+│                la sveglia è un attributo della voce di notifica (D-NOTIF-1)
 ├── ui/          React 19 (D-STACK-1): schermate (Oggi, Crea, Dettaglio, Corsi, Sessione, AI, Statistiche, Notifiche,
 │                Impostazioni), componenti, hook. Solo token di `claude-design/design/tokens.css` (importati da `src/main.tsx`, D-DESIGN-4).
-└── platform/    Adapter nativi dietro le porte (Capacitor, D-STACK-1): LocalNotifications, AlarmScreen (full-screen intent),
-                 DoNotDisturb, Widget (Android), FileSystem/Backup, TextToSpeech, Haptics, Clock.
-                 Già presente: clock (adapter web della porta Clock, T-013; vale anche nella WebView); device
-                 (Wake Lock e Non Disturbare assente sul web, T-017); notifications (adapter web, T-019)
+└── platform/    Adapter dietro le porte (`src/platform/*.ts`): web (`clock`, `device`, `notifications`, …) e Android
+                 con Capacitor (`*Android.ts`, plugin locali in `android/`, D-STACK-1); `src/main.tsx` sceglie quale
+                 iniettare
 ```
 
-**Regola**: `ui → app → data → domain`. `platform` è iniettato in `app` tramite le porte (`src/app/ports/*.ts`) così
-i servizi si testano con adapter finti. `domain` non importa nulla dagli altri strati e non usa `Date.now()`.
+**Regola**: `ui → app → data → domain`, e tutti possono usare `domain` (INV-1). `platform` è iniettato in `app`
+tramite le porte (`src/app/ports/*.ts`) così i servizi si testano con adapter finti. `domain` non importa nulla dagli altri strati e non usa `Date.now()`.
 Verifica: `scripts/architettura.test.mjs` (INV-1, INV-2, INV-3); le regole operative di ogni strato sono in `.claude/rules/`.
 
 ## 2. Perché il dominio è puro
@@ -137,8 +131,7 @@ resta fuori dal dominio.
   rotte in `src/ui/App.tsx`; testi con `t()` di `src/ui/i18n` (sei JSON, lingua da `pickLanguage`, MECC §23); punto di
   composizione `src/main.tsx` (font, token, lingua, archiviazione persistente), fuori dagli strati.
 - Accessibilità: `prefers-reduced-motion` e scala testo di sistema rispettati (CONTESTO §3); safe area su mobile.
-- Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `claude-design/design/tokens.css` (importati da `src/main.tsx`, D-DESIGN-4)
-  (copia non modificata dei token dell'export del design: oggi del vecchio, INV-20 sospeso fino al nuovo handoff),
+- Stack (D-STACK-1): React 19 + Vite; stili con **CSS Modules** che usano solo i token di `claude-design/design/tokens.css` (importati da `src/main.tsx`, D-DESIGN-4),
   niente Tailwind né stili inline con valori; icone `lucide-react` (tratto 1.75); font Manrope e IBM Plex Mono locali
   (`@fontsource`); rotte con `react-router`.
 
@@ -150,7 +143,7 @@ resta fuori dal dominio.
 | Sveglie a schermo intero | no: notifica che resta finché la si tocca (`requireInteraction`, D-NOTIF-1) | full-screen intent + `SCHEDULE_EXACT_ALARM` | limitato (notifica critica/time-sensitive) | plugin nativo da scrivere (T-021) |
 | Non Disturbare | no | `ACCESS_NOTIFICATION_POLICY` | non disponibile → iperfocus vale comunque (§10.4) | T-017 |
 | Timer con app chiusa (D-TIMER-2) | no: solo Wake Lock a scheda aperta; battiti e intervallo non verificato (T-047) | servizio in primo piano con notifica-cronometro (T-021) | Live Activity + notifica «tempo scaduto» (T-036) | il tempo oltre 30' dall'ultimo battito non conta nel focus |
-| Widget | no | Kotlin AppWidget (T-023) | "se disponibile" (WidgetKit, dopo) | |
+| Widget | no | AppWidget in Java (T-023) | "se disponibile" (WidgetKit, dopo) | |
 | Backup su cartella documenti | download | `@capacitor/filesystem` Documents | Files | §22 |
 | TTS (Trivia) | Web Speech API (si ferma a schermo spento) | plugin locale `VoceTrivia`: coda di `TextToSpeech` con i silenzi (D-NATIVO-4) | da scrivere (T-036) | §18 |
 | Schermo acceso | Wake Lock API | plugin keep-awake | idem | §10.4 |
@@ -165,8 +158,8 @@ npm i -D @types/react @types/react-dom vite@7 @vitejs/plugin-react@5 eslint-plug
 npm i -D @capacitor/cli && npx cap init RoutForge com.routforge.app --web-dir dist
 npx cap add android            # progetto in android/, versionato; iOS richiede un Mac
 npm run build && npx cap sync android && (cd android && ./gradlew assembleDebug)   # APK di debug
-# T-021: il resto dei plugin
-npm i @capacitor/app @capacitor/local-notifications @capacitor/haptics
+# T-021 (fatto): il resto dei plugin
+npm i @capacitor/app @capacitor/local-notifications
 # T-035: PWA installabile (manifest con nome e icona di CP6)
 npm i -D vite-plugin-pwa
 ```

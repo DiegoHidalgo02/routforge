@@ -5,10 +5,9 @@ sessioni di studio con esiti che fanno avanzare un corso, promemoria, pratica ge
 sincronizzazione fra dispositivi. Android · iOS · web installabile. Dati sul dispositivo, offline salvo AI e sync.
 
 ## Stato
-Passo 5 di 10 (CONTESTO §6): fatti dati e import del corso, calendario, scheduler, sessione ed esiti, modello delle
-notifiche; restano alcuni task dei passi precedenti (T-037, T-040–T-042, T-044) e le notifiche native (T-021). Il
-nuovo design è in `claude-design/` dal 05/10/2026 (D-DESIGN-3) con la spec allineata; le schermate si implementano
-dopo il suo handoff (`docs/03_HANDOFF_DESIGN_CODE.md`). Vedi `docs/STATO.md`.
+Passo corrente, fatto, problemi aperti e prossimo task: `docs/STATO.md`. Il design è in `claude-design/` dal
+05/10/2026 (D-DESIGN-3) con la spec allineata; una schermata si implementa dopo il suo handoff
+(`docs/03_HANDOFF_DESIGN_CODE.md`).
 
 ## Avvio rapido
 ```bash

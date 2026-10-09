@@ -53,7 +53,7 @@ src/app/        servizi che orchestrano dominio + dati: scheduler, sessione, not
 src/ui/         schermate e componenti React 19 (D-STACK-1); SOLO i token di claude-design/design/tokens.css
 src/platform/   adapter nativi dietro interfacce (Capacitor da T-021: notifiche, sveglie, Non Disturbare, widget, file system, TTS)
 ```
-Regola di dipendenza: `ui → app → data → domain`; `platform` è usato solo da `app` tramite interfacce.
+Regola di dipendenza: `ui → app → data → domain`, e tutti usano `domain` (INV-1); `platform` solo da `app` tramite interfacce.
 Stack deciso in T-000 (D-STACK-1): React 19 + Vite + CSS Modules, Dexie, Capacitor; i dettagli presi dal vecchio
 design (token, font, icone) restano finché l'handoff del nuovo design non li cambia.
 Tempo: ogni istante è epoch ms; il giorno è quello **locale** (`src/domain/time.ts`). Mai `Date.now()` dentro
@@ -65,11 +65,10 @@ Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-T
 ## 4. Convenzioni
 
 - TypeScript `strict`, niente `any`, niente `// @ts-ignore` (ESLint nel gate); formato Prettier (`npm run format`).
-- **Vocabolario (D-NAMING-1)**: tipi, attributi e valori del dominio in **italiano come nelle spec** (`Blocco`,
-  `stato`, `inizio`, `UnitaPercorso`, `'perso'`); i valori con spazi usano `_` (`in_corso`, `non_iniziata`); funzioni e
-  verbi tecnici restano in inglese, come i nomi di file, cartelle e servizi (`assignPointer`, `lost.ts`,
-  `SchedulerService`); porte e componenti hanno un nome libero, le costanti seguono i tipi (`FACILITA_MINIMA`). Un
-  concetto = un nome: niente sinonimi inglesi di un attributo già italiano.
+- **Vocabolario (D-NAMING-1)**: tipi, attributi, valori e costanti del dominio in **italiano come nelle spec**
+  (`Blocco`, `stato`, `'perso'`, `FACILITA_MINIMA`); i valori con spazi usano `_` (`in_corso`, `non_iniziata`); in
+  inglese funzioni, file, cartelle e servizi (`assignPointer`, `lost.ts`, `SchedulerService`); porte e componenti a
+  nome libero. Un concetto = un nome: niente sinonimi inglesi di un attributo già italiano.
 - Commenti in italiano; in testa a ogni modulo di dominio: fonte (§) e scenari coperti.
 - Test accanto al codice: `x.test.ts`; ogni `describe` cita il paragrafo o lo scenario (`'Persi — SCENARI B2'`);
   un test che cita uno scenario ha la sua riga in `docs/TRACCIABILITA.md` (il gate lo verifica).
