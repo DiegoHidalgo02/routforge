@@ -25,6 +25,7 @@ import { saveSettings } from '../app/settings';
 import { currentSyncService, type StatoSync } from '../app/sync';
 import { ANTICIPI } from '../domain/activity';
 import type { ErroreAi } from '../domain/ai';
+import { backupSizeEstimate } from '../domain/backup';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
 import type { Impostazioni, LinguaRisposte } from '../domain/settings';
 import type { TipoBlocco } from '../domain/types';
@@ -459,7 +460,7 @@ export function Backup() {
     () =>
       watch(
         () => materialsSpace(appDb),
-        (x) => setStima((x.pdf * 4) / 3 + x.altri + x.codice),
+        (x) => setStima(backupSizeEstimate(x)),
       ),
     [],
   );

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { backupFile, FORMATO_BACKUP, fromBase64, parseBackup, toBase64, VERSIONE_BACKUP } from './backup';
+import {
+  backupFile,
+  backupSizeEstimate,
+  FORMATO_BACKUP,
+  fromBase64,
+  parseBackup,
+  toBase64,
+  VERSIONE_BACKUP,
+} from './backup';
 import { local } from './time';
 
 const ADESSO = local(2026, 9, 23, 16, 8);
@@ -99,5 +107,12 @@ describe('Formato del backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', ()
     expect(parseBackup(file({ preferenze: [riga('impostazioni', { valore: 'x' })] }), nomi)).toEqual({
       errore: 'illeggibile',
     });
+  });
+});
+
+describe('Stima del file — MECCANISMI §22 (audit P3-17)', () => {
+  it('i PDF pesano un terzo in più (base64 nel file); note, link e codice come sono', () => {
+    expect(backupSizeEstimate({ pdf: 3000, altri: 100, codice: 50 })).toBe(4150);
+    expect(backupSizeEstimate({ pdf: 0, altri: 0, codice: 0 })).toBe(0);
   });
 });

@@ -30,7 +30,6 @@ import { unitScope } from '../app/ai';
 import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { logError } from '../app/diagnostics';
-import { readStreak } from '../app/outcome';
 import {
   abandonSession,
   anticipateSession,
@@ -38,7 +37,7 @@ import {
   endSession,
   startSession,
   setupInputs,
-  type SessioneRegistrata,
+  type SessioneChiusaConStreak,
   type CorsoSetup,
   type IngressiSetup,
   type UnitaSetup,
@@ -575,13 +574,10 @@ export function ActiveSession() {
     const n = adesso();
     void editActiveSession(appDb, (x) => f(x, n), n).catch(traccia(null));
   };
-  // Chiude e legge la streak prima e dopo: «+1» solo se questa chiusura l'ha fatta crescere (§12, handoff §3 n. 48)
-  const chiudiCon = async (chiusura: (n: number) => Promise<SessioneRegistrata | null>) => {
-    const n = adesso();
-    const prima = await readStreak(appDb, n);
-    const c = await chiusura(n);
-    const giorni = await readStreak(appDb, n);
-    return c && { c, streak: { giorni, piu: giorni > prima } };
+  // La streak viene dalla chiusura, letta nella sua transazione: «+1» solo se l'ha fatta crescere (§12, handoff §3 n. 48)
+  const chiudiCon = async (chiusura: (n: number) => Promise<SessioneChiusaConStreak | null>) => {
+    const c = await chiusura(adesso());
+    return c && { c, streak: c.streak };
   };
   // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma; altrimenti si torna a Oggi
   const abbandona = () => {

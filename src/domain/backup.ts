@@ -71,6 +71,13 @@ export function fromBase64(testo: string): Uint8Array {
   return out;
 }
 
+/**
+ * La dimensione del file per S22 («~ 14 MB»): i binari dei PDF pesano un terzo in più, perché nel file stanno in base64;
+ * note, link e codice come sono (la stima stava nella UI: audit P3-17).
+ */
+export const backupSizeEstimate = (spazio: { pdf: number; altri: number; codice: number }): number =>
+  (spazio.pdf * 4) / 3 + spazio.altri + spazio.codice;
+
 /** Il file da salvare: le tabelle date, coi binari dei PDF in base64. */
 export function backupFile(tabelle: Record<string, readonly object[]>, now: number) {
   return {

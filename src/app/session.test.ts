@@ -851,3 +851,13 @@ describe('Chiusura — atomicità, CONTESTO §3 (audit P2-12)', () => {
     expect((await get(db, 'blocchi', 's1'))?.stato).toBe('in_corso');
   });
 });
+
+describe('Streak della chiusura — MECCANISMI §12 (audit P3-17)', () => {
+  it('la chiusura restituisce la streak letta nella sua transazione: +1 solo se questa chiusura l’ha fatta crescere', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta(), oggi(9, 10), FUSO);
+    expect(await endSession(db, oggi(9, 40), FUSO, ESITO)).toMatchObject({ streak: { giorni: 1, piu: true } });
+    await startSession(db, null, scelta(), oggi(11), FUSO);
+    expect(await endSession(db, oggi(11, 30), FUSO, ESITO)).toMatchObject({ streak: { giorni: 1, piu: false } });
+  });
+});

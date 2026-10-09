@@ -24,7 +24,7 @@ import { MINUTE } from '../domain/time';
 import { abandonPlan, beat, closeSession, currentStudyUnit, exitLocked, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
-import { TABELLE_ESITO, writeOutcome } from './outcome';
+import { readStreak, TABELLE_ESITO, writeOutcome } from './outcome';
 import { logError } from './diagnostics';
 import type { Clock } from './ports/clock';
 import type { SessioneInPrimoPiano } from './ports/device';
@@ -244,6 +244,8 @@ export function editActiveSession(
 
 /** Una sessione chiusa con l'esito scelto (`null` = abbandonata), come sta in `sessioni`. */
 export type SessioneRegistrata = SessioneChiusa & { esito: DatiEsito | null };
+/** La chiusura con la streak letta nella sua transazione: `piu` se l'ha fatta crescere (§12, S15; audit P3-17). */
+export type SessioneChiusaConStreak = SessioneRegistrata & { streak: { giorni: number; piu: boolean } };
 
 /**
  * Chiusura (§10.5, §11): la sessione con tipo, riepilogo ed esito va in `sessioni` (statistiche §20, anche gli
@@ -258,10 +260,11 @@ function close(
   now: number,
   fuso: string,
   esito: DatiEsito | 'abbandono',
-): Promise<SessioneRegistrata | null> {
+): Promise<SessioneChiusaConStreak | null> {
   return inTransaction(db, ['sessioni', ...TABELLE_ESITO], async () => {
     const s = await readActiveSession(db);
     if (!s) return null;
+    const prima = await readStreak(db, now);
     const piano = esito === 'abbandono' ? abandonPlan(s, now) : { chiusura: undefined, esito };
     const chiusa = { ...closeSession(s, now, piano.chiusura), esito: piano.esito };
     await save(db, 'sessioni', chiusa, now);
@@ -281,7 +284,8 @@ function close(
       );
     } else if (b?.stato === 'in_corso') await saveBlock(db, { ...b, stato: 'programmato' }, now, fuso);
     await remove(db, 'preferenze', CHIAVE_SESSIONE_ATTIVA, now);
-    return chiusa;
+    const giorni = await readStreak(db, now);
+    return { ...chiusa, streak: { giorni, piu: giorni > prima } };
   });
 }
 
@@ -291,8 +295,8 @@ export const endSession = (
   now: number,
   fuso: string,
   esito: DatiEsito,
-): Promise<SessioneRegistrata | null> => close(db, now, fuso, esito);
+): Promise<SessioneChiusaConStreak | null> => close(db, now, fuso, esito);
 
 /** «Abbandona» (§8, §10.5): nessun esito, oppure Continua dal 65% della durata pianificata (D-SESS-2, D7). */
-export const abandonSession = (db: RoutForgeDb, now: number, fuso: string): Promise<SessioneRegistrata | null> =>
+export const abandonSession = (db: RoutForgeDb, now: number, fuso: string): Promise<SessioneChiusaConStreak | null> =>
   close(db, now, fuso, 'abbandono');
