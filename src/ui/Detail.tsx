@@ -70,12 +70,10 @@ import {
 import { impostazioni } from './preferenze';
 import { lingua, t, type Chiave } from './i18n';
 import s from './Detail.module.css';
-import { lascia, type Tono } from './avvisi';
+import { ANNULLA_MS, lascia, type Tono } from './avvisi';
 import { SchedaEsito, useStudyAction } from './Session';
 
 const PRIORITA = { alta: 'prioritaRigaAlta', normale: 'prioritaRigaNormale', bassa: 'prioritaRigaBassa' } as const;
-/** Il toast con «Annulla» resta 5 s, come l'annulla del trascinamento (MECC §15). */
-const TOAST_MS = 5000;
 
 const fmtGiornoOra = new Intl.DateTimeFormat(lingua, {
   day: 'numeric',
@@ -227,7 +225,7 @@ export function Detail() {
     { poi, todo }: { poi?: () => void; todo?: boolean } = {},
   ) => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => (poi ? poi() : setToast(null)), TOAST_MS);
+    timer.current = setTimeout(() => (poi ? poi() : setToast(null)), ANNULLA_MS);
     setToast({
       testo,
       todo,

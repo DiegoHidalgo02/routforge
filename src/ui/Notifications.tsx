@@ -8,15 +8,13 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { appDb, watch } from '../app/db';
 import { markAllRead, readInbox, type EsitoPendente, type Inbox, type VoceIeri } from '../app/inbox';
 import { addLocalDays, localDayKey, localTimeKey, startOfLocalDay } from '../domain/time';
-import { ascolta, type Tono } from './avvisi';
+import { ANNULLA_MS, ascolta, type Tono } from './avvisi';
 import { useMinuto } from './clock';
 import { durata, fmtData } from './format';
 import { t, type Chiave } from './i18n';
 import { SessionBannerSlot } from './SessionBanner';
+import { Toast } from './Toast';
 import s from './Notifications.module.css';
-
-/** Ms del messaggio con «Annulla» dopo l'esito (come Oggi, §3). */
-const AVVISO_MS = 5000;
 
 const giorno = (istante: number, now: number): string => {
   const g = localDayKey(istante);
@@ -57,7 +55,7 @@ export function Notifications() {
     () =>
       ascolta(({ testo, tono, annulla }) => {
         clearTimeout(timer.current);
-        timer.current = setTimeout(() => setAvviso(undefined), AVVISO_MS);
+        timer.current = setTimeout(() => setAvviso(undefined), ANNULLA_MS);
         setAvviso({
           testo,
           tono,
@@ -199,19 +197,7 @@ export function Notifications() {
 
       <span className={s.nota}>{t('notaImpostazioniNotifiche')}</span>
 
-      <div className={s.regioneToast} role="status">
-        {avviso && (
-          <div className={s.toast}>
-            <span className={s.puntoToast} data-tono={avviso.tono} />
-            <span className={s.testoToast}>{avviso.testo}</span>
-            {avviso.annulla && (
-              <button type="button" className={s.annullaToast} onClick={avviso.annulla}>
-                {t('annullaAzione')}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <Toast avviso={avviso} />
     </div>
   );
 }

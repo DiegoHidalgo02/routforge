@@ -67,12 +67,13 @@ import { eDesktop, useDesktop } from './desktop';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
 import { HeroCard } from './HeroCard';
 import { lingua, t, type Chiave } from './i18n';
-import { ascolta, type Tono } from './avvisi';
+import { ANNULLA_MS, ascolta, type Tono } from './avvisi';
 import { animazioniRidotte, impostazioni, useSettings, vibra } from './preferenze';
 import { ProfileMenu } from './ProfileMenu';
 import { ProgressoOggi, ProssimeAttivita } from './Progress';
 import { Archivio, GiornataChiusa } from './Archive';
 import { SessionBannerSlot } from './SessionBanner';
+import { Toast } from './Toast';
 import s from './Today.module.css';
 
 // Forme brevi nella colonna dell'orario («Norm.», S1)
@@ -153,7 +154,6 @@ const periodoDi = (vista: Vista, giorno: string, inizio: InizioSettimana) =>
   vista === 'mese' ? giorno.slice(0, 7) : vista === 'settimana' ? (weekOf(giorno, inizio)[0] ?? giorno) : giorno;
 
 /** «Annulla» del toast della spunta resta 5 s (A7), come il toast del Dettaglio. */
-const ANNULLA_MS = 5000;
 /** Movimento del puntatore oltre il quale la pressione diventa trascinamento. */
 const SOGLIA_PRESA = 4;
 /** L'istante delle scritture, fuori dal render (lo stesso accorgimento di Session.tsx per `react-hooks/purity`). */
@@ -536,19 +536,7 @@ export function Today() {
       {/* Senza bersaglio la card sollevata segue il puntatore nella colonna della giornata. Su un orario si aggancia
           nello spazio che la giornata apre; sulla striscia lascia il posto al giorno acceso, e il suggerimento sta in
           testa alla giornata (`Giornata`, S1 `drag=giorno`) */}
-      <div className={s.regioneToast} role="status">
-        {avviso && (
-          <div className={s.toast}>
-            <span className={s.puntoToast} data-tono={avviso.tono} />
-            <span className={s.testoToast}>{avviso.testo}</span>
-            {avviso.annulla && (
-              <button ref={annullaToast} type="button" className={s.annullaToast} onClick={avviso.annulla}>
-                {t('annullaAzione')}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <Toast avviso={avviso} annullaRef={annullaToast} />
     </div>
   );
 }

@@ -75,6 +75,7 @@ import {
 } from '../domain/timer';
 import { GLOBALE, type AmbitoAperto } from '../domain/ai';
 import type { Blocco, Esito } from '../domain/types';
+import { ANNULLA_MS } from './avvisi';
 import { ChatPanel } from './Chat';
 import { cifre } from './Cifre';
 import { useMinuto, useSecondo } from './clock';
@@ -451,9 +452,6 @@ function Sottotitolo({ v }: { v: VistaSessione }) {
   );
 }
 
-/** Tempo del messaggio «Interruzione iperfocus registrata», come il toast del trascinamento (D-DRAG-1). */
-const AVVISO_MS = 5000;
-
 /**
  * Timer della sessione (S15 `timer`, `iperfocus`, sheet di chiusura; MECC §10.2–§10.5): i valori li deriva
  * `domain/timer.ts` dagli istanti salvati, ogni secondo. Schermo acceso finché il timer è aperto; in iperfocus schermo
@@ -514,7 +512,7 @@ export function ActiveSession() {
   }, [bloccata]);
   useEffect(() => {
     if (uscita !== 'registrata') return;
-    const id = setTimeout(() => setUscita('no'), AVVISO_MS);
+    const id = setTimeout(() => setUscita('no'), ANNULLA_MS);
     return () => clearTimeout(id);
   }, [uscita]);
 

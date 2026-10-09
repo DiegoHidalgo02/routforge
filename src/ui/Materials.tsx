@@ -37,10 +37,12 @@ import {
 } from '../app/materials';
 import { hostOf, youtubeId } from '../domain/course/parser';
 import { isGroundable, type Materiale } from '../domain/materials';
+import { ANNULLA_MS } from './avvisi';
 import { IconaLink } from './IconaLink';
 import { dimensione, fmtGiornoMese, unDecimale } from './format';
 import { t } from './i18n';
 import { Section } from './Section';
+import { Toast } from './Toast';
 import s from './Materials.module.css';
 
 /** L'istante delle scritture, letto al gesto (fuori dal render). */
@@ -57,7 +59,7 @@ function useAnnulla() {
   useEffect(() => () => clearTimeout(timer.current), []);
   const mostra = (titolo: string, ripristina: () => Promise<unknown>) => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setAvviso(undefined), 5000);
+    timer.current = setTimeout(() => setAvviso(undefined), ANNULLA_MS);
     setAvviso({
       testo: t('materialeEliminato', { titolo }),
       annulla: () => {
@@ -67,19 +69,7 @@ function useAnnulla() {
       },
     });
   };
-  const toast = (
-    <div className={s.regioneToast} role="status">
-      {avviso && (
-        <div className={s.toast}>
-          <span className={s.puntoToast} data-tono="info" />
-          <span className={s.testoToast}>{avviso.testo}</span>
-          <button type="button" className={s.annullaToast} onClick={avviso.annulla}>
-            {t('annullaAzione')}
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  const toast = <Toast avviso={avviso && { ...avviso, tono: 'info' }} />;
   return { mostra, toast };
 }
 

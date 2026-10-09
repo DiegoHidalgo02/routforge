@@ -595,26 +595,6 @@
   box-shadow: var(--ring-focus-danger);
 }
 
-.regioneToast {
-  composes: regioneToast from './Today.module.css';
-}
-
-.toast {
-  composes: toast from './Today.module.css';
-}
-
-.puntoToast {
-  composes: puntoToast from './Today.module.css';
-}
-
-.testoToast {
-  composes: testoToast from './Today.module.css';
-}
-
-.annullaToast {
-  composes: annullaToast from './Today.module.css';
-}
-
 /* «Carica il codice prodotto» della chiusura della sessione (S15): riga tratteggiata in surface, testo text-2, la
    nota in text-3; al passaggio bordo border-strong e testo bianco */
 .caricaCodice {

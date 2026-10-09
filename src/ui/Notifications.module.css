@@ -317,24 +317,3 @@
   font: var(--text-sm) / 16px var(--font-ui);
   text-wrap: pretty;
 }
-
-/* Il messaggio dell'esito registrato, come quello di Oggi */
-.regioneToast {
-  composes: regioneToast from './Today.module.css';
-}
-
-.toast {
-  composes: toast from './Today.module.css';
-}
-
-.puntoToast {
-  composes: puntoToast from './Today.module.css';
-}
-
-.testoToast {
-  composes: testoToast from './Today.module.css';
-}
-
-.annullaToast {
-  composes: annullaToast from './Today.module.css';
-}
