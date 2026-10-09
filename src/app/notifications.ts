@@ -21,6 +21,7 @@ import {
   testNotification,
   unreadableBlocks,
   type ImpostazioniNotifiche,
+  type VoceRegistro,
 } from '../domain/notifications/desiredSet';
 import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
 import { addLocalDays, localDayKey } from '../domain/time';
@@ -156,6 +157,9 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
   let prima = true;
   let permessoChiesto = false;
   let coda: Promise<void> = Promise.resolve();
+  // Le voci armate da questo processo (audit P3-3): sul web ogni scheda ha i suoi timer e il registro è condiviso; la
+  // riconciliazione le confronta con l'insieme desiderato come il registro (`reconcilePlan`)
+  const armateQui = new Map<string, VoceRegistro>();
 
   async function esegui(now: number): Promise<void> {
     try {
@@ -168,8 +172,11 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
       if (saltati.length) logError('notifiche', `blocchi senza promemoria (dati non leggibili): ${saltati.join(', ')}`);
       const blocchi = saltati.length ? ingressi.blocchi.filter((b) => !saltati.includes(b.id)) : ingressi.blocchi;
       const desiderate = desiredSet({ ...ingressi, blocchi, inizioSettimana }, now);
-      const piano = reconcilePlan(desiderate, await list(db, 'registroNotifiche'), prima, now);
+      const registro = await list(db, 'registroNotifiche');
+      const piano = reconcilePlan(desiderate, registro, prima, now, [...armateQui.values()]);
       if (piano.daCancellare.length > 0) await porta.cancel(piano.daCancellare);
+      for (const [chiave, v] of armateQui)
+        if (piano.daCancellare.includes(v.idNativo) || v.istante <= now) armateQui.delete(chiave);
       if (piano.daTogliere.length > 0) await purge(db, 'registroNotifiche', piano.daTogliere);
       if (piano.daArmare.length > 0) {
         // Senza attendere: il prompt del browser può restare aperto (o non comparire mai senza un gesto) e fermerebbe
@@ -178,6 +185,8 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
           permessoChiesto = true;
           void porta.requestPermission().catch(() => false);
         }
+        // Prima dell'armamento: una voce armata solo in parte (su Android due plugin) si cancella alla prossima
+        for (const v of piano.daArmare) armateQui.set(v.chiave, v);
         await porta.schedule(piano.daArmare);
         await inTransaction(db, ['registroNotifiche'], async () => {
           for (const v of piano.daArmare) await save(db, 'registroNotifiche', { ...v, id: v.chiave }, now);
@@ -225,6 +234,7 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
             'registroNotifiche',
             voci.map((v) => v.id),
           );
+          armateQui.clear();
         })
         .catch((e: unknown) => logError('notifiche', e))),
     ...(porta.sveglia && { sveglia: porta.sveglia }),

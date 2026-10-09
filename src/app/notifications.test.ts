@@ -676,3 +676,50 @@ describe('Cancella tutto — MECCANISMI §22, D-BACKUP-2 (audit P2-12)', () => {
   });
 });
 
+describe('Due schede sul web — MECCANISMI §13.3 (audit P3-3)', () => {
+  it('una voce che un’altra scheda ha già tolto dal registro si cancella anche qui: nessun promemoria stantio', async () => {
+    const id = await crea(todo({ inizio: '18:00', durata: 30 }), oggi(8));
+    const [a, b] = [portaFinta(), portaFinta()];
+    const prima = createNotifications(db, a.porta, orologio(oggi(8)));
+    const seconda = createNotifications(db, b.porta, orologio(oggi(8)));
+    await prima.reconcile(oggi(8));
+    await seconda.reconcile(oggi(8));
+    expect(b.armate.size).toBeGreaterThan(0);
+    await deleteBlock(db, id, oggi(9), FUSO);
+    await prima.reconcile(oggi(9));
+    await seconda.reconcile(oggi(9));
+    expect([a.armate.size, b.armate.size]).toEqual([0, 0]);
+  });
+});
+
+describe('Due schede sul web, voci nuove o spostate — MECCANISMI §13.3 (audit P3-3)', () => {
+  const dueSchede = () => {
+    const [a, b] = [portaFinta(), portaFinta()];
+    const prima = createNotifications(db, a.porta, orologio(oggi(8)));
+    const seconda = createNotifications(db, b.porta, orologio(oggi(8)));
+    const entrambe = async (now: number) => {
+      await prima.reconcile(now);
+      await seconda.reconcile(now);
+    };
+    return { a, b, entrambe };
+  };
+
+  it('un blocco spostato dall’altra scheda si riarma anche qui all’orario nuovo', async () => {
+    const id = await crea(todo({ inizio: '18:00', durata: 30 }), oggi(8));
+    const { a, b, entrambe } = dueSchede();
+    await entrambe(oggi(8));
+    await saveBlock(db, { ...(await get(db, 'blocchi', id))!, inizio: oggi(20), fine: oggi(20, 30) }, oggi(9), FUSO);
+    await entrambe(oggi(9));
+    expect(b.vista()).toEqual(a.vista());
+    expect(b.vista().some((v) => v.endsWith('@20:00'))).toBe(true);
+  });
+
+  it('una voce nata con le due schede aperte la arma anche la seconda: chiudere la prima non la perde', async () => {
+    const { a, b, entrambe } = dueSchede();
+    await entrambe(oggi(8));
+    await crea(todo({ inizio: '18:00', durata: 30 }), oggi(8));
+    await entrambe(oggi(8, 1));
+    expect(a.armate.size).toBeGreaterThan(0);
+    expect(b.vista()).toEqual(a.vista());
+  });
+});

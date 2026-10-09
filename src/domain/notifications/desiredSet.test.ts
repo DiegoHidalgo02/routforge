@@ -733,3 +733,42 @@ describe("L'esito non è mai una sveglia — SCENARI F7", () => {
     expect(n.find((x) => x.trigger === 'esito')?.istante).toBe(oggi(16, 55));
   });
 });
+
+describe('Riconciliazione con le voci armate da questo processo — MECCANISMI §13.3 (audit P3-3)', () => {
+  // Sul web ogni scheda ha i suoi timer e il registro è condiviso: il registro può dire «armata» o «tolta» per
+  // un'altra scheda
+  const voci = blockNotifications(blocco(), undefined, DEF);
+  const registro = voci.map((v, i) => ({ ...v, idNativo: i }));
+  const now = oggi(8);
+
+  it('senza argomento le voci armate qui sono il registro: con una copia del registro il piano è lo stesso', () => {
+    const spostate = voci.map((v) => ({ ...v, istante: v.istante + minutes(60) }));
+    for (const desiderate of [voci, voci.slice(1), spostate])
+      expect(reconcilePlan(desiderate, registro, false, now)).toEqual(
+        reconcilePlan(desiderate, registro, false, now, [...registro]),
+      );
+  });
+
+  it('una voce armata qui nella versione vecchia e cambiata a meno di 5 s si cancella, anche col registro già aggiornato', () => {
+    const adesso = oggi(8, 55) - 3_000;
+    const vecchia = { ...registro[0]!, istante: registro[0]!.istante + minutes(1) };
+    const p = reconcilePlan(voci, registro, false, adesso, [vecchia, ...registro.slice(1)]);
+    expect([p.daCancellare, p.daArmare]).toEqual([[0], []]);
+  });
+
+  it('una voce nel registro ma non armata qui si arma; una armata qui in un’altra versione si riarma', () => {
+    const spostata = { ...registro[1]!, istante: registro[1]!.istante - minutes(60) };
+    const p = reconcilePlan(voci, registro, false, now, [registro[0]!, spostata, registro[2]!]);
+    expect(p.daArmare.map((v) => v.idNativo)).toEqual([1, 3]);
+    expect(p.daCancellare).toEqual([]);
+  });
+
+  it('una voce armata qui e tolta dal registro da un’altra scheda si cancella, se non è ancora scattata', () => {
+    const p = reconcilePlan(voci.slice(1), registro.slice(1), false, now, registro);
+    expect([p.daCancellare, p.daArmare]).toEqual([[0], []]);
+    const scattata = { ...registro[0]!, istante: now - 1 };
+    expect(
+      reconcilePlan(voci.slice(1), registro.slice(1), false, now, [scattata, ...registro.slice(1)]).daCancellare,
+    ).toEqual([]);
+  });
+});

@@ -418,36 +418,46 @@ const stessaVoce = (a: NotificaPianificata, b: NotificaPianificata): boolean =>
  * manca o è cambiato (stesso id = sostituzione), purché scatti almeno 5 s dopo («niente entro 5 s»: una voce così
  * vicina resta com'è sulla piattaforma). Una voce già scattata non si cancella e resta nel registro fino alla fine di
  * domani, per «Ieri · gestite» della schermata Notifiche (§8, T-022); poi esce senza chiamare la piattaforma.
- * `riarmaTutto` alla prima riconciliazione del processo (D-NOTIF-1 n. 5).
+ * `riarmaTutto` alla prima riconciliazione del processo (D-NOTIF-1 n. 5). `armateQui`: le voci che questo processo ha
+ * armato, se il registro è condiviso fra processi (sul web ogni scheda ha i suoi timer): la stessa regola vale anche
+ * per loro, così una voce nuova o spostata da un'altra scheda si arma anche qui e una che l'altra ha tolto si cancella
+ * (audit P3-3). Senza, sono il registro.
  */
 export function reconcilePlan(
   desiderate: readonly NotificaPianificata[],
   registro: readonly VoceRegistro[],
   riarmaTutto: boolean,
   now: number,
+  armateQui: readonly VoceRegistro[] = registro,
 ): { daCancellare: number[]; daTogliere: string[]; daArmare: VoceRegistro[] } {
-  const perChiave = new Map(registro.map((r) => [r.chiave, r]));
   const volute = new Set(desiderate.map((d) => d.chiave));
   const ieri = startOfLocalDay(addLocalDays(now, -1));
   const armabile = now + MIN_ANTICIPO_ARMATURA_MS;
-  const cambiata = (d: NotificaPianificata): boolean => {
-    const r = perChiave.get(d.chiave);
-    return !r || !stessaVoce(d, r);
+  /** Le voci di `voci` ancora pendenti da cancellare e il confronto con la versione desiderata. */
+  const confronto = (voci: readonly VoceRegistro[]) => {
+    const perChiave = new Map(voci.map((r) => [r.chiave, r]));
+    const cambiata = (d: NotificaPianificata): boolean => {
+      const r = perChiave.get(d.chiave);
+      return !r || !stessaVoce(d, r);
+    };
+    // Una voce cambiata che scatta entro 5 s non si può riarmare (§13.3): la versione vecchia, se è ancora pendente
+    // sulla piattaforma, si cancella (C4: «Anticipa» porta «inizio» ad adesso) e la sua riga esce dal registro
+    const superate = desiderate
+      .filter((d) => d.istante < armabile && cambiata(d))
+      .map((d) => perChiave.get(d.chiave))
+      .filter((r): r is VoceRegistro => r !== undefined && r.istante > now);
+    return { cambiata, pendenti: [...voci.filter((r) => !volute.has(r.chiave) && r.istante > now), ...superate] };
   };
-  // Una voce cambiata che scatta entro 5 s non si può riarmare (§13.3): la versione vecchia, se è ancora pendente sulla
-  // piattaforma, si cancella (C4: «Anticipa» porta «inizio» ad adesso) e la sua riga esce dal registro
-  const superate = desiderate
-    .filter((d) => d.istante < armabile && cambiata(d))
-    .map((d) => perChiave.get(d.chiave))
-    .filter((r): r is VoceRegistro => r !== undefined && r.istante > now);
-  const pendenti = [...registro.filter((r) => !volute.has(r.chiave) && r.istante > now), ...superate];
-  const via = [...pendenti, ...registro.filter((r) => !volute.has(r.chiave) && r.istante < ieri)];
+  const nelRegistro = confronto(registro);
+  const qui = armateQui === registro ? nelRegistro : confronto(armateQui);
+  const via = [...nelRegistro.pendenti, ...registro.filter((r) => !volute.has(r.chiave) && r.istante < ieri)];
   const ids = assignNativeIds(
     desiderate.map((d) => d.chiave),
     new Map(registro.map((r) => [r.chiave, r.idNativo])),
   );
   const daArmare = desiderate
-    .filter((d) => d.istante >= armabile && (riarmaTutto || cambiata(d)))
+    .filter((d) => d.istante >= armabile && (riarmaTutto || nelRegistro.cambiata(d) || qui.cambiata(d)))
     .map((d) => ({ ...d, idNativo: ids.get(d.chiave) ?? nativeId(d.chiave) }));
-  return { daCancellare: pendenti.map((r) => r.idNativo), daTogliere: via.map((r) => r.chiave), daArmare };
+  const daCancellare = [...new Set([...nelRegistro.pendenti, ...qui.pendenti].map((r) => r.idNativo))];
+  return { daCancellare, daTogliere: via.map((r) => r.chiave), daArmare };
 }
