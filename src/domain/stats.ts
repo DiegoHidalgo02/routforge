@@ -196,6 +196,10 @@ export const MINIMO_SCALA = 60;
  * del suo orario, i giorni con blocchi completati/parziali e i loro minuti; un blocco senza orario o senza durata vale 0
  * (B4). `livello` = minuti / max(massimo, 60), fra 0 e 1.
  */
+/** I minuti di un blocco (B4): senza orario o senza durata 0; li contano mappa delle attività e Giornata chiusa (audit P3-13). */
+export const blockMinutes = (b: Pick<Blocco, 'conOrario' | 'inizio' | 'fine'>): number =>
+  b.conOrario && b.fine !== null ? Math.max(0, Math.round((b.fine - b.inizio) / MINUTE)) : 0;
+
 export function activityMap(
   blocchi: readonly Pick<Blocco, 'stato' | 'inizio' | 'fine' | 'conOrario'>[],
   now: number,
@@ -205,8 +209,7 @@ export function activityMap(
   for (const b of blocchi) {
     if (!fatto(b) || !dentro(b.inizio, r)) continue;
     const g = localDayKey(b.inizio);
-    const durata = b.conOrario && b.fine !== null ? Math.max(0, Math.round((b.fine - b.inizio) / MINUTE)) : 0;
-    minuti.set(g, (minuti.get(g) ?? 0) + durata);
+    minuti.set(g, (minuti.get(g) ?? 0) + blockMinutes(b));
   }
   const scala = Math.max(MINIMO_SCALA, ...minuti.values());
   const mappa = Array.from({ length: GIORNI_MAPPA }, (_, i) => {

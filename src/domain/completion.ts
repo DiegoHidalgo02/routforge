@@ -10,7 +10,7 @@
 import { canCheckRoutine, effectiveEnd } from './lost';
 import { canRegisterOutcome } from './outcome';
 import { localDayKey } from './time';
-import { STATI_TERMINALI, type Blocco, type StatoBlocco } from './types';
+import { isOpen, STATI_TERMINALI, type Blocco, type StatoBlocco } from './types';
 
 /**
  * Completamento consentito adesso dall'azione del dettaglio (§3): todo sempre, anche «non fatto» e da qualsiasi giorno;
@@ -42,7 +42,7 @@ export function canCheckFromCalendar(b: Blocco, now: number): boolean {
     case 'evento':
       return b.stato !== 'completato';
     case 'routine':
-      return (b.stato === 'programmato' || b.stato === 'in_corso') && canCheckRoutine(b, now);
+      return isOpen(b.stato) && canCheckRoutine(b, now);
     case 'studio':
       return b.stato === 'programmato' && canRegisterOutcome(b, now) && localDayKey(b.inizio) === localDayKey(now);
   }

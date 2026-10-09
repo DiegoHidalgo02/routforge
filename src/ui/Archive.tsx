@@ -9,6 +9,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { useRef, useState, type PointerEvent, type WheelEvent } from 'react';
 import type { BloccoCalendario } from '../app/calendar';
 import { ORDINE_TIPI } from '../domain/calendar';
+import { blockMinutes } from '../domain/stats';
 import { MINUTE } from '../domain/time';
 import s from './Archive.module.css';
 import { durata, sottotitolo, TIPO, titolo } from './format';
@@ -17,9 +18,6 @@ import { t } from './i18n';
 /** Spostamento oltre il quale il gesto apre o chiude il mazzo; la rotella chiude oltre 12 (S1). */
 const SOGLIA_ARCHIVIO = 28;
 const SOGLIA_ROTELLA = 12;
-
-const minuti = (b: BloccoCalendario) =>
-  b.conOrario && b.fine !== null ? Math.max(0, Math.round((b.fine - b.inizio) / MINUTE)) : 0;
 
 function CardCompletata({ b }: { b: BloccoCalendario }) {
   const sub = sottotitolo(b);
@@ -129,12 +127,12 @@ export function GiornataChiusa({
 }) {
   const conOrario = blocchi.filter((b) => b.conOrario).sort((a, b) => a.inizio - b.inizio);
   const segmenti = [...conOrario, ...blocchi.filter((b) => !b.conOrario)];
-  const fine = Math.max(...conOrario.map((b) => b.inizio + minuti(b) * MINUTE));
-  const ultimaFine = conOrario.find((b) => b.inizio + minuti(b) * MINUTE === fine);
+  const fine = Math.max(...conOrario.map((b) => b.inizio + blockMinutes(b) * MINUTE));
+  const ultimaFine = conOrario.find((b) => b.inizio + blockMinutes(b) * MINUTE === fine);
   const legenda = ORDINE_TIPI.map((tipo) => ({
     tipo,
     n: blocchi.filter((b) => b.tipo === tipo).length,
-    m: blocchi.filter((b) => b.tipo === tipo).reduce((x, b) => x + minuti(b), 0),
+    m: blocchi.filter((b) => b.tipo === tipo).reduce((x, b) => x + blockMinutes(b), 0),
   }))
     .filter((x) => x.n > 0)
     .sort((a, b) => b.m - a.m);
@@ -161,7 +159,7 @@ export function GiornataChiusa({
         <span className={s.barra} role="img" aria-label={t('composizioneGiornata')}>
           {segmenti.map((b) => (
             // La larghezza è il dato: i minuti dell'attività, 10 per quelle senza durata (S1)
-            <span key={b.id} className={s.segmento} data-tipo={b.tipo} style={{ flexGrow: minuti(b) || 10 }} />
+            <span key={b.id} className={s.segmento} data-tipo={b.tipo} style={{ flexGrow: blockMinutes(b) || 10 }} />
           ))}
         </span>
         <span className={s.legenda}>

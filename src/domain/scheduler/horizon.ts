@@ -13,7 +13,7 @@ import { ANCORA_TODO } from '../activity';
 import { isRollingTodo } from '../lost';
 import { enterGroup } from '../ordering';
 import { endOfLocalDay, localDayKey, localInstant, minutes } from '../time';
-import type { Blocco, BloccoAncorato } from '../types';
+import { isOpen, type Blocco, type BloccoAncorato } from '../types';
 
 /** Finestra dello slot libero dei todo con orario (§6). */
 export const FINESTRA_SLOT = { inizio: '08:00', fine: '22:00' } as const;
@@ -81,7 +81,7 @@ export function rollPlan<B extends BloccoAncorato>(
   for (const b of blocchi)
     if (
       b.conOrario &&
-      (b.stato === 'programmato' || b.stato === 'in_corso') &&
+      isOpen(b.stato) &&
       b.fine !== null &&
       b.fine > b.inizio &&
       b.inizio < finestra[1] &&

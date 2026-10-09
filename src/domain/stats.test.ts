@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   activityMap,
   behaviourStats,
+  blockMinutes,
   discipline,
   focusMinutes,
   longestStreak,
@@ -375,5 +376,15 @@ describe('Barre per settimana — MECCANISMI §20 (S20: vince il design, D-STATS
     expect(s.media).toBe(3 / 12);
     const persi = weeklyLost([blocco({ stato: 'perso', inizio: local(2026, 9, 21, 9) }), blocco({})], barre);
     expect([persi.length, persi.at(-1)?.numero]).toEqual([12, 1]);
+  });
+});
+
+describe('Minuti di un blocco — MECCANISMI §20, SCENARI B4 (audit P3-13)', () => {
+  const inizio = local(2026, 9, 23, 9, 0);
+  it('con orario la durata in minuti; senza orario, senza fine o con la fine prima dell’inizio vale 0', () => {
+    expect(blockMinutes({ conOrario: true, inizio, fine: inizio + 45 * MINUTE })).toBe(45);
+    expect(blockMinutes({ conOrario: false, inizio, fine: inizio + 45 * MINUTE })).toBe(0);
+    expect(blockMinutes({ conOrario: true, inizio, fine: null })).toBe(0);
+    expect(blockMinutes({ conOrario: true, inizio, fine: inizio - MINUTE })).toBe(0);
   });
 });

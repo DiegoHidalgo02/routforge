@@ -171,14 +171,21 @@ export interface Ricorrenza extends OraDiParete {
   promemoria: Promemoria;
 }
 
-/** Stato terminale = non più aperto (§1). */
-export const STATI_TERMINALI: ReadonlySet<StatoBlocco> = new Set([
-  'completato',
-  'parziale',
-  'indietro',
-  'saltato',
-  'perso',
-]);
+/** Terminale = non più aperto (§1): un `Record`, così uno stato nuovo va classificato per compilare (audit P3-13). */
+const TERMINALE: Record<StatoBlocco, boolean> = {
+  programmato: false,
+  in_corso: false,
+  completato: true,
+  parziale: true,
+  indietro: true,
+  saltato: true,
+  perso: true,
+};
+export const STATI_TERMINALI: ReadonlySet<StatoBlocco> = new Set(
+  (Object.keys(TERMINALE) as StatoBlocco[]).filter((s) => TERMINALE[s]),
+);
+/** Un blocco aperto: programmato o in corso (§1). */
+export const isOpen = (s: StatoBlocco): boolean => !TERMINALE[s];
 
 /** Stati "pendenti" di un'unità: alimentano il puntatore (§1, §11). */
 export const STATI_UNITA_PENDENTI: ReadonlySet<StatoUnita> = new Set(['non_iniziata', 'parziale', 'da_rivedere']);
