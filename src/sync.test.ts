@@ -45,14 +45,21 @@ interface Dispositivo {
 let archivio: ArchivioSync;
 let n = 0;
 const aperti: RoutForgeDb[] = [];
-function dispositivo(nome: string, opzioni: { pagina?: number; dopoRicezione?: () => void } = {}): Dispositivo {
+/** `avvolgi`: il servizio finto con un guasto iniettato (la rete che cade a metà di un giro). */
+function dispositivo(
+  nome: string,
+  {
+    avvolgi = (b) => b,
+    ...opzioni
+  }: { pagina?: number; dopoRicezione?: () => void; avvolgi?: (b: SyncBackend) => SyncBackend } = {},
+): Dispositivo {
   const db = openDb(`test-sync-${nome}-${++n}`);
   aperti.push(db);
   const d: Dispositivo = { db, online: true } as Dispositivo;
   const rete = { online: () => d.online, onOnline: () => () => undefined };
   d.sync = createSyncService(
     db,
-    memorySyncBackend(archivio, () => ora, newId),
+    avvolgi(memorySyncBackend(archivio, () => ora, newId)),
     rete,
     clock,
     { nome, piattaforma: 'web' },
@@ -713,5 +720,61 @@ describe('Righe che il servizio rifiuta sempre — MECCANISMI §25 (audit P1-11)
     expect(await sync.verifyCode(EMAIL, CODICE_FINTO)).toBe(true);
     await sync.run();
     expect((await get(db, 'blocchi', grande))?.note).toBe(nota);
+  });
+});
+
+describe('Rete che cade a metà di un giro — MECCANISMI §25, INV-16 (audit P1-12)', () => {
+  it('push che fallisce: la coda resta, run() non rigetta; al giro dopo vince il gesto locale più recente su entrambi', async () => {
+    let cade = false;
+    const telefono = dispositivo('telefono', {
+      avvolgi: (b) => ({ ...b, push: (buste) => (cade ? Promise.reject(new Error('rete')) : b.push(buste)) }),
+    });
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    await accedi(tablet);
+    const id = await crea(telefono.db, todo('Chiama Marco'));
+    await telefono.sync.run();
+    await tablet.sync.run();
+    const rinomina = async (d: Dispositivo, titolo: string) =>
+      saveBlock(d.db, { ...(await get(d.db, 'blocchi', id))!, titolo }, ora, FUSO);
+    ora = ADESSO + 10 * MINUTE;
+    await rinomina(tablet, 'Chiama Marco e Anna');
+    ora = ADESSO + 20 * MINUTE;
+    await rinomina(telefono, 'Chiama Marco domani');
+    cade = true;
+    await expect(telefono.sync.run()).resolves.toBeUndefined();
+    expect(telefono.sync.snapshot().fase).toBe('errore');
+    expect((await list(telefono.db, 'syncCoda')).map((v) => v.recordId)).toEqual([id]);
+    // La modifica del tablet, più vecchia del gesto del telefono, arriva per prima sul servizio
+    await tablet.sync.run();
+    cade = false;
+    await telefono.sync.run();
+    await tablet.sync.run();
+    for (const d of [telefono, tablet])
+      expect(await get(d.db, 'blocchi', id)).toMatchObject({ titolo: 'Chiama Marco domani' });
+  });
+
+  it('pull che fallisce alla seconda pagina: la prima resta col suo cursore; il giro dopo completa senza doppioni', async () => {
+    let pagine = 0;
+    let cade = false;
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet', {
+      pagina: 1,
+      avvolgi: (b) => ({
+        ...b,
+        pull: (cursore, n) => (cade && ++pagine === 2 ? Promise.reject(new Error('rete')) : b.pull(cursore, n)),
+      }),
+    });
+    await accedi(telefono);
+    await accedi(tablet);
+    for (const titolo of ['Uno', 'Due', 'Tre']) await crea(telefono.db, todo(titolo));
+    await telefono.sync.run();
+    cade = true;
+    await expect(tablet.sync.run()).resolves.toBeUndefined();
+    expect(tablet.sync.snapshot().fase).toBe('errore');
+    expect(await titoli(tablet.db)).toHaveLength(1);
+    cade = false;
+    await tablet.sync.run();
+    expect(await titoli(tablet.db)).toEqual(['Due', 'Tre', 'Uno']);
   });
 });
