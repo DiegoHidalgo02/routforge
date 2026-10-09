@@ -1,6 +1,6 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb, type Tabelle } from '../data/db';
 import { get, list, save, saveBlock } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
@@ -462,5 +462,23 @@ describe('Elimina dal dettaglio — MECC §5, D-OCC-1 (servizio)', () => {
     expect((await get(db, 'ricorrenze', rid))!.dateSaltate).toEqual([]);
     expect(await blocco(id)).toMatchObject({ id, stato: 'programmato', titolo: 'Mattina', inizio: d.blocco.inizio });
     expect(await generateOccurrences(db, (await get(db, 'ricorrenze', rid))!, local(2026, 9, 23, 9, 2), FUSO)).toBe(0);
+  });
+});
+
+describe('Follow-up in una transazione — MECCANISMI §5, D-DETT-2 (audit P2-10)', () => {
+  it('un errore al secondo follow-up non lascia il primo: il nuovo tentativo non crea doppioni', async () => {
+    const id = await crea(eventoDentista());
+    const giovedi = local(2026, 9, 24, 11, 5);
+    // saveBlock scrive con db.blocchi, un'istanza diversa da db.table('blocchi')
+    const blocchi = db.blocchi;
+    const put = blocchi.put.bind(blocchi);
+    let scritture = 0;
+    vi.spyOn(blocchi, 'put').mockImplementation(((...a: Parameters<typeof put>) =>
+      ++scritture === 2 ? Promise.reject(new Error('spazio esaurito')) : put(...a)) as never);
+    const etichette = ['Stampare le analisi', 'Portare i documenti'];
+    await expect(createFollowUps(db, id, etichette, giovedi, FUSO)).rejects.toThrow('spazio esaurito');
+    expect((await list(db, 'blocchi')).filter((b) => b.tipo === 'todo')).toEqual([]);
+    expect(await createFollowUps(db, id, etichette, giovedi, FUSO)).toHaveLength(2);
+    expect((await list(db, 'blocchi')).filter((b) => b.tipo === 'todo')).toHaveLength(2);
   });
 });

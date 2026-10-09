@@ -184,12 +184,15 @@ export async function createFollowUps(
 ): Promise<string[]> {
   const evento = await get(db, 'blocchi', eventoId);
   if (!evento) return [];
-  const ids: string[] = [];
-  for (const etichetta of etichette) {
-    const r = await createActivity(db, followUpDraft(etichetta, evento, now), now, fuso);
-    if (r.ok) ids.push(r.id);
-  }
-  return ids;
+  // Tutti o nessuno: con un errore a metà il nuovo tentativo dal Dettaglio non crea doppioni (audit P2-10)
+  return inTransaction(db, ['ricorrenze', 'blocchi'], async () => {
+    const ids: string[] = [];
+    for (const etichetta of etichette) {
+      const r = await createActivity(db, followUpDraft(etichetta, evento, now), now, fuso);
+      if (r.ok) ids.push(r.id);
+    }
+    return ids;
+  });
 }
 
 /**
