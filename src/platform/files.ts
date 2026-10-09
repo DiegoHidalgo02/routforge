@@ -26,6 +26,7 @@ const android: ArchivioFile = {
     // Si scrive su un nome a parte e si rinomina solo a file completo: un export fallito non tocca il backup che ha
     // già quel nome (lo stesso giorno) e non lascia file troncati col nome giusto (audit P0-1)
     const parziale = `${nome}.parziale`;
+    let completo = false;
     try {
       await Filesystem.requestPermissions();
       for (let i = 0; i === 0 || i < testo.length;) {
@@ -42,10 +43,14 @@ const android: ArchivioFile = {
         i = fine;
         if (fine === 0) break;
       }
+      completo = true;
       await Filesystem.rename({ from: parziale, to: nome, directory: Directory.Documents });
       return 'documenti';
     } catch {
-      await Filesystem.deleteFile({ path: parziale, directory: Directory.Documents }).catch(() => undefined);
+      // Il plugin cancella la destinazione prima di rinominare: se poi la rinomina fallisce, il parziale completo è
+      // l'unica copia del backup e resta (revisione di sicurezza di P0-1)
+      if (!completo)
+        await Filesystem.deleteFile({ path: parziale, directory: Directory.Documents }).catch(() => undefined);
       return null;
     }
   },
