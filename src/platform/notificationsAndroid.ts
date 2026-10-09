@@ -29,6 +29,33 @@ export interface EtichetteNative {
 
 interface Extra extends VoceToccata {
   anticipo: number;
+  segreto: string;
+}
+
+/**
+ * Il segreto di questa installazione negli `extra` di ogni voce (audit P1-6): `MainActivity` è esportata (è il launcher) e
+ * il plugin delle notifiche trasforma in un gesto qualunque intent con i suoi extra, anche di un'altra app. Un gesto
+ * senza il segreto giusto non si esegue: l'app si apre e basta. Sta nel `localStorage` della WebView, privato dell'app e
+ * fuori da backup e sync. Le voci armate prima di questa versione lo ricevono alla prima riconciliazione del processo,
+ * che riarma tutte quelle future; una volta sola restano senza le notifiche già in tendina o che scattano prima di quel
+ * primo avvio: il loro tocco apre l'app senza il gesto. Se il `localStorage` non risponde vale un segreto di questo
+ * processo (i tocchi delle voci di prima si ignorano).
+ */
+const CHIAVE_SEGRETO = 'routforge-segreto-notifiche';
+function segretoInstallazione(): string {
+  try {
+    const s = localStorage.getItem(CHIAVE_SEGRETO);
+    if (s) return s;
+  } catch {
+    /* sotto si genera */
+  }
+  const nuovo = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+  try {
+    localStorage.setItem(CHIAVE_SEGRETO, nuovo);
+  } catch {
+    /* resta di questo processo */
+  }
+  return nuovo;
 }
 
 const PromemoriaNativi = registerPlugin<{
@@ -51,7 +78,10 @@ const PromemoriaNativi = registerPlugin<{
   sblocca(): Promise<{ sbloccato: boolean }>;
   chiudi(o: { id?: number; sfondo: boolean }): Promise<void>;
   addListener(evento: 'gesti', f: () => void): Promise<PluginListenerHandle>;
-  addListener(evento: 'sveglia', f: (s: Extra & { id: number }) => void): Promise<PluginListenerHandle>;
+  addListener(
+    evento: 'sveglia',
+    f: (s: Omit<Extra, 'segreto'> & { id: number }) => void,
+  ): Promise<PluginListenerHandle>;
 }>('PromemoriaNativi');
 
 /** Importanza Android: 5 sopra le app (sveglie), 4 col suono, 2 senza suono né comparsa (MECC §13.3 «silenzioso»). */
@@ -67,6 +97,7 @@ export function androidNotifications(
   onGesto: (voce: VoceToccata, gesto: GestoNotifica, istante?: number) => Promise<void> | void,
   onSveglia: (s: SvegliaAperta) => void,
 ): Notifications & { pronte: Promise<void> } {
+  const segreto = segretoInstallazione();
   const registrati = new Set<string>();
   /** I gesti fatti senza aprire l'app, uno dopo l'altro e con il loro istante (A6, F5); le chiamate si accodano. */
   let coda: Promise<void> = Promise.resolve();
@@ -95,8 +126,8 @@ export function androidNotifications(
   })().catch(() => undefined);
   const canali = (async () => {
     await LocalNotifications.addListener('localNotificationActionPerformed', ({ actionId, notification }) => {
-      const e = notification.extra as Partial<VoceToccata> | undefined;
-      if (!e?.chiave || !e.trigger) return;
+      const e = notification.extra as (Partial<VoceToccata> & { segreto?: unknown }) | undefined;
+      if (!e?.chiave || !e.trigger || e.segreto !== segreto) return;
       void onGesto(
         { chiave: e.chiave, trigger: e.trigger, bloccoId: e.bloccoId ?? null },
         actionId === 'tap' ? 'tocco' : (actionId as AzioneNotifica),
@@ -150,7 +181,7 @@ export function androidNotifications(
               schedule: { at: new Date(v.istante), allowWhileIdle: true },
               channelId: canale(v),
               ...(v.azioni.length && { actionTypeId: tipoAzioni(v.azioni) }),
-              extra: { chiave: v.chiave, trigger: v.trigger, bloccoId: v.bloccoId },
+              extra: { chiave: v.chiave, trigger: v.trigger, bloccoId: v.bloccoId, segreto },
             };
           }),
         });
@@ -168,7 +199,8 @@ export function androidNotifications(
             ...testi(v),
             sveglia: v.sveglia,
             azioni: v.azioni.map((a) => ({ id: a, titolo: etichette.azioni[a], sfondo: runsInBackground(v, a) })),
-            extra: { chiave: v.chiave, trigger: v.trigger, bloccoId: v.bloccoId, anticipo: v.anticipo },
+            // Il ricevitore nativo copia questi extra nella notifica che apre l'app (`PromemoriaReceiver.apri`)
+            extra: { chiave: v.chiave, trigger: v.trigger, bloccoId: v.bloccoId, anticipo: v.anticipo, segreto },
           })),
         });
       }
