@@ -8,9 +8,8 @@
  * Il corso di esempio incluso (T-005, D-SAMPLE-1) si legge e si salva qui: ogni import crea un corso nuovo.
  */
 import { unzipSync, strFromU8 } from 'fflate';
-import { newId, saveCourse } from '../data/repository';
+import { inTransaction, newId, saveCourse } from '../data/repository';
 import type { RoutForgeDb } from '../data/db';
-import { logError } from './diagnostics';
 import { moveMaterialsOnImport } from './materials';
 import m0 from '../data/sample-course/M0-Riattivazione_JavaScript.md?raw';
 import m1 from '../data/sample-course/M1-Tooling_Moderno.md?raw';
@@ -21,6 +20,7 @@ import {
   MAX_BYTE_TESTO_CORSO,
   MAX_WARNINGS_SHOWN,
   parseCourse,
+  type CorsoImportato,
   type FileCorso,
   type OpzioniImport,
   type RisultatoImportCorso,
@@ -59,14 +59,22 @@ export function importCourseFromZip(zip: Uint8Array, opts: OpzioniImport): Risul
 export const zipNeedsTitle = (zip: Uint8Array): boolean => !hasStructureFile(readZip(zip));
 
 /**
+ * Il corso salvato e i materiali e i file di codice dei corsi con lo stesso titolo passati a lui (FUNZ §10, T-024) in una
+ * transazione: con un errore non resta un corso nuovo coi materiali sul vecchio, che sparirebbero eliminandolo (audit P2-9).
+ */
+const saveWithMaterials = (db: RoutForgeDb, corso: CorsoImportato, now: number, esempio = false) =>
+  inTransaction(db, ['corsi', 'moduli', 'unita', 'sezioni', 'risorse', 'materiali', 'fileCodice'], async () => {
+    await saveCourse(db, corso, now, esempio);
+    await moveMaterialsOnImport(db, corso, now);
+  });
+
+/**
  * Importa uno ZIP scelto dall'utente e lo salva come corso nuovo (MECC §16). Restituisce al massimo 5 avvisi da mostrare
  * e il loro totale. `ErroreImportCorso` se lo ZIP è illeggibile o senza moduli: allora non si salva niente.
  */
 export async function importZip(db: RoutForgeDb, zip: Uint8Array, now: number, titolo?: string) {
   const { corso, avvisi } = importCourseFromZip(zip, { corsoId: newId(), now, titolo });
-  await saveCourse(db, corso, now);
-  // I materiali dei corsi con lo stesso titolo passano a questo (FUNZ §10, T-024); un errore non annulla l'import
-  await moveMaterialsOnImport(db, corso, now).catch((e: unknown) => logError('materiali', e));
+  await saveWithMaterials(db, corso, now);
   return { corso, avvisi: avvisi.slice(0, MAX_WARNINGS_SHOWN), totaleAvvisi: avvisi.length };
 }
 
@@ -92,7 +100,6 @@ export async function importSampleCourse(db: RoutForgeDb, now: number): Promise<
     titolo: 'Syllabus Software Engineer 2026',
     segnaposto: SEGNAPOSTO_ESEMPIO,
   });
-  await saveCourse(db, r.corso, now, true);
-  await moveMaterialsOnImport(db, r.corso, now).catch((e: unknown) => logError('materiali', e));
+  await saveWithMaterials(db, r.corso, now, true);
   return r;
 }

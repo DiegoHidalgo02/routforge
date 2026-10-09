@@ -1,6 +1,6 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, list } from '../data/repository';
 import { isGroundable } from '../domain/materials';
@@ -129,5 +129,18 @@ describe('PDF col visore del sistema — MECCANISMI §17, D-MAT-2', () => {
     }
     expect(hasSystemPdfViewer()).toBe(false);
     expect(await openPdfInSystem(db, 'nessuno')).toBe(false);
+  });
+});
+
+describe('Reimport in una transazione — FUNZIONALITA §10, MECCANISMI §16 (audit P2-9)', () => {
+  it('se lo spostamento dei materiali fallisce il reimport non resta a metà: nessun corso nuovo, la nota resta sul vecchio', async () => {
+    await importSampleCourse(db, ADESSO);
+    const [vecchio] = await list(db, 'corsi');
+    const u07 = (await list(db, 'unita')).find((u) => u.corsoId === vecchio!.id && u.numero === '0.7')!;
+    const nota = await addNote(db, { corsoId: vecchio!.id, unitaId: u07.id }, 'Appunti', 'testo', ADESSO);
+    vi.spyOn(db.table('materiali'), 'put').mockRejectedValueOnce(new Error('spazio esaurito'));
+    await expect(importSampleCourse(db, ADESSO + 1)).rejects.toThrow('spazio esaurito');
+    expect((await list(db, 'corsi')).map((c) => c.id)).toEqual([vecchio!.id]);
+    expect(await get(db, 'materiali', nota.id)).toMatchObject({ corsoId: vecchio!.id, unitaId: u07.id });
   });
 });
