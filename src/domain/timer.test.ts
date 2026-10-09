@@ -242,6 +242,12 @@ describe('Abbandono oltre soglia — SCENARI D7', () => {
   it('il tempo extra non alza la quota oltre il 100%', () => {
     expect(focusPercent(routine, ore(10, 10))).toBe(100);
   });
+  it('con le pause il focus dopo la fine non conta: pausa di 25’, «Abbandona» alle 10:05 → 58%, abbandono (audit P1-8)', () => {
+    // MECC §10.5: «focus / durata pianificata ≥ 65 % (pause e tempo extra esclusi)»: 60' − 25' di pausa = 35' su 60
+    const s = resumeSession(pauseSession(routine, ore(9, 30)), ore(9, 55));
+    expect(focusPercent(s, ore(10, 5))).toBe(58);
+    expect(abandonPlan(s, ore(10, 5))).toEqual({ chiusura: 'abbandonata', esito: null });
+  });
   it('un recupero da 25 minuti sul blocco: la quota è sulla durata scelta, la stessa del tempo extra', () => {
     const r = sessione({ contesto: 'recupero', bloccoId: 'b1', avvio: ore(10, 20), fine: ore(10, 45), durata: 25 });
     expect(focusPercent(r, ore(10, 40))).toBe(80);

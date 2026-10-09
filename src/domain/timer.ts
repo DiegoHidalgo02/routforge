@@ -288,13 +288,16 @@ export function closeSession(
 export const SOGLIA_ABBANDONO = 65;
 
 /**
- * Percento intero della durata pianificata già studiata (focus: pause escluse; tetto 100, il tempo extra non lo alza):
- * `null` senza blocco o col cronometro, dove la soglia dell'abbandono non vale (§10.5, D-SESS-2).
+ * Percento intero della durata pianificata già studiata (focus: pause e tempo extra esclusi, MECC §10.5): ancorata
+ * all'orologio il focus si misura fino alla fine del blocco, a durata fino alla durata (tetto 100). `null` senza blocco
+ * o col cronometro, dove la soglia dell'abbandono non vale (§10.5, D-SESS-2). Prima il focus dopo la fine contava: con
+ * le pause una sessione sotto la soglia risultava sopra (audit P1-8).
  */
 export function focusPercent(s: SessioneAttiva, now: number): number | null {
   const durata = s.bloccoId === null ? null : plannedMs(s);
   if (durata === null) return null;
-  return durata > 0 ? Math.min(100, Math.floor((activeAt(s, now) * 100) / durata)) : 100;
+  const focus = activeAt(s, s.fine !== null ? Math.min(now, s.fine) : now);
+  return durata > 0 ? Math.min(100, Math.floor((focus * 100) / durata)) : 100;
 }
 
 /**
