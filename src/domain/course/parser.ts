@@ -6,7 +6,8 @@
  * applicativo (T-003). Gli identificatori sono deterministici a partire da `corsoId`.
  *
  * Decisione D-PARSE-1: senza file struttura il titolo è quello passato dal chiamante (chiesto
- * all'utente) o "Corso importato" — FORMATO_CORSO §1 prevale su MECC §16 ("primo H1 dei moduli").
+ * all'utente; la UI passa il ripiego nella lingua dell'app, audit P3-31) o "Corso importato" — FORMATO_CORSO §1
+ * prevale su MECC §16 ("primo H1 dei moduli").
  * Decisione D-DESIGN-1 (sostituisce D-PARSE-2): il risultato atteso è il fixture del design (course-data.js).
  * L'intestazione di sezione è il testo dopo emoji e numero, verbatim ("Teoria (Fondamenta)"; il mini progetto
  * conserva «Mini Progetto Finale:»); la finestra tiene la nota fra parentesi dopo « · » senza i rimandi «v. …»;

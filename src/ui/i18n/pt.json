@@ -49,6 +49,7 @@
   "unCorso": "{n} curso",
   "nCorsi": "{n} cursos",
   "unitaCompletateN": "{n} unidades concluídas",
+  "corsoImportato": "Curso importado",
   "corsoImportatoIl": "Curso · importado a {data}",
   "corsoAvanzamento": "{fatte} / {unita} unidades · {pct} % · {tempo} dedicadas",
   "routineDiStudio": "Rotina de estudo",

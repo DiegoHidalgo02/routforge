@@ -80,7 +80,8 @@ export function Courses() {
 
   const importa = async (file: string, zip: Uint8Array, titolo?: string) => {
     try {
-      const r = await importZip(appDb, zip, Date.now(), titolo);
+      // Senza titolo né 00_struttura il ripiego arriva nella lingua dell'app (D-PARSE-1, audit P3-31)
+      const r = await importZip(appDb, zip, Date.now(), titolo?.trim() || t('corsoImportato'));
       setEsito(r.totaleAvvisi > 0 ? { tipo: 'avvisi', ...r } : null);
     } catch (e) {
       setEsito(errore(file, e));
