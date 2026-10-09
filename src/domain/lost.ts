@@ -72,7 +72,8 @@ export const isRollingTodo = (
  * Il blocco va marcato `perso` adesso? (§8 marcatura; §6 per i todo)
  * - evento: mai;
  * - todo con orizzonte ≠ giorno e ancora entro l'orizzonte: no (rotola invece, §6);
- * - altrimenti: `programmato` e adesso > fine effettiva + 30'.
+ * - altrimenti: `programmato` e adesso ≥ fine effettiva + 30': «alle 10:30 è perso» (SCENARI B2, B7, D7 prevalgono sul
+ *   «> 30 minuti» di §8; audit P3-6).
  */
 export function shouldMarkLost(
   block: Blocco & { giornoLocale?: string },
@@ -82,7 +83,7 @@ export function shouldMarkLost(
   if (block.stato !== 'programmato') return false;
   if (block.tipo === 'evento') return false;
   if (isRollingTodo(block, now, inizioSettimana)) return false;
-  return now > effectiveEnd(block) + LOST_GRACE_MS;
+  return now >= effectiveEnd(block) + LOST_GRACE_MS;
 }
 
 /**

@@ -240,15 +240,15 @@ describe('Abbandono oltre soglia — SCENARI D7', () => {
     expect(await readActiveSession(db)).toBeNull();
     expect(await list(db, 'sessioni')).toMatchObject([{ chiusura: 'terminata_prima', esito: { esito: 'continua' } }]);
   });
-  it('«Abbandona» alle 09:35 con 35 minuti di focus (58%): abbandono, blocco programmato e perso dopo le 10:30 (§8: fine passata da più di 30 minuti)', async () => {
+  it('«Abbandona» alle 09:35 con 35 minuti di focus (58%): abbandono, blocco programmato e alle 10:30 perso (D7; audit P3-6)', async () => {
     await avvia();
     expect(await abandonSession(db, oggi(9, 35), FUSO)).toMatchObject({ chiusura: 'abbandonata', esito: null });
     expect((await get(db, 'blocchi', 's1'))?.stato).toBe('programmato');
     expect((await get(db, 'unita', 'u11'))?.stato).toBe('non_iniziata');
     expect(await readStreak(db, oggi(9, 35))).toBe(0);
-    await runCycle(db, oggi(10, 30), FUSO);
+    await runCycle(db, oggi(10, 30) - 1, FUSO);
     expect((await get(db, 'blocchi', 's1'))?.stato).toBe('programmato');
-    await runCycle(db, oggi(10, 31), FUSO);
+    await runCycle(db, oggi(10, 30), FUSO);
     expect((await get(db, 'blocchi', 's1'))?.stato).toBe('perso');
   });
 });

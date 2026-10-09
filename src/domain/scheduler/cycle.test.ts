@@ -50,8 +50,8 @@ describe('Marcatura persi — SCENARI B7 (routine 18:00–20:00 non avviata)', (
     expect(lostPlan([routine], local(2026, 9, 23, 20, 29))).toEqual({ persi: [], avvisiRitardo: [], avvisiPerso: [] });
   });
 
-  it("alle 20:31 è persa con l'istante della marcatura e un avviso «blocco perso»", () => {
-    const now = local(2026, 9, 23, 20, 31);
+  it("alle 20:30 è persa con l'istante della marcatura e un avviso «blocco perso»", () => {
+    const now = local(2026, 9, 23, 20, 30);
     expect(lostPlan([routine], now)).toEqual({
       persi: [{ ...routine, stato: 'perso', persoIl: now }],
       avvisiRitardo: [],
@@ -88,8 +88,9 @@ describe('Non fatto — SCENARI A1 (todo «Chiama Marco» senza orario, orizzont
     fine: endOfLocalDay(inizio),
   });
 
-  it('alle 00:29 del giorno dopo non è ancora «non fatto»', () => {
-    expect(lostPlan([marco], local(2026, 9, 23, 0, 29)).persi).toEqual([]);
+  // Fine 23:59 (D-TIME-1) + 30': «non fatto» dalle 00:29, come la routine senza durata di B4 (audit P3-6)
+  it('un istante prima delle 00:29 del giorno dopo non è ancora «non fatto»', () => {
+    expect(lostPlan([marco], local(2026, 9, 23, 0, 29) - 1).persi).toEqual([]);
   });
 
   it("alle 00:30 è «non fatto» nel giorno di ieri, con l'avviso «in ritardo» e `ritardoIl`", () => {

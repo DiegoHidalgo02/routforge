@@ -119,6 +119,7 @@ Niente lettura vocale dei corsi (voce solo per Trivia) · niente servizi musical
 | 33 | MECC §25 vs S22 `account` e D-SYNC-3 | §25 e il mock («Cosa viaggia: … chiave AI») sincronizzano la chiave AI; il CP4 l'ha tenuta sul dispositivo | D-SYNC-3: «Cosa viaggia» senza chiave AI, «Cosa resta qui» la aggiunge; allineamento della spec e del mock all'utente |
 | 34 | S22 `account-conflict` vs D-SYNC-2 | Il mock mostra un conflitto da confermare con «Ok»; «ultimo vince» lo risolve da sé e nessun evento lo produce | Non costruito (piano di T-033 §6 n. 1); decide l'utente |
 | 35 | MECC §25 vs S22 notifiche | §25 sincronizza le notifiche; S22 dice che l'interruttore generale le spegne «su questo dispositivo» | Vince il design: l'interruttore generale resta sul dispositivo, il resto viaggia (D-SYNC-4 n. 5) |
+| 36 | MECC §8 vs SCENARI B2, B4, B7, D7 | §8 marca perso con la fine passata da «> 30 minuti»; gli scenari danno l'istante esatto («dalle 08:30», «alle 00:29», «alle 20:30», «alle 10:30 è perso») | Vince lo scenario: perso da fine + 30' compresa (D-PERSO-1, audit P3-6); allineamento di §8 all'utente |
 
 ## 7. Informazioni mancanti (non deducibili dalle spec)
 

@@ -25,9 +25,9 @@ const block = (over: Partial<Blocco>): Blocco => ({
 
 describe('Persi — SCENARI B2 (routine 07:00–08:00 di mercoledì)', () => {
   const b = block({});
-  it("non è persa alle 08:29, lo è dalle 08:30 (fine + 30')", () => {
-    expect(shouldMarkLost(b, local(2026, 9, 23, 8, 29))).toBe(false);
-    expect(shouldMarkLost(b, local(2026, 9, 23, 8, 31))).toBe(true);
+  it("non è persa un istante prima delle 08:30, lo è dalle 08:30 in punto (fine + 30'; audit P3-6)", () => {
+    expect(shouldMarkLost(b, local(2026, 9, 23, 8, 30) - 1)).toBe(false);
+    expect(shouldMarkLost(b, local(2026, 9, 23, 8, 30))).toBe(true);
     expect(lostAtInstant(b)).toBe(local(2026, 9, 23, 8, 30));
   });
   it('spuntabile solo mercoledì (né martedì né giovedì)', () => {

@@ -209,7 +209,7 @@ describe('Orfani — SCENARI C8 (app chiusa a metà sessione, riaperta 40 minuti
 });
 
 describe('Persi — SCENARI B7 (routine 18:00–20:00 non avviata)', () => {
-  it('alle 20:29 è ancora programmata; alle 20:31 è persa con un solo avviso «blocco perso»', async () => {
+  it('alle 20:29 è ancora programmata; alle 20:30 è persa con un solo avviso «blocco perso»', async () => {
     const r = await blocco({ inizio: local(2026, 9, 23, 18, 0), fine: local(2026, 9, 23, 20, 0) });
     expect(await runCycle(db, local(2026, 9, 23, 20, 29), FUSO)).toEqual({
       avvisiRitardo: [],
@@ -217,7 +217,7 @@ describe('Persi — SCENARI B7 (routine 18:00–20:00 non avviata)', () => {
       ricorrenzeSaltate: [],
     });
     expect((await letto(r.id)).stato).toBe('programmato');
-    expect(await runCycle(db, local(2026, 9, 23, 20, 31), FUSO)).toEqual({
+    expect(await runCycle(db, local(2026, 9, 23, 20, 30), FUSO)).toEqual({
       avvisiRitardo: [],
       avvisiPerso: [r.id],
       ricorrenzeSaltate: [],
@@ -237,7 +237,7 @@ describe('Persi — SCENARI B2 (occorrenza di mercoledì 07:00–08:00)', () => 
     const mercoledi = async () => (await list(db, 'blocchi')).find((b) => b.giornoLocale === '2026-09-23')!;
     await runCycle(db, local(2026, 9, 23, 8, 29), FUSO);
     expect((await mercoledi()).stato).toBe('programmato');
-    await runCycle(db, local(2026, 9, 23, 8, 31), FUSO);
+    await runCycle(db, local(2026, 9, 23, 8, 30), FUSO);
     expect((await mercoledi()).stato).toBe('perso');
   });
 });
