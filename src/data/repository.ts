@@ -381,10 +381,15 @@ export async function saveCourse(db: RoutForgeDb, corso: CorsoImportato, now: nu
 /**
  * Riesegue `query` a ogni scrittura sulle tabelle che legge e passa il risultato a `onChange` (query live di Dexie,
  * D-STACK-1). Restituisce la funzione che smette di osservare. Un errore della query non arriva a `onChange` e non
- * interrompe la UI (INV-16): la schermata resta all'ultimo valore; la registrazione in Diagnostica arriva con T-032.
+ * interrompe la UI (INV-16): la schermata resta all'ultimo valore e l'errore va a `onError`, che `app` collega alla
+ * Diagnostica (`data` non la conosce; audit P1-13).
  */
-export function watch<T>(query: () => Promise<T>, onChange: (v: T) => void): () => void {
-  const s = liveQuery(query).subscribe({ next: onChange, error: () => {} });
+export function watch<T>(
+  query: () => Promise<T>,
+  onChange: (v: T) => void,
+  onError: (e: unknown) => void = () => {},
+): () => void {
+  const s = liveQuery(query).subscribe({ next: onChange, error: onError });
   return () => s.unsubscribe();
 }
 

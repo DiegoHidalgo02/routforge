@@ -1,10 +1,11 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { openDb } from '../data/db';
 import { save } from '../data/repository';
 import { testNotification } from '../domain/notifications/desiredSet';
 import { local } from '../domain/time';
+import { watch } from './db';
 import { configureDiagnostics, logError, logReconcile, MAX_EVENTI, readDiagnostics } from './diagnostics';
 
 const ADESSO = local(2026, 9, 23, 16, 8);
@@ -47,5 +48,28 @@ describe('Diagnostica, errori ripetuti — MECCANISMI §23 (INV-16)', () => {
     expect(eventi.slice(0, 3).map((e) => e.messaggio)).toEqual(['?', 'B', 'A']);
     expect(eventi.filter((e) => e.messaggio === 'A' || e.messaggio === 'B')).toHaveLength(2);
     await db.delete();
+  });
+});
+
+describe('Errori delle letture — MECCANISMI §23, INV-16 (audit P1-13)', () => {
+  it('una query live che fallisce va in Diagnostica; col registro illeggibile la Diagnostica mostra comunque gli eventi', async () => {
+    configureDiagnostics({ now: () => ADESSO });
+    const smetti = watch(
+      () => Promise.reject(new Error('lettura rotta')),
+      () => undefined,
+    );
+    const db = openDb('test-diagnostica-letture');
+    await vi.waitFor(async () =>
+      expect((await readDiagnostics(db, ADESSO)).eventi[0]).toMatchObject({
+        sorgente: 'interfaccia',
+        messaggio: 'lettura rotta',
+      }),
+    );
+    smetti();
+    // Un database che non risponde: il registro delle notifiche non si legge, gli eventi in memoria sì
+    vi.spyOn(db.table('registroNotifiche'), 'toArray').mockRejectedValue(new Error('database chiuso'));
+    const d = await readDiagnostics(db, ADESSO);
+    expect(d.eventi[0]?.messaggio).toBe('lettura rotta');
+    expect(d.armate).toBe(0);
   });
 });

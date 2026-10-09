@@ -101,6 +101,7 @@ export function followSessionInForeground(db: RoutForgeDb, porta: SessioneInPrim
         logError('dispositivo', e);
       }
     },
+    (e) => logError('dispositivo', e),
   );
 }
 

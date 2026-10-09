@@ -61,9 +61,10 @@ export function logReconcile(istante: number, errore: unknown): void {
 }
 
 export async function readDiagnostics(db: RoutForgeDb, now: number) {
-  const coda = (await list(db, 'registroNotifiche'))
-    .filter((v) => v.istante > now)
-    .sort((a, b) => a.istante - b.istante);
+  // Col database che non risponde gli eventi in memoria restano visibili: sono proprio quelli che spiegano il guasto
+  // (audit P1-13)
+  const registro = await list(db, 'registroNotifiche').catch(() => []);
+  const coda = registro.filter((v) => v.istante > now).sort((a, b) => a.istante - b.istante);
   return { armate: coda.length, prossima: coda[0]?.istante ?? null, riconciliazione, eventi: [...eventi] };
 }
 

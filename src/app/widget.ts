@@ -34,7 +34,11 @@ export function followWidget(db: RoutForgeDb, clock: Clock, porta: Widget): () =
       ultimo = testo;
     })().catch((e: unknown) => logError('dispositivo', e));
   const stop = [
-    watch(() => blocksBetween(db, ...intervallo(clock.now())), ricalcola),
+    watch(
+      () => blocksBetween(db, ...intervallo(clock.now())),
+      ricalcola,
+      (e) => logError('dispositivo', e),
+    ),
     clock.every(MINUTE, ricalcola),
     clock.onForeground(ricalcola),
   ];

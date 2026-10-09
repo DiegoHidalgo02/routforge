@@ -200,6 +200,7 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
       watch(
         () => readInputs(db, clock.now()),
         () => void reconcile(clock.now()),
+        (e) => logError('notifiche', e),
       ),
     async test(now) {
       try {

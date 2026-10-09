@@ -153,6 +153,7 @@ export function createScheduler(
             if (avvio) avvio = false;
             else void run();
           },
+          (e) => logError('ciclo', e),
         ),
       ];
       return () => stop.forEach((smetti) => smetti());
