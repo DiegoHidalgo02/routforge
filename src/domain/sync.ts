@@ -147,6 +147,13 @@ const FORMA: Record<TabellaSincronizzata, (d: Campi) => boolean> = {
 };
 
 /**
+ * La forma dei campi mostrati di una riga viva (`FORMA`) per le righe dell'ambito della sync; le altre (preferenze che
+ * restano qui, tabelle che non viaggiano) non la hanno. La usa anche l'import del backup (audit P1-3).
+ */
+export const hasShape = (tabella: string, dati: Campi): boolean =>
+  !isSynced(tabella, String(dati.id)) || FORMA[tabella as TabellaSincronizzata](dati);
+
+/**
  * Una busta ricevuta si applica solo se è dell'ambito della sync, se i dati sono la riga del suo id (con la stessa
  * eliminazione), se ha un istante e, viva, se i campi mostrati hanno la loro forma: un servizio compromesso non scrive
  * altrove, né la chiave AI né la coda (T-033), e non lascia l'app a schermo vuoto (T-059).

@@ -4,6 +4,20 @@ import { local } from './time';
 
 const ADESSO = local(2026, 9, 23, 16, 8);
 const riga = (id: string, extra: object = {}) => ({ id, createdAt: 1, updatedAt: 2, deletedAt: null, ...extra });
+/** Un todo vivo con i campi che le schermate leggono (la forma delle buste della sync, D-RECUPERO-1). */
+const blocco = (id: string, extra: object = {}) =>
+  riga(id, {
+    tipo: 'todo',
+    stato: 'programmato',
+    inizio: ADESSO,
+    fine: null,
+    conOrario: false,
+    giornoLocale: '2026-09-23',
+    orarioInizio: '16:08',
+    orarioFine: null,
+    checklist: [],
+    ...extra,
+  });
 
 describe('Base64 dei PDF nel file — MECCANISMI §22', () => {
   it('ogni lunghezza (0, 1, 2, 3 byte e oltre) torna identica; il testo è il base64 standard', () => {
@@ -20,7 +34,7 @@ describe('Base64 dei PDF nel file — MECCANISMI §22', () => {
 describe('Formato del backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', () => {
   it('le tabelle passano così come sono, i binari dei PDF in base64; il file si rilegge identico', () => {
     const tabelle = {
-      blocchi: [riga('b1', { titolo: 'Spesa' }), { id: 'b2', createdAt: 1, updatedAt: 3, deletedAt: 3 }],
+      blocchi: [blocco('b1', { titolo: 'Spesa' }), { id: 'b2', createdAt: 1, updatedAt: 3, deletedAt: 3 }],
       materialiBinari: [riga('m1', { materialeId: 'm1', dati: new Uint8Array([1, 2, 3]) })],
     };
     const file = backupFile(tabelle, ADESSO);
@@ -68,5 +82,22 @@ describe('Formato del backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', ()
     const buona = { ...riga, url: 'https://esempio.it' };
     const ok = JSON.stringify({ formato: FORMATO_BACKUP, versione: 1, creatoIl: 1, tabelle: { materiali: [buona] } });
     expect(parseBackup(ok, ['materiali'])).not.toHaveProperty('errore');
+  });
+
+  it('una riga viva con la forma sbagliata rende il file illeggibile, come una busta della sync (D-RECUPERO-1, audit P1-3)', () => {
+    const file = (tabelle: object) => JSON.stringify({ formato: FORMATO_BACKUP, versione: 1, creatoIl: 1, tabelle });
+    const nomi = ['blocchi', 'moduli', 'preferenze'];
+    const modulo = riga('m1', { numero: 1, titolo: 'Tooling', criteri: [] });
+    // Le preferenze che non viaggiano hanno valori propri: «Ultimo backup» è un numero
+    const ultimo = riga('ultimoBackup', { valore: ADESSO });
+    expect(
+      parseBackup(file({ blocchi: [blocco('b1')], moduli: [modulo], preferenze: [ultimo] }), nomi),
+    ).not.toHaveProperty('errore');
+    expect(parseBackup(file({ blocchi: [blocco('b1', { checklist: 'x' })] }), nomi)).toEqual({ errore: 'illeggibile' });
+    expect(parseBackup(file({ blocchi: [blocco('b1', { tipo: 'altro' })] }), nomi)).toEqual({ errore: 'illeggibile' });
+    expect(parseBackup(file({ moduli: [{ ...modulo, criteri: null }] }), nomi)).toEqual({ errore: 'illeggibile' });
+    expect(parseBackup(file({ preferenze: [riga('impostazioni', { valore: 'x' })] }), nomi)).toEqual({
+      errore: 'illeggibile',
+    });
   });
 });

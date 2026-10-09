@@ -5,6 +5,7 @@
  * servizio (`app/backup.ts`); qui la forma, la codifica e la validazione del file scelto dall'utente, che è un dato non
  * fidato: un formato sconosciuto o una riga senza identità fermano l'import prima che tocchi i dati.
  */
+import { hasShape } from './sync';
 
 export const FORMATO_BACKUP = 'routforge-backup';
 export const VERSIONE_BACKUP = 1;
@@ -109,6 +110,14 @@ const indirizziSicuri = (nome: string, r: RigaBackup): boolean =>
       : true;
 
 /**
+ * Una riga viva ha la forma che le schermate e il ciclo leggono: per le tabelle della sync la stessa delle buste ricevute
+ * (D-RECUPERO-1), per i moduli i criteri Go/No-Go. Una riga malformata farebbe cadere Oggi e fermare il ciclo dopo che
+ * l'import ha già sostituito i dati (audit P1-3).
+ */
+const formaValida = (nome: string, r: RigaBackup): boolean =>
+  r.deletedAt !== null || (hasShape(nome, r) && (nome !== 'moduli' || Array.isArray(r.criteri)));
+
+/**
  * Le righe delle tabelle `nomi` dal testo di un file di backup; una tabella assente è vuota (un backup senza PDF si
  * importa), una che questa versione non conosce si ignora. `versione`: il file viene da una versione più nuova.
  */
@@ -133,7 +142,11 @@ export function parseBackup(testo: string, nomi: readonly string[]): EsitoLettur
     const tabelle: Record<string, RigaBackup[]> = {};
     for (const nome of nomi) {
       const righe = Object.hasOwn(sorgente, nome) ? sorgente[nome] : [];
-      if (!Array.isArray(righe) || !righe.every(rigaValida) || !righe.every((r) => indirizziSicuri(nome, r)))
+      if (
+        !Array.isArray(righe) ||
+        !righe.every(rigaValida) ||
+        !righe.every((r) => indirizziSicuri(nome, r) && formaValida(nome, r))
+      )
         return { errore: 'illeggibile' };
       // Una tombstone resta minima, coi soli campi comuni (INV-14: fuori dagli indici secondari)
       tabelle[nome] = righe.map((r): RigaBackup =>
