@@ -23,6 +23,7 @@ import type { PermessiNotifiche } from '../app/ports/notifications';
 import { doNotDisturbAccess } from '../app/sessionDevice';
 import { saveSettings } from '../app/settings';
 import { currentSyncService, type StatoSync } from '../app/sync';
+import { ANTICIPI } from '../domain/activity';
 import type { ErroreAi } from '../domain/ai';
 import type { ImpostazioniNotifiche, ImpostazioniTipo } from '../domain/notifications/desiredSet';
 import type { Impostazioni, LinguaRisposte } from '../domain/settings';
@@ -256,9 +257,10 @@ const TIPI: [TipoBlocco, Chiave][] = [
   ['routine', 'tipoRoutine'],
   ['evento', 'eventi'],
 ];
-/** Anticipi del mock: Inizio · 5' · 10' · 15' · 30' · 1 h · 1 g (in minuti). */
-const ANTICIPI = [0, 5, 10, 15, 30, 60, 1440];
-const anticipo = (m: number) =>
+/** Gli anticipi di Crea (MECC §13.1) in ordine crescente, come nel mock: Inizio · 5' · 10' · 15' · 30' · 1 h · 1 g (audit P3-16). */
+const ANTICIPI_CRESCENTI = [...ANTICIPI].reverse();
+/** L'anticipo nella forma breve delle Impostazioni (`anticipo` di format.ts è quella lunga). */
+const anticipoBreve = (m: number) =>
   m === 0
     ? t('anticipoInizioBreve')
     : m % 1440 === 0
@@ -317,7 +319,7 @@ export function NotificationSettings() {
                   <span className={s.pallino} />
                   <span className={s.etichettaRiga}>{t(nome)}</span>
                   <span className={s.valore} data-tono={x.attivo ? 'chiaro' : 'spento'}>
-                    {x.attivo ? anticipo(x.anticipi[0] ?? 0) : t('celebrazioniOff')}
+                    {x.attivo ? anticipoBreve(x.anticipi[0] ?? 0) : t('celebrazioniOff')}
                   </span>
                   {x.attivo && x.silenzioso && <VolumeX size={13} className={s.muto} aria-label={t('silenzioso')} />}
                   <ChevronRight size={16} className={s.chevron} data-aperto={apri || undefined} />
@@ -336,14 +338,14 @@ export function NotificationSettings() {
                       <>
                         <span className={s.etichettaAnticipo}>{t('anticipoTitolo')}</span>
                         <div className={s.chip} role="group" aria-label={t('anticipoTitolo')}>
-                          {ANTICIPI.map((m) => (
+                          {ANTICIPI_CRESCENTI.map((m) => (
                             <button
                               key={m}
                               type="button"
                               aria-pressed={x.anticipi[0] === m}
                               onClick={() => tipo(k, (y) => ({ ...y, anticipi: [m] }))}
                             >
-                              {anticipo(m)}
+                              {anticipoBreve(m)}
                             </button>
                           ))}
                         </div>

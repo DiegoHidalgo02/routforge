@@ -9,7 +9,6 @@
  * D-NOTIF-2.
  */
 import type { RoutForgeDb } from '../data/db';
-import { MAX_ANTICIPO_MINUTI } from '../domain/activity';
 import { blocksBetween, get, inTransaction, list, purge, save, watch } from '../data/repository';
 import {
   CHIAVE_PROVA,
@@ -17,6 +16,7 @@ import {
   IMPOSTAZIONI_NOTIFICHE_DEFAULT,
   nativeId,
   ORIZZONTE_BLOCCHI_GIORNI,
+  readableNotificationSettings,
   reconcilePlan,
   testNotification,
   unreadableBlocks,
@@ -25,7 +25,6 @@ import {
 } from '../domain/notifications/desiredSet';
 import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
 import { addLocalDays, localDayKey } from '../domain/time';
-import type { TipoBlocco } from '../domain/types';
 import type { Clock } from './ports/clock';
 import type { Notifications, PermessiNotifiche, SchermoSveglia } from './ports/notifications';
 import { logError, logReconcile } from './diagnostics';
@@ -37,30 +36,10 @@ export const CHIAVE_IMPOSTAZIONI_NOTIFICHE = 'notifiche';
 /** Riga di `preferenze` dei tocchi «Posticipa» (§13.2, D-NOTIF-2): chiave della notifica → istante del tocco. */
 export const CHIAVE_POSTICIPI = 'posticipi';
 
-const TIPI: readonly TipoBlocco[] = ['todo', 'evento', 'routine', 'studio'];
-const ORA = /^([01]\d|2[0-3]):[0-5]\d$/;
-const oraLeggibile = (v: unknown): v is string => typeof v === 'string' && ORA.test(v);
-
-const leggibili = (v: unknown): v is ImpostazioniNotifiche => {
-  if (typeof v !== 'object' || v === null || !('generale' in v) || !('perTipo' in v)) return false;
-  const { generale, perTipo, digest } = v as Record<string, unknown>;
-  if (typeof generale !== 'boolean' || typeof perTipo !== 'object' || perTipo === null) return false;
-  if (!oraLeggibile((digest as Record<string, unknown> | undefined)?.orario)) return false;
-  return TIPI.every((t) => {
-    const x = (perTipo as Record<string, unknown>)[t] as Record<string, unknown> | undefined;
-    return (
-      typeof x?.attivo === 'boolean' &&
-      typeof x.silenzioso === 'boolean' &&
-      Array.isArray(x.anticipi) &&
-      x.anticipi.every((m) => Number.isInteger(m) && m >= 0 && m <= MAX_ANTICIPO_MINUTI)
-    );
-  });
-};
-
 /** Le impostazioni delle notifiche; riga assente o illeggibile = default di §13.1 (D-NOTIF-1 n. 11). */
 export async function readNotificationSettings(db: RoutForgeDb): Promise<ImpostazioniNotifiche> {
   const v = (await get(db, 'preferenze', CHIAVE_IMPOSTAZIONI_NOTIFICHE))?.valore;
-  return leggibili(v) ? v : IMPOSTAZIONI_NOTIFICHE_DEFAULT;
+  return readableNotificationSettings(v) ? v : IMPOSTAZIONI_NOTIFICHE_DEFAULT;
 }
 
 /** Cambia le impostazioni delle notifiche a partire da quelle salvate (o dai default di §13.1; Impostazioni, T-032). */
@@ -72,7 +51,8 @@ export function editNotificationSettings(
   return inTransaction(db, ['preferenze'], async () => {
     const valore = modifica(await readNotificationSettings(db));
     // Un valore illeggibile riporterebbe tutto ai default alla lettura: non si salva
-    if (leggibili(valore)) await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore }, now);
+    if (readableNotificationSettings(valore))
+      await save(db, 'preferenze', { id: CHIAVE_IMPOSTAZIONI_NOTIFICHE, valore }, now);
   });
 }
 

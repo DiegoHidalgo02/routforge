@@ -12,6 +12,7 @@ import {
   nativeId,
   oneShotNotifications,
   POSTICIPO_MS,
+  readableNotificationSettings,
   reconcilePlan,
   RITARDO_ONE_SHOT_MS,
   runsInBackground,
@@ -770,5 +771,21 @@ describe('Riconciliazione con le voci armate da questo processo — MECCANISMI �
     expect(
       reconcilePlan(voci.slice(1), registro.slice(1), false, now, [scattata, ...registro.slice(1)]).daCancellare,
     ).toEqual([]);
+  });
+});
+
+describe('Impostazioni delle notifiche leggibili — MECCANISMI §13.1, §13.5, D-NOTIF-1 n. 11 (audit P3-16)', () => {
+  const con = (fn: (v: ImpostazioniNotifiche) => void) => {
+    const v = JSON.parse(JSON.stringify(DEF)) as ImpostazioniNotifiche;
+    fn(v);
+    return v;
+  };
+  it('i default sono leggibili; un anticipo oltre 31 giorni o non intero, un orario impossibile o un tipo mancante no', () => {
+    expect(readableNotificationSettings(DEF)).toBe(true);
+    expect(readableNotificationSettings(con((v) => (v.perTipo.todo.anticipi = [31 * 1440 + 1])))).toBe(false);
+    expect(readableNotificationSettings(con((v) => (v.perTipo.todo.anticipi = [2.5])))).toBe(false);
+    expect(readableNotificationSettings(con((v) => (v.digest.orario = '24:00')))).toBe(false);
+    expect(readableNotificationSettings({ ...DEF, perTipo: {} })).toBe(false);
+    expect(readableNotificationSettings(null)).toBe(false);
   });
 });

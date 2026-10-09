@@ -144,7 +144,8 @@ export type Validazione =
   | { ok: true; fasi: FaseValida[]; blocco: NuovoBlocco; ricorrenza?: undefined }
   | { ok: true; fasi: FaseValida[]; ricorrenza: NuovaRicorrenza; blocco?: undefined };
 
-const ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
+/** Un orario di parete «HH:MM» valido (§2), per i form e per le impostazioni. */
+export const ORARIO = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 /** Istante locale del giorno "YYYY-MM-DD" all'orario "HH:MM"; `null` se uno dei due non è valido (`2026-02-31` no). */
 const at = (giorno: string, orario: string): number | null =>

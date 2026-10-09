@@ -14,7 +14,7 @@
  * - Chiave `trigger:anticipo:bloccoId`, id nativo FNV-1a a 32 bit con segno, collisioni risolte con +1.
  */
 import type { InizioSettimana } from '../settings';
-import { MAX_ANTICIPO_SVEGLIA } from '../activity';
+import { MAX_ANTICIPO_MINUTI, MAX_ANTICIPO_SVEGLIA, ORARIO } from '../activity';
 import { lostNotificationDue, recoveryDeadline } from '../lost';
 import type { SessioneAttiva } from '../session';
 import { addLocalDays, localDayKey, localInstant, minutes, startOfLocalDay } from '../time';
@@ -89,6 +89,29 @@ export const IMPOSTAZIONI_NOTIFICHE_DEFAULT: ImpostazioniNotifiche = {
   },
   digest: { orario: '08:00' },
 };
+
+const TIPI_NOTIFICHE: readonly TipoBlocco[] = ['todo', 'evento', 'routine', 'studio'];
+/**
+ * Impostazioni delle notifiche leggibili (§13.1, §13.5; D-NOTIF-1 n. 11): l'interruttore generale e, per ogni tipo,
+ * attivo, silenzioso e anticipi interi fra 0 e 31 giorni, con l'orario del digest; una riga che non le rispetta vale i
+ * default. La regola stava nel servizio, con una sua regex dell'orario (audit P3-16).
+ */
+export function readableNotificationSettings(v: unknown): v is ImpostazioniNotifiche {
+  if (typeof v !== 'object' || v === null || !('generale' in v) || !('perTipo' in v)) return false;
+  const { generale, perTipo, digest } = v as Record<string, unknown>;
+  if (typeof generale !== 'boolean' || typeof perTipo !== 'object' || perTipo === null) return false;
+  const orario = (digest as Record<string, unknown> | undefined)?.orario;
+  if (typeof orario !== 'string' || !ORARIO.test(orario)) return false;
+  return TIPI_NOTIFICHE.every((t) => {
+    const x = (perTipo as Record<string, unknown>)[t] as Record<string, unknown> | undefined;
+    return (
+      typeof x?.attivo === 'boolean' &&
+      typeof x.silenzioso === 'boolean' &&
+      Array.isArray(x.anticipi) &&
+      x.anticipi.every((m) => Number.isInteger(m) && m >= 0 && m <= MAX_ANTICIPO_MINUTI)
+    );
+  });
+}
 
 /** §13.3: si armano le notifiche che scattano entro 14 giorni, sui blocchi che iniziano entro 14 + 31. */
 export const FINESTRA_NOTIFICHE_GIORNI = 14;
