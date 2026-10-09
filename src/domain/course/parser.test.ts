@@ -385,7 +385,7 @@ describe('Unità — FORMATO_CORSO §3', () => {
 });
 
 describe("Puntatore all'import e stati dei moduli — FORMATO_CORSO §4", () => {
-  it('unità corrente = prima unità del primo modulo aperto; M3 è bloccato perché M1 ha criteri non fatti', () => {
+  it('M3 è bloccato perché M1 ha criteri non fatti (l’unità corrente è di currentUnit, pointer.test.ts)', () => {
     const { corso } = parseCourse(
       [
         { name: 'M1-Tooling_Moderno.md', content: M1 },
@@ -394,8 +394,6 @@ describe("Puntatore all'import e stati dei moduli — FORMATO_CORSO §4", () => 
       opts,
     );
     expect(corso.numeroUnita).toBe(3);
-    expect(corso.unitaCompletate).toBe(0);
-    expect(corso.unitaCorrenteId).toBe('corso-1:M1:U1.1');
     expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
   });
 

@@ -100,8 +100,6 @@ export interface CorsoImportato {
   importatoIl: number;
   moduli: ModuloImportato[];
   numeroUnita: number;
-  unitaCompletate: number;
-  unitaCorrenteId: string | null;
 }
 
 export interface FileCorso {
@@ -697,8 +695,6 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   moduli.sort((a, b) => a.numero - b.numero);
   const stati = statiModuli(moduli.map(modulePath));
   for (const m of moduli) m.stato = stati.get(m.numero) ?? 'bloccato';
-  const firstOpen = moduli.find((m) => m.stato !== 'bloccato');
-  const unitaCorrenteId = firstOpen?.unita[0]?.id ?? null;
 
   return {
     corso: {
@@ -708,8 +704,6 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
       importatoIl: opts.now,
       moduli,
       numeroUnita: moduli.reduce((n, m) => n + m.unita.length, 0),
-      unitaCompletate: 0,
-      unitaCorrenteId,
     },
     avvisi: warnings,
   };

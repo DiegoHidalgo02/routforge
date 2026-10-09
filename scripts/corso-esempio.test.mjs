@@ -83,8 +83,7 @@ describe('Corso di esempio — CONTESTO §5, FORMATO_CORSO §0 e §5 (INV-19, D-
     expect(corso.moduli.flatMap((m) => m.unita).every((u) => u.oreStimate === null && u.difficolta === null)).toBe(
       true,
     );
-    // Puntatore sulla prima unità; M1 bloccato finché i criteri di M0 non sono tutti sì (FORMATO §4)
-    expect(corso.unitaCorrenteId).toBe('corso-esempio:M0:U0.1');
+    // M1 bloccato finché i criteri di M0 non sono tutti sì (FORMATO §4)
     expect(corso.moduli.map((m) => m.stato)).toEqual(['aperto', 'bloccato']);
   });
 

@@ -49,9 +49,9 @@ export function Gruppo({ titolo, children, spento }: { titolo?: string; children
 
 type Tono = 'successo' | 'avviso' | 'chiaro';
 
-function RigaLink(p: { etichetta: string; valore?: string; tono?: Tono; to?: string; pericolo?: boolean }) {
-  const dentro = (
-    <>
+function RigaLink(p: { etichetta: string; valore?: string; tono?: Tono; to: string; pericolo?: boolean }) {
+  return (
+    <Link to={p.to} className={s.riga}>
       <span className={s.etichettaRiga} data-pericolo={p.pericolo || undefined}>
         {p.etichetta}
       </span>
@@ -61,16 +61,7 @@ function RigaLink(p: { etichetta: string; valore?: string; tono?: Tono; to?: str
         </span>
       )}
       <ChevronRight size={16} className={s.chevron} />
-    </>
-  );
-  return p.to ? (
-    <Link to={p.to} className={s.riga}>
-      {dentro}
     </Link>
-  ) : (
-    <button type="button" className={s.riga} disabled>
-      {dentro}
-    </button>
   );
 }
 
