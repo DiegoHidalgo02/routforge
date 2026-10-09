@@ -281,6 +281,17 @@ export const allRows = <K extends NomeTabella>(db: RoutForgeDb, nome: K): Promis
   tabella(db, nome).toArray();
 
 /**
+ * Tutte le righe delle tabelle date, in una transazione di sola lettura: una fotografia coerente, che una scrittura
+ * arrivata a metà (il ciclo, una pagina della sync, l'import di un corso) non divide (il backup; audit P2-8).
+ */
+export const allTables = (db: RoutForgeDb, nomi: readonly NomeTabella[]): Promise<Record<string, object[]>> =>
+  db.transaction('r', [...nomi], async () => {
+    const righe: Record<string, object[]> = {};
+    for (const nome of nomi) righe[nome] = await allRows(db, nome);
+    return righe;
+  });
+
+/**
  * Azzeramento (MECC §22, T-030): l'import di un backup e «Elimina tutti i dati» svuotano ogni tabella e scrivono le
  * righe date, in una sola transazione (se fallisce, resta tutto com'era). L'altra cancellazione fisica oltre a `purge`:
  * l'azzeramento è totale per spec e i dati remoti restano finché l'utente non li cancella dall'account (INV-14). La coda

@@ -1,5 +1,6 @@
 // IndexedDB finto: va importato prima di Dexie, che legge le API globali quando viene caricato.
 import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseCourse } from '../domain/course/parser';
 import type { Blocco } from '../domain/types';
@@ -7,6 +8,7 @@ import { local } from '../domain/time';
 import { openDb, type RoutForgeDb } from './db';
 import {
   allRows,
+  allTables,
   blocksBetween,
   dequeue,
   enqueueAll,
@@ -498,5 +500,30 @@ describe('Coda della sync — MECCANISMI §25, INV-14 (T-033)', () => {
     await saveBlock(db, { ...evento, id: 'b1' }, T0, ROMA);
     await purge(db, 'syncCoda', ['blocchi:b1']);
     expect(await db.syncCoda.count()).toBe(0);
+  });
+});
+
+describe('Fotografia delle tabelle per il backup — MECCANISMI §22 (audit P2-8)', () => {
+  it('una scrittura arrivata mentre si leggono non ci finisce a metà: corso e modulo insieme o nessuno dei due', async () => {
+    // Dopo la lettura dei corsi, prima di quella dei moduli, un'altra transazione scrive un corso col suo modulo
+    const corsi = db.table('corsi');
+    const leggi = corsi.toArray.bind(corsi);
+    let scrittura: Promise<unknown> | undefined;
+    vi.spyOn(corsi, 'toArray').mockImplementationOnce(() =>
+      leggi().then((letti) => {
+        scrittura = Dexie.ignoreTransaction(() =>
+          db.transaction('rw', ['corsi', 'moduli'], async () => {
+            await db.table('corsi').put({ id: 'c-nuovo', deletedAt: null });
+            await db.table('moduli').put({ id: 'm-nuovo', corsoId: 'c-nuovo', deletedAt: null });
+          }),
+        );
+        return letti;
+      }),
+    );
+    const righe = await allTables(db, ['corsi', 'moduli']);
+    await scrittura;
+    const ha = (tabella: string, id: string) =>
+      (righe[tabella] as { id: string }[] | undefined)?.some((r) => r.id === id);
+    expect(ha('corsi', 'c-nuovo')).toBe(ha('moduli', 'm-nuovo'));
   });
 });

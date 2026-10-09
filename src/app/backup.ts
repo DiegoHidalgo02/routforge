@@ -6,7 +6,7 @@
  * non fidato: lo valida `parseBackup` prima di toccare qualcosa.
  */
 import type { RoutForgeDb, Tabelle } from '../data/db';
-import { allRows, get, replaceAll, save, tableNames } from '../data/repository';
+import { allTables, get, replaceAll, save, tableNames } from '../data/repository';
 import { backupFile, parseBackup, type RigaBackup } from '../domain/backup';
 import { localDayKey } from '../domain/time';
 import { logError } from './diagnostics';
@@ -32,8 +32,7 @@ export function configureBackupFiles(a: ArchivioFile): void {
 
 /** Il nome e il testo del file («routforge-2026-09-11.rfbackup», S22). */
 export async function backupText(db: RoutForgeDb, now: number): Promise<{ nome: string; testo: string }> {
-  const righe: Record<string, object[]> = {};
-  for (const nome of tabelle(db)) righe[nome] = await allRows(db, nome);
+  const righe = await allTables(db, tabelle(db));
   righe.preferenze =
     (righe.preferenze as RigaBackup[] | undefined)?.filter((r) => r.id !== CHIAVE_AI && r.id !== CHIAVE_STATO_SYNC) ??
     [];
