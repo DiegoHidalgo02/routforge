@@ -148,8 +148,18 @@ function applyPage(
         locale,
       );
       // L'ultimo gesto di una riga viva è l'istante della busta, già controllato e limitato dal servizio (D-SYNC-2), non
-      // il campo scritto dal mittente; la tombstone resta minima (INV-14; audit P0-2)
-      await putRemote(db, b.tabella, [(b.deletedAt === null ? { ...riga, gestoIl: b.updatedAt } : riga) as never]);
+      // il campo scritto dal mittente (audit P0-2); una tombstone si ricostruisce minima dalla busta, senza i campi del
+      // mittente (INV-14: fuori dagli indici secondari; revisione di sicurezza di P0-2)
+      await putRemote(db, b.tabella, [
+        (b.deletedAt === null
+          ? { ...riga, gestoIl: b.updatedAt }
+          : {
+              id: b.id,
+              createdAt: locale?.createdAt ?? b.updatedAt,
+              updatedAt: b.updatedAt,
+              deletedAt: b.deletedAt,
+            }) as never,
+      ]);
       scritte++;
       if (b.tabella === 'ricorrenze') await followReceived(db, b, now, fuso);
     }

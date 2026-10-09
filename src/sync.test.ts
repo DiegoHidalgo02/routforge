@@ -911,3 +911,38 @@ describe('Giri programmati — MECCANISMI §25, D-SYNC-4 n. 9 (audit P2-6)', () 
     expect(timer.size).toBe(0);
   });
 });
+
+describe('Tombstone ricevute — MECCANISMI §25, INV-14 (revisione di sicurezza di P0-2)', () => {
+  it('una busta eliminata con campi in più si salva minima, con l’istante della busta', async () => {
+    const telefono = dispositivo('telefono');
+    await accedi(telefono);
+    const userId = [...archivio.account.values()][0]!;
+    const seq = ++archivio.seq;
+    archivio.righe.set(`${userId}:blocchi:b-ad-arte:${seq}`, {
+      userId,
+      ricevutaIl: ora,
+      busta: {
+        tabella: 'blocchi',
+        id: 'b-ad-arte',
+        dati: {
+          id: 'b-ad-arte',
+          createdAt: 'ieri',
+          updatedAt: 1.5,
+          deletedAt: ora,
+          giornoLocale: '2026-09-22',
+          inizio: ora,
+          stato: 'programmato',
+          ricorrenzaId: 'r-1',
+        },
+        updatedAt: ora + 1,
+        deletedAt: ora,
+        generata: false,
+        dispositivo: 'zzz',
+        seq,
+      },
+    });
+    await telefono.sync.run();
+    const riga = (await allRows(telefono.db, 'blocchi')).find((r) => r.id === 'b-ad-arte');
+    expect(riga).toEqual({ id: 'b-ad-arte', createdAt: ora + 1, updatedAt: ora + 1, deletedAt: ora });
+  });
+});
