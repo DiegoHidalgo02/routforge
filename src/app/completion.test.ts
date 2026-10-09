@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb, type Tabelle } from '../data/db';
-import { get, list, saveBlock } from '../data/repository';
+import { get, list, save, saveBlock } from '../data/repository';
 import type { BozzaAttivita } from '../domain/activity';
 import { occurrenceId } from '../domain/scheduler/occurrences';
 import { local, localDayKey } from '../domain/time';
@@ -175,6 +175,26 @@ describe('Spunta diretta dal cerchio della card — MECCANISMI §3, §24, SCENAR
     const prima = await blocco(id);
     expect(await checkFromCalendar(db, id, local(2026, 9, 23, 10, 20), FUSO)).toBe('esito');
     expect(await blocco(id)).toEqual(prima);
+  });
+  it('lo stesso studio con l’unità proposta dal puntatore: dal cerchio si apre «Registra esito» (C10, audit P1-1)', async () => {
+    await save(db, 'moduli', { id: 'm1', corsoId: 'c1', numero: 1, titolo: 'Tooling' } as never, NOW);
+    const unita = { id: 'u1', corsoId: 'c1', moduloId: 'm1', numero: '1.1', titolo: 'Vite', stato: 'non_iniziata' };
+    await save(db, 'unita', unita as never, NOW);
+    const { id } = await saveBlock(
+      db,
+      {
+        tipo: 'studio',
+        stato: 'programmato',
+        conOrario: true,
+        inizio: local(2026, 9, 23, 9, 0),
+        fine: local(2026, 9, 23, 10, 0),
+        corsoId: 'c1',
+        unitaId: 'u1',
+      },
+      NOW,
+      FUSO,
+    );
+    expect(await checkFromCalendar(db, id, local(2026, 9, 23, 10, 20), FUSO)).toBe('esito');
   });
   it('routine persa nel suo giorno (§24 contro B2, 00_SINTESI §6 n. 26): niente dal cerchio, «Fatta» dal dettaglio', async () => {
     const id = oggi(await crea(routineMattina([])));

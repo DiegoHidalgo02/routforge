@@ -78,7 +78,8 @@ export async function readDetail(db: RoutForgeDb, id: string): Promise<Dettaglio
   };
 }
 
-const TABELLE = ['blocchi', 'ricorrenze', 'corsi', 'logFasi'] as const;
+// Tutte le tabelle che `readDetail` legge: dentro una transazione Dexie una tabella non elencata lancia (audit P1-1)
+const TABELLE = ['blocchi', 'ricorrenze', 'corsi', 'logFasi', 'unita', 'moduli'] as const;
 
 /**
  * Spunta (§3): se non è consentita adesso non scrive nulla (false). Con fasi scrive il log con le `saltate` (§5,
