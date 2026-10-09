@@ -1,15 +1,18 @@
 // Il servizio della sync in memoria (porta `SyncBackend`, T-033): le stesse regole dell'SQL di `supabase/schema.sql`
 // (ultimo vince per record con la parità sul dispositivo, la riga `generata` che non sovrascrive e cede, l'istante
-// limitato a 5 minuti avanti, il cursore `seq`, il filtro delle righe del proprio dispositivo, la revoca). È la
-// specifica eseguibile dell'SQL (salvo i 5 s in cui l'SQL trattiene le righe appena ricevute, che servono solo con push
-// concorrenti: qui non ce ne sono): più istanze sullo stesso archivio sono più dispositivi dello stesso account. Accetta ogni
-// email col codice 000000; `main.tsx` lo usa finché mancano le chiavi di Supabase («servizio finto» in Diagnostica).
+// limitato a 5 minuti avanti, il cursore `seq`, il filtro delle righe del proprio dispositivo, la revoca, le righe fuori
+// ambito o con l'id dei dati diverso scartate, il lotto rifiutato intero per una riga oltre il `check`). È la specifica
+// eseguibile dell'SQL: più istanze sullo stesso archivio sono più dispositivi dello stesso account. I 5 s in cui l'SQL
+// trattiene le righe appena ricevute sono `trattieniMs`, 0 se non dato (audit P2-7). Accetta ogni email col codice
+// 000000; `main.tsx` lo usa finché mancano le chiavi di Supabase («servizio finto» in Diagnostica).
 import { RevocatoError, type Dispositivo, type Sessione, type SyncBackend } from '../app/ports/sync';
-import { clampUpdatedAt, serverAccepts, type Busta, type BustaRicevuta } from '../domain/sync';
+import { clampUpdatedAt, isSynced, sendable, serverAccepts, type Busta, type BustaRicevuta } from '../domain/sync';
 
 interface RigaServizio {
   userId: string;
   busta: BustaRicevuta;
+  /** `received_at` dell'SQL. */
+  ricevutaIl: number;
 }
 interface DispositivoServizio {
   userId: string;
@@ -35,7 +38,12 @@ export const createSyncStore = (): ArchivioSync => ({
 /** Il codice accettato dal servizio finto. */
 export const CODICE_FINTO = '000000';
 
-export function memorySyncBackend(archivio: ArchivioSync, ora: () => number, nuovoId: () => string): SyncBackend {
+export function memorySyncBackend(
+  archivio: ArchivioSync,
+  ora: () => number,
+  nuovoId: () => string,
+  { trattieniMs = 0 }: { trattieniMs?: number } = {},
+): SyncBackend {
   let sessione: Sessione | null = null;
   const ascolti = new Set<(s: Sessione | null) => void>();
   const cambia = (s: Sessione | null) => {
@@ -89,7 +97,13 @@ export function memorySyncBackend(archivio: ArchivioSync, ora: () => number, nuo
       try {
         const s = attivo();
         const buste = [...archivio.righe.values()]
-          .filter((r) => r.userId === s.userId && r.busta.seq > daSeq && r.busta.dispositivo !== s.dispositivo)
+          .filter(
+            (r) =>
+              r.userId === s.userId &&
+              r.busta.seq > daSeq &&
+              r.busta.dispositivo !== s.dispositivo &&
+              ora() - r.ricevutaIl >= trattieniMs,
+          )
           .map((r) => r.busta)
           .sort((a, b) => a.seq - b.seq)
           .slice(0, limite);
@@ -101,15 +115,22 @@ export function memorySyncBackend(archivio: ArchivioSync, ora: () => number, nuo
     push(buste: readonly Busta[]) {
       try {
         const s = attivo();
-        for (const b of buste) {
+        // Il `check` di `records` e il `jsonb` del parametro fanno fallire tutta la chiamata, prima di ogni scrittura
+        if (!buste.every((b) => sendable(b.dati))) throw new Error('new row violates check constraint');
+        // La `where` di push_records: fuori ambito, id dei dati diverso o istante mancante si scartano in silenzio
+        const valide = buste.filter(
+          (b) => isSynced(b.tabella, b.id) && b.dati.id === b.id && Number.isFinite(b.updatedAt),
+        );
+        for (const b of valide) {
           const chiave = `${s.userId}:${b.tabella}:${b.id}`;
           const arrivata = { ...b, updatedAt: clampUpdatedAt(b.updatedAt, ora()), dispositivo: s.dispositivo };
           const memorizzata = archivio.righe.get(chiave)?.busta;
+          const riga = { userId: s.userId, ricevutaIl: ora() };
           if (serverAccepts(memorizzata, arrivata))
-            archivio.righe.set(chiave, { userId: s.userId, busta: { ...arrivata, seq: ++archivio.seq } });
+            archivio.righe.set(chiave, { ...riga, busta: { ...arrivata, seq: ++archivio.seq } });
           // Ha perso: la memorizzata di un altro dispositivo torna a chi ha spedito col prossimo pull, come nell'SQL
           else if (memorizzata && memorizzata.dispositivo !== s.dispositivo)
-            archivio.righe.set(chiave, { userId: s.userId, busta: { ...memorizzata, seq: ++archivio.seq } });
+            archivio.righe.set(chiave, { ...riga, busta: { ...memorizzata, seq: ++archivio.seq } });
         }
         return Promise.resolve();
       } catch (e) {

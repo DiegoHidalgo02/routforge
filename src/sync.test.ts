@@ -425,6 +425,7 @@ describe('Casi limite della sync — MECCANISMI §25 (T-033)', () => {
       const seq = ++archivio.seq;
       archivio.righe.set(`${userId}:${tabella}:${id}:${seq}`, {
         userId,
+        ricevutaIl: ora,
         busta: {
           tabella: tabella as never,
           id,
