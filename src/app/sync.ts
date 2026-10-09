@@ -18,6 +18,7 @@ import {
   listKeyRange,
   purge,
   putRemote,
+  queueSize,
   rawRow,
   save,
   watch,
@@ -76,7 +77,6 @@ const leggiStato = async (db: RoutForgeDb) =>
   (await get(db, 'preferenze', CHIAVE_STATO_SYNC))?.valore as StatoLocale | undefined;
 const scriviStato = (db: RoutForgeDb, s: StatoLocale, now: number) =>
   save(db, 'preferenze', { id: CHIAVE_STATO_SYNC, valore: s }, now);
-const contaCoda = async (db: RoutForgeDb) => (await list(db, 'syncCoda')).length;
 export const readProfileName = async (db: RoutForgeDb): Promise<string | null> => {
   const v = (await get(db, 'preferenze', CHIAVE_PROFILO))?.valore as { nome?: unknown } | undefined;
   return typeof v?.nome === 'string' && v.nome.trim() ? v.nome.trim() : null;
@@ -255,7 +255,7 @@ export function createSyncService(
     stato = { ...stato, ...p };
     for (const f of ascolti) f();
   };
-  const conta = async () => aggiorna({ inCoda: await contaCoda(db) });
+  const conta = async () => aggiorna({ inCoda: await queueSize(db) });
   const account = async () => {
     const s = backend.session();
     aggiorna({ account: s ? { email: s.email, nome: await readProfileName(db) } : null });
@@ -398,7 +398,7 @@ export function createSyncService(
         clock.onForeground(() => void run()),
         rete.onOnline(() => void run()),
         watch(
-          () => contaCoda(db),
+          () => queueSize(db),
           (n) => {
             aggiorna({ inCoda: n });
             if (n > 0 && backend.session()) programma(RITARDO_MS);

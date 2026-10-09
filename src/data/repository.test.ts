@@ -20,6 +20,7 @@ import {
   newId,
   purge,
   putRemote,
+  queueSize,
   remove,
   replaceAll,
   save,
@@ -525,5 +526,14 @@ describe('Fotografia delle tabelle per il backup — MECCANISMI §22 (audit P2-8
     const ha = (tabella: string, id: string) =>
       (righe[tabella] as { id: string }[] | undefined)?.some((r) => r.id === id);
     expect(ha('corsi', 'c-nuovo')).toBe(ha('moduli', 'm-nuovo'));
+  });
+});
+
+describe('Lunghezza della coda — MECCANISMI §25 (audit P3-10)', () => {
+  it('si conta senza leggere le voci, ed è il numero delle voci', async () => {
+    const evento = { tipo: 'evento' as const, stato: 'programmato' as const, inizio: T0, fine: T1, conOrario: true };
+    for (const id of ['b1', 'b2', 'b3']) await saveBlock(db, { ...evento, id }, T0, ROMA);
+    expect(await queueSize(db)).toBe((await list(db, 'syncCoda')).length);
+    expect(await queueSize(db)).toBe(3);
   });
 });

@@ -218,6 +218,9 @@ export const rawRow = <K extends NomeTabella>(
   id: string,
 ): Promise<Tabelle[K] | Tombstone | undefined> => tabella(db, nome).get(id);
 
+/** Quante voci ha la coda della sync, senza leggerle: le voci si cancellano fisicamente, quindi sono tutte vive (audit P3-10). */
+export const queueSize = (db: RoutForgeDb): Promise<number> => db.syncCoda.count();
+
 /**
  * Toglie dalla coda le voci spedite (T-033), solo se non sono cambiate dopo: una modifica arrivata durante il push ha un
  * `updatedAt` più recente e resta in coda.
