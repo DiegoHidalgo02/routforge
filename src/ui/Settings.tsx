@@ -1237,29 +1237,14 @@ function Conto({ stato, account }: { stato: StatoSync; account: NonNullable<Stat
         </button>
       </Gruppo>
       {conferma && (
-        <div className={s.conferma} role="alertdialog" aria-labelledby="conferma-remoti">
-          <div className={s.testaConferma}>
-            <TriangleAlert size={18} className={s.iconaPericolo} />
-            <span className={s.testi}>
-              <span id="conferma-remoti" className={s.titoloConferma}>
-                {t('cancellareDatiAccount')}
-              </span>
-              <span className={s.corpoConferma}>{t('cancellareDatiAccountTesto')}</span>
-            </span>
-          </div>
-          <div className={s.azioniConferma}>
-            <button type="button" className={s.annullaConferma} onClick={() => setConferma(false)}>
-              {t('annulla')}
-            </button>
-            <button
-              type="button"
-              className={s.pericoloConferma}
-              onClick={() => void sync?.eraseRemote().then(() => setConferma(false))}
-            >
-              {t('cancellaDallAccount')}
-            </button>
-          </div>
-        </div>
+        <Conferma
+          titolo={t('cancellareDatiAccount')}
+          corpo={t('cancellareDatiAccountTesto')}
+          azione={t('cancellaDallAccount')}
+          lavoro={false}
+          onAnnulla={() => setConferma(false)}
+          onConferma={() => void sync?.eraseRemote().then(() => setConferma(false))}
+        />
       )}
     </>
   );

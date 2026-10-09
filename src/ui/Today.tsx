@@ -61,7 +61,7 @@ import type { AvvisoAssenza } from '../domain/scheduler/absence';
 import type { InizioSettimana } from '../domain/settings';
 import { localDayKey, localInstant } from '../domain/time';
 import { STATI_TERMINALI } from '../domain/types';
-import { useMinuto, useOggi } from './clock';
+import { adesso, useMinuto, useOggi } from './clock';
 import { centro, Coriandoli } from './Coriandoli';
 import { eDesktop, useDesktop } from './desktop';
 import { fuso, maiuscola, sottotitolo, TIPO, titolo } from './format';
@@ -156,8 +156,6 @@ const periodoDi = (vista: Vista, giorno: string, inizio: InizioSettimana) =>
 /** «Annulla» del toast della spunta resta 5 s (A7), come il toast del Dettaglio. */
 /** Movimento del puntatore oltre il quale la pressione diventa trascinamento. */
 const SOGLIA_PRESA = 4;
-/** L'istante delle scritture, fuori dal render (lo stesso accorgimento di Session.tsx per `react-hooks/purity`). */
-const istante = () => Date.now();
 /** Le frecce del riordino (MECC §15). */
 type Freccia = 'su' | 'giu';
 /** La priorità del gruppo nel testo della barra e della regione live («Priorità alta · 2 di 2»). */
@@ -750,7 +748,7 @@ function Giornata({
   const sposta = (b: BloccoCalendario, a: number, freccia?: Freccia, dove: 'riga' | 'barra' = 'riga') => {
     const { n } = posizione(b);
     if (freccia) fuoco.current = { id: b.id, freccia, dove, da: righe.findIndex((r) => r.id === b.id) };
-    void reorderTodo(appDb, b.id, a, istante(), fuso()).then(
+    void reorderTodo(appDb, b.id, a, adesso(), fuso()).then(
       (ok) => {
         if (!ok) return void (fuoco.current = null);
         const livello = t(LIVELLO[b.priorita ?? 'normale']);

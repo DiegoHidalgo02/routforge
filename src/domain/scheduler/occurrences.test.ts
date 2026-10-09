@@ -12,6 +12,7 @@ import {
   occurrenceId,
   ORIZZONTE_OCCORRENZE_GIORNI,
   reanchor,
+  recurrenceError,
   removableOccurrences,
 } from './occurrences';
 
@@ -391,5 +392,12 @@ describe('Ora legale: buco e sovrapposizione — CONTESTO §3, D-TIME-3 (audit P
     // Un'ora dopo l'inizio l'orologio segna di nuovo lo stesso orario: l'inizio è la prima volta
     expect(localTimeKey(b.inizio + HOUR)).toBe(doppia.orario);
     expect(localTimeKey(b.inizio)).toBe(doppia.orario);
+  });
+});
+
+describe('Ricorrenza che non si legge — MECCANISMI §9, D-SCHED-1 n. 8 (audit P3-20)', () => {
+  it('l’errore della generazione, o null se la ricorrenza si legge: una sola prova per il ciclo e per la sync', () => {
+    expect(recurrenceError(ricorrenza(), NOW)).toBeNull();
+    expect(recurrenceError({ ...ricorrenza(), giorni: null as never }, NOW)).toBeInstanceOf(Error);
   });
 });

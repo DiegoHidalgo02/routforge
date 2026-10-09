@@ -55,6 +55,19 @@ export const isMovedOccurrence = (
   return b.giornoLocale !== giorno || b.orarioInizio !== localTimeKey(localInstant(giorno, orario));
 };
 
+/**
+ * L'errore che rende illeggibile una ricorrenza (un dato rotto, anche da un backup o da un altro dispositivo), o `null`:
+ * il ciclo la salta e la sync la scarta, con l'errore in Diagnostica (D-SCHED-1 n. 8; una sola prova, audit P3-20).
+ */
+export function recurrenceError(r: Ricorrenza, now: number): unknown {
+  try {
+    missingOccurrences(r, [], now);
+    return null;
+  } catch (e) {
+    return e ?? new Error('ricorrenza illeggibile');
+  }
+}
+
 /** Differenza da applicare a una modifica (§7): blocchi da scrivere (nuovi o riscritti), id da eliminare. */
 export interface PianoOccorrenze {
   daScrivere: Blocco[];

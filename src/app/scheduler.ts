@@ -15,9 +15,8 @@
 import type { RoutForgeDb } from '../data/db';
 import { inTransaction, list, listBy, save, saveBlock, watch } from '../data/repository';
 import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
-import { missingOccurrences, reanchor } from '../domain/scheduler/occurrences';
+import { reanchor, recurrenceError } from '../domain/scheduler/occurrences';
 import { needsFingerprints, relinkPlan } from '../domain/sync';
-import type { Ricorrenza } from '../domain/types';
 import { MINUTE } from '../domain/time';
 import { registerOpening } from './absence';
 import { courseFingerprints } from './courses';
@@ -45,15 +44,6 @@ export interface AvvisiCiclo {
 
 const TABELLE_CICLO = ['blocchi', 'ricorrenze', 'preferenze', 'corsi', 'unita', 'moduli'] as const;
 
-function leggibile(r: Ricorrenza, now: number): boolean {
-  try {
-    missingOccurrences(r, [], now);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /** Esegue il ciclo adesso; `fuso` è quello corrente del dispositivo (D-TIME-2). Senza cambiamenti non scrive nulla. */
 export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Promise<AvvisiCiclo> {
   // L'inizio settimana (FUNZ §23) si legge prima della transazione: letto dentro, dopo la generazione delle occorrenze,
@@ -80,7 +70,7 @@ export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Prom
     //    riporta (D-SCHED-1 n. 8)
     const ricorrenzeSaltate: string[] = [];
     for (const r of await list(db, 'ricorrenze')) {
-      if (leggibile(r, now)) await generateOccurrences(db, r, now, fuso);
+      if (recurrenceError(r, now) === null) await generateOccurrences(db, r, now, fuso);
       else ricorrenzeSaltate.push(r.id);
     }
     // 2. Spostamento dei todo (§6); la fine dell'orizzonte «settimana» segue l'inizio settimana

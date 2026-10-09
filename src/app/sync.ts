@@ -35,7 +35,7 @@ import {
   type BustaRicevuta,
   type TabellaSincronizzata,
 } from '../domain/sync';
-import { missingOccurrences } from '../domain/scheduler/occurrences';
+import { recurrenceError } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 import { courseFingerprints } from './courses';
 import { logError } from './diagnostics';
@@ -94,12 +94,9 @@ class Fermata extends Error {}
 async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fuso: string): Promise<void> {
   if (b.deletedAt !== null) return dropOccurrences(db, b.id, now);
   const r = b.dati as unknown as Ricorrenza;
-  try {
-    missingOccurrences(r, [], now);
-  } catch (e) {
-    // Una definizione che non si legge non blocca la pagina, come nel ciclo (D-SCHED-1 n. 8)
-    return logError('sync', e);
-  }
+  // Una definizione che non si legge non blocca la pagina, come nel ciclo (D-SCHED-1 n. 8)
+  const errore = recurrenceError(r, now);
+  if (errore) return logError('sync', errore);
   const inCoda = await listKeyRange(db, 'syncCoda', `blocchi:${r.id}:`, `blocchi:${r.id}:~`);
   await followRecurrence(
     db,
@@ -225,6 +222,16 @@ export interface SyncService {
   snapshot(): StatoSync;
 }
 
+/** Lo stato di chi non ha un account, prima del primo giro e senza servizio (la UI nei test). */
+export const SENZA_ACCOUNT: StatoSync = {
+  account: null,
+  fase: 'senza_account',
+  inCoda: 0,
+  ultimaSync: null,
+  dispositivi: [],
+  finto: false,
+};
+
 export function createSyncService(
   db: RoutForgeDb,
   backend: SyncBackend,
@@ -242,14 +249,7 @@ export function createSyncService(
     dopoRicezione?: () => void;
   } = {},
 ): SyncService {
-  let stato: StatoSync = {
-    account: null,
-    fase: 'senza_account',
-    inCoda: 0,
-    ultimaSync: null,
-    dispositivi: [],
-    finto,
-  };
+  let stato: StatoSync = { ...SENZA_ACCOUNT, finto };
   const ascolti = new Set<() => void>();
   const aggiorna = (p: Partial<StatoSync>) => {
     stato = { ...stato, ...p };

@@ -38,6 +38,7 @@ import {
 import { hostOf, youtubeId } from '../domain/course/parser';
 import { isGroundable, type Materiale } from '../domain/materials';
 import { ANNULLA_MS } from './avvisi';
+import { adesso } from './clock';
 import { IconaLink } from './IconaLink';
 import { dimensione, fmtGiornoMese, unDecimale } from './format';
 import { t } from './i18n';
@@ -45,9 +46,6 @@ import { Section } from './Section';
 import { Toast } from './Toast';
 import { useIndietro } from './useIndietro';
 import s from './Materials.module.css';
-
-/** L'istante delle scritture, letto al gesto (fuori dal render). */
-const adesso = () => Date.now();
 
 type Aperto = 'link' | 'nota' | { file: string; byte: number } | null;
 

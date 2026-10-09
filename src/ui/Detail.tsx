@@ -53,7 +53,7 @@ import { effectiveEnd, horizonLastDay, lostAtInstant } from '../domain/lost';
 import { shownPhases } from '../domain/phases';
 import { MINUTE, localInstant, sameLocalDay } from '../domain/time';
 import type { StatoBlocco } from '../domain/types';
-import { useMinuto } from './clock';
+import { adesso, useMinuto } from './clock';
 import {
   durata,
   fmtData,
@@ -256,7 +256,6 @@ export function Detail() {
     b.fine === null
       ? `${b.orarioInizio} · ${t('senzaDurata')}`
       : `${b.orarioInizio} – ${b.orarioFine} · ${durata(Math.round((b.fine - b.inizio) / MINUTE))}`;
-  const ora = () => Date.now();
 
   const meta: Meta[] = [];
   if (tipo === 'todo') {
@@ -382,31 +381,31 @@ export function Detail() {
       setSaltate(new Set());
       setVista('revisione');
     } else if (passo === 'residuo') setVista('residuo');
-    else esegui(() => completeBlock(appDb, id, ora(), fuso));
+    else esegui(() => completeBlock(appDb, id, adesso(), fuso));
   };
   // «Non ora» nella sheet delle voci rimaste: segna fatto e basta (tutte le voci spuntate, S5)
   const soloFatto = () => {
     const prima = d;
     if (!soloFoglio) {
       setVista('dettaglio');
-      return esegui(() => completeBlock(appDb, id, ora(), fuso));
+      return esegui(() => completeBlock(appDb, id, adesso(), fuso));
     }
     void act(async () => {
-      if (!(await completeBlock(appDb, id, ora(), fuso))) return fallita();
-      torna(t('fattoTutteVoci'), () => restoreBlock(appDb, prima, ora(), fuso));
+      if (!(await completeBlock(appDb, id, adesso(), fuso))) return fallita();
+      torna(t('fattoTutteVoci'), () => restoreBlock(appDb, prima, adesso(), fuso));
     });
   };
   const creaResiduo = () => {
     const prima = d;
     void act(async () => {
-      const nuovo = await completeWithLeftover(appDb, id, ora(), fuso);
+      const nuovo = await completeWithLeftover(appDb, id, adesso(), fuso);
       if (!nuovo) return fallita();
       if (soloFoglio)
         return torna(
           t('completatoVociNuovoTodo', { n: voci.length - fatte }),
           async () => {
-            await deleteBlock(appDb, nuovo, ora(), fuso);
-            await restoreBlock(appDb, prima, ora(), fuso);
+            await deleteBlock(appDb, nuovo, adesso(), fuso);
+            await restoreBlock(appDb, prima, adesso(), fuso);
           },
           'todo',
         );
@@ -414,8 +413,8 @@ export function Detail() {
       mostraToast(
         t('todoCreato', { titolo }),
         async () => {
-          await deleteBlock(appDb, nuovo, ora(), fuso);
-          await restoreBlock(appDb, prima, ora(), fuso);
+          await deleteBlock(appDb, nuovo, adesso(), fuso);
+          await restoreBlock(appDb, prima, adesso(), fuso);
           setVista('residuo');
         },
         { todo: true },
@@ -430,7 +429,7 @@ export function Detail() {
   const quandoFollowUp = sameLocalDay(giornoDerivato, now) ? t('oggiMinuscolo') : fmtData.format(giornoDerivato);
   const conferma = () =>
     void act(async () => {
-      const ok = await completeBlock(appDb, id, ora(), fuso, [...saltate]);
+      const ok = await completeBlock(appDb, id, adesso(), fuso, [...saltate]);
       if (!ok) return fallita();
       if (tipo === 'evento' && saltate.size > 0) {
         setScelte(new Set(saltate));
@@ -440,21 +439,21 @@ export function Detail() {
           tipo === 'routine'
             ? t('esitoFattaFasi', { fatte: template.length - saltate.size, totale: template.length })
             : t('toastEventoCompletato', { titolo }),
-          () => reopenBlock(appDb, id, ora(), fuso),
+          () => reopenBlock(appDb, id, adesso(), fuso),
         );
       else setVista('dettaglio');
     });
   const creaFollowUp = () =>
     void act(async () => {
       const etichette = template.filter((f) => scelte.has(f.id)).map((f) => f.etichetta);
-      const ids = await createFollowUps(appDb, id, etichette, ora(), fuso);
+      const ids = await createFollowUps(appDb, id, etichette, adesso(), fuso);
       const testo =
         ids.length === 1 ? t('todoCreato', { titolo: etichette[0] ?? '' }) : t('todoCreatiN', { n: ids.length });
       if (soloFoglio)
         return torna(
           testo,
           async () => {
-            for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
+            for (const i of ids) await deleteBlock(appDb, i, adesso(), fuso);
           },
           'todo',
         );
@@ -462,7 +461,7 @@ export function Detail() {
       mostraToast(
         testo,
         async () => {
-          for (const i of ids) await deleteBlock(appDb, i, ora(), fuso);
+          for (const i of ids) await deleteBlock(appDb, i, adesso(), fuso);
           setVista('followup');
         },
         { todo: true },
@@ -472,11 +471,11 @@ export function Detail() {
     void act(async () => {
       if (soloFoglio) {
         // Dal cerchio (C10): «Esito registrato · … · Continua» con «Annulla», che rimette tutto com'era
-        const annulla = await registerOutcomeUndoable(appDb, id, { esito, confidenza, nota }, ora(), fuso);
+        const annulla = await registerOutcomeUndoable(appDb, id, { esito, confidenza, nota }, adesso(), fuso);
         if (!annulla) return fallita();
-        return torna(t('esitoRegistratoToast', { titolo, esito: t(NOME_ESITO[esito]) }), () => annulla(ora()));
+        return torna(t('esitoRegistratoToast', { titolo, esito: t(NOME_ESITO[esito]) }), () => annulla(adesso()));
       }
-      const ok = await registerOutcome(appDb, id, { esito, confidenza, nota }, ora(), fuso);
+      const ok = await registerOutcome(appDb, id, { esito, confidenza, nota }, adesso(), fuso);
       setVista('dettaglio');
       if (!ok) setErrore(true);
     });
@@ -484,7 +483,7 @@ export function Detail() {
   const nonOraFollowUp = () =>
     soloFoglio
       ? torna(saltate.size === 1 ? t('esitoCompletatoSaltata') : t('esitoCompletatoSaltate', { n: saltate.size }), () =>
-          reopenBlock(appDb, id, ora(), fuso),
+          reopenBlock(appDb, id, adesso(), fuso),
         )
       : setVista('dettaglio');
   // Elimina (S5): un'occorrenza di routine chiede «Solo questa» o «Tutta la routine»; todo ed evento si eliminano subito
@@ -492,14 +491,14 @@ export function Detail() {
   const eliminaQuesta = (testo: string) => {
     const prima = d;
     setVista('dettaglio');
-    mostraToast(testo, () => restoreBlock(appDb, prima, ora(), fuso), { poi: chiudi });
-    void act(() => deleteBlock(appDb, id, ora(), fuso));
+    mostraToast(testo, () => restoreBlock(appDb, prima, adesso(), fuso), { poi: chiudi });
+    void act(() => deleteBlock(appDb, id, adesso(), fuso));
   };
   const eliminaRoutine = (ricorrenzaId: string) => {
     setVista('dettaglio');
     void act(async () => {
-      const annulla = await deleteRecurrence(appDb, ricorrenzaId, ora());
-      mostraToast(t(tipo === 'studio' ? 'studioEliminata' : 'routineEliminata'), () => annulla(ora(), fuso), {
+      const annulla = await deleteRecurrence(appDb, ricorrenzaId, adesso());
+      mostraToast(t(tipo === 'studio' ? 'studioEliminata' : 'routineEliminata'), () => annulla(adesso(), fuso), {
         poi: chiudi,
       });
     });
@@ -510,7 +509,7 @@ export function Detail() {
     <button
       type="button"
       className={`${s.azione} ${s.secondaria} ${s.larga}`}
-      onClick={() => void act(() => reopenBlock(appDb, id, ora(), fuso))}
+      onClick={() => void act(() => reopenBlock(appDb, id, adesso(), fuso))}
     >
       {t('riapri')}
     </button>
@@ -536,7 +535,7 @@ export function Detail() {
             <button
               type="button"
               className={`${s.azione} ${s.secondaria}`}
-              onClick={() => esegui(() => skipBlock(appDb, id, ora(), fuso))}
+              onClick={() => esegui(() => skipBlock(appDb, id, adesso(), fuso))}
             >
               {t('saltata')}
             </button>
@@ -769,7 +768,7 @@ export function Detail() {
                   className={s.voce}
                   aria-pressed={v.fatta}
                   disabled={sparito}
-                  onClick={() => void act(() => toggleChecklist(appDb, id, i, ora(), fuso))}
+                  onClick={() => void act(() => toggleChecklist(appDb, id, i, adesso(), fuso))}
                 >
                   {casella(v.fatta)}
                   <span className={s.testoVoce}>{v.testo}</span>

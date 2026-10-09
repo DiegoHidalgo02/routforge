@@ -6,10 +6,10 @@
 import type { RoutForgeDb } from '../data/db';
 import { blocksBetween } from '../data/repository';
 import { sortDay } from '../domain/ordering';
-import type { Blocco, OraDiParete } from '../domain/types';
+import type { BloccoAncorato } from '../domain/types';
 
-/** Un blocco come lo mostra il calendario: con gli orari di parete memorizzati (D-TIME-2). */
-export type BloccoCalendario = Blocco & OraDiParete & { giornoLocale: string };
+/** Un blocco come lo mostra il calendario: con gli orari di parete memorizzati (D-TIME-2); è il blocco ancorato. */
+export type BloccoCalendario = BloccoAncorato;
 
 /**
  * I blocchi ordinati di ogni giorno del periodo (chiavi "YYYY-MM-DD" consecutive, come le danno `weekOf` e

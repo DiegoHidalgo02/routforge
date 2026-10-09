@@ -6,6 +6,7 @@
  * e i file noti senza estensione; al più 500 KB per file. Si contano i saltati. Il contenuto serve solo all'AI (T-026);
  * l'utente vede l'albero delle cartelle, non il contenuto.
  */
+import { fileNameOf } from './course/parser';
 
 /** Limite per file (§17): 500 KB. */
 export const MAX_BYTE_CODICE = 500 * 1024;
@@ -71,8 +72,6 @@ const NOTI = new Set(
 /** I percorsi degli ZIP di Windows usano `\`: si portano a `/` prima di classificarli e salvarli. */
 export const normalizePath = (percorso: string): string => percorso.replace(/\\/g, '/');
 
-const nomeDi = (percorso: string) => percorso.slice(percorso.lastIndexOf('/') + 1);
-
 /** La prima cartella tecnica del percorso, se c'è (per contare una volta sola i suoi file). */
 export function technicalFolder(percorso: string): string | null {
   const parti = normalizePath(percorso).split('/').slice(0, -1);
@@ -82,7 +81,7 @@ export function technicalFolder(percorso: string): string | null {
 
 /** Perché un file non entra (§17), o `null` se entra. */
 export function exclusionReason(percorso: string, byte: number): MotivoEsclusione | null {
-  const nome = nomeDi(normalizePath(percorso));
+  const nome = fileNameOf(normalizePath(percorso));
   if (technicalFolder(percorso)) return 'cartella_tecnica';
   // `.env*` (§17): `.env`, `.env.local`, `.envrc`, `.env-cmdrc.json`…
   if (/^\.env/i.test(nome)) return 'segreto';
@@ -171,7 +170,7 @@ export function codeTree(file: readonly { percorso: string; byte: number; motivo
       .sort((a, b) => (a.percorso < b.percorso ? -1 : 1)))
       righe.push({
         percorso: f.percorso,
-        nome: nomeDi(f.percorso),
+        nome: fileNameOf(f.percorso),
         livello,
         cartella: false,
         byte: f.byte,

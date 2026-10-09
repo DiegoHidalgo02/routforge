@@ -4,6 +4,9 @@
 import { useEffect, useState } from 'react';
 import { localDayKey, MINUTE } from '../domain/time';
 
+/** L'istante di un gesto, letto fuori dal render (`react-hooks/purity`): lo stesso per tutte le schermate (audit P3-20). */
+export const adesso = (): number => Date.now();
+
 /** Chiama `fn` al cambio di ogni minuto (o di ogni `ms`) e quando la pagina torna visibile; restituisce lo stop. */
 function aOgniMinuto(fn: () => void, ms = MINUTE): () => void {
   let timer: ReturnType<typeof setTimeout>;

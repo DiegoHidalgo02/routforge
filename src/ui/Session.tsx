@@ -77,7 +77,7 @@ import type { Blocco, Esito } from '../domain/types';
 import { ANNULLA_MS } from './avvisi';
 import { ChatPanel } from './Chat';
 import { cifre } from './Cifre';
-import { useMinuto, useSecondo } from './clock';
+import { adesso, useMinuto, useSecondo } from './clock';
 import {
   durata as durataBreve,
   fmtData,
@@ -92,8 +92,6 @@ import { CaricaCodice } from './Materials';
 import { testoTimer, useSessionView } from './SessionBanner';
 import s from './Session.module.css';
 
-/** L'istante del clic (fuori dal render: `react-hooks/purity`). */
-const adesso = () => Date.now();
 /** Un'azione della sessione che fallisce va in Diagnostica e la schermata prosegue col ripiego (INV-16; audit P2-5). */
 const traccia =
   <T,>(ripiego: T) =>
@@ -574,51 +572,34 @@ export function ActiveSession() {
     const n = adesso();
     void editActiveSession(appDb, (x) => f(x, n), n).catch(traccia(null));
   };
-  // La streak viene dalla chiusura, letta nella sua transazione: «+1» solo se l'ha fatta crescere (§12, handoff §3 n. 48)
-  const chiudiCon = async (chiusura: (n: number) => Promise<SessioneChiusaConStreak | null>) => {
-    const c = await chiusura(adesso());
-    return c && { c, streak: c.streak };
-  };
-  // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma; altrimenti si torna a Oggi
-  const abbandona = () => {
+  // Chiusa con un esito resta la schermata finale (S15 `done`), con la streak della chiusura: «+1» solo se l'ha fatta
+  // crescere (§12, handoff §3 n. 48); senza esito (abbandono sotto la soglia, già chiusa altrove, errore) si torna a Oggi
+  const chiudi = (
+    chiusura: (n: number) => Promise<SessioneChiusaConStreak | null>,
+    { puntatore = null, percento = false }: { puntatore?: string | null; percento?: boolean } = {},
+  ) => {
     if (inChiusura) return;
     setInChiusura(true);
-    void chiudiCon((n) => abandonSession(appDb, n, fuso()))
+    void chiusura(adesso())
       .catch(traccia(null))
-      .then((x) =>
-        x?.c.esito
+      .then((c) =>
+        c?.esito
           ? setFatto({
-              dati: x.c.esito,
-              puntatore: null,
-              minuti: minutiDi(x.c.riepilogo.focus),
-              percento: focusPercent(x.c, x.c.chiusaIl),
-              libera: x.c.bloccoId === null,
-              unita: x.c.unitaId !== null,
-              streak: x.streak,
-            })
-          : navigate('/', { replace: true }),
-      );
-  };
-  // Registrato l'esito resta la schermata finale (S15 `done`); senza chiusura (già chiusa altrove, errore) si torna a Oggi
-  const registra = (dati: DatiEsito, puntatore: string | null) => {
-    if (inChiusura) return;
-    setInChiusura(true);
-    void chiudiCon((n) => endSession(appDb, n, fuso(), dati))
-      .catch(traccia(null))
-      .then((x) =>
-        x
-          ? setFatto({
-              dati,
+              dati: c.esito,
               puntatore,
-              minuti: minutiDi(x.c.riepilogo.focus),
-              percento: null,
-              libera: x.c.bloccoId === null,
-              unita: x.c.unitaId !== null,
-              streak: x.streak,
+              minuti: minutiDi(c.riepilogo.focus),
+              percento: percento ? focusPercent(c, c.chiusaIl) : null,
+              libera: c.bloccoId === null,
+              unita: c.unitaId !== null,
+              streak: c.streak,
             })
           : navigate('/', { replace: true }),
       );
   };
+  // Oltre la soglia l'abbandono registra Continua (D-SESS-2): la schermata finale lo conferma col focus in percentuale
+  const abbandona = () => chiudi((n) => abandonSession(appDb, n, fuso()), { percento: true });
+  const registra = (dati: DatiEsito, puntatore: string | null) =>
+    chiudi((n) => endSession(appDb, n, fuso(), dati), { puntatore });
   const interruzione = (
     <button type="button" className={s.pill} onClick={() => modifica((x, n) => addInterruption(x, n))}>
       <CircleAlert size={12} strokeWidth={2} />

@@ -5,6 +5,7 @@
  *
  * Una riga salvata illeggibile o incompleta non blocca l'app: ogni campo non valido vale il suo predefinito.
  */
+import { LINGUE } from './language';
 
 export type Animazioni = 'auto' | 'sempre' | 'mai';
 export type Celebrazioni = 'sobria' | 'piena' | 'off';
@@ -27,7 +28,7 @@ export interface Impostazioni {
 }
 
 export type ModelloAi = 'flash' | 'pro';
-export const LINGUE_RISPOSTE = ['auto', 'it', 'en', 'es', 'pt', 'fr', 'de'] as const;
+export const LINGUE_RISPOSTE = ['auto', ...LINGUE] as const;
 export type LinguaRisposte = (typeof LINGUE_RISPOSTE)[number];
 
 export const IMPOSTAZIONI_DEFAULT: Impostazioni = {
