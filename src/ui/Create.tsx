@@ -44,6 +44,7 @@ import {
   MAX_CARATTERI_VOCE,
   MAX_VOCI_CHECKLIST,
   creationDays,
+  draftFromToday,
   endsNextDay,
   recurrenceLastDay,
   recurrenceTerm,
@@ -517,7 +518,9 @@ function Foglio({ modifica }: { modifica?: DettaglioAttivita }) {
         }
         throw new Error('modifica');
       }
-      const r = await createActivity(appDb, bozza, Date.now(), fuso());
+      // A cavallo della mezzanotte il giorno fissato all'apertura sarebbe ieri: torna nella finestra da oggi (audit P2-1)
+      const adesso = Date.now();
+      const r = await createActivity(appDb, draftFromToday(bozza, localDayKey(adesso)), adesso, fuso());
       if (r.ok) {
         // Oggi mostra «… creato» con «Annulla», che toglie l'attività appena creata (G5)
         const { id } = r;

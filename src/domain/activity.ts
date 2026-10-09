@@ -37,6 +37,17 @@ export function startDay(selezionato: string | null, oggi: string): string {
   return selezionato && isDayKey(selezionato) && selezionato >= primo && selezionato <= ultimo ? selezionato : oggi;
 }
 
+/**
+ * La bozza di Crea al salvataggio, riportata nella finestra da oggi (§2, G5): il foglio fissa «oggi» quando si apre, e
+ * aperto prima di mezzanotte e salvato dopo proporrebbe ieri (un todo subito «non fatto», un evento già concluso; audit
+ * P2-1). Il giorno del todo o dell'evento e l'inizio della ricorrenza seguono `startDay`.
+ */
+export function draftFromToday(b: BozzaAttivita, oggi: string): BozzaAttivita {
+  return b.tipo === 'todo' || b.tipo === 'evento'
+    ? { ...b, giorno: startDay(b.giorno, oggi) }
+    : { ...b, dataInizio: startDay(b.dataInizio, oggi) };
+}
+
 /** Gradini della durata di un todo con orario, in minuti (§2). */
 export const GRADINI_DURATA = [5, 10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 105, 120, 150, 180, 210, 240] as const;
 /** Durata predefinita del form «+ Crea» per un todo con orario, in minuti: anche quella del todo senza orario che si trascina su un orario (§15). */

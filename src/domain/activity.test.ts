@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GRADINI_DURATA,
   creationDays,
+  draftFromToday,
   editBlock,
   endsNextDay,
   recurrenceLastDay,
@@ -320,6 +321,14 @@ describe('Crea dal giorno selezionato — SCENARI G5', () => {
   it('con un giorno già passato, oltre il 29, nessuno o non valido, parte da oggi', () => {
     for (const g of ['2026-09-22', '2026-09-30', null, '2026-02-30'])
       expect(startDay(g, '2026-09-23')).toBe('2026-09-23');
+  });
+  it('il foglio aperto il 22 e salvato dopo mezzanotte non crea su ieri; i giorni della finestra restano (audit P2-1)', () => {
+    const oggi = '2026-09-23';
+    expect(draftFromToday(todo({ giorno: '2026-09-22' }), oggi)).toMatchObject({ giorno: oggi });
+    expect(draftFromToday(evento({ giorno: '2026-09-22' }), oggi)).toMatchObject({ giorno: oggi });
+    expect(draftFromToday(routine({ dataInizio: '2026-09-22' }), oggi)).toMatchObject({ dataInizio: oggi });
+    expect(draftFromToday(studio({ dataInizio: '2026-09-22' }), oggi)).toMatchObject({ dataInizio: oggi });
+    expect(draftFromToday(todo({ giorno: '2026-09-25' }), oggi)).toMatchObject({ giorno: '2026-09-25' });
   });
 });
 
