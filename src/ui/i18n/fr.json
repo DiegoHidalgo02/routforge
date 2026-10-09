@@ -995,6 +995,6 @@
   "ciaoNome": "Salut, {nome}",
   "servizioFinto": "service de test",
   "recuperoTitolo": "Impossible d'afficher cet écran",
-  "recuperoTesto": "Une donnée de cet appareil est illisible. Réessaie ; si ça se reproduit, tu peux effacer les données de cet appareil : celles du compte restent.",
+  "recuperoTesto": "Une donnée de cet appareil est illisible. Réessaie ; si ça se reproduit, exporte la sauvegarde avant d'effacer les données de cet appareil : le compte ne contient que les activités et les paramètres.",
   "sorgenteInterfaccia": "Interface"
 }

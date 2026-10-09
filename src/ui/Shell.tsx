@@ -7,6 +7,7 @@ import { useMinuto } from './clock';
 import { t } from './i18n';
 import { Logomark } from './Logomark';
 import { ProfileMenu } from './ProfileMenu';
+import { Recupero } from './Recupero';
 import { SessionBanner, useSessionView } from './Session';
 import s from './Shell.module.css';
 
@@ -64,8 +65,11 @@ export function Shell() {
         // Corso, modulo e unità accanto all'elenco: su desktop le colonne hanno margini e scorrimento propri
         data-colonne={location.pathname.startsWith('/corsi/') || undefined}
       >
-        {/* Il banner della sessione lo mette ogni schermata sotto la sua intestazione (SessionBannerSlot) */}
-        <Outlet />
+        {/* Il banner della sessione lo mette ogni schermata sotto la sua intestazione (SessionBannerSlot). Un errore di
+            disegno della schermata lascia la navigazione; cambiare rotta azzera il confine (audit P1-4) */}
+        <Recupero dentro key={location.pathname}>
+          <Outlet />
+        </Recupero>
       </main>
       {barra && (
         <nav className={s.bottomNav} aria-label={t('navigazione')}>

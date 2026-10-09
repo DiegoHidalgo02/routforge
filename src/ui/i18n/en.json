@@ -995,6 +995,6 @@
   "ciaoNome": "Hi, {nome}",
   "servizioFinto": "test service",
   "recuperoTitolo": "This screen can't be shown",
-  "recuperoTesto": "Some data on this device can't be read. Try again; if it keeps happening, you can delete the data on this device: your account's data stays.",
+  "recuperoTesto": "Some data on this device can't be read. Try again; if it keeps happening, export a backup before you delete the data on this device: your account only holds activities and settings.",
   "sorgenteInterfaccia": "Interface"
 }

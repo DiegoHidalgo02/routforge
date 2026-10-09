@@ -995,6 +995,6 @@
   "ciaoNome": "Ciao, {nome}",
   "servizioFinto": "servizio finto",
   "recuperoTitolo": "Questa schermata non si riesce a mostrare",
-  "recuperoTesto": "Un dato su questo dispositivo non si legge. Riprova; se succede ancora, puoi eliminare i dati di questo dispositivo: quelli dell'account restano.",
+  "recuperoTesto": "Un dato su questo dispositivo non si legge. Riprova; se succede ancora, esporta un backup prima di eliminare i dati di questo dispositivo: nell'account ci sono solo attività e impostazioni.",
   "sorgenteInterfaccia": "Interfaccia"
 }

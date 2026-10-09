@@ -5,10 +5,13 @@
 import 'fake-indexeddb/auto';
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { configureBackupFiles } from '../app/backup';
 import { appDb } from '../app/db';
 import { readDiagnostics } from '../app/diagnostics';
 import { Recupero } from './Recupero';
+import { Shell } from './Shell';
 
 let box: HTMLDivElement;
 let root: Root;
@@ -57,5 +60,44 @@ describe('Pagina di recupero — CONTESTO §3 (T-059)', () => {
     // Il secondo «Delete all data» è l'azione della conferma
     bottoni('Delete all data')[1]!.click();
     await vi.waitFor(async () => expect(await appDb.preferenze.get('impostazioni')).toBeUndefined());
+  });
+
+  it('«Esporta backup» salva il file prima di eliminare: corsi, PDF e sessioni sono solo qui (audit P1-4)', async () => {
+    const salva = vi.fn(() => Promise.resolve('download' as const));
+    configureBackupFiles({ salva });
+    apri();
+    await vi.waitFor(() => expect(bottoni('Export backup')).toHaveLength(1));
+    bottoni('Export backup')[0]!.click();
+    await vi.waitFor(() => expect(testo()).toContain('Backup downloaded'));
+    expect(salva).toHaveBeenCalledWith(expect.stringMatching(/\.rfbackup$/), expect.any(String));
+  });
+
+  it('un errore in una schermata lascia la navigazione; un’altra rotta si disegna di nuovo (audit P1-4)', async () => {
+    root.render(
+      createElement(
+        MemoryRouter,
+        { initialEntries: ['/rotta'] },
+        createElement(
+          Recupero,
+          null,
+          createElement(
+            Routes,
+            null,
+            createElement(
+              Route,
+              { element: createElement(Shell) },
+              createElement(Route, { path: '/rotta', element: createElement(Schermata) }),
+              createElement(Route, { path: '/', element: createElement('p', null, 'Oggi') }),
+            ),
+          ),
+        ),
+      ),
+    );
+    await vi.waitFor(() => expect(testo()).toContain("This screen can't be shown"));
+    const oggi = box.querySelector<HTMLAnchorElement>('nav a[href="/"]');
+    expect(oggi).not.toBeNull();
+    oggi!.click();
+    await vi.waitFor(() => expect(testo()).toContain('Oggi'));
+    expect(testo()).not.toContain("This screen can't be shown");
   });
 });

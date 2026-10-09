@@ -995,6 +995,6 @@
   "ciaoNome": "Olá, {nome}",
   "servizioFinto": "serviço de teste",
   "recuperoTitolo": "Não é possível mostrar este ecrã",
-  "recuperoTesto": "Há um dado neste dispositivo que não se consegue ler. Tenta de novo; se voltar a acontecer, podes apagar os dados deste dispositivo: os da conta ficam.",
+  "recuperoTesto": "Há um dado neste dispositivo que não se consegue ler. Tenta de novo; se voltar a acontecer, exporta uma cópia antes de apagar os dados deste dispositivo: na conta só há atividades e configurações.",
   "sorgenteInterfaccia": "Interface"
 }

@@ -995,6 +995,6 @@
   "ciaoNome": "Hola, {nome}",
   "servizioFinto": "servicio de prueba",
   "recuperoTitolo": "No se puede mostrar esta pantalla",
-  "recuperoTesto": "Hay un dato en este dispositivo que no se puede leer. Reinténtalo; si vuelve a pasar, puedes borrar los datos de este dispositivo: los de la cuenta se quedan.",
+  "recuperoTesto": "Hay un dato en este dispositivo que no se puede leer. Reinténtalo; si vuelve a pasar, exporta una copia antes de borrar los datos de este dispositivo: en la cuenta solo hay actividades y ajustes.",
   "sorgenteInterfaccia": "Interfaz"
 }

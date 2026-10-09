@@ -452,7 +452,9 @@ cosa si costruisce: per ogni voce fonti, effetto, task e decisione della gerarch
 86. Pagina di recupero (T-059, security review del 07/10): il design non ha uno stato per un errore di disegno
     (una riga malformata arrivata con la sync o con un backup). Scelta minima, da confermare col design: fuori dalla
     shell, coi margini della pagina, i pezzi di Impostazioni → Backup (gruppo col titolo «Questa schermata non si riesce
-    a mostrare», righe «Riprova» ed «Elimina tutti i dati» in rosso, nota sotto, conferma in linea di S22).
+    a mostrare», righe «Riprova» ed «Elimina tutti i dati» in rosso, nota sotto, conferma in linea di S22). Audit P1-4
+    (09/10): fra le due righe «Esporta backup» con l'esito di S22 sotto il gruppo, e la nota invita a esportare prima di
+    eliminare; un errore di una schermata mostra la pagina dentro la shell, con la navigazione, e cambiare rotta la toglie.
 
 ## 4. Mappa schermata → design → task
 
