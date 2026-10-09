@@ -142,11 +142,11 @@ const opts = { corsoId: 'corso-1', now: local(2026, 9, 22, 10, 0) };
 
 describe('Import corso — SCENARI H1', () => {
   const zip = [
-    { name: 'cartella/00_struttura.md', content: STRUTTURA },
-    { name: 'M3-Backend.md', content: M3 },
-    { name: 'sub/M1-Tooling_Moderno.md', content: M1 },
-    { name: 'note.txt', content: '# MODULO M9 — non deve essere letto' },
-    { name: 'M2-Rotto.md', content: M2_BROKEN },
+    { nome: 'cartella/00_struttura.md', contenuto: STRUTTURA },
+    { nome: 'M3-Backend.md', contenuto: M3 },
+    { nome: 'sub/M1-Tooling_Moderno.md', contenuto: M1 },
+    { nome: 'note.txt', contenuto: '# MODULO M9 — non deve essere letto' },
+    { nome: 'M2-Rotto.md', contenuto: M2_BROKEN },
   ];
 
   it('il corso ha 2 moduli in ordine 1, 3; il .txt è ignorato; M2 senza intestazione genera un avviso ed è saltato', () => {
@@ -175,21 +175,21 @@ describe('Import corso — SCENARI H1', () => {
   });
 
   it('senza file struttura: titolo passato dal chiamante, altrimenti "Corso importato" (D-PARSE-1)', () => {
-    const files = [{ name: 'M1-Tooling_Moderno.md', content: M1 }];
+    const files = [{ nome: 'M1-Tooling_Moderno.md', contenuto: M1 }];
     expect(parseCourse(files, opts).corso.titolo).toBe('Corso importato');
     expect(parseCourse(files, { ...opts, titolo: 'Il mio corso' }).corso.titolo).toBe('Il mio corso');
   });
 
   it('senza alcun file modulo → errore', () => {
-    expect(() => parseCourse([{ name: 'README.md', content: '# ciao' }], opts)).toThrow(ErroreImportCorso);
+    expect(() => parseCourse([{ nome: 'README.md', contenuto: '# ciao' }], opts)).toThrow(ErroreImportCorso);
   });
 });
 
 describe('File struttura: titolo da chiedere — FORMATO_CORSO §1 (D-PARSE-1)', () => {
   it('riconosce 00_struttura anche in una sottocartella; un .txt o un modulo non contano', () => {
-    expect(hasStructureFile([{ name: 'corso/00_struttura.md' }, { name: 'M1-a.md' }])).toBe(true);
-    expect(hasStructureFile([{ name: '00_Mappa_corso.md' }])).toBe(true);
-    expect(hasStructureFile([{ name: 'M1-a.md' }, { name: '00_struttura.txt' }])).toBe(false);
+    expect(hasStructureFile([{ nome: 'corso/00_struttura.md' }, { nome: 'M1-a.md' }])).toBe(true);
+    expect(hasStructureFile([{ nome: '00_Mappa_corso.md' }])).toBe(true);
+    expect(hasStructureFile([{ nome: 'M1-a.md' }, { nome: '00_struttura.txt' }])).toBe(false);
   });
 });
 
@@ -215,8 +215,8 @@ testo
 
   it('due file M1-… con lo stesso numero: il secondo è saltato con avviso, il primo vince', () => {
     const files = [
-      { name: 'M1-A.md', content: M1_A },
-      { name: 'M1-B.md', content: M1_B },
+      { nome: 'M1-A.md', contenuto: M1_A },
+      { nome: 'M1-B.md', contenuto: M1_B },
     ];
     const { corso, avvisi } = parseCourse(files, opts);
     expect(corso.moduli).toHaveLength(1);
@@ -238,7 +238,7 @@ testo
 **🎯 Concetto Core: y**
 testo
 `;
-    const { modulo, avvisi } = parseModule({ name: 'M1.md', content: dup }, 'corso-1');
+    const { modulo, avvisi } = parseModule({ nome: 'M1.md', contenuto: dup }, 'corso-1');
     expect(modulo?.unita).toHaveLength(1);
     expect(modulo?.unita[0]?.titolo).toBe('Prima');
     expect(avvisi.some((w) => /unità 1\.1: numero duplicato/.test(w.messaggio))).toBe(true);
@@ -246,7 +246,7 @@ testo
 });
 
 describe('Modulo — FORMATO_CORSO §2', () => {
-  const { modulo: m, avvisi } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
+  const { modulo: m, avvisi } = parseModule({ nome: 'M1-Tooling_Moderno.md', contenuto: M1 }, 'corso-1');
   if (!m) throw new Error('modulo atteso');
 
   it('intestazione, campi in grassetto, finestra senza rimandi, trasversali, intro (D-DESIGN-1)', () => {
@@ -263,7 +263,7 @@ describe('Modulo — FORMATO_CORSO §2', () => {
     const testo = M1.replace('settimane 9–12 (vedi mappa §3)', 'settimane 8–11 (mini-modulo, v. mappa §4)')
       .replace('Seconda riga di introduzione.', 'Seconda riga di **introduzione**.\n\nSecondo paragrafo escluso.')
       .replace('### Obiettivi di Apprendimento\n', '### Obiettivi di Apprendimento\nAl termine sarai in grado di:\n');
-    const { modulo } = parseModule({ name: 'M1-Tooling_Moderno.md', content: testo }, 'corso-1');
+    const { modulo } = parseModule({ nome: 'M1-Tooling_Moderno.md', contenuto: testo }, 'corso-1');
     expect(modulo?.finestraIndicativa).toBe('settimane 8–11 · mini-modulo');
     expect(modulo?.intro).toBe(
       'Questo modulo introduce gli strumenti del lavoro quotidiano.\nSeconda riga di introduzione.\nAl termine sarai in grado di:',
@@ -316,7 +316,7 @@ describe('Modulo — FORMATO_CORSO §2', () => {
 });
 
 describe('Unità — FORMATO_CORSO §3', () => {
-  const { modulo: m } = parseModule({ name: 'M1-Tooling_Moderno.md', content: M1 }, 'corso-1');
+  const { modulo: m } = parseModule({ nome: 'M1-Tooling_Moderno.md', contenuto: M1 }, 'corso-1');
   const u = m!.unita[0]!;
 
   it('concetto core con titolo e testo separati', () => {
@@ -388,8 +388,8 @@ describe("Puntatore all'import e stati dei moduli — FORMATO_CORSO §4", () => 
   it('M3 è bloccato perché M1 ha criteri non fatti (l’unità corrente è di currentUnit, pointer.test.ts)', () => {
     const { corso } = parseCourse(
       [
-        { name: 'M1-Tooling_Moderno.md', content: M1 },
-        { name: 'M3-Backend.md', content: M3 },
+        { nome: 'M1-Tooling_Moderno.md', contenuto: M1 },
+        { nome: 'M3-Backend.md', contenuto: M3 },
       ],
       opts,
     );
@@ -411,8 +411,8 @@ describe('Moduli segnaposto — FORMATO_CORSO §5 (T-041)', () => {
   it('un segnaposto col numero di un modulo letto dal file si scarta; gli altri entrano bloccati e senza unità', () => {
     const { corso } = parseCourse(
       [
-        { name: 'M1-Tooling_Moderno.md', content: M1 },
-        { name: 'M3-Backend.md', content: M3 },
+        { nome: 'M1-Tooling_Moderno.md', contenuto: M1 },
+        { nome: 'M3-Backend.md', contenuto: M3 },
       ],
       {
         ...opts,
@@ -436,7 +436,7 @@ describe('Moduli segnaposto — FORMATO_CORSO §5 (T-041)', () => {
 
 describe('Vocabolario unico — unità importate e puntatore (D-NAMING-1)', () => {
   it("un'unità importata è già un'UnitaPercorso: il puntatore la usa senza conversioni", () => {
-    const { corso } = parseCourse([{ name: 'M1-Tooling_Moderno.md', content: M1 }], opts);
+    const { corso } = parseCourse([{ nome: 'M1-Tooling_Moderno.md', contenuto: M1 }], opts);
     const unita: UnitaPercorso[] = corso.moduli.flatMap((m) => m.unita); // verificato dal compilatore
     const mappa = assignPointer(unita, [{ id: 'b1', inizio: local(2026, 9, 23, 9, 0) }]);
     expect(mappa.get('b1')).toBe('corso-1:M1:U1.1');

@@ -26,8 +26,8 @@ async function corsoC1(criterio?: '[ ]' | '[x]'): Promise<string> {
     ? `\n### Verifica della Comprensione\n**Criteri Go/No-Go**\n- ${criterio} Ripasso fatto\n`
     : '';
   const files = [
-    { name: 'M1-Uno.md', content: `# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n\n#### Unità 1.2 — B\n${verifica}` },
-    { name: 'M2-Due.md', content: '# MODULO M2 — Due\n\n#### Unità 2.1 — C\n' },
+    { nome: 'M1-Uno.md', contenuto: `# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n\n#### Unità 1.2 — B\n${verifica}` },
+    { nome: 'M2-Due.md', contenuto: '# MODULO M2 — Due\n\n#### Unità 2.1 — C\n' },
   ];
   const { corso } = parseCourse(files, { corsoId: 'c1', now: NOW });
   await saveCourse(db, corso, NOW);

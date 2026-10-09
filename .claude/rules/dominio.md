@@ -14,9 +14,9 @@ paths:
 - Le attività pianificate sono definite dall'ora locale di parete (D-TIME-2): gli istanti si generano con il
   costruttore `Date` locale del processo, che è il fuso corrente del dispositivo, e si conserva l'ora di parete accanto
   agli istanti; il fuso corrente arriva come dato dalla porta `Clock` di `app`, mai da `Intl` nel dominio.
-- Nomi in italiano come nelle spec per tipi, attributi e valori (`in_corso`, `non_iniziata`); in inglese per file,
-  cartelle, funzioni e variabili (`lost.ts`, `scheduler/occurrences.ts`, `assignPointer`) (D-NAMING-1, INV-12).
-  Nessun sinonimo di un attributo esistente: prima cerca in `types.ts`.
+- Nomi in italiano come nelle spec per tipi, attributi, valori e costanti (`in_corso`, `FACILITA_MINIMA`); in
+  inglese per file, cartelle, funzioni e variabili (`lost.ts`, `scheduler/occurrences.ts`, `assignPointer`)
+  (D-NAMING-1, INV-12). Nessun sinonimo di un attributo esistente: prima cerca in `types.ts`.
 - Una regola di spec è scritta in un solo modulo (D-MODULI-1, INV-13): prima di aggiungere una funzione, cerca se
   esiste (`statiModuli`, `effectiveEnd`, `assignPointer`, `segmentTimeline`, …) partendo da `src/domain/index.ts`.
 - Ogni modulo dichiara in testa fonte (§ di MECCANISMI o FORMATO_CORSO) e scenari coperti; ogni modulo nuovo è

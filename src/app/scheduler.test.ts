@@ -71,8 +71,8 @@ async function studioC1(
   creataIl = LUNEDI,
 ): Promise<{ corsoId: string; numero: (unitaId: string | null | undefined) => string | null }> {
   const files = [
-    { name: 'M1-Uno.md', content: '# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n\n#### Unità 1.2 — B\n' },
-    { name: 'M2-Due.md', content: '# MODULO M2 — Due\n\n#### Unità 2.1 — C\n' },
+    { nome: 'M1-Uno.md', contenuto: '# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n\n#### Unità 1.2 — B\n' },
+    { nome: 'M2-Due.md', contenuto: '# MODULO M2 — Due\n\n#### Unità 2.1 — C\n' },
   ];
   const { corso } = parseCourse(files, { corsoId: 'c1', now: creataIl });
   await saveCourse(db, corso, creataIl);
@@ -524,7 +524,7 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
   });
 
   it('l’import di un corso esegue il ciclo: la routine di studio ricevuta col corso di un altro dispositivo si collega subito (§25)', async () => {
-    const files = [{ name: 'M1-Uno.md', content: '# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n' }];
+    const files = [{ nome: 'M1-Uno.md', contenuto: '# MODULO M1 — Uno\n\n#### Unità 1.1 — A\n' }];
     const altrove = parseCourse(files, { corsoId: 'c-altrove', now: LUNEDI }).corso;
     // La routine come arriva dalla sync: il corso dell'altro dispositivo e la sua impronta (D-SYNC-5)
     await save(db, 'ricorrenze', ricevuta('r1', altrove.id, courseFingerprint(altrove.titolo, altrove.moduli)), LUNEDI);

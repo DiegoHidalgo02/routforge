@@ -1,7 +1,8 @@
 # D-NAMING-1 — Vocabolario unico del dominio in italiano
 
 **Stato**: applicata (24/09/2026, rename guidato dal compilatore; residui nei tipi di risultato del parser corretti lo
-stesso giorno). Riga nel registro: `docs/01_DECISIONI.md`.
+stesso giorno). Riga nel registro: `docs/01_DECISIONI.md`. Aggiornata il 09/10/2026 (audit P3-26, F-17 e F-18): porte,
+componenti, schermate e costanti descritte come nel codice; `FileCorso{nome,contenuto}` e le costanti rinominate.
 
 ## Contesto
 
@@ -19,9 +20,13 @@ Le spec sono in italiano e fissano i nomi: Blocco, Ricorrenza, Sessione, stati `
 - I valori di spec con spazi diventano identificatori con `_`: `in_corso`, `non_iniziata`, `da_rivedere`, `da_fare`,
   `orario_passato`. Le etichette visibili all'utente sono chiavi i18n, mai questi valori.
 - Le tabelle di persistenza usano gli stessi nomi (`facilita`, non `ease`).
-- Nomi di file, cartelle, funzioni, servizi e porte sono identificatori tecnici in inglese, come i moduli esistenti
-  (`lost.ts`, `nowBlock.ts`, `scheduler/occurrences.ts`, `SchedulerService`, `Clock`): un solo nome per modulo; le
-  schermate portano il nome del design (`Oggi`, `Crea`).
+- Nomi di file, cartelle, funzioni e servizi sono identificatori tecnici in inglese, come i moduli esistenti
+  (`lost.ts`, `nowBlock.ts`, `scheduler/occurrences.ts`, `SchedulerService`): un solo nome per modulo. Il file di una
+  schermata ha il nome inglese del modulo e il nome del design nel commento di testa (`Today.tsx`: «Oggi (S1 …)»).
+- Porte e componenti hanno un nome libero, inglese o italiano, ma uno solo per concetto (`Clock`, `ArchivioFile`,
+  `Voce`; `ActiveSession`, `CorsiColonne`): una porta si cerca in `src/app/ports/`, non traducendone il nome.
+- Le costanti seguono la regola dei tipi: il concetto del modello col suo nome italiano (`FACILITA_MINIMA`,
+  `MARGINE_PERSO_MS`, `MAX_AVVISI_MOSTRATI`, `INTERVALLO_NIENTE_MS`); prefissi e unità restano tecnici (`MAX_`, `_MS`).
 
 ## Motivazione
 
@@ -32,6 +37,8 @@ aggiunto. Prima dello schema dati (T-004) il costo del rename era basso; dopo sa
 
 - Tutto in inglese: contraddice le spec e obbliga a tradurre ogni regola prima di implementarla.
 - Misto: lo stato trovato dall'audit, corretto.
+- Porte e schermate rinominate in una lingua sola (audit P3-26): molti file toccati per nessun guadagno, perché porte e
+  schermate non sono vocabolario del modello; si è scelto di descrivere il codice com'era.
 
 ## Conseguenze
 

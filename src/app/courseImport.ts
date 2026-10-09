@@ -18,7 +18,7 @@ import {
   hasStructureFile,
   MAX_BYTE_FILE_CORSO,
   MAX_BYTE_TESTO_CORSO,
-  MAX_WARNINGS_SHOWN,
+  MAX_AVVISI_MOSTRATI,
   parseCourse,
   type CorsoImportato,
   type FileCorso,
@@ -52,7 +52,7 @@ function readZip(zip: Uint8Array): FileCorso[] {
     throw new ErroreImportCorso('ZIP non leggibile o corrotto');
   }
   if (troppo) throw new ErroreImportCorso('corso troppo grande');
-  const file = Object.entries(entries).map(([name, data]) => ({ name, content: strFromU8(data) }));
+  const file = Object.entries(entries).map(([nome, data]) => ({ nome, contenuto: strFromU8(data) }));
   letti.set(zip, file);
   return file;
 }
@@ -82,7 +82,7 @@ const saveWithMaterials = (db: RoutForgeDb, corso: CorsoImportato, now: number, 
 export async function importZip(db: RoutForgeDb, zip: Uint8Array, now: number, titolo?: string) {
   const { corso, avvisi } = importCourseFromZip(zip, { corsoId: newId(), now, titolo });
   await saveWithMaterials(db, corso, now);
-  return { corso, avvisi: avvisi.slice(0, MAX_WARNINGS_SHOWN), totaleAvvisi: avvisi.length };
+  return { corso, avvisi: avvisi.slice(0, MAX_AVVISI_MOSTRATI), totaleAvvisi: avvisi.length };
 }
 
 /** I moduli M2–M4 del corso di esempio, senza file: segnaposto bloccati (FORMATO §5, `locked` di course-data.js, T-041). */
@@ -94,8 +94,8 @@ export const SEGNAPOSTO_ESEMPIO = [
 
 /** Corso di esempio incluso: M0 + M1 dell'export del design, senza file struttura (FORMATO §5, D-SAMPLE-1). */
 const ESEMPIO: FileCorso[] = [
-  { name: 'M0-Riattivazione_JavaScript.md', content: m0 },
-  { name: 'M1-Tooling_Moderno.md', content: m1 },
+  { nome: 'M0-Riattivazione_JavaScript.md', contenuto: m0 },
+  { nome: 'M1-Tooling_Moderno.md', contenuto: m1 },
 ];
 
 /** Carica il corso di esempio: come ogni import crea un corso nuovo (MECC §16), marcato come esempio. */

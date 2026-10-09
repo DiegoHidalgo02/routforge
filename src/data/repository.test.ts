@@ -301,7 +301,7 @@ const MODULO = `# MODULO M1 — Tooling
 - [npm](https://esempio.org/npm)
 `;
 const corsoDi = (corsoId: string) =>
-  parseCourse([{ name: 'M1-Tooling.md', content: MODULO }], { corsoId, now: T0 }).corso;
+  parseCourse([{ nome: 'M1-Tooling.md', contenuto: MODULO }], { corsoId, now: T0 }).corso;
 
 describe('Albero del corso — MECC §16, D-DATA-2 (D-IMPORT-1)', () => {
   it('una riga per nodo, senza i campi che il dominio calcola; risorsa = sezione + posizione', async () => {

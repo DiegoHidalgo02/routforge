@@ -30,36 +30,36 @@ export interface RisultatoRipasso extends StatoCarta {
   rimettiInCoda: boolean;
 }
 
-export const EASE_INITIAL = 2.5;
-export const EASE_MIN = 1.3;
-export const NIENTE_DELAY_MS = 10 * MINUTE;
+export const FACILITA_INIZIALE = 2.5;
+export const FACILITA_MINIMA = 1.3;
+export const INTERVALLO_NIENTE_MS = 10 * MINUTE;
 const DAY_MS = 24 * 60 * MINUTE;
 
 /** Carta appena creata: dovuta subito. */
 export function newCard(now: number): StatoCarta {
-  return { facilita: EASE_INITIAL, intervalloGiorni: 0, scadenza: now };
+  return { facilita: FACILITA_INIZIALE, intervalloGiorni: 0, scadenza: now };
 }
 
-const clampEase = (e: number): number => Math.max(EASE_MIN, Number(e.toFixed(4)));
+const clampFacilita = (e: number): number => Math.max(FACILITA_MINIMA, Number(e.toFixed(4)));
 
 export function review(card: StatoCarta, rating: Valutazione, now: number): RisultatoRipasso {
   switch (rating) {
     case 'niente': {
-      const facilita = clampEase(card.facilita - 0.2);
-      return { facilita, intervalloGiorni: 0, scadenza: now + NIENTE_DELAY_MS, rimettiInCoda: true };
+      const facilita = clampFacilita(card.facilita - 0.2);
+      return { facilita, intervalloGiorni: 0, scadenza: now + INTERVALLO_NIENTE_MS, rimettiInCoda: true };
     }
     case 'difficile': {
-      const facilita = clampEase(card.facilita - 0.15);
+      const facilita = clampFacilita(card.facilita - 0.15);
       const intervalloGiorni = Math.max(1, card.intervalloGiorni * 1.2);
       return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }
     case 'bene': {
-      const facilita = clampEase(card.facilita);
+      const facilita = clampFacilita(card.facilita);
       const intervalloGiorni = Math.max(1, card.intervalloGiorni * facilita);
       return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }
     case 'facile': {
-      const facilita = clampEase(card.facilita + 0.15);
+      const facilita = clampFacilita(card.facilita + 0.15);
       const intervalloGiorni = Math.max(1, card.intervalloGiorni * facilita * 1.3);
       return { facilita, intervalloGiorni, scadenza: now + intervalloGiorni * DAY_MS, rimettiInCoda: false };
     }

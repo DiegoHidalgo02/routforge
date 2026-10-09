@@ -67,8 +67,9 @@ Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-T
 - TypeScript `strict`, niente `any`, niente `// @ts-ignore` (ESLint nel gate); formato Prettier (`npm run format`).
 - **Vocabolario (D-NAMING-1)**: tipi, attributi e valori del dominio in **italiano come nelle spec** (`Blocco`,
   `stato`, `inizio`, `UnitaPercorso`, `'perso'`); i valori con spazi usano `_` (`in_corso`, `non_iniziata`); funzioni e
-  verbi tecnici restano in inglese, come i nomi di file, cartelle, servizi e porte (`assignPointer`, `lost.ts`,
-  `SchedulerService`). Un concetto = un nome: niente sinonimi inglesi di un attributo già italiano.
+  verbi tecnici restano in inglese, come i nomi di file, cartelle e servizi (`assignPointer`, `lost.ts`,
+  `SchedulerService`); porte e componenti hanno un nome libero, le costanti seguono i tipi (`FACILITA_MINIMA`). Un
+  concetto = un nome: niente sinonimi inglesi di un attributo già italiano.
 - Commenti in italiano; in testa a ogni modulo di dominio: fonte (§) e scenari coperti.
 - Test accanto al codice: `x.test.ts`; ogni `describe` cita il paragrafo o lo scenario (`'Persi — SCENARI B2'`);
   un test che cita uno scenario ha la sua riga in `docs/TRACCIABILITA.md` (il gate lo verifica).

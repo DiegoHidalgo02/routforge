@@ -12,7 +12,7 @@ import { addLocalDays, endOfLocalDay, HOUR, localInstant, minutes, sameLocalDay,
 import { weekOffset, type InizioSettimana } from './settings';
 import type { Blocco } from './types';
 
-export const LOST_GRACE_MS = minutes(30);
+export const MARGINE_PERSO_MS = minutes(30);
 
 /** Fine effettiva (§8): fine reale, o 23:59 locale del giorno d'inizio. */
 export function effectiveEnd(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'>): number {
@@ -83,7 +83,7 @@ export function shouldMarkLost(
   if (block.stato !== 'programmato') return false;
   if (block.tipo === 'evento') return false;
   if (isRollingTodo(block, now, inizioSettimana)) return false;
-  return now >= effectiveEnd(block) + LOST_GRACE_MS;
+  return now >= effectiveEnd(block) + MARGINE_PERSO_MS;
 }
 
 /**
@@ -96,12 +96,14 @@ export function isOrphan(
   bloccoSessioneAttiva: string | null,
   now: number,
 ): boolean {
-  return block.stato === 'in_corso' && block.id !== bloccoSessioneAttiva && now > effectiveEnd(block) + LOST_GRACE_MS;
+  return (
+    block.stato === 'in_corso' && block.id !== bloccoSessioneAttiva && now > effectiveEnd(block) + MARGINE_PERSO_MS
+  );
 }
 
 /** Istante esatto in cui il blocco diventa perso (utile a test e diagnostica). */
 export function lostAtInstant(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'>): number {
-  return effectiveEnd(block) + LOST_GRACE_MS;
+  return effectiveEnd(block) + MARGINE_PERSO_MS;
 }
 
 /**

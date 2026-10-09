@@ -62,7 +62,7 @@ function attesoDalFixture(fixture) {
   };
 }
 
-const files = FILE.map((name) => ({ name, content: readFileSync(join(COPIA, name), 'utf8') }));
+const files = FILE.map((nome) => ({ nome, contenuto: readFileSync(join(COPIA, nome), 'utf8') }));
 // Titolo passato dal chiamante: il corso di esempio non ha il file struttura (FORMATO §5, D-PARSE-1, D-SAMPLE-1).
 const opzioni = { corsoId: 'corso-esempio', now: local(2026, 9, 24, 9, 0), titolo: 'Syllabus Software Engineer 2026' };
 const { corso, avvisi } = parseCourse(files, opzioni);

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
 import { MAX_BYTE_ZIP } from '../domain/codeFiles';
 import { ErroreImportCorso, type CodiceAvviso } from '../domain/course/parser';
-import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
+import { MAX_AVVISI_MOSTRATI } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { cifre } from './Cifre';
@@ -229,7 +229,7 @@ export function Courses() {
                   {t('importatoConAvvisiTesto', {
                     moduli: esito.corso.moduli.length,
                     unita: esito.corso.numeroUnita,
-                    max: MAX_WARNINGS_SHOWN,
+                    max: MAX_AVVISI_MOSTRATI,
                   })}
                 </span>
               </span>

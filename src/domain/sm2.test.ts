@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueCards, newCard, review, EASE_MIN, NIENTE_DELAY_MS } from './sm2';
+import { dueCards, newCard, review, FACILITA_MINIMA, INTERVALLO_NIENTE_MS } from './sm2';
 import { local } from './time';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -34,14 +34,14 @@ describe('SM-2 — SCENARI I1', () => {
     const afterFacile = review(review(newCard(now), 'bene', now), 'facile', now);
     const r = review(afterFacile, 'niente', now);
     expect(r.rimettiInCoda).toBe(true);
-    expect(r.scadenza).toBe(now + NIENTE_DELAY_MS);
+    expect(r.scadenza).toBe(now + INTERVALLO_NIENTE_MS);
     expect(r.facilita).toBeCloseTo(2.45, 4);
   });
 
   it('la facilità non scende mai sotto 1,3', () => {
     let c = newCard(now);
     for (let i = 0; i < 20; i++) c = review(c, 'niente', now);
-    expect(c.facilita).toBe(EASE_MIN);
+    expect(c.facilita).toBe(FACILITA_MINIMA);
   });
 
   it('"Difficile" → max(1 g, intervallo × 1,2)', () => {

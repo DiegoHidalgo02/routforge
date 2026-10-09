@@ -104,8 +104,8 @@ export interface CorsoImportato {
 
 export interface FileCorso {
   /** Nome (o percorso) del file nello ZIP: conta solo il nome (FORMATO §1). */
-  name: string;
-  content: string;
+  nome: string;
+  contenuto: string;
 }
 
 /** Il tipo di un avviso di lettura: la UI lo traduce con i suoi parametri (T-031, D-I18N-2). */
@@ -471,8 +471,8 @@ export interface RisultatoImportModulo {
 
 export function parseModule(file: FileCorso, courseId: string): RisultatoImportModulo {
   const warnings: AvvisoImport[] = [];
-  const name = fileNameOf(file.name);
-  const lines = file.content.split(/\r?\n/);
+  const name = fileNameOf(file.nome);
+  const lines = file.contenuto.split(/\r?\n/);
   const headerIndex = lines.findIndex((l) => MODULE_HEADER.test(l));
   if (headerIndex < 0) {
     warnings.push({
@@ -595,7 +595,7 @@ export function parseModule(file: FileCorso, courseId: string): RisultatoImportM
     riassunto,
     progetto,
     testDiFit,
-    markdown: file.content,
+    markdown: file.contenuto,
     stato: 'aperto',
   };
   return { modulo: module, avvisi: warnings };
@@ -608,11 +608,11 @@ export interface RisultatoImportCorso {
   avvisi: AvvisoImport[];
 }
 
-const isStructureFile = (f: { name: string }): boolean => /\.md$/i.test(f.name) && STRUCTURE_FILE.test(f.name);
+const isStructureFile = (f: { nome: string }): boolean => /\.md$/i.test(f.nome) && STRUCTURE_FILE.test(f.nome);
 
 /** C'è il file struttura (FORMATO §1)? Se manca, il titolo si chiede all'utente (D-PARSE-1). */
-export const hasStructureFile = (files: readonly { name: string }[]): boolean =>
-  files.some((f) => isStructureFile({ name: fileNameOf(f.name) }));
+export const hasStructureFile = (files: readonly { nome: string }[]): boolean =>
+  files.some((f) => isStructureFile({ nome: fileNameOf(f.nome) }));
 
 /** Un modulo segnaposto (FORMATO §5): numero e titolo, nessuna unità né criterio, sempre bloccato. */
 function placeholderModule(corsoId: string, numero: number, titolo: string): ModuloImportato {
@@ -647,12 +647,14 @@ function placeholderModule(corsoId: string, numero: number, titolo: string): Mod
  */
 export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): RisultatoImportCorso {
   const warnings: AvvisoImport[] = [];
-  const md = files.map((f) => ({ name: fileNameOf(f.name), content: f.content })).filter((f) => /\.md$/i.test(f.name));
+  const md = files
+    .map((f) => ({ nome: fileNameOf(f.nome), contenuto: f.contenuto }))
+    .filter((f) => /\.md$/i.test(f.nome));
 
   const moduleFiles = md
-    .filter((f) => MODULE_FILE.test(f.name))
-    .map((f) => ({ file: f, order: Number(MODULE_FILE.exec(f.name)![1]) }))
-    .sort((a, b) => a.order - b.order || a.file.name.localeCompare(b.file.name));
+    .filter((f) => MODULE_FILE.test(f.nome))
+    .map((f) => ({ file: f, order: Number(MODULE_FILE.exec(f.nome)![1]) }))
+    .sort((a, b) => a.order - b.order || a.file.nome.localeCompare(b.file.nome));
   if (moduleFiles.length === 0) {
     throw new ErroreImportCorso('Nessun file modulo (M<numero>-…md) trovato nello ZIP');
   }
@@ -661,8 +663,8 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
   let sottotitolo = '';
   const structure = md.find(isStructureFile);
   if (structure) {
-    const h1 = structure.content.split(/\r?\n/).find((l) => /^#\s+\S/.test(l));
-    const h2 = structure.content.split(/\r?\n/).find((l) => /^##\s+\S/.test(l));
+    const h1 = structure.contenuto.split(/\r?\n/).find((l) => /^#\s+\S/.test(l));
+    const h2 = structure.contenuto.split(/\r?\n/).find((l) => /^##\s+\S/.test(l));
     if (h1) titolo = h1.replace(/^#\s+/, '').trim();
     if (h2) sottotitolo = h2.replace(/^##\s+/, '').trim();
   }
@@ -676,7 +678,7 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
     if (numeriModuloVisti.has(r.modulo.numero)) {
       // Numero di modulo duplicato fra file diversi (D-PARSE-3): saltato come un'intestazione illeggibile.
       warnings.push({
-        file: file.name,
+        file: file.nome,
         codice: 'modulo_duplicato',
         parametri: { numero: r.modulo.numero },
         messaggio: `modulo ${r.modulo.numero}: numero duplicato, file saltato`,
@@ -710,7 +712,7 @@ export function parseCourse(files: readonly FileCorso[], opts: OpzioniImport): R
 }
 
 /** Massimo avvisi mostrati all'utente (MECC §16). Il parser li restituisce tutti; la UI ne mostra 5. */
-export const MAX_WARNINGS_SHOWN = 5;
+export const MAX_AVVISI_MOSTRATI = 5;
 
 /**
  * Il titolo di una sezione accanto al suo badge (S15 Materiale, S12; FORMATO §3): dopo i due punti che vengono prima di
