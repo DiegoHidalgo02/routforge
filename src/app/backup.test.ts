@@ -132,3 +132,18 @@ describe('Backup — MECCANISMI §22, FUNZIONALITA §20 (T-030)', () => {
     expect(preferenze.find((p) => p.id === CHIAVE_SESSIONE_ATTIVA)).toBeUndefined();
   });
 });
+
+describe('Import fallito — MECCANISMI §22, D-BACKUP-2 (audit P2-12)', () => {
+  it('se la scrittura fallisce restano i dati di prima e nessuna notifica si toglie', async () => {
+    await importSampleCourse(db, ADESSO);
+    const letto = readBackup(altro, (await backupText(db, ADESSO)).testo);
+    if ('errore' in letto) throw new Error(letto.errore);
+    await save(altro, 'preferenze', { id: 'impostazioni', valore: { tema: 'scuro' } }, ADESSO);
+    vi.spyOn(altro.table('corsi'), 'bulkPut').mockRejectedValueOnce(new Error('spazio esaurito'));
+    cancelAll.mockClear();
+    await expect(importBackup(altro, letto)).rejects.toThrow('spazio esaurito');
+    expect(cancelAll).not.toHaveBeenCalled();
+    expect(await allRows(altro, 'corsi')).toEqual([]);
+    expect((await allRows(altro, 'preferenze')).map((p) => p.id)).toEqual(['impostazioni']);
+  });
+});

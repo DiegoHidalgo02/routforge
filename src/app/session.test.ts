@@ -24,6 +24,7 @@ import { configureSessionDevice } from './sessionDevice';
 import {
   abandonSession,
   anticipateSession,
+  CHIAVE_SESSIONE_ATTIVA,
   editActiveSession,
   endSession,
   followSessionInForeground,
@@ -831,5 +832,23 @@ describe('Unità del blocco assente qui — MECCANISMI §10.1, §25 (audit P2-3)
     const s = await startSession(db, 's1', scelta({ unitaId: 'u-qui', corsoId: 'c-qui' }), oggi(15, 5), FUSO);
     expect(s).toMatchObject({ contesto: 'routine', bloccoId: 's1', unitaId: 'u-qui', corsoId: 'c-qui' });
     expect(await get(db, 'blocchi', 's1')).toMatchObject({ stato: 'in_corso', unitaId: 'u-altrove' });
+  });
+});
+
+describe('Chiusura — atomicità, CONTESTO §3 (audit P2-12)', () => {
+  it('se l’ultimo passo fallisce non resta nulla a metà: nessuna sessione registrata, sessione attiva e blocco in corso restano', async () => {
+    await studio('s1', { inizio: oggi(9), fine: oggi(10) });
+    await startSession(db, 's1', scelta(), oggi(9, 10), FUSO);
+    // L'ultimo passo della chiusura toglie la sessione attiva: la sua tombstone in `preferenze` non si scrive
+    const preferenze = db.table('preferenze');
+    const put = preferenze.put.bind(preferenze);
+    vi.spyOn(preferenze, 'put').mockImplementation(((r: { id: string; deletedAt: number | null }) =>
+      r.id === CHIAVE_SESSIONE_ATTIVA && r.deletedAt !== null
+        ? Promise.reject(new Error('spazio esaurito'))
+        : put(r as never)) as never);
+    await expect(endSession(db, oggi(9, 40), FUSO, ESITO)).rejects.toThrow('spazio esaurito');
+    expect(await list(db, 'sessioni')).toEqual([]);
+    expect(await readActiveSession(db)).not.toBeNull();
+    expect((await get(db, 'blocchi', 's1'))?.stato).toBe('in_corso');
   });
 });

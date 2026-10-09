@@ -654,3 +654,17 @@ describe('Inneschi — MECCANISMI §13.3 (ogni mutazione)', () => {
 // La lib della radice è ES2022 senza DOM né Node (D-TS-1): si dichiarano i soli globali che servono ai test
 declare const setTimeout: (fatto: () => void, ms: number) => unknown;
 declare function structuredClone<T>(v: T): T;
+
+describe('Cancella tutto — MECCANISMI §22, D-BACKUP-2 (audit P2-12)', () => {
+  it('toglie dalla piattaforma ogni voce del registro e lo svuota, dopo la riconciliazione in coda', async () => {
+    const p = portaFinta();
+    await crea(todo({ inizio: '18:00', durata: 30 }), oggi(8));
+    const s = createNotifications(db, p.porta, orologio(oggi(8)));
+    await s.reconcile(oggi(8));
+    expect(p.armate.size).toBeGreaterThan(0);
+    void s.reconcile(oggi(8));
+    await s.cancelAll();
+    expect(p.armate.size).toBe(0);
+    expect(await list(db, 'registroNotifiche')).toEqual([]);
+  });
+});
