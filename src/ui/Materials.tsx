@@ -35,7 +35,7 @@ import {
   renderPdfPage,
   restoreMaterial,
 } from '../app/materials';
-import { hostOf } from '../domain/course/parser';
+import { hostOf, youtubeId } from '../domain/course/parser';
 import { isGroundable, type Materiale } from '../domain/materials';
 import { IconaLink } from './IconaLink';
 import { lingua, t } from './i18n';
@@ -97,7 +97,7 @@ function Riga({ m }: { m: RigaMateriale }) {
   if (m.tipo === 'link')
     return (
       <a className={s.riga} href={m.url} target="_blank" rel="noopener noreferrer">
-        <IconaLink host={hostOf(m.url ?? '')} youtube={/youtu\.?be/.test(m.url ?? '')} />
+        <IconaLink host={hostOf(m.url ?? '')} youtube={youtubeId(m.url ?? '') !== null} />
         <span className={s.testi}>
           <span className={s.titolo}>{m.titolo}</span>
           <span className={s.sotto}>{hostOf(m.url ?? '')}</span>

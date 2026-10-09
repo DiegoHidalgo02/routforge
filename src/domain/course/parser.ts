@@ -167,7 +167,7 @@ const CRITERION_SUFFIX = /\s*→\s*s[iì]\s*\/\s*no\s*$/i;
 const HOURS_TILDE = /~\s*(\d+(?:[.,]\d+)?)\s*(?:h|ore)\b/i;
 const HOURS_RANGE = /(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(?:h|ore)\b/i;
 const DIFFICULTY = /Difficolt[àa]\s*:\s*(alta|media|bassa)/i;
-const YOUTUBE = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)/i;
+const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/i;
 
 const SECTION_BY_EMOJI: Record<string, TipoSezione> = {
   '📖': 'teoria',
@@ -197,11 +197,17 @@ export function hostOf(url: string): string {
   return m ? m[1]!.toLowerCase().replace(/^www\./, '') : '';
 }
 
+/**
+ * L'id del video YouTube (11 caratteri) di un URL, o `null` (FORMATO §3): la sola regola del «video», per il parser, la
+ * VideoCard e i materiali (audit P3-11). Un canale, una playlist o un id troncato non sono video incorporabili.
+ */
+export const youtubeId = (url: string): string | null => YOUTUBE_ID.exec(url)?.[1] ?? null;
+
 export function extractLinks(text: string): RisorsaImportata[] {
   const out: RisorsaImportata[] = [];
   for (const m of text.matchAll(LINK)) {
     const url = m[2]!;
-    out.push({ titolo: m[1]!.trim(), url, host: hostOf(url), youtube: YOUTUBE.test(url) });
+    out.push({ titolo: m[1]!.trim(), url, host: hostOf(url), youtube: youtubeId(url) !== null });
   }
   return out;
 }

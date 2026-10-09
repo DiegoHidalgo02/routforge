@@ -42,6 +42,7 @@ import {
   type VistaUnita,
 } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { youtubeId } from '../domain/course/parser';
 import { quizCriterion } from '../domain/generation';
 import { completedUnits } from '../domain/pointer';
 import { local } from '../domain/time';
@@ -632,17 +633,15 @@ const ESITO: Record<Esito, Chiave> = {
 };
 const fmtUltima = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
-/** L'id del video (11 caratteri) dall'URL del file del corso: l'indirizzo del player lo costruisce l'app, mai il file. */
-const ID_YOUTUBE = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/i;
-
 /**
  * VideoCard (S12; FORMATO §3, CONTROLLI): il primo video YouTube della sezione Studio, che si riproduce qui e non nel
  * browser. Il player si carica solo dopo «Riproduci»; offline mostra l'errore del browser dentro il riquadro.
  */
 function VideoStudio({ m }: { m: MaterialeUnita }) {
   const [avviato, setAvviato] = useState(false);
-  const r = m.sezioni.find((x) => x.tipo === 'studio')?.risorse.find((x) => x.youtube);
-  const id = r && ID_YOUTUBE.exec(r.url)?.[1];
+  // L'indirizzo del player lo costruisce l'app dall'id, mai il file del corso
+  const r = m.sezioni.find((x) => x.tipo === 'studio')?.risorse.find((x) => youtubeId(x.url) !== null);
+  const id = r && youtubeId(r.url);
   if (!r || !id) return null;
   return (
     <section className={s.sezione}>

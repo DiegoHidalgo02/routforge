@@ -9,6 +9,7 @@ import {
   parseModule,
   parseThreshold,
   sectionTitle,
+  youtubeId,
 } from './parser';
 import { local } from '../time';
 import { assignPointer, type UnitaPercorso } from '../pointer';
@@ -368,12 +369,18 @@ describe('Unità — FORMATO_CORSO §3', () => {
     expect(hostOf('https://münchen.de/x')).toBe('münchen.de');
   });
 
-  it('youtu.be e shorts sono video incorporabili', () => {
-    expect(
-      extractLinks('[a](https://youtu.be/xyz) [b](https://www.youtube.com/shorts/q1) [c](https://vimeo.com/1)').map(
-        (r) => r.youtube,
-      ),
-    ).toEqual([true, true, false]);
+  it('youtu.be e shorts sono video incorporabili; senza un id di 11 caratteri, un canale o una playlist no (audit P3-11)', () => {
+    const testo = [
+      '[a](https://youtu.be/P3aKRdUyr0s)',
+      '[b](https://www.youtube.com/shorts/P3aKRdUyr0s)',
+      '[c](https://vimeo.com/1)',
+      '[d](https://www.youtube.com/watch?v=abc)',
+      '[e](https://www.youtube.com/@canale)',
+      '[f](https://www.youtube.com/playlist?list=PL1)',
+    ].join(' ');
+    expect(extractLinks(testo).map((r) => r.youtube)).toEqual([true, true, false, false, false, false]);
+    expect(youtubeId('https://www.youtube.com/watch?v=P3aKRdUyr0s&t=10')).toBe('P3aKRdUyr0s');
+    expect(youtubeId('https://www.youtube.com/watch?v=abc')).toBeNull();
   });
 });
 
