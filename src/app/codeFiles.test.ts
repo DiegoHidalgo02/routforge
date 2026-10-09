@@ -37,6 +37,22 @@ const zip = zipSync({
 });
 const posto = { corsoId: 'c', unitaId: 'u' };
 
+describe('Tetti del caricamento — MECCANISMI §17, D-CODE-1 (audit P1-7)', () => {
+  it('5 000 file e 20 MB valgono per tutto il caricamento, non per ogni ZIP: 2 ZIP da 15 MB → 40 file da 500 KB', async () => {
+    const pieno = (cartella: string) =>
+      zipSync(
+        Object.fromEntries(
+          [...Array(30).keys()].map((i) => [
+            `${cartella}/f${i}.js`,
+            [new Uint8Array(500 * 1024), { level: 0 }] as const,
+          ]),
+        ),
+      );
+    const r = await uploadCode(db, posto, [scelto('a.zip', pieno('a')), scelto('b.zip', pieno('b'))], ADESSO);
+    expect(r).toEqual({ file: 40, esclusi: 20 });
+  });
+});
+
 describe('File di codice — MECCANISMI §17 (T-025)', () => {
   it('uno ZIP: entrano i file di codice; esclusi node_modules e vendor (contati per file), .env senza contenuto, lock, log, oltre 500 KB, estensioni non di codice', async () => {
     expect(await uploadCode(db, posto, [scelto('task-tracker.zip', zip)], ADESSO)).toEqual({ file: 2, esclusi: 8 });

@@ -6,6 +6,7 @@ import { GraduationCap, SlidersVertical, Target, TriangleAlert, Upload } from 'l
 import { Link, Navigate, NavLink, useOutlet } from 'react-router';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { importSampleCourse, importZip, zipNeedsTitle } from '../app/courseImport';
+import { MAX_BYTE_ZIP } from '../domain/codeFiles';
 import { ErroreImportCorso, type CodiceAvviso } from '../domain/course/parser';
 import { MAX_WARNINGS_SHOWN } from '../domain/course/parser';
 import { courseCards, type SchedaCorso } from '../app/courses';
@@ -102,6 +103,8 @@ export function Courses() {
 
   const zipScelto = async (f: File | undefined) => {
     if (!f) return;
+    // Uno ZIP oltre il tetto di lettura non si apre nemmeno (D-IMPORT-2, lo stesso dei file di codice di D-CODE-1)
+    if (f.size > MAX_BYTE_ZIP) return setEsito({ tipo: 'errore', file: f.name });
     const zip = new Uint8Array(await f.arrayBuffer());
     try {
       if (zipNeedsTitle(zip)) return setEsito({ tipo: 'titolo', file: f.name, zip });

@@ -76,6 +76,22 @@ describe('Import corso da ZIP — SCENARI H1', () => {
   });
 });
 
+describe('Tetti dell’import — MECCANISMI §16, D-IMPORT-2 (audit P1-7)', () => {
+  const testo = (byte: number) => new Uint8Array(byte).fill(97);
+  it('un .md oltre 5 MB, o più di 20 MB di .md in tutto, ferma l’import prima di decomprimere; sotto i tetti nulla cambia', () => {
+    const appunti = zipSync({ 'M1-Tooling.md': strToU8(M1), 'appunti.md': [testo(5 * 1024 * 1024 + 1), { level: 0 }] });
+    expect(() => importCourseFromZip(appunti, opts)).toThrow(ErroreImportCorso);
+    const parti = Object.fromEntries(
+      [0, 1, 2, 3, 4].map((i) => [`parte${i}.md`, [testo(4.5 * 1024 * 1024), { level: 0 }] as const]),
+    );
+    expect(() => importCourseFromZip(zipSync({ 'M1-Tooling.md': strToU8(M1), ...parti }), opts)).toThrow(
+      ErroreImportCorso,
+    );
+    const piccolo = zipSync({ 'M1-Tooling.md': strToU8(M1), 'appunti.md': testo(1024) });
+    expect(importCourseFromZip(piccolo, opts).corso.moduli).toHaveLength(1);
+  });
+});
+
 // ------------------------------------------------------------------ corso di esempio salvato (T-005)
 
 const T0 = local(2026, 9, 25, 9, 0);

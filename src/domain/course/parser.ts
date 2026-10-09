@@ -138,6 +138,13 @@ export interface OpzioniImport {
 
 export class ErroreImportCorso extends Error {}
 
+/**
+ * Tetti dei `.md` di un corso importato (D-IMPORT-2, audit P1-7), per file e in tutto, sulla dimensione dichiarata: uno
+ * ZIP costruito ad arte non fa allocare GB alla WebView. Un modulo vero pesa decine di KB (FORMATO §0: M0 38 KB).
+ */
+export const MAX_BYTE_FILE_CORSO = 5 * 1024 * 1024;
+export const MAX_BYTE_TESTO_CORSO = 20 * 1024 * 1024;
+
 // ------------------------------------------------------------------ espressioni regolari
 
 const MODULE_FILE = /^M(\d+)[-_]/i;

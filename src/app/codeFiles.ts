@@ -28,11 +28,19 @@ export interface FileScelto {
 
 type Voce = Pick<FileCodice, 'percorso' | 'byte' | 'contenuto' | 'motivo' | 'file'>;
 
+/** I file ammessi finora e i loro byte: i tetti valgono per tutto il caricamento, ZIP e file sciolti (audit P1-7). */
+type Conto = { ammessi: number; byte: number };
+/** `troppo_grande` se il file non entra nei tetti del caricamento, altrimenti lo conta. */
+function conta(conto: Conto, byte: number): 'troppo_grande' | null {
+  if (conto.ammessi >= MAX_FILE_AMMESSI || conto.byte + byte > MAX_BYTE_AMMESSI) return 'troppo_grande';
+  conto.ammessi += 1;
+  conto.byte += byte;
+  return null;
+}
+
 /** I file di uno ZIP: gli esclusi si decidono dalla directory dello ZIP, senza decomprimerli. */
-function fromZip(nome: string, dati: Uint8Array): Voce[] {
+function fromZip(nome: string, dati: Uint8Array, conto: Conto): Voce[] {
   const voci: Voce[] = [];
-  let ammessi = 0;
-  let byteAmmessi = 0;
   try {
     const dentro = unzipSync(dati, {
       filter: (x) => {
@@ -43,13 +51,11 @@ function fromZip(nome: string, dati: Uint8Array): Voce[] {
         let motivo = exclusionReason(percorso, byte);
         // Una voce con una compressione che fflate non legge (Deflate64, LZMA, AES) è illeggibile da sola
         if (!motivo && x.compression !== 0 && x.compression !== 8) motivo = 'illeggibile';
-        if (!motivo && (ammessi >= MAX_FILE_AMMESSI || byteAmmessi + byte > MAX_BYTE_AMMESSI)) motivo = 'troppo_grande';
+        motivo ??= conta(conto, byte);
         if (motivo) {
           voci.push({ percorso, byte, contenuto: null, motivo });
           return false;
         }
-        ammessi += 1;
-        byteAmmessi += byte;
         return true;
       },
     });
@@ -67,13 +73,13 @@ function fromZip(nome: string, dati: Uint8Array): Voce[] {
   return voci;
 }
 
-async function voci(f: FileScelto): Promise<Voce[]> {
+async function voci(f: FileScelto, conto: Conto): Promise<Voce[]> {
   if (/\.zip$/i.test(f.nome))
     return f.byte > MAX_BYTE_ZIP
       ? [{ percorso: f.nome, byte: f.byte, contenuto: null, motivo: 'troppo_grande' }]
-      : fromZip(f.nome, await f.leggi());
+      : fromZip(f.nome, await f.leggi(), conto);
   const percorso = normalizePath(f.nome);
-  const motivo = exclusionReason(percorso, f.byte);
+  const motivo = exclusionReason(percorso, f.byte) ?? conta(conto, f.byte);
   // Un escluso (un `.env`, un video) non si legge nemmeno
   if (motivo) return [{ percorso, byte: f.byte, contenuto: null, motivo }];
   const dati = await f.leggi();
@@ -88,7 +94,8 @@ export async function uploadCode(
   now: number,
 ) {
   const tutte: Voce[] = [];
-  for (const f of scelti) tutte.push(...(await voci(f)));
+  const conto: Conto = { ammessi: 0, byte: 0 };
+  for (const f of scelti) tutte.push(...(await voci(f, conto)));
   const righe = collapseUpload(tutte, (percorso, file, byte) => ({
     percorso,
     byte,

@@ -17,6 +17,8 @@ import m1 from '../data/sample-course/M1-Tooling_Moderno.md?raw';
 import {
   ErroreImportCorso,
   hasStructureFile,
+  MAX_BYTE_FILE_CORSO,
+  MAX_BYTE_TESTO_CORSO,
   MAX_WARNINGS_SHOWN,
   parseCourse,
   type FileCorso,
@@ -26,13 +28,25 @@ import {
 
 function readZip(zip: Uint8Array): FileCorso[] {
   let entries: Record<string, Uint8Array>;
+  let byte = 0;
+  let troppo = false;
   try {
     // Si decomprimono solo i `.md` (FORMATO §1): un PDF o una cartella estranea nello ZIP non occupano memoria.
-    // La regola su quali file leggere resta nel parser; questo è solo un filtro sull'inflazione.
-    entries = unzipSync(zip, { filter: (f) => /\.md$/i.test(f.name) });
+    // La regola su quali file leggere resta nel parser; questo è solo un filtro sull'inflazione, coi tetti di D-IMPORT-2
+    // sulla dimensione più grande fra dichiarata e compressa (un'intestazione falsa non li aggira, come per il codice)
+    entries = unzipSync(zip, {
+      filter: (f) => {
+        if (troppo || !/\.md$/i.test(f.name)) return false;
+        const dimensione = Math.max(f.size, f.originalSize);
+        byte += dimensione;
+        troppo = dimensione > MAX_BYTE_FILE_CORSO || byte > MAX_BYTE_TESTO_CORSO;
+        return !troppo;
+      },
+    });
   } catch {
     throw new ErroreImportCorso('ZIP non leggibile o corrotto');
   }
+  if (troppo) throw new ErroreImportCorso('corso troppo grande');
   return Object.entries(entries).map(([name, data]) => ({ name, content: strFromU8(data) }));
 }
 
