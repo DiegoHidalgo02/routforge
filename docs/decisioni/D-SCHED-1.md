@@ -41,7 +41,10 @@ timer in `app`, e come B7 («alle 20:30 diventa persa e riceve una notifica») v
    `undefined` e il battito dopo riprova. Una ricorrenza la cui definizione non si legge (dato rotto, anche arrivato
    dalla sync) non ferma il ciclo: il piano puro si calcola prima di aprire la sua transazione, la ricorrenza si salta e
    il suo id torna in `ricorrenzeSaltate`; gli altri passi scrivono. La registrazione in Diagnostica di entrambi i casi è
-   di T-032.
+   di T-032. Allo stesso modo (audit P1-2) un modulo o un'unità che non si leggono fermano solo il puntatore del loro
+   corso (il calcolo puro si prova dentro la sotto-transazione, che senza scritture si chiude bene), e un blocco di cui
+   non si calcolano le voci resta fuori dalla riconciliazione delle notifiche (`unreadableBlocks`); entrambi vanno in
+   Diagnostica.
 9. **UI**: Oggi prende il giorno da `useOggi()`, il blocco Adesso e il Dettaglio l'istante da `useMinuto()`
    (`src/ui/clock.ts`): al cambio di minuto e al ritorno in primo piano. Le schermate leggono ancora `Date.now()`.
 10. **Lettura degli slot per chiave**: la generazione legge solo gli slot dell'orizzonte, per intervallo di chiave

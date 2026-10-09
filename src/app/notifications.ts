@@ -19,6 +19,7 @@ import {
   ORIZZONTE_BLOCCHI_GIORNI,
   reconcilePlan,
   testNotification,
+  unreadableBlocks,
   type ImpostazioniNotifiche,
 } from '../domain/notifications/desiredSet';
 import { GIORNI_INDIETRO } from '../domain/scheduler/horizon';
@@ -161,7 +162,12 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
       // L'inizio settimana (FUNZ §23) si legge qui e non negli ingressi osservati: dentro la query live la lettura
       // farebbe perdere a Dexie le successive; un suo cambio arriva con la riconciliazione del ciclo seguente
       const { inizioSettimana } = await readSettings(db);
-      const desiderate = desiredSet({ ...(await readInputs(db, now)), inizioSettimana }, now);
+      const ingressi = await readInputs(db, now);
+      // Un blocco che non si legge non ferma le voci degli altri: resta fuori e va in Diagnostica (audit P1-2)
+      const saltati = unreadableBlocks(ingressi.blocchi, ingressi.ricorrenze, ingressi.impostazioni);
+      if (saltati.length) logError('notifiche', `blocchi senza promemoria (dati non leggibili): ${saltati.join(', ')}`);
+      const blocchi = saltati.length ? ingressi.blocchi.filter((b) => !saltati.includes(b.id)) : ingressi.blocchi;
+      const desiderate = desiredSet({ ...ingressi, blocchi, inizioSettimana }, now);
       const piano = reconcilePlan(desiderate, await list(db, 'registroNotifiche'), prima, now);
       if (piano.daCancellare.length > 0) await porta.cancel(piano.daCancellare);
       if (piano.daTogliere.length > 0) await purge(db, 'registroNotifiche', piano.daTogliere);

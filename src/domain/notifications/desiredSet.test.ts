@@ -17,6 +17,7 @@ import {
   runsInBackground,
   sessionNotification,
   testNotification,
+  unreadableBlocks,
   type ImpostazioniNotifiche,
   type NotificaPianificata,
 } from './desiredSet';
@@ -693,5 +694,16 @@ describe('Prova — MECCANISMI §13.6', () => {
       oneShot: true,
       bloccoId: null,
     });
+  });
+});
+
+describe('Blocchi che non si leggono — MECCANISMI §13.3, CONTESTO §3 (audit P1-2)', () => {
+  it('un tipo sconosciuto o un promemoria personalizzato senza anticipi si riconoscono; i blocchi buoni no', () => {
+    const rotti = [
+      blocco({ id: 'tipo', tipo: 'x' as Blocco['tipo'] }),
+      blocco({ id: 'anticipi', promemoria: { modo: 'personalizzato' } as Promemoria }),
+    ];
+    expect(unreadableBlocks([blocco(), ...rotti], [], DEF)).toEqual(['tipo', 'anticipi']);
+    expect(unreadableBlocks([blocco({ ricorrenzaId: 'r1' })], [ricorrenza(pers([5]))], DEF)).toEqual([]);
   });
 });

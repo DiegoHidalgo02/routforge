@@ -9,6 +9,7 @@
 import type { RoutForgeDb } from '../data/db';
 import { inTransaction, listBy, saveBlock } from '../data/repository';
 import { pointerPlan } from '../domain/pointer';
+import { logError } from './diagnostics';
 
 /** Ricalcola il puntatore del corso adesso; `fuso` è quello corrente del dispositivo (D-TIME-2). */
 export async function recomputePointer(db: RoutForgeDb, corsoId: string, now: number, fuso: string): Promise<void> {
@@ -16,7 +17,15 @@ export async function recomputePointer(db: RoutForgeDb, corsoId: string, now: nu
     const unita = await listBy(db, 'unita', 'corsoId', corsoId);
     const moduli = await listBy(db, 'moduli', 'corsoId', corsoId);
     const blocchi = (await listBy(db, 'blocchi', 'stato', 'programmato')).filter((b) => b.corsoId === corsoId);
-    const piano = pointerPlan(unita, moduli, blocchi, now);
+    let piano: ReturnType<typeof pointerPlan>;
+    try {
+      piano = pointerPlan(unita, moduli, blocchi, now);
+    } catch (e) {
+      // Un modulo o un'unità che non si leggono (dato rotto, anche da un backup) fermano solo il puntatore di questo
+      // corso: senza scritture la sotto-transazione si chiude bene e il ciclo prosegue (audit P1-2, D-SCHED-1 n. 8)
+      logError('ciclo', `puntatore del corso ${corsoId} non calcolato: ${e instanceof Error ? e.message : String(e)}`);
+      return;
+    }
     for (const b of blocchi)
       if (piano.has(b.id)) await saveBlock(db, { ...b, unitaId: piano.get(b.id) ?? null }, now, fuso, 'ciclo');
   });

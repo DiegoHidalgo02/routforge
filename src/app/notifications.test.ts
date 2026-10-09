@@ -16,6 +16,7 @@ import { addLocalDays, local } from '../domain/time';
 import type { Orizzonte, Promemoria } from '../domain/types';
 import { createActivity } from './activities';
 import { completeBlock, deleteBlock, reopenBlock, toggleChecklist } from './completion';
+import { readDiagnostics } from './diagnostics';
 import {
   CHIAVE_IMPOSTAZIONI_NOTIFICHE,
   createNotifications,
@@ -378,6 +379,17 @@ describe('Registro — MECCANISMI §1, §13.3', () => {
     expect(p.chiamate).toEqual(['schedule pre:5:s1 inizio:0:s1 verifica:0:s1 esito:0:s1']);
     await s.reconcile(oggi(8));
     expect(p.chiamate).toHaveLength(1);
+  });
+
+  it('un blocco che non si legge (tipo sconosciuto) non toglie i promemoria agli altri e va in Diagnostica (audit P1-2)', async () => {
+    await blocco({ id: 's1', inizio: oggi(9), fine: oggi(10) });
+    await db.blocchi.put({ ...(await get(db, 'blocchi', 's1'))!, id: 'rotto', tipo: 'x' } as never);
+    const p = portaFinta();
+    const s = createNotifications(db, p.porta, orologio(oggi(8)));
+    await s.reconcile(oggi(8));
+    expect(p.chiamate).toEqual(['schedule pre:5:s1 inizio:0:s1 verifica:0:s1 esito:0:s1']);
+    const { eventi } = await readDiagnostics(db, oggi(8));
+    expect(eventi.some((e) => e.sorgente === 'notifiche' && e.messaggio.includes('rotto'))).toBe(true);
   });
 
   it('una porta che fallisce non fa fallire la riconciliazione; il registro resta e la successiva riprova (INV-16)', async () => {

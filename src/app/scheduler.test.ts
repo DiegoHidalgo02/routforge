@@ -12,6 +12,7 @@ import { createActivity } from './activities';
 import { calendarDays } from './calendar';
 import type { Clock } from './ports/clock';
 import { courseFingerprints } from './courses';
+import { readDiagnostics } from './diagnostics';
 import { createScheduler, runCycle } from './scheduler';
 import { CHIAVE_SESSIONE_ATTIVA } from './session';
 
@@ -32,6 +33,15 @@ const LUNEDI = local(2026, 9, 21, 8, 0);
 const blocco = (dati: Partial<DatiBlocco> & Pick<DatiBlocco, 'inizio' | 'fine'>) =>
   saveBlock(db, { tipo: 'routine', stato: 'programmato', conOrario: true, ...dati }, dati.inizio, FUSO);
 const letto = async (id: string) => (await get(db, 'blocchi', id))!;
+/**
+ * Un ciclo che fallisce: la lettura delle unità del puntatore, ultimo passo e solo a leggerle, lancia finché non si
+ * ripara con `mockRestore`. La tabella è quella del repository (`db.table`), un oggetto diverso da `db.unita`. Un dato
+ * rotto non fa più fallire il ciclo (audit P1-2): il guasto qui è della lettura, come un IndexedDB che rifiuta.
+ */
+const guastaCiclo = () =>
+  vi.spyOn(db.table('unita'), 'where').mockImplementation(() => {
+    throw new Error('lettura fallita');
+  });
 
 async function crea(bozza: BozzaAttivita, now: number): Promise<string> {
   const r = await createActivity(db, bozza, now, FUSO);
@@ -351,13 +361,26 @@ describe('Idempotenza — MECCANISMI §9, INV-15', () => {
 
 describe('Atomicità — CONTESTO §3 (un ciclo che fallisce non lascia scritture a metà)', () => {
   it("se l'ultimo passo fallisce nessun passo scrive", async () => {
-    const { corsoId } = await studioC1();
-    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
-    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']); // il puntatore fallirà
+    await studioC1();
     await blocco({ inizio: local(2026, 9, 23, 7, 0), fine: local(2026, 9, 23, 8, 0) }); // da marcare perso
     const prima = await copia();
-    await expect(runCycle(db, local(2026, 9, 23, 12, 0), FUSO)).rejects.toThrow();
+    const guasto = guastaCiclo();
+    await expect(runCycle(db, local(2026, 9, 23, 12, 0), FUSO)).rejects.toThrow('lettura fallita');
+    guasto.mockRestore();
     expect(await copia()).toEqual(prima);
+  });
+});
+
+describe('Modulo malformato — MECC §9, §11, CONTESTO §3 (un dato rotto non ferma il ciclo)', () => {
+  it('il puntatore di quel corso si salta e va in Diagnostica; gli altri passi scrivono (audit P1-2)', async () => {
+    const { corsoId } = await studioC1();
+    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
+    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    const b = await blocco({ inizio: local(2026, 9, 23, 7, 0), fine: local(2026, 9, 23, 8, 0) });
+    await runCycle(db, local(2026, 9, 23, 12, 0), FUSO);
+    expect((await letto(b.id)).stato).toBe('perso');
+    const { eventi } = await readDiagnostics(db, local(2026, 9, 23, 12, 0));
+    expect(eventi.some((e) => e.sorgente === 'ciclo' && e.messaggio.includes(corsoId))).toBe(true);
   });
 });
 
@@ -513,16 +536,15 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
   });
 
   it('con un ciclo fallito l’apertura non si registra: il messaggio direbbe che il piano si è riallineato (FUNZ §2)', async () => {
-    const { corsoId } = await studioC1();
-    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
-    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    await studioC1();
+    const guasto = guastaCiclo();
     const o = orologioFinto(local(2026, 9, 23, 20, 31));
     const s = createScheduler(db, o.clock);
     const stop = s.start();
     await s.run();
     await new Promise<void>((fatto) => setTimeout(fatto, 50));
     expect(await ultimaApertura()).toBeUndefined();
-    await db.moduli.put(modulo);
+    guasto.mockRestore();
     o.salta(60_000);
     o.primoPiano();
     await vi.waitFor(async () => expect(await ultimaApertura()).toBe(local(2026, 9, 23, 20, 32)));
@@ -531,12 +553,11 @@ describe('Inneschi — MECCANISMI §9 (avvio, primo piano, ogni 60 s)', () => {
 
   it('un ciclo che fallisce non arriva al chiamante e il successivo lavora (CONTESTO §3)', async () => {
     const r = await routine1820();
-    const { corsoId } = await studioC1();
-    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
-    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    await studioC1();
+    const guasto = guastaCiclo();
     const s = createScheduler(db, orologioFinto(local(2026, 9, 23, 20, 31)).clock);
     await expect(s.run()).resolves.toBeUndefined();
-    await db.moduli.put(modulo);
+    guasto.mockRestore();
     expect(await s.run()).toEqual({ avvisiRitardo: [], avvisiPerso: [r.id], ricorrenzeSaltate: [] });
   });
 
@@ -622,12 +643,12 @@ describe('Ciclo — MECCANISMI §9 (notifiche dopo la transazione)', () => {
   });
 
   it('con il ciclo fallito riconcilia comunque; una riconciliazione che rigetta non rompe run()', async () => {
-    const { corsoId } = await studioC1();
-    const modulo = (await listBy(db, 'moduli', 'corsoId', corsoId))[0]!;
-    await db.moduli.put({ ...modulo, criteri: null } as unknown as Tabelle['moduli']);
+    await studioC1();
+    const guasto = guastaCiclo();
     const reconcile = vi.fn(() => Promise.reject(new Error('guasta')));
     await expect(createScheduler(db, orologioFinto(LUNEDI).clock, { reconcile }).run()).resolves.toBeUndefined();
     expect(reconcile).toHaveBeenCalledWith(LUNEDI);
+    guasto.mockRestore();
   });
 });
 

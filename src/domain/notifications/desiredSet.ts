@@ -201,6 +201,29 @@ export function oneShotNotifications(b: BloccoNotifiche, imp: ImpostazioniNotifi
   return voci;
 }
 
+/**
+ * I blocchi di cui non si calcolano le voci: un dato rotto (un tipo sconosciuto, un promemoria personalizzato senza
+ * anticipi), anche da un backup. Il servizio li toglie dall'insieme desiderato e li porta in Diagnostica, così non
+ * fermano le voci degli altri (audit P1-2; come le ricorrenze che non si leggono nel ciclo, D-SCHED-1 n. 8).
+ */
+export function unreadableBlocks(
+  blocchi: readonly BloccoNotifiche[],
+  ricorrenze: readonly Ricorrenza[],
+  imp: ImpostazioniNotifiche,
+): string[] {
+  const definizioni = new Map(ricorrenze.map((r) => [r.id, r]));
+  return blocchi
+    .filter((b) => {
+      try {
+        blockNotifications(b, b.ricorrenzaId ? definizioni.get(b.ricorrenzaId) : undefined, imp);
+        return false;
+      } catch {
+        return true;
+      }
+    })
+    .map((b) => b.id);
+}
+
 /** Tutte le voci di un blocco secondo §13.2 e §13.6, senza finestra né posticipi. */
 export function blockNotifications(
   b: BloccoNotifiche,
