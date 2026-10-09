@@ -13,7 +13,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { configureAi, followPendingMessages } from './app/ai';
 import { appDb } from './app/db';
-import { configureDiagnostics } from './app/diagnostics';
+import { catchUnhandled, configureDiagnostics } from './app/diagnostics';
 import { configureBackupFiles } from './app/backup';
 import { configureVoice } from './app/practice';
 import { createSyncService, registerSyncService } from './app/sync';
@@ -52,8 +52,9 @@ configureSessionDevice(
     ? { schermo: androidScreenAwake, nonDisturbare: androidDoNotDisturb }
     : { schermo: webScreenAwake, nonDisturbare: webDoNotDisturb },
 );
-// L'orologio degli eventi della Diagnostica (T-032)
+// L'orologio degli eventi della Diagnostica (T-032); gli errori che nessuno raccoglie vanno lì (audit P2-5)
 configureDiagnostics(webClock);
+catchUnhandled(window);
 // Lettore dei PDF dei materiali (MECC §17, D-MAT-1): pdf.js, caricato solo al primo PDF; su Android il PDF si guarda
 // col visore del sistema (D-MAT-2)
 configurePdf(webPdf, androidPdfViewer);

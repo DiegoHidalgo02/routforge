@@ -54,6 +54,21 @@ export function logError(sorgente: Sorgente, errore: unknown, codice?: EventoDia
   eventi.length = Math.min(eventi.length, MAX_EVENTI);
 }
 
+/** Ciò che serve di un evento `error` o `unhandledrejection` della finestra (la lib di `app` non ha il DOM). */
+type ErroreGlobale = { reason?: unknown; error?: unknown; message?: string };
+
+/**
+ * Gli errori che nessuno raccoglie (una promessa senza `catch` nella UI, un gestore d'evento che lancia, un errore dopo
+ * il montaggio) vanno in Diagnostica (INV-16): prima finivano solo nella console, invisibile sul telefono (audit P2-5).
+ * Lo chiama il punto di composizione con la finestra.
+ */
+export function catchUnhandled(finestra: {
+  addEventListener(tipo: 'error' | 'unhandledrejection', f: (e: ErroreGlobale) => void): void;
+}): void {
+  finestra.addEventListener('unhandledrejection', (e) => logError('interfaccia', e.reason));
+  finestra.addEventListener('error', (e) => logError('interfaccia', e.error ?? e.message));
+}
+
 /** L'esito dell'ultima riconciliazione delle notifiche (§13.3). */
 export function logReconcile(istante: number, errore: unknown): void {
   riconciliazione = { istante, errore: errore == null ? null : testo(errore) };

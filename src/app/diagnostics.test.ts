@@ -6,7 +6,14 @@ import { save } from '../data/repository';
 import { testNotification } from '../domain/notifications/desiredSet';
 import { local } from '../domain/time';
 import { watch } from './db';
-import { configureDiagnostics, logError, logReconcile, MAX_EVENTI, readDiagnostics } from './diagnostics';
+import {
+  catchUnhandled,
+  configureDiagnostics,
+  logError,
+  logReconcile,
+  MAX_EVENTI,
+  readDiagnostics,
+} from './diagnostics';
 
 const ADESSO = local(2026, 9, 23, 16, 8);
 
@@ -71,5 +78,20 @@ describe('Errori delle letture — MECCANISMI §23, INV-16 (audit P1-13)', () =>
     const d = await readDiagnostics(db, ADESSO);
     expect(d.eventi[0]?.messaggio).toBe('lettura rotta');
     expect(d.armate).toBe(0);
+  });
+});
+
+describe('Errori che nessuno raccoglie — MECCANISMI §23, INV-16 (audit P2-5)', () => {
+  it('una promessa rifiutata senza catch e un errore di un gestore vanno in Diagnostica, non solo nella console', async () => {
+    configureDiagnostics({ now: () => ADESSO });
+    const ascolti = new Map<string, (e: { reason?: unknown; error?: unknown; message?: string }) => void>();
+    catchUnhandled({ addEventListener: (tipo, f) => void ascolti.set(tipo, f) });
+    ascolti.get('unhandledrejection')?.({ reason: new Error('salvataggio rifiutato') });
+    ascolti.get('error')?.({ error: new Error('gestore rotto'), message: 'gestore rotto' });
+    const { eventi } = await readDiagnostics(openDb('test-diagnostica-globale'), ADESSO);
+    expect(eventi.slice(0, 2).map((e) => [e.sorgente, e.messaggio])).toEqual([
+      ['interfaccia', 'gestore rotto'],
+      ['interfaccia', 'salvataggio rifiutato'],
+    ]);
   });
 });

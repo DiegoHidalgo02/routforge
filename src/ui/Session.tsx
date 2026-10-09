@@ -29,6 +29,7 @@ import { Link, Navigate, NavLink, useNavigate, useSearchParams } from 'react-rou
 import { unitScope } from '../app/ai';
 import { readUnitMaterial, type MaterialeUnita } from '../app/courses';
 import { appDb, watch } from '../app/db';
+import { logError } from '../app/diagnostics';
 import { readStreak } from '../app/outcome';
 import {
   abandonSession,
@@ -85,6 +86,13 @@ import s from './Session.module.css';
 
 /** L'istante del clic (fuori dal render: `react-hooks/purity`). */
 const adesso = () => Date.now();
+/** Un'azione della sessione che fallisce va in Diagnostica e la schermata prosegue col ripiego (INV-16; audit P2-5). */
+const traccia =
+  <T,>(ripiego: T) =>
+  (e: unknown): T => {
+    logError('interfaccia', e);
+    return ripiego;
+  };
 const fmtGiorno = new Intl.DateTimeFormat(lingua, { weekday: 'short', day: 'numeric', month: 'short' });
 
 /**
@@ -98,7 +106,7 @@ export function useStudyAction(): (azione: AzioneStudio, b: Pick<Blocco, 'id' | 
       return void navigate(`/sessione/setup?blocco=${encodeURIComponent(b.id)}`);
     if (azione === 'anticipa')
       return void anticipateSession(appDb, b.id, adesso(), fuso())
-        .catch(() => false)
+        .catch(traccia(false))
         .then(() => navigate(`/sessione/setup?blocco=${encodeURIComponent(b.id)}`));
     navigate(b.unitaId ? `/sessione/setup?unita=${encodeURIComponent(b.unitaId)}` : '/sessione/setup');
   };
@@ -209,7 +217,10 @@ export function SessionSetup() {
     setInAvvio(true);
     void startSession(appDb, b?.id ?? null, sceltaUtente, adesso(), fuso())
       .then(() => navigate('/sessione', { replace: true }))
-      .catch(() => setInAvvio(false));
+      .catch((e: unknown) => {
+        logError('interfaccia', e);
+        setInAvvio(false);
+      });
   };
 
   const scegli = (id: string | null) => {
@@ -626,7 +637,7 @@ export function ActiveSession() {
 
   const modifica = (f: (x: SessioneAttiva, n: number) => SessioneAttiva) => {
     const n = adesso();
-    void editActiveSession(appDb, (x) => f(x, n), n).catch(() => null);
+    void editActiveSession(appDb, (x) => f(x, n), n).catch(traccia(null));
   };
   // Chiude e legge la streak prima e dopo: «+1» solo se questa chiusura l'ha fatta crescere (§12, handoff §3 n. 48)
   const chiudiCon = async (chiusura: (n: number) => Promise<SessioneRegistrata | null>) => {
@@ -641,7 +652,7 @@ export function ActiveSession() {
     if (inChiusura) return;
     setInChiusura(true);
     void chiudiCon((n) => abandonSession(appDb, n, fuso()))
-      .catch(() => null)
+      .catch(traccia(null))
       .then((x) =>
         x?.c.esito
           ? setFatto({
@@ -661,7 +672,7 @@ export function ActiveSession() {
     if (inChiusura) return;
     setInChiusura(true);
     void chiudiCon((n) => endSession(appDb, n, fuso(), dati))
-      .catch(() => null)
+      .catch(traccia(null))
       .then((x) =>
         x
           ? setFatto({
@@ -1255,7 +1266,7 @@ const NOTE_MS = 600;
 function Note({ note }: { note: string }) {
   const [testo, setTesto] = useState(note);
   const salva = () => {
-    if (testo !== note) void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(() => null);
+    if (testo !== note) void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(traccia(null));
   };
   // All'uscita dalla schermata (indietro di sistema, app chiusa) il testo non ancora salvato si salva lo stesso
   const ultimo = useRef({ testo, note });
@@ -1266,14 +1277,14 @@ function Note({ note }: { note: string }) {
     () => () => {
       const u = ultimo.current;
       if (u.testo !== u.note)
-        void editActiveSession(appDb, (x) => ({ ...x, note: u.testo }), adesso()).catch(() => null);
+        void editActiveSession(appDb, (x) => ({ ...x, note: u.testo }), adesso()).catch(traccia(null));
     },
     [],
   );
   useEffect(() => {
     if (testo === note) return;
     const id = setTimeout(
-      () => void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(() => null),
+      () => void editActiveSession(appDb, (x) => ({ ...x, note: testo }), adesso()).catch(traccia(null)),
       NOTE_MS,
     );
     return () => clearTimeout(id);
