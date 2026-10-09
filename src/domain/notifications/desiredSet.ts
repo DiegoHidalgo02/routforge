@@ -254,15 +254,18 @@ export function blockNotifications(
   // «All'inizio» coincide col trigger puntuale e, se sveglia, lo rende sveglia (§13.1 n. 4)
   const zero = anticipi.find((a) => a.minuti === 0);
   const puntuale = (trigger: TriggerNotifica) => voce(trigger, 0, b.inizio, zero?.sveglia ?? false);
+  // La verifica solo se il blocco non è mai stato avviato (§8): dopo una sessione abbandonata torna `programmato` ma
+  // `minutiRitardo` resta dal primo avvio, come per l'avviso «perso» (audit P1-9)
+  const verifica = b.minutiRitardo == null ? [voce('verifica', 0, recoveryDeadline(b))] : [];
   switch (b.tipo) {
     case 'evento':
       return zero ? [...avvisi, ...pre, puntuale('inizio')] : [...avvisi, ...pre];
     case 'todo':
       return [...avvisi, ...pre, puntuale('scadenza')];
     case 'routine':
-      return [...avvisi, ...pre, puntuale('inizio'), voce('verifica', 0, recoveryDeadline(b))];
+      return [...avvisi, ...pre, puntuale('inizio'), ...verifica];
     case 'studio':
-      return [...avvisi, ...pre, puntuale('inizio'), voce('verifica', 0, recoveryDeadline(b)), ...esito];
+      return [...avvisi, ...pre, puntuale('inizio'), ...verifica, ...esito];
   }
 }
 

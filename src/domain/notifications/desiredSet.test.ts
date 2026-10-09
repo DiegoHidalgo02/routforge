@@ -149,6 +149,14 @@ describe('Trigger — MECCANISMI §13.2, SCENARI F1', () => {
     ]);
   });
 
+  it('dopo una sessione abbandonata il blocco torna programmato ma è già avviato: niente verifica (§8, audit P1-9)', () => {
+    // MECC §8: la verifica scatta «se il blocco non è stato avviato né chiuso»; `minutiRitardo` resta dal primo avvio
+    for (const tipo of ['studio', 'routine'] as const)
+      expect(
+        riassunto(blockNotifications(blocco({ tipo, minutiRitardo: 2 }), undefined, DEF)).map(([t]) => t),
+      ).not.toContain('verifica');
+  });
+
   it('routine: pre 10 · inizio · verifica, azione Posticipa', () => {
     const n = blockNotifications(blocco({ tipo: 'routine' }), undefined, DEF);
     expect(riassunto(n)).toEqual([
