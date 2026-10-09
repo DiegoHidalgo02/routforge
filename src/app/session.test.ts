@@ -20,6 +20,7 @@ import type { Blocco, Esito, StatoBlocco, StatoUnita } from '../domain/types';
 import { readStreak } from './outcome';
 import type { Clock } from './ports/clock';
 import { runCycle } from './scheduler';
+import { configureSessionDevice } from './sessionDevice';
 import {
   abandonSession,
   anticipateSession,
@@ -28,6 +29,7 @@ import {
   followSessionInForeground,
   readActiveSession,
   readSessionView,
+  releaseDoNotDisturb,
   setupInputs,
   startHeartbeat,
   startSession,
@@ -794,5 +796,29 @@ describe('Servizio in primo piano della sessione — MECCANISMI §10.4, D-TIMER-
     await startSession(db, null, scelta(), oggi(10), FUSO);
     expect(await readActiveSession(db)).not.toBeNull();
     rotto();
+  });
+});
+
+describe('Non Disturbare dopo un arresto — MECCANISMI §10.4 (audit P1-5)', () => {
+  afterEach(() =>
+    configureSessionDevice({
+      schermo: { keep: () => () => undefined },
+      nonDisturbare: { enable: () => Promise.resolve(false), disable: () => undefined },
+    }),
+  );
+  it('all’avvio senza una sessione con l’uscita bloccata si spegne; con l’uscita ancora bloccata resta', async () => {
+    const disable = vi.fn();
+    configureSessionDevice({
+      schermo: { keep: () => () => undefined },
+      nonDisturbare: { enable: () => Promise.resolve(true), disable },
+    });
+    await releaseDoNotDisturb(db, oggi(8));
+    expect(disable).toHaveBeenCalledTimes(1);
+    // Iperfocus dalle 9:00 per 50': alle 9:10 l'uscita è bloccata, alle 10:00 non più (l'app era morta a metà)
+    await startSession(db, null, scelta({ iperfocus: true }), oggi(9), FUSO);
+    await releaseDoNotDisturb(db, oggi(9, 10));
+    expect(disable).toHaveBeenCalledTimes(1);
+    await releaseDoNotDisturb(db, oggi(10));
+    expect(disable).toHaveBeenCalledTimes(2);
   });
 });

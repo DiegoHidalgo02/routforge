@@ -24,7 +24,7 @@ import { createScheduler } from './app/scheduler';
 import { blockRouteById, notificationGesture } from './app/notificationActions';
 import { followWidget } from './app/widget';
 import type { GestoNotifica, VoceToccata } from './app/ports/notifications';
-import { followSessionInForeground, startHeartbeat } from './app/session';
+import { followSessionInForeground, releaseDoNotDisturb, startHeartbeat } from './app/session';
 import { configureSessionDevice } from './app/sessionDevice';
 import { webClock } from './platform/clock';
 import { webDoNotDisturb, webScreenAwake } from './platform/device';
@@ -108,6 +108,8 @@ void pronti.then(() => {
 // Battiti di continuità della sessione (MECC §10.4, D-TIMER-2): sul web solo a scheda aperta; su Android il servizio in
 // primo piano della sessione li tiene vivi anche con l'app chiusa (T-021)
 startHeartbeat(appDb, webClock);
+// Un iperfocus interrotto dalla chiusura dell'app non lascia il telefono in Non Disturbare (audit P1-5)
+void releaseDoNotDisturb(appDb, webClock.now());
 // I messaggi della chat scritti offline partono al ritorno della rete (MECC §18)
 followPendingMessages(appDb, webNetwork, () => webClock.now());
 // La sincronizzazione fra dispositivi (MECC §25, T-033, D-SYNC-1): Supabase con le chiavi di `.env.local`; senza, il

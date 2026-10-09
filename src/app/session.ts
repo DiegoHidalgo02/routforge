@@ -21,13 +21,14 @@ import {
   type SessioneAttiva,
 } from '../domain/session';
 import { MINUTE } from '../domain/time';
-import { abandonPlan, beat, closeSession, currentStudyUnit, type SessioneChiusa } from '../domain/timer';
+import { abandonPlan, beat, closeSession, currentStudyUnit, exitLocked, type SessioneChiusa } from '../domain/timer';
 import type { StatoUnita } from '../domain/types';
 import type { BloccoCalendario } from './calendar';
 import { TABELLE_ESITO, writeOutcome } from './outcome';
 import { logError } from './diagnostics';
 import type { Clock } from './ports/clock';
 import type { SessioneInPrimoPiano } from './ports/device';
+import { disableDoNotDisturb } from './sessionDevice';
 
 /**
  * Riga di `preferenze` della sessione attiva (MECC §1; docs/02_ARCHITETTURA.md §4). Il ciclo ne legge `bloccoId` con
@@ -62,6 +63,21 @@ export function startHeartbeat(db: RoutForgeDb, clock: Clock): () => void {
   batti();
   const stop = [clock.every(MINUTE, batti), clock.onForeground(batti)];
   return () => stop.forEach((smetti) => smetti());
+}
+
+/**
+ * All'avvio (§10.4, audit P1-5): senza una sessione con l'uscita bloccata il Non Disturbare dell'iperfocus si spegne. Lo
+ * accende e lo spegne la schermata del timer finché l'uscita è bloccata; se l'app muore in quella fase (tolta dai
+ * recenti, arresto forzato, riavvio) la pulizia non gira e il telefono resterebbe silenziato. Il nativo ripristina solo
+ * se ha salvato il filtro di prima, quindi negli altri casi non fa nulla. Un errore resta qui (INV-16).
+ */
+export async function releaseDoNotDisturb(db: RoutForgeDb, now: number): Promise<void> {
+  try {
+    const s = await readActiveSession(db);
+    if (!s || !exitLocked(s, now)) disableDoNotDisturb();
+  } catch (e) {
+    logError('dispositivo', e);
+  }
 }
 
 /**
