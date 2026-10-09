@@ -14,7 +14,7 @@
  * - Ancorata all'orologio (`fine` presente): finisce a `fine`, la pausa non la sposta; ancorata al focus (libera con
  *   durata): finisce quando il focus arriva alla durata; cronometro (senza durata): mai finita.
  * - Oltre la fine il timer prosegue: tempo extra = tempo attivo dopo la fine (orologio) o focus − durata (focus).
- * - Pomodoro: i segmenti di `planSegments` scorrono sul tempo attivo, avanzano da soli tranne l'ultimo; «salta» chiude
+ * - Pomodoro: i segmenti di `segmentTimeline` scorrono sul tempo attivo, avanzano da soli tranne l'ultimo; «salta» chiude
  *   il segmento corrente in quell'istante. Il tempo per unità esclude le pause dei segmenti.
  * - Iperfocus: uscita bloccata finché la sessione non è finita o non c'è un'uscita forzata (interruzione «iperfocus»);
  *   senza una fine (cronometro) nessun blocco.
@@ -88,14 +88,14 @@ export interface SegmentoTimer {
 
 /**
  * Segmenti del pomodoro (§10.3) sul tempo attivo. Con una durata l'alternanza studio/pausa del preset tassella il tempo
- * fino alla fine (ultimo troncato, come `planSegments`), anche dopo un «salta», che anticipa i segmenti seguenti: la
+ * fino alla fine (ultimo troncato), anche dopo un «salta», che anticipa i segmenti seguenti: la
  * durata resta tassellata (D-TIMER-1); ancorata all'orologio, la durata è fine − avvio. Senza durata i 4 cicli di
  * `planSegments` (D-POMO-1). L'ultimo segmento non si salta e prosegue nel tempo extra.
  */
 export function segmentTimeline(s: SessioneAttiva): SegmentoTimer[] {
   if (s.modalita === 'continua') return [];
   const preset = PRESET[s.modalita];
-  const fisso = s.durata === null ? planSegments(preset, null) : null;
+  const fisso = s.durata === null ? planSegments(preset) : null;
   const totale = plannedMs(s) ?? Infinity;
   const salti = s.salti.map((x) => activeAt(s, x)).sort((a, b) => a - b);
   const out: SegmentoTimer[] = [];

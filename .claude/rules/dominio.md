@@ -18,7 +18,7 @@ paths:
   cartelle, funzioni e variabili (`lost.ts`, `scheduler/occurrences.ts`, `assignPointer`) (D-NAMING-1, INV-12).
   Nessun sinonimo di un attributo esistente: prima cerca in `types.ts`.
 - Una regola di spec è scritta in un solo modulo (D-MODULI-1, INV-13): prima di aggiungere una funzione, cerca se
-  esiste (`statiModuli`, `effectiveEnd`, `assignPointer`, `planSegments`, …) partendo da `src/domain/index.ts`.
+  esiste (`statiModuli`, `effectiveEnd`, `assignPointer`, `segmentTimeline`, …) partendo da `src/domain/index.ts`.
 - Ogni modulo dichiara in testa fonte (§ di MECCANISMI o FORMATO_CORSO) e scenari coperti; ogni modulo nuovo è
   esportato da `src/domain/index.ts` (INV-3).
 - Ogni funzione nuova ha un test accanto (`x.test.ts`); ogni `describe` cita § o scenario (INV-6); un test che nomina
