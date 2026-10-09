@@ -46,7 +46,8 @@ registro: `docs/01_DECISIONI.md`. Precisa D-DATA-1 e realizza la parte «modello
    albero del corso (id del parser, D-PARSE-2), occorrenze (slot), log fasi (blocco), preferenze (id = chiave),
    registro notifiche (id = chiave logica).
 7. **Campi calcolati del corso non salvati**: stato dei moduli, numero di unità, unità completate, unità corrente
-   restano funzioni del dominio (`statiModuli`, `courseProgress`, `currentUnit`), non copie da tenere allineate.
+   restano funzioni del dominio (`statiModuli`, `completedUnits`, `currentUnit`), non copie da tenere allineate
+   (`courseProgress`, tolta il 01/10 come codice morto, è tornata come `completedUnits`: audit P2-18).
 
 ## Motivazione
 

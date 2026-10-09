@@ -101,6 +101,13 @@ export function pendingUnits(units: readonly UnitaPercorso[], modules?: readonly
   return sortedUnits(units).filter((u) => STATI_UNITA_PENDENTI.has(u.stato) && isOpen(u.moduloNumero));
 }
 
+/**
+ * Le unità completate (MECC §11; D-DATA-2 n. 7): una saltata non è fatta. Lo stesso numero nella card dei Corsi, nel
+ * Corso, nel Modulo, nel setup della Sessione e nel Dettaglio (audit P2-18).
+ */
+export const completedUnits = (unita: readonly { stato: StatoUnita }[]): number =>
+  unita.filter((u) => u.stato === 'completata').length;
+
 /** Unità corrente del corso = prima pendente, o null se il percorso è finito/bloccato. */
 export function currentUnit(
   units: readonly UnitaPercorso[],

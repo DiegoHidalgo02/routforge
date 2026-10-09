@@ -7,7 +7,7 @@
  * I numeri si contano dalle righe salvate, non dai mock: il corso di esempio è 5 moduli (M2–M4 segnaposto, T-041) · 13 unità (D-SAMPLE-1).
  * `esempio` dà il badge «Esempio» (D-IMPORT-1). Ordine: dal più vecchio import al più recente.
  */
-import type { RoutForgeDb } from '../data/db';
+import type { RoutForgeDb, Tabelle } from '../data/db';
 import { get, inTransaction, list, listBy, remove, save, saveBlock } from '../data/repository';
 import {
   sectionTitle,
@@ -16,7 +16,7 @@ import {
   type SezioneImportata,
 } from '../domain/course/parser';
 import { quizCriterion } from '../domain/generation';
-import { criteriaMet, currentUnit, modulePath, sortedUnits, statiModuli } from '../domain/pointer';
+import { completedUnits, criteriaMet, currentUnit, modulePath, sortedUnits, statiModuli } from '../domain/pointer';
 import { courseFingerprint } from '../domain/sync';
 import { STATI_UNITA_PENDENTI } from '../domain/types';
 import { sessionMinutes } from '../domain/outcome';
@@ -38,28 +38,41 @@ export interface SchedaCorso {
   prossima: { id: string; numero: string; titolo: string } | null;
 }
 
+/** La scheda di un corso, uguale in S10 e nella Panoramica di S11 (una sola regola, audit P2-18). */
+function scheda(
+  { id, titolo, esempio }: Tabelle['corsi'],
+  moduli: readonly Tabelle['moduli'][],
+  unita: readonly Tabelle['unita'][],
+): SchedaCorso {
+  const sue = sortedUnits(unita);
+  const completate = completedUnits(sue);
+  // L'unità corrente (MECC §11): prima pendente nei moduli aperti; a percorso bloccato nessuna (D-PTR-1)
+  const c = currentUnit(sue, moduli.map(modulePath));
+  const p = c && sue.find((u) => u.id === c.id);
+  return {
+    id,
+    titolo,
+    esempio,
+    moduli: moduli.length,
+    unita: sue.length,
+    completate,
+    pct: sue.length ? Math.round((completate / sue.length) * 100) : 0,
+    minuti: sue.reduce((n, u) => n + u.minuti, 0),
+    prossima: p ? { id: p.id, numero: p.numero, titolo: p.titolo } : null,
+  };
+}
+
 export async function courseCards(db: RoutForgeDb): Promise<SchedaCorso[]> {
   const [corsi, moduli, unita] = await Promise.all([list(db, 'corsi'), list(db, 'moduli'), list(db, 'unita')]);
   return corsi
     .sort((a, b) => a.importatoIl - b.importatoIl)
-    .map(({ id, titolo, esempio }) => {
-      const sue = sortedUnits(unita.filter((u) => u.corsoId === id));
-      const completate = sue.filter((u) => u.stato === 'completata').length;
-      const percorso = moduli.filter((m) => m.corsoId === id).map(modulePath);
-      const c = currentUnit(sue, percorso);
-      const p = c && sue.find((u) => u.id === c.id);
-      return {
-        id,
-        titolo,
-        esempio,
-        moduli: moduli.filter((m) => m.corsoId === id).length,
-        unita: sue.length,
-        completate,
-        pct: sue.length ? Math.round((completate / sue.length) * 100) : 0,
-        minuti: sue.reduce((n, u) => n + u.minuti, 0),
-        prossima: p ? { id: p.id, numero: p.numero, titolo: p.titolo } : null,
-      };
-    });
+    .map((c) =>
+      scheda(
+        c,
+        moduli.filter((m) => m.corsoId === c.id),
+        unita.filter((u) => u.corsoId === c.id),
+      ),
+    );
 }
 
 /**
@@ -154,27 +167,13 @@ export async function readCourse(db: RoutForgeDb, corsoId: string): Promise<Vist
   const percorso = moduli.map(modulePath);
   const stati = statiModuli(percorso);
   const ordinate = sortedUnits(unita);
-  // L'unità corrente (MECC §11): prima pendente nei moduli aperti; a percorso bloccato nessuna (D-PTR-1)
-  const corrente = currentUnit(ordinate, percorso);
-  const u = corrente && ordinate.find((x) => x.id === corrente.id);
   const r = ricorrenze.filter((x) => x.tipo === 'studio').sort((a, b) => a.createdAt - b.createdAt)[0];
-  const completate = unita.filter((x) => x.stato === 'completata').length;
-  const puntatore = u ? { id: u.id, numero: u.numero, titolo: u.titolo } : null;
+  const s = scheda(corso, moduli, unita);
   return {
-    scheda: {
-      id: corso.id,
-      titolo: corso.titolo,
-      esempio: corso.esempio,
-      moduli: moduli.length,
-      unita: unita.length,
-      completate,
-      pct: unita.length ? Math.round((completate / unita.length) * 100) : 0,
-      minuti: unita.reduce((n, x) => n + x.minuti, 0),
-      prossima: puntatore,
-    },
+    scheda: s,
     importatoIl: corso.importatoIl,
     routine: r ? { giorni: r.giorni, orarioInizio: r.orarioInizio } : null,
-    puntatore,
+    puntatore: s.prossima,
     moduli: moduli
       .sort((a, b) => a.numero - b.numero)
       .map((m, i, tutti) => ({
@@ -250,7 +249,7 @@ export async function readModule(db: RoutForgeDb, corsoId: string, numero: numbe
     listBy(db, 'sezioni', 'corsoId', corsoId),
     listBy(db, 'risorse', 'corsoId', corsoId),
   ]);
-  const fatte = m.unita.filter((u) => u.stato === 'completata').length;
+  const fatte = completedUnits(m.unita);
   const delModulo = new Set(m.unita.map((u) => u.id));
   const ultimo = (await list(db, 'pratiche'))
     .flatMap((p) => (p.tipo === 'quiz' && p.risultato && delModulo.has(p.unitaId) ? [p.risultato] : []))

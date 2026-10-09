@@ -43,6 +43,7 @@ import {
 } from '../app/courses';
 import { appDb, watch } from '../app/db';
 import { quizCriterion } from '../domain/generation';
+import { completedUnits } from '../domain/pointer';
 import { local } from '../domain/time';
 import type { Esito, StatoUnita } from '../domain/types';
 import { durata as durataBreve, durataCorso, fuso, SETTIMANA } from './format';
@@ -174,7 +175,7 @@ export function Course() {
           {v.moduli.map((m) => {
             const bloccato = m.stato === 'bloccato';
             const aperto = !bloccato && aperti.has(m.numero);
-            const fatte = m.unita.filter((u) => u.stato === 'completata').length;
+            const fatte = completedUnits(m.unita);
             const modulo = `/corsi/${encodeURIComponent(corso)}/moduli/${m.numero}`;
             return (
               <div key={m.id} className={s.modulo} data-bloccato={bloccato || undefined}>

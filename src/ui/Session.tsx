@@ -46,6 +46,7 @@ import {
 } from '../app/session';
 import { disableDoNotDisturb, enableDoNotDisturb, keepScreenOn } from '../app/sessionDevice';
 import { countsByDefault, outcomeHints, sessionMinutes, type DatiEsito } from '../domain/outcome';
+import { completedUnits } from '../domain/pointer';
 import {
   lockedUnit,
   startContext,
@@ -417,7 +418,7 @@ function SchedaUnita(p: {
         {corso.titolo} ·{' '}
         <span className={s.num}>
           {t('unitaDelModulo', {
-            fatte: corso.unita.filter((x) => x.stato === 'completata').length,
+            fatte: completedUnits(corso.unita),
             totali: corso.unita.length,
           })}
         </span>

@@ -22,6 +22,7 @@ import {
   type PassoSpunta,
 } from '../domain/completion';
 import { followUpDraft, phaseLog } from '../domain/phases';
+import { completedUnits } from '../domain/pointer';
 import { occurrenceDay } from '../domain/scheduler/occurrences';
 import type { FaseLog, FaseTemplate, Ricorrenza } from '../domain/types';
 import { createActivity } from './activities';
@@ -70,7 +71,7 @@ export async function readDetail(db: RoutForgeDb, id: string): Promise<Dettaglio
           modulo: {
             numero: modulo.numero,
             titolo: modulo.titolo,
-            fatte: delModulo.filter((u) => u.stato === 'completata').length,
+            fatte: completedUnits(delModulo),
             totali: delModulo.length,
           },
         },

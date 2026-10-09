@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyOutcome,
   assignPointer,
+  completedUnits,
   criteriaMet,
   currentUnit,
   modulePath,
@@ -218,5 +219,13 @@ describe('Moduli segnaposto — FORMATO_CORSO §5 (T-041)', () => {
       modulePath({ numero: 3, criteri: [] }),
     ]);
     expect([...stati.values()]).toEqual(['passato', 'passato', 'bloccato', 'bloccato']);
+  });
+});
+
+describe('Unità completate — MECCANISMI §11, D-DATA-2 n. 7 (audit P2-18)', () => {
+  it('conta solo le completate: una saltata, una parziale o da rivedere non sono fatte', () => {
+    const stati = ['completata', 'saltata', 'completata', 'parziale', 'da_rivedere', 'non_iniziata'] as const;
+    expect(completedUnits(stati.map((stato) => ({ stato })))).toBe(2);
+    expect(completedUnits([])).toBe(0);
   });
 });
