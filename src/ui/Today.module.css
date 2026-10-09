@@ -89,12 +89,7 @@
 
 /* Testo per il lettore di schermo: la data intera anche quando si vede la forma breve */
 .soloLettore {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  composes: soloLettore from global;
 }
 
 .giornoSettimana {

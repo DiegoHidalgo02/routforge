@@ -91,3 +91,13 @@ a {
   transition: none !important;
   animation: none !important;
 }
+
+/* Testo solo per il lettore di schermo (Oggi, Pratica; i moduli lo compongono con `from global`) */
+.soloLettore {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
