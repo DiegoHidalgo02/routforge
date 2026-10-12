@@ -99,7 +99,7 @@ tabelle e campi in italiano come nel dominio (D-NAMING-1). Un campo nuovo non ri
   (`abandonPlan`, D-SESS-2). `endSession` e `abandonSession` salvano la sessione
   chiusa in `sessioni` con tipo e riepilogo, nella stessa transazione del blocco; `endSession` riceve l'esito e lo
   scrive con `writeOutcome` di `src/app/outcome.ts` (T-018, D-ESITO-1): unità, blocco (o blocco retroattivo della
-  libera che conta), streak in `preferenze.streak` e puntatore del corso. «Registra esito» senza sessione è
+  libera che conta) e puntatore del corso; la streak si ricalcola dai blocchi (§12, §25). «Registra esito» senza sessione è
   `registerOutcome` dello stesso modulo.
 - **NotificationPlanner** = `createNotifications` (`src/app/notifications.ts`, T-019, D-NOTIF-1) — `desiredSet(…, now)`
   di `src/domain/notifications/desiredSet.ts` calcola l'insieme desiderato (§13.3) in modo deterministico (chiave

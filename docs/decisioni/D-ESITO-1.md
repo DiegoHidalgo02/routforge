@@ -25,8 +25,9 @@ giorno della registrazione; con «conta» spento solo `sessioni` sa dell'esito.
   una via di mezzo che lo farebbe marcare perso (D-SCHED-1).
 - Il design fissa la precedente («Ripeti la 2.3»); saltare le `saltate` evita che Indietro annulli un Salta.
 - Le `note` del blocco vengono dalla routine (§7): scriverci la nota dell'esito le cancellerebbe.
-- `creditStreak` è idempotente sul giorno: accreditare un giorno passato dopo averne contato uno più recente romperebbe
-  il conteggio; il giorno della registrazione è quello in cui l'utente «ha studiato» per l'app.
+- Il giorno della registrazione è quello in cui l'utente «ha studiato» per l'app. Dal 12/10/2026 la streak non è più un
+  contatore in `preferenze`: si ricalcola dai blocchi di studio completati e parziali nel giorno di `chiusoIl`, come
+  vuole MECC §25 («ricalcolata localmente dai blocchi»), così vale anche su un secondo dispositivo (audit P2-2).
 - Un parziale ripreso è lo stesso blocco: i suoi minuti sono la somma delle sessioni.
 
 ## Alternative scartate

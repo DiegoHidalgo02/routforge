@@ -12,6 +12,7 @@
 import { recoveryDeadline } from './lost';
 import type { DatiEsito } from './outcome';
 import { weekOffset, type InizioSettimana } from './settings';
+import { studyDays } from './streak';
 import { addLocalDays, localDayKey, localInstant, localTimeKey, localWeekday, MINUTE, startOfLocalDay } from './time';
 import { plannedMs, type SessioneChiusa } from './timer';
 import type { Blocco, FaseLog, FaseTemplate, Ricorrenza, TipoBlocco } from './types';
@@ -228,9 +229,7 @@ export function longestStreak(
   blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'chiusoIl'>[],
   attuale: number,
 ): number {
-  const giorni = [
-    ...new Set(blocchi.filter((b) => b.tipo === 'studio' && fatto(b)).map((b) => localDayKey(b.chiusoIl ?? b.inizio))),
-  ].sort();
+  const giorni = studyDays(blocchi);
   let migliore = attuale;
   let serie = 0;
   let ieri: string | null = null;

@@ -84,13 +84,23 @@ describe('Continua — SCENARI C2', () => {
     expect(await readActiveSession(db)).toBeNull();
   });
   it('la streak aumenta di 1, una sola volta anche con due sessioni oggi (§12)', async () => {
-    await save(db, 'preferenze', { id: 'streak', valore: { conteggio: 4, ultimoGiorno: '2026-09-27' } }, 1);
+    for (const g of [24, 25, 26, 27])
+      await studio(`g${g}`, { stato: 'completato', inizio: local(2026, 9, g, 9), fine: local(2026, 9, g, 10) });
     await startSession(db, null, scelta({ unitaId: 'u11', corsoId: 'c1' }), oggi(9), FUSO);
     await endSession(db, oggi(9, 25), FUSO, esito('continua'));
     await startSession(db, null, scelta({ unitaId: 'u11', corsoId: 'c1' }), oggi(11), FUSO);
     await endSession(db, oggi(11, 25), FUSO, esito('completata'));
     expect(await readStreak(db, oggi(12))).toBe(5);
     expect(await readStreak(db, local(2026, 9, 30, 12))).toBe(0);
+  });
+  it('la streak si ricalcola dai blocchi, anche da quelli ricevuti con la sync (MECC §25; audit P2-2)', async () => {
+    // Due giorni di studio sul telefono, arrivati qui senza `writeOutcome`: completato ieri, parziale l'altro ieri
+    await studio('ieri', { stato: 'completato', inizio: local(2026, 9, 27, 9), fine: local(2026, 9, 27, 10) });
+    await studio('altroieri', { stato: 'parziale', inizio: local(2026, 9, 26, 9), fine: local(2026, 9, 26, 10) });
+    expect(await readStreak(db, oggi(8))).toBe(2);
+    // Un'attività che non è studio, o uno studio non fatto, non conta
+    await studio('perso', { stato: 'perso', inizio: local(2026, 9, 25, 9), fine: local(2026, 9, 25, 10) });
+    expect(await readStreak(db, oggi(8))).toBe(2);
   });
   it('Indietro, Salta e una sessione che non conta non alimentano la streak (§12)', async () => {
     await startSession(db, null, scelta({ unitaId: 'u12', corsoId: 'c1' }), oggi(9), FUSO);

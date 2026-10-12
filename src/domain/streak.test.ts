@@ -1,42 +1,56 @@
 import { describe, expect, it } from 'vitest';
-import { creditStreak, currentStreak, EMPTY_STREAK, outcomeCountsForStreak } from './streak';
+import { currentStreak, studyDays } from './streak';
 import { local } from './time';
+import type { Blocco } from './types';
 
-describe('Streak — MECCANISMI §12 / SCENARI C2', () => {
+/** Un blocco di studio chiuso all'istante dato (l'esito), nello stato dato. */
+const studio = (chiusoIl: number, stato: Blocco['stato'] = 'completato') =>
+  ({ tipo: 'studio', stato, inizio: chiusoIl, chiusoIl }) as const;
+
+describe('Streak — MECCANISMI §12, §25 / SCENARI C2', () => {
   it('la prima sessione che conta porta la streak a 1', () => {
-    const s = creditStreak(EMPTY_STREAK, local(2026, 9, 22, 9, 30));
-    expect(s.conteggio).toBe(1);
-    expect(s.ultimoGiorno).toBe('2026-09-22');
+    expect(currentStreak(studyDays([studio(local(2026, 9, 22, 9, 30))]), local(2026, 9, 22, 10, 0))).toBe(1);
   });
 
   it('C2: +1 una sola volta anche con due sessioni oggi', () => {
-    const s1 = creditStreak(EMPTY_STREAK, local(2026, 9, 22, 9, 30));
-    const s2 = creditStreak(s1, local(2026, 9, 22, 21, 0));
-    expect(s2.conteggio).toBe(1);
+    const giorni = studyDays([studio(local(2026, 9, 22, 9, 30)), studio(local(2026, 9, 22, 21, 0), 'parziale')]);
+    expect(giorni).toEqual(['2026-09-22']);
+    expect(currentStreak(giorni, local(2026, 9, 22, 22, 0))).toBe(1);
   });
 
   it('giorni consecutivi: ieri → oggi = +1', () => {
-    let s = creditStreak(EMPTY_STREAK, local(2026, 9, 21, 9, 30));
-    s = creditStreak(s, local(2026, 9, 22, 9, 30));
-    expect(s.conteggio).toBe(2);
+    const giorni = studyDays([studio(local(2026, 9, 21, 9, 30)), studio(local(2026, 9, 22, 9, 30))]);
+    expect(currentStreak(giorni, local(2026, 9, 22, 10, 0))).toBe(2);
   });
 
   it('si spezza se passa un giorno intero senza: riparte da 1', () => {
-    let s = creditStreak(EMPTY_STREAK, local(2026, 9, 20, 9, 30));
-    s = creditStreak(s, local(2026, 9, 22, 9, 30));
-    expect(s.conteggio).toBe(1);
+    const giorni = studyDays([studio(local(2026, 9, 20, 9, 30)), studio(local(2026, 9, 22, 9, 30))]);
+    expect(currentStreak(giorni, local(2026, 9, 22, 10, 0))).toBe(1);
   });
 
   it("valore mostrato: 0 se l'ultimo giorno contato non è oggi né ieri", () => {
-    const s = creditStreak(EMPTY_STREAK, local(2026, 9, 20, 9, 30));
-    expect(currentStreak(s, local(2026, 9, 21, 8, 0))).toBe(1); // ieri
-    expect(currentStreak(s, local(2026, 9, 22, 8, 0))).toBe(0); // due giorni dopo
+    const giorni = studyDays([studio(local(2026, 9, 19, 9, 30)), studio(local(2026, 9, 20, 9, 30))]);
+    expect(currentStreak(giorni, local(2026, 9, 21, 8, 0))).toBe(2); // ieri: la serie vale ancora
+    expect(currentStreak(giorni, local(2026, 9, 22, 8, 0))).toBe(0); // due giorni dopo
   });
 
-  it('solo Completata e Continua contano', () => {
-    expect(outcomeCountsForStreak('completata')).toBe(true);
-    expect(outcomeCountsForStreak('continua')).toBe(true);
-    expect(outcomeCountsForStreak('indietro')).toBe(false);
-    expect(outcomeCountsForStreak('salta')).toBe(false);
+  it('solo Completata e Continua contano: Indietro, Salta, persi e altri tipi no', () => {
+    const giorno = local(2026, 9, 22, 9, 30);
+    expect(
+      studyDays([
+        studio(giorno, 'indietro'),
+        studio(giorno, 'saltato'),
+        studio(giorno, 'perso'),
+        { tipo: 'routine', stato: 'completato', inizio: giorno, chiusoIl: giorno },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('il giorno è quello dell’esito, anche per un blocco pianificato il giorno prima (D-ESITO-1 n. 4)', () => {
+    expect(
+      studyDays([
+        { tipo: 'studio', stato: 'completato', inizio: local(2026, 9, 21, 23, 0), chiusoIl: local(2026, 9, 22, 0, 30) },
+      ]),
+    ).toEqual(['2026-09-22']);
   });
 });
