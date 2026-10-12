@@ -27,9 +27,11 @@ giorno della registrazione; con «conta» spento solo `sessioni` sa dell'esito.
 - Le `note` del blocco vengono dalla routine (§7): scriverci la nota dell'esito le cancellerebbe.
 - Il giorno della registrazione è quello in cui l'utente «ha studiato» per l'app. Dal 12/10/2026 la streak non è più un
   contatore in `preferenze`: si ricalcola dai blocchi di studio completati e parziali nel giorno di `chiusoIl`, come
-  vuole MECC §25 («ricalcolata localmente dai blocchi»), così vale anche su un secondo dispositivo (audit P2-2). Un
-  esito che arriva entro un giorno dall'inizio del blocco conta per il giorno dell'inizio: una sessione serale chiusa
-  dopo mezzanotte non spezza la serie di chi studia la sera (audit A-3); solo i campi del blocco, uguali ovunque.
+  vuole MECC §25 («ricalcolata localmente dai blocchi»), così vale anche su un secondo dispositivo (audit P2-2). Il
+  giorno è quello in cui lo studio è cominciato, stimato come l'esito meno i suoi minuti: una sessione serale chiusa
+  dopo mezzanotte non spezza la serie di chi studia la sera (audit A-3) e un recupero conta il giorno in cui si fa;
+  solo i campi del blocco, uguali su ogni dispositivo. Limiti: le pause spostano la stima in avanti, e un parziale
+  chiuso poi con Indietro o Salta perde il giorno del suo Continua.
 - Un parziale ripreso è lo stesso blocco: i suoi minuti sono la somma delle sessioni.
 
 ## Alternative scartate
