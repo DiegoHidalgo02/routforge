@@ -42,7 +42,8 @@ eliminata sarebbe un orfano in calendario e nelle statistiche.
 ## Conseguenze
 
 Le metriche costruite sui blocchi (disciplina, giorni con attività, persi, esiti, puntualità, §20) perdono la storia
-del corso eliminato; le statistiche di focus no, perché vengono dalle sessioni. Il punto 3 va confermato dall'utente.
+del corso eliminato; le statistiche di focus no, perché vengono dalle sessioni. Il punto 3 è confermato (risposta dell'utente del 09/10/2026 all'audit,
+P1-14), anche per gli altri dispositivi dove il corso c'è ancora.
 
 ## Verifica
 

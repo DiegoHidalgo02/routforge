@@ -56,7 +56,7 @@ dell'utente.
 
 - Finché il corso non è importato, ogni ciclo con una routine da collegare rilegge il testo dei moduli (pochi corsi:
   accettato).
-- **Da confermare con l'utente**: eliminare un corso elimina a cascata le routine collegate (H3); dopo il
+- **Confermato** (risposta dell'utente del 09/10/2026 all'audit, P1-14): eliminare un corso elimina a cascata le routine collegate (H3); dopo il
   collegamento vale anche per una routine ricevuta, e l'eliminazione raggiunge gli altri dispositivi, dove il corso c'è
   ancora. L'alternativa è staccare la routine dal corso invece di eliminarla quando il corso è solo di qui.
 - Un corso importato con un titolo diverso (ZIP senza file struttura, titolo chiesto all'utente) ha un'altra impronta:

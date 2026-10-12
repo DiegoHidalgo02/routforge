@@ -1,7 +1,7 @@
 # D-TIME-3 — Ora legale: l'orario che non esiste e quello che c'è due volte
 
-**Stato**: applicata il 09/10/2026 (audit P2-22). La spec tace: scelta minima e reversibile dell'agente, da confermare
-con l'utente. Riga nel registro: `docs/01_DECISIONI.md`.
+**Stato**: applicata il 09/10/2026 (audit P2-22). La spec tace: scelta minima e reversibile dell'agente, confermata
+dall'utente (risposta dell'utente del 09/10/2026 all'audit). Riga nel registro: `docs/01_DECISIONI.md`.
 
 ## Contesto
 
