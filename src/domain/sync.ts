@@ -264,19 +264,30 @@ export const MAX_BYTE_RIGA = 1024 * 1024;
 const ESCAPE_RIFIUTATO = /(?:^|[^\\])(?:\\\\)*\\u(?:0000|d[89a-f][0-9a-f]{2})/;
 
 /**
- * `false` per una riga che il servizio rifiuterebbe sempre. I byte si misurano sul JSON indentato di uno spazio, mai
- * più corto del testo `jsonb` (uno spazio dopo ogni `:` e `,`), salvo i numeri con esponente che i dati dell'app non hanno.
+ * Il tetto in byte di un lotto del push (audit N-5): con righe fino a 1 MiB, 200 righe farebbero una richiesta che un
+ * limite della piattaforma o il tempo massimo di una chiamata rifiuterebbero sempre, fermando la coda.
  */
-export function sendable(dati: unknown): boolean {
-  const testo = JSON.stringify(dati, null, 1);
-  if (ESCAPE_RIFIUTATO.test(testo)) return false;
+export const MAX_BYTE_LOTTO = 4 * 1024 * 1024;
+
+const byteUtf8 = (testo: string): number => {
   let byte = 0;
   for (const c of testo) {
     const punto = c.codePointAt(0) ?? 0;
     byte += punto < 0x80 ? 1 : punto < 0x800 ? 2 : punto < 0x10000 ? 3 : 4;
-    if (byte > MAX_BYTE_RIGA) return false;
   }
-  return true;
+  return byte;
+};
+
+/**
+ * I byte di una riga sul servizio, misurati sul JSON indentato di uno spazio: mai meno del testo `jsonb` (uno spazio
+ * dopo ogni `:` e `,`), salvo i numeri con esponente che i dati dell'app non hanno.
+ */
+export const rowBytes = (dati: unknown): number => byteUtf8(JSON.stringify(dati, null, 1));
+
+/** `false` per una riga che il servizio rifiuterebbe sempre: escape vietati da `jsonb` o oltre `MAX_BYTE_RIGA`. */
+export function sendable(dati: unknown): boolean {
+  const testo = JSON.stringify(dati, null, 1);
+  return !ESCAPE_RIFIUTATO.test(testo) && byteUtf8(testo) <= MAX_BYTE_RIGA;
 }
 
 /** D-SYNC-2: l'istante salvato dal servizio non supera di più di 5 minuti la sua ora. */

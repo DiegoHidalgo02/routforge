@@ -9,7 +9,7 @@ import { allRows, get, list, newId, replaceAll, save, saveBlock } from './data/r
 import type { BozzaAttivita } from './domain/activity';
 import { desiredSet, IMPOSTAZIONI_NOTIFICHE_DEFAULT } from './domain/notifications/desiredSet';
 import { lockedUnit } from './domain/session';
-import { CHIAVE_STATO_SYNC, courseFingerprint } from './domain/sync';
+import { CHIAVE_STATO_SYNC, courseFingerprint, MAX_BYTE_LOTTO } from './domain/sync';
 import { local, MINUTE } from './domain/time';
 import { CODICE_FINTO, createSyncStore, memorySyncBackend, type ArchivioSync } from './platform/syncMemory';
 import { createActivity } from './app/activities';
@@ -984,5 +984,28 @@ describe('Sessione su un altro dispositivo — MECCANISMI §8, §25 (audit P3-4)
     expect(await stato()).toBe('in_corso');
     await runCycle(tablet.db, ora + 13 * 60 * MINUTE, FUSO);
     expect(await stato()).toBe('perso');
+  });
+});
+
+describe('Tetto in byte del lotto — MECCANISMI §25 (audit N-5)', () => {
+  it('cinque note da 900 KB partono in più lotti, ognuno sotto il tetto in byte, e arrivano tutte', async () => {
+    const pesi: number[] = [];
+    const contaPesi = (b: SyncBackend): SyncBackend => ({
+      ...b,
+      push: (buste) => {
+        pesi.push(buste.reduce((n, x) => n + JSON.stringify(x.dati).length, 0));
+        return b.push(buste);
+      },
+    });
+    const telefono = dispositivo('telefono', { avvolgi: contaPesi });
+    await accedi(telefono);
+    for (const t of ['A', 'B', 'C', 'D', 'E']) await crea(telefono.db, { ...todo(t), note: t.repeat(900 * 1024) });
+    pesi.length = 0;
+    await telefono.sync.run();
+    expect(pesi.length).toBeGreaterThan(1);
+    expect(Math.max(...pesi)).toBeLessThanOrEqual(MAX_BYTE_LOTTO);
+    const tablet = dispositivo('tablet');
+    await accedi(tablet);
+    expect(await titoli(tablet.db)).toEqual(['A', 'B', 'C', 'D', 'E']);
   });
 });

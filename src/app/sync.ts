@@ -28,12 +28,15 @@ import {
   CHIAVE_STATO_SYNC,
   decide,
   isSynced,
+  MAX_BYTE_LOTTO,
   mergeLocalFields,
   receivedInProgress,
+  rowBytes,
   sendable,
   TABELLE_SINCRONIZZATE,
   toEnvelope,
   validEnvelope,
+  type Busta,
   type BustaRicevuta,
   type TabellaSincronizzata,
 } from '../domain/sync';
@@ -201,36 +204,48 @@ async function pushQueue(db: RoutForgeDb, backend: SyncBackend): Promise<boolean
   );
   let impronte: Map<string, string> | undefined;
   let spedito = false;
-  for (let i = 0; i < voci.length; i += LOTTO) {
-    const buste = [];
-    const spedite = [];
-    for (const v of voci.slice(i, i + LOTTO)) {
-      spedite.push({ id: v.id, updatedAt: v.updatedAt });
-      if (!isSynced(v.tabella, v.recordId)) continue;
-      const tabella = v.tabella as TabellaSincronizzata;
-      // Un record che non c'è più (azzerato con l'import di un backup): la voce non ha nulla da spedire
-      const riga = await rawRow(db, tabella, v.recordId);
-      if (!riga) continue;
-      const corsoId = tabella === 'ricorrenze' && riga.deletedAt === null ? (riga as Ricorrenza).corsoId : null;
-      if (corsoId) impronte ??= new Map((await courseFingerprints(db)).map((c) => [c.id, c.impronta]));
-      const impronta = corsoId ? impronte?.get(corsoId) : undefined;
-      const spedita = impronta ? { ...riga, impronta } : riga;
-      const busta = toEnvelope(tabella, spedita, v);
-      // Una riga che il servizio rifiuterebbe sempre fermerebbe tutta la coda: non parte, va in Diagnostica e la sua voce
-      // resta in coda, perché senza voce una versione remota più vecchia la sovrascriverebbe (`decide`; audit P1-11)
-      if (!sendable(busta.dati)) {
-        spedite.pop();
-        logError('sync', new Error(`riga non spedita, il servizio la rifiuterebbe: ${tabella}:${v.recordId}`));
-        continue;
-      }
-      buste.push(busta);
-    }
+  // Un lotto si chiude a `LOTTO` righe o prima di superare `MAX_BYTE_LOTTO` (audit N-5); le sue voci escono dalla coda
+  // solo dopo il push riuscito, anche quelle senza nulla da spedire
+  let buste: Busta[] = [];
+  let spedite: { id: string; updatedAt: number }[] = [];
+  let byte = 0;
+  const chiudi = async () => {
     if (buste.length) {
       await backend.push(buste);
       spedito = true;
     }
     await dequeue(db, spedite);
+    [buste, spedite, byte] = [[], [], 0];
+  };
+  for (const v of voci) {
+    const voce = { id: v.id, updatedAt: v.updatedAt };
+    // Un record che non c'è più (azzerato con l'import di un backup) o fuori ambito: la voce non ha nulla da spedire
+    const riga = isSynced(v.tabella, v.recordId)
+      ? await rawRow(db, v.tabella as TabellaSincronizzata, v.recordId)
+      : null;
+    if (!riga) {
+      spedite.push(voce);
+      continue;
+    }
+    const tabella = v.tabella as TabellaSincronizzata;
+    const corsoId = tabella === 'ricorrenze' && riga.deletedAt === null ? (riga as Ricorrenza).corsoId : null;
+    if (corsoId) impronte ??= new Map((await courseFingerprints(db)).map((c) => [c.id, c.impronta]));
+    const impronta = corsoId ? impronte?.get(corsoId) : undefined;
+    const spedita = impronta ? { ...riga, impronta } : riga;
+    const busta = toEnvelope(tabella, spedita, v);
+    // Una riga che il servizio rifiuterebbe sempre fermerebbe tutta la coda: non parte, va in Diagnostica e la sua voce
+    // resta in coda, perché senza voce una versione remota più vecchia la sovrascriverebbe (`decide`; audit P1-11)
+    if (!sendable(busta.dati)) {
+      logError('sync', new Error(`riga non spedita, il servizio la rifiuterebbe: ${tabella}:${v.recordId}`));
+      continue;
+    }
+    const peso = rowBytes(busta.dati);
+    if (buste.length >= LOTTO || (buste.length > 0 && byte + peso > MAX_BYTE_LOTTO)) await chiudi();
+    buste.push(busta);
+    spedite.push(voce);
+    byte += peso;
   }
+  await chiudi();
   return spedito;
 }
 

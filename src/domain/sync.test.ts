@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  rowBytes,
   receivedInProgress,
   clampUpdatedAt,
   courseFingerprint,
@@ -292,5 +293,13 @@ describe('Blocchi in corso altrove — MECCANISMI §25 (audit P3-4)', () => {
     expect(receivedInProgress({ a: 10, b: 'x', c: Number.NaN, d: null })).toEqual({ a: 10 });
     expect(receivedInProgress(null)).toEqual({});
     expect(receivedInProgress('rotta')).toEqual({});
+  });
+});
+
+describe('Byte di una riga — MECCANISMI §25 (audit N-5)', () => {
+  it('i byte UTF-8 del JSON indentato di uno spazio: base del tetto della riga e di quello del lotto', () => {
+    // {\n "a": "è"\n} = 13 caratteri, la «è» vale 2 byte
+    expect(rowBytes({ a: 'è' })).toBe(14);
+    expect(rowBytes({ a: '😀' })).toBe(16);
   });
 });
