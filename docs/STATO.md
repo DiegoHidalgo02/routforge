@@ -29,7 +29,7 @@ decisioni (`docs/01_DECISIONI.md`).*
 - Deploy web su un host con origine propria (Cloudflare Pages o Netlify; non GitHub Pages: D-RILASCIO-1).
 - Sync vera: progetto Supabase coi passi in testa a `supabase/schema.sql`, variabili in `.env.local` e sull'host.
 - Collaudo dell'APK sul telefono: `docs/COLLAUDO.md` (da un APK di debug: backup, disinstalla, installa, importa);
-  da provare lì anche N-2 (sveglia S8) e P2-28 (gesti in due fasi).
+  da provare lì anche N-2 (sveglia S8), P2-28 (gesti in due fasi) e gli orari di Crea in inglese a 360 px.
 - Spec da allineare al codice per D-DIVERGENZE-1, D-OCC-2 e la streak (D-ESITO-1 n. 4), se l'utente lo chiede (INV-5).
 - CP4 (council, 07/10): tetto di spesa sulla chiave Gemini; MECC §22 e §25 da allineare (chiave AI fuori da backup e
   sync).

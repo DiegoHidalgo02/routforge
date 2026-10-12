@@ -27,6 +27,8 @@ installando l'APK sul telefono; un difetto trovato diventa un task o una riga di
 ## Il resto
 
 - Scala del testo; cambio di fuso ad app aperta; PDF col visore del sistema; backup in Documenti e import.
+- Crea in inglese a 360 px: «08:00 PM» intero nei campi orario e il foglio non scorre a destra (correzione del
+  08/10: in Edge si prova solo il meccanismo, perché lì gli orari sono a 24 ore).
 - Widget e collegamenti (a 110 dp d'altezza se taglia: 3 righe d'agenda).
 - Voce della Trivia: lingua, 5 s, una playlist a schermo spento, Salta, uscita, Play dopo un errore; swipe di DevSwipe
   partendo dal codice.
