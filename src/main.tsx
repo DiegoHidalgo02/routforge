@@ -40,6 +40,7 @@ import { deviceDescription, supabaseSyncBackend } from './platform/syncSupabase'
 import { webPdf } from './platform/pdf';
 import { deviceVoice } from './platform/voice';
 import { androidPdfViewer } from './platform/pdfAndroid';
+import { registerPwa } from './platform/pwa';
 import { App } from './ui/App';
 import { lingua } from './ui/i18n';
 import { etichetteNative, testiNotifica } from './ui/notificationTexts';
@@ -73,6 +74,8 @@ if (radice)
     </StrictMode>,
   );
 
+// La PWA installabile e offline (CONTESTO §3, T-035): il service worker solo nel browser, dopo il montaggio
+registerPwa();
 // Archiviazione persistente (D-DATA-1, docs/02_ARCHITETTURA.md §8), dopo il montaggio e mai bloccante (INV-16): il
 // browser può non averla o rifiutarla; lo stato si mostra in Diagnostica (T-032).
 void navigator.storage?.persist?.().catch(() => false);

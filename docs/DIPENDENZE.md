@@ -15,7 +15,7 @@ un pacchetto non registrato è un `BLOCCO:`.
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
 | `typescript` | dev | typecheck (`npm run check`) | TypeScript `strict` è il linguaggio del progetto | D-TEST-1 |
-| `vitest` | dev | test (`npm test`), comprese le verifiche architetturali in `scripts/*.test.mjs` | gate unico, ambiente node, test accanto al codice. Due avvisi moderati noti su `@vitest/mocker` (redirect mock del dev server, funzione non usata): correzione disponibile solo con la major 5, da valutare in un task dedicato | D-TEST-1 |
+| `vitest` | dev | test (`npm test`), comprese le verifiche architetturali in `scripts/*.test.mjs` | gate unico, ambiente node, test accanto al codice. Avvisi di `npm audit` noti al 09/10/2026: `@vitest/mocker` (moderato, redirect mock del dev server, funzione non usata) e `tinypool` (critico, prototype pollution nelle opzioni dei worker: serve un attaccante che controlli la configurazione dei test); correzione solo con la major 5, in un task dedicato | D-TEST-1 |
 | `eslint`, `@eslint/js`, `typescript-eslint` | dev | lint (`npm run lint`), regole "recommended" | `any`, `@ts-ignore`, variabili inutilizzate verificati dal gate e non solo scritti in CLAUDE.md | D-LINT-1 |
 | `prettier` | dev | formato (`npm run format`, `npm run format:check`) | stile uniforme fra modelli e sessioni diverse | D-LINT-1 |
 | `fflate` | runtime | `src/app/courseImport.ts` (lettura ZIP), T-003 | estrazione dei `.md` dallo ZIP del corso; piccola, senza dipendenze, stesso codice su web e WebView | D-STACK-1 |
@@ -41,6 +41,6 @@ un pacchetto non registrato è un `BLOCCO:`.
 
 | Pacchetto | Tipo | Uso | Motivo | Decisione |
 |---|---|---|---|---|
-| `vite-plugin-pwa` | prevista | dev, web installabile (manifest e service worker), T-035: nome e icona arrivano con CP6 | PWA sulla stessa build di Vite | D-STACK-1 |
+| `vite-plugin-pwa` | dev | web installabile e offline (manifest e service worker di Workbox), T-035; 1.3.0 e non la 2.0.0, uscita il 03/10/2026 | PWA sulla stessa build di Vite | D-STACK-1, D-RILASCIO-1 |
 | `i18next` | prevista | `src/ui`, T-031 | sei lingue da file JSON | D-I18N-1 |
 | `@testing-library/react` | prevista | dev, test UI, solo dove uno scenario lo richiede (es. G3) | test di interazione | D-TEST-1 |

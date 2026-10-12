@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { backupText } from '../app/backup';
 import { appDb } from '../app/db';
 import { registerSyncService, type StatoSync, type SyncService } from '../app/sync';
-import { Account, Backup } from './Settings';
+import { Account, Backup, Diagnostics } from './Settings';
 
 let box: HTMLDivElement;
 let root: Root;
@@ -98,5 +98,104 @@ describe('Azioni distruttive di Impostazioni — MECCANISMI §22, §25 (audit P2
     expect(eraseRemote).not.toHaveBeenCalled();
     bottoni('Delete from the account')[0]!.click();
     await vi.waitFor(() => expect(eraseRemote).toHaveBeenCalledTimes(1));
+  });
+});
+
+/** Lo spazio del browser (jsdom non ha `navigator.storage`): senza la stima la sezione di «Svuota cache» non c'è. */
+const spazioDelBrowser = () =>
+  Object.defineProperty(navigator, 'storage', {
+    configurable: true,
+    value: {
+      estimate: () => Promise.resolve({ usage: 2048, quota: 1 << 30, usageDetails: { caches: 1024 } }),
+      persisted: () => Promise.resolve(true),
+    },
+  });
+
+describe('«Reinstalla PWA» — MECCANISMI §23 (T-035)', () => {
+  // jsdom non ha `matchMedia`, che la Diagnostica legge per la riduzione delle animazioni
+  beforeEach(() => {
+    window.matchMedia = (media: string) =>
+      ({ matches: false, media, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+    Reflect.deleteProperty(navigator, 'storage');
+  });
+
+  it('senza un service worker che controlla la pagina (app Android, sviluppo) il bottone non c’è', async () => {
+    apri(Diagnostics);
+    await vi.waitFor(() => expect(bottoni('Copy diagnostics')).toHaveLength(1));
+    expect(bottoni('Reinstall PWA')).toHaveLength(0);
+  });
+
+  /** La PWA attiva: un service worker che controlla la pagina e la sua cache; `unregister` e le cache cancellate. */
+  const pwaAttiva = () => {
+    spazioDelBrowser();
+    const unregister = vi.fn(() => Promise.resolve(true));
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: { controller: {}, getRegistrations: () => Promise.resolve([{ unregister }]) },
+    });
+    const cancellate: string[] = [];
+    vi.stubGlobal('caches', {
+      keys: () => Promise.resolve(['workbox-precache-v2']),
+      delete: (k: string) => Promise.resolve(Boolean(cancellate.push(k))),
+    });
+    return { unregister, cancellate };
+  };
+
+  it('col service worker della PWA svuota le cache e lo deregistra, poi ricarica', async () => {
+    const { unregister, cancellate } = pwaAttiva();
+    apri(Diagnostics);
+    await vi.waitFor(() => expect(bottoni('Reinstall PWA')).toHaveLength(1));
+    bottoni('Reinstall PWA')[0]!.click();
+    await vi.waitFor(() => expect(unregister).toHaveBeenCalledTimes(1));
+    expect(cancellate).toEqual(['workbox-precache-v2']);
+  });
+
+  it('offline non fa nulla: senza rete la PWA non si reinstallerebbe e l’app resterebbe senza file', async () => {
+    const { unregister, cancellate } = pwaAttiva();
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+    try {
+      apri(Diagnostics);
+      await vi.waitFor(() => expect(bottoni('Reinstall PWA')).toHaveLength(1));
+      bottoni('Reinstall PWA')[0]!.click();
+      bottoni('Clear cache')[0]!.click();
+      await new Promise((r) => setTimeout(r, 300));
+      expect(unregister).not.toHaveBeenCalled();
+      expect(cancellate).toEqual([]);
+    } finally {
+      Reflect.deleteProperty(navigator, 'onLine');
+    }
+  });
+});
+
+describe('«Svuota cache» — FUNZIONALITA §24, MECCANISMI §23 (T-035)', () => {
+  beforeEach(() => {
+    window.matchMedia = (media: string) =>
+      ({ matches: false, media, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+    Reflect.deleteProperty(navigator, 'storage');
+  });
+
+  it('con la PWA attiva la cache è quella del service worker: svuotarla reinstalla la PWA, che resta usabile offline', async () => {
+    spazioDelBrowser();
+    const unregister = vi.fn(() => Promise.resolve(true));
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: { controller: {}, getRegistrations: () => Promise.resolve([{ unregister }]) },
+    });
+    vi.stubGlobal('caches', {
+      keys: () => Promise.resolve(['workbox-precache-v2']),
+      delete: () => Promise.resolve(true),
+    });
+    apri(Diagnostics);
+    await vi.waitFor(() => expect(bottoni('Clear cache')).toHaveLength(1));
+    bottoni('Clear cache')[0]!.click();
+    await vi.waitFor(() => expect(unregister).toHaveBeenCalledTimes(1));
   });
 });

@@ -147,8 +147,9 @@ resta fuori dal dominio.
 | Backup su cartella documenti | download | `@capacitor/filesystem` Documents | Files | §22 |
 | TTS (Trivia) | Web Speech API (si ferma a schermo spento) | plugin locale `VoceTrivia`: coda di `TextToSpeech` con i silenzi (D-NATIVO-4) | da scrivere (T-036) | §18 |
 | Schermo acceso | Wake Lock API | plugin keep-awake | idem | §10.4 |
+| Installazione e offline (T-035, D-RILASCIO-1) | PWA: service worker di Workbox con tutta la build in cache, aggiornamento automatico; host con origine propria e CSP scritta dalla build in `dist/_headers` | APK firmato (`npm run apk`), nessun service worker: i file sono nel pacchetto | T-036 | icone dal logo del design (`scripts/icone.mjs`) |
 
-## 7. Comandi di scaffold (T-006 fatto il 25/09/2026; Capacitor in T-021, PWA in T-035)
+## 7. Comandi di scaffold (T-006 fatto il 25/09/2026; Capacitor in T-021, PWA e APK firmato in T-035)
 
 ```bash
 # T-006 (fatto): UI web
@@ -160,8 +161,12 @@ npx cap add android            # progetto in android/, versionato; iOS richiede 
 npm run build && npx cap sync android && (cd android && ./gradlew assembleDebug)   # APK di debug
 # T-021 (fatto): il resto dei plugin
 npm i @capacitor/app @capacitor/local-notifications
-# T-035: PWA installabile (manifest con nome e icona di CP6)
-npm i -D vite-plugin-pwa
+# T-035 (fatto): PWA installabile e offline, APK firmato con la chiave di ~/.routforge (D-RILASCIO-1)
+npm i -D vite-plugin-pwa@1.3.0
+node scripts/icone.mjs         # icone web e Android dal logo del design, dopo un reimport che cambia i colori
+npm run apk                    # release firmata: android/app/build/outputs/apk/release/app-release.apk
+npm run apk:debug              # senza chiave: android/app/build/outputs/apk/debug/app-debug.apk
+# Deploy web (Cloudflare Pages o Netlify, origine propria): build `npm run build`, cartella `dist`
 ```
 Vite resta alla 7 finché Vitest è alla 3 (`docs/DIPENDENZE.md`). Ogni pacchetto è «previsto» in `docs/DIPENDENZE.md`:
 all'installazione la riga passa a `dev`/`runtime`. Il gate resta `npm run verify`: `check` esegue i due tsconfig (radice senza

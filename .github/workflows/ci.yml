@@ -15,6 +15,8 @@ jobs:
       - run: npm ci
       # Gate unico (INV-11): typecheck + lint + formato + test, identico a locale e hook Stop
       - run: npm run verify
+      # La build di rilascio (T-035): manifest, service worker e icone della PWA; un errore qui ferma il deploy
+      - run: npm run build
       # Robustezza al fuso orario (CONTESTO §3, D-TIME-1): la stessa suite in quattro fusi diversi dal runner,
       # incluso uno a mezz'ora (Kolkata) e uno che attraversa il cambio d'ora in direzione opposta (Auckland)
       - run: TZ=Europe/Rome npm test

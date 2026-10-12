@@ -1,0 +1,4 @@
+# Rotte della SPA per Netlify (T-035): ogni percorso dell'app (/attivita/…, /sessione, …) serve index.html; i file
+# esistenti vincono. Cloudflare Pages scarta la regola con un avviso («Infinite loop detected») e fa da sé il ripiego
+# SPA, perché non c'è un 404.html.
+/*  /index.html  200

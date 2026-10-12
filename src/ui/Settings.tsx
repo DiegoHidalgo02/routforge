@@ -783,16 +783,29 @@ async function misuraSpazio(): Promise<Spazio | null> {
   return { dati: (stima.usage ?? 0) - cache, cache, persistente: (await navigator.storage.persisted?.()) ?? false };
 }
 
-/** Svuota cache (FUNZ §24): solo la cache dell'app web, mai i dati dell'utente. */
-async function svuotaCache(): Promise<void> {
+const cancellaCache = async () => {
   if ('caches' in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
-}
+};
 
-/** Reinstalla PWA (MECC §23): deregistra il service worker e ricarica. */
+/**
+ * Reinstalla PWA (MECC §23): svuota la cache dell'app, deregistra il service worker e ricarica; al caricamento la PWA si
+ * installa di nuovo con i file del server (T-035). Offline non fa nulla: senza rete l'app resterebbe senza file.
+ */
 async function reinstalla(): Promise<void> {
+  if (!navigator.onLine) return;
+  await cancellaCache();
   const registrazioni = (await navigator.serviceWorker?.getRegistrations()) ?? [];
   await Promise.all(registrazioni.map((r) => r.unregister()));
   location.reload();
+}
+
+/**
+ * Svuota cache (FUNZ §24): solo la cache dell'app web, mai i dati dell'utente. Con la PWA attiva la cache è quella del
+ * service worker: svuotarla vuol dire reinstallarla, altrimenti l'app non si aprirebbe più offline (T-035).
+ */
+async function svuotaCache(): Promise<void> {
+  if (navigator.serviceWorker?.controller) return reinstalla();
+  await cancellaCache();
 }
 
 /**
@@ -978,9 +991,12 @@ export function Diagnostics() {
           <button type="button" className={s.secondario} onClick={copia}>
             {t(copiata ? 'copiata' : 'copiaDiagnostica')}
           </button>
-          <button type="button" className={s.fantasma} onClick={() => void reinstalla()}>
-            {t('reinstallaPwa')}
-          </button>
+          {/* «Reinstalla PWA (web)» del design: solo dove un service worker della PWA controlla la pagina (T-035) */}
+          {navigator.serviceWorker?.controller && (
+            <button type="button" className={s.fantasma} onClick={() => void reinstalla()}>
+              {t('reinstallaPwa')}
+            </button>
+          )}
         </div>
       </div>
     </div>

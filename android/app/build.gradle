@@ -4,6 +4,16 @@ apply plugin: 'com.android.application'
 // (`__VERSIONE__` di vite.config.ts); versionCode = maggiore·10000 + minore·100 + patch (0.1.0 → 100)
 def versioneApp = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
 
+// Firma della release (T-035, D-RILASCIO-1): chiave e password fuori dal repository, in ~/.routforge/keystore.properties
+// (storeFile con le barre normali, storePassword, keyAlias, keyPassword). Senza il file la release non è firmata.
+def fileFirma = new File(System.getProperty('user.home'), '.routforge/keystore.properties')
+def firma = new Properties()
+if (fileFirma.exists()) {
+    fileFirma.withReader('UTF-8') { firma.load(it) }
+    def mancanti = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword'].findAll { !firma[it] }
+    if (mancanti) throw new GradleException("${fileFirma}: mancano ${mancanti.join(', ')}")
+}
+
 android {
     namespace = "com.routforge.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -20,10 +30,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (fileFirma.exists()) {
+            release {
+                storeFile file(firma['storeFile'])
+                storePassword firma['storePassword']
+                keyAlias firma['keyAlias']
+                keyPassword firma['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (fileFirma.exists()) signingConfig signingConfigs.release
         }
     }
 }
