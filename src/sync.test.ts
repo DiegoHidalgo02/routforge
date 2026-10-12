@@ -1031,3 +1031,38 @@ describe('Registrazione del dispositivo che fallisce — MECCANISMI §25, D-SYNC
     expect(sync.snapshot().fase).toBe('in_pari');
   });
 });
+
+describe('Tombstone del ciclo nella fusione — MECCANISMI §25, D-SYNC-4 n. 4 (audit N-1)', () => {
+  it('le occorrenze tolte da una routine eliminata altrove hanno l’istante dell’eliminazione, non quello della ricezione', async () => {
+    const a = dispositivo('a');
+    const b = dispositivo('b');
+    await accedi(a);
+    const id = await crea(a.db, {
+      ...comune,
+      tipo: 'routine',
+      titolo: 'Corsa',
+      giorni: [0, 1, 2, 3, 4, 5, 6],
+      inizio: '07:00',
+      fine: '08:00',
+      dataInizio: '2026-09-22',
+      termine: null,
+      fasi: [],
+    });
+    await a.sync.run();
+    await accedi(b);
+    // B si apre un giorno dopo: il suo ciclo genera uno slot che A non ha mai avuto, e solo B lo toglierà
+    ora = ADESSO + 24 * 60 * MINUTE;
+    await generateOccurrences(b.db, (await get(b.db, 'ricorrenze', id))!, ora, FUSO);
+    const eliminataIl = ADESSO + MINUTE;
+    ora = eliminataIl;
+    await deleteRecurrence(a.db, id, ora);
+    await a.sync.run();
+    // B riceve un giorno dopo: in una fusione futura le sue tombstone non devono valere come gesti di oggi
+    ora = ADESSO + 24 * 60 * MINUTE;
+    await b.sync.run();
+    const soloB = `${id}:2026-10-21:07:00`;
+    const tombstone = (await allRows(b.db, 'blocchi')).filter((x) => x.id === soloB && x.deletedAt !== null);
+    expect(tombstone.length).toBeGreaterThan(0);
+    expect(new Set(tombstone.map((x) => x.updatedAt))).toEqual(new Set([eliminataIl]));
+  });
+});

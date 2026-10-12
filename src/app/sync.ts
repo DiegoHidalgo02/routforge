@@ -98,7 +98,7 @@ class Fermata extends Error {}
  * ovunque (D-SYNC-6).
  */
 async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fuso: string): Promise<void> {
-  if (b.deletedAt !== null) return dropOccurrences(db, b.id, now);
+  if (b.deletedAt !== null) return dropOccurrences(db, b.id, b.updatedAt);
   const r = b.dati as unknown as Ricorrenza;
   // Una definizione che non si legge non blocca la pagina, come nel ciclo (D-SCHED-1 n. 8)
   const errore = recurrenceError(r, now);
@@ -110,6 +110,7 @@ async function followReceived(db: RoutForgeDb, b: BustaRicevuta, now: number, fu
     now,
     fuso,
     new Set(inCoda.filter((v) => v.updatedAt > b.updatedAt).map((v) => v.recordId)),
+    b.updatedAt,
   );
 }
 

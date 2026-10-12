@@ -38,22 +38,24 @@ export async function generateOccurrences(db: RoutForgeDb, r: Ricorrenza, now: n
  * slot superati raggiungono gli altri dispositivi); le occorrenze riscritte no, ognuno le rigenera dalla definizione
  * (T-033, D-SYNC-4), salvo le spostate (C4) riportate allo slot: sono dati dell'utente e il ripristino viaggia.
  * Per una definizione `ricevuta` le eliminazioni sono del ciclo, perché bastano quelle di chi l'ha modificata (spedite di
- * nuovo rimbalzerebbero), e restano come sono le spostate (ci pensa chi modifica) e le occorrenze `intatte`, con una
- * modifica dell'utente in coda più recente (D-SYNC-6).
+ * nuovo rimbalzerebbero), con l'istante del gesto della definizione e non quello della ricezione: in una fusione futura
+ * non battono un completamento fatto altrove prima di lui (audit N-1). Restano come sono le spostate (ci pensa chi
+ * modifica) e le occorrenze `intatte`, con una modifica dell'utente in coda più recente (D-SYNC-6).
  */
 async function followDefinition(
   db: RoutForgeDb,
   r: Ricorrenza,
   now: number,
   fuso: string,
-  ricevuta?: { intatte: ReadonlySet<string> },
+  ricevuta?: { intatte: ReadonlySet<string>; istante: number },
 ): Promise<void> {
   const occorrenze = await occurrencesOf(db, r.id);
   const piano = editPlan(r, occorrenze, now);
   const spostate = new Set(occorrenze.filter((b) => isMovedOccurrence(b, r.id)).map((b) => b.id));
   const intatte = ricevuta ? new Set([...ricevuta.intatte, ...spostate]) : new Set<string>();
   for (const id of piano.daEliminare)
-    if (!intatte.has(id)) await remove(db, 'blocchi', id, now, ricevuta ? 'ciclo' : 'utente');
+    if (!intatte.has(id))
+      await remove(db, 'blocchi', id, ricevuta ? ricevuta.istante : now, ricevuta ? 'ciclo' : 'utente');
   for (const b of piano.daScrivere)
     if (!intatte.has(b.id)) await saveBlock(db, b, now, fuso, !ricevuta && spostate.has(b.id) ? 'utente' : 'ciclo');
 }
@@ -68,18 +70,20 @@ export async function editRecurrence(db: RoutForgeDb, r: Ricorrenza, now: number
 
 /**
  * Una ricorrenza eliminata su un altro dispositivo (T-033): le sue occorrenze programmate di qui spariscono, come in
- * `deleteRecurrence`; eliminazioni del ciclo, perché le tombstone di chi l'ha eliminata bastano (D-SYNC-6).
+ * `deleteRecurrence`; eliminazioni del ciclo, perché le tombstone di chi l'ha eliminata bastano (D-SYNC-6), con l'istante
+ * dell'eliminazione ricevuta (audit N-1).
  */
-export function dropOccurrences(db: RoutForgeDb, ricorrenzaId: string, now: number): Promise<void> {
+export function dropOccurrences(db: RoutForgeDb, ricorrenzaId: string, eliminataIl: number): Promise<void> {
   return inTransaction(db, ['blocchi'], async () => {
     for (const id of removableOccurrences(await occurrencesOf(db, ricorrenzaId)))
-      await remove(db, 'blocchi', id, now, 'ciclo');
+      await remove(db, 'blocchi', id, eliminataIl, 'ciclo');
   });
 }
 
 /**
  * Una ricorrenza ricevuta dalla sync (T-033, J2): le occorrenze di questo dispositivo seguono la definizione ricevuta,
- * tranne `intatte` (quelle con una modifica dell'utente in coda più recente, D-SYNC-6).
+ * tranne `intatte` (quelle con una modifica dell'utente in coda più recente, D-SYNC-6); le eliminazioni hanno
+ * l'istante del gesto della definizione, `ricevutaIl` (audit N-1).
  */
 export function followRecurrence(
   db: RoutForgeDb,
@@ -87,8 +91,9 @@ export function followRecurrence(
   now: number,
   fuso: string,
   intatte: ReadonlySet<string> = new Set(),
+  ricevutaIl: number = now,
 ): Promise<void> {
-  return inTransaction(db, ['blocchi'], () => followDefinition(db, r, now, fuso, { intatte }));
+  return inTransaction(db, ['blocchi'], () => followDefinition(db, r, now, fuso, { intatte, istante: ricevutaIl }));
 }
 
 /**
