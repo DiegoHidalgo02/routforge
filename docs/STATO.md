@@ -34,8 +34,8 @@ decisioni (`docs/01_DECISIONI.md`).*
 - CP4 (council, 07/10): tetto di spesa sulla chiave Gemini; MECC §22 e §25 da allineare (chiave AI fuori da backup e
   sync).
 
-**Rinviati**: P3-24 (dialogo nativo del foglio della sessione) e P3-32 (componenti grandi), da fare col confronto del
-design; N-3 accettato, avviso `uuid` di `xcode` accettato (`docs/DIPENDENZE.md`), N-9 residuo accettato
+**Rinviati**: P3-32 (componenti grandi), a pezzi quando si toccano i file (roadmap); P3-24 non applicata
+(D-MINORI-1); N-3 accettato, avviso `uuid` di `xcode` accettato (`docs/DIPENDENZE.md`), N-9 residuo accettato
 (`audit/nuovi-problemi.md`).
 
 **Obblighi per i prossimi task** (le regole stanno nelle decisioni citate)
