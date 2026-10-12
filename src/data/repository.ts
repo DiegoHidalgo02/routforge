@@ -248,9 +248,11 @@ export async function enqueueAll(db: RoutForgeDb): Promise<void> {
       for (const r of await allRows(db, nome)) {
         const id = `${nome}:${r.id}`;
         if (!isSynced(nome, r.id) || (await db.syncCoda.get(id))) continue;
-        // Da un backup modificato a mano può arrivare qualunque valore: il servizio vuole un istante intero
+        // Il servizio vuole un istante intero: un decimale (riga ricevuta o importata prima di N-4) si arrotonda, e una
+        // riga con un istante fuori dagli interi sicuri resta qui, perché fermerebbe ogni push successivo (audit N-4)
         const gesto = (r as { gestoIl?: unknown }).gestoIl;
-        const istante = Number.isSafeInteger(gesto) ? (gesto as number) : r.updatedAt;
+        const istante = Number.isSafeInteger(gesto) ? (gesto as number) : Math.round(r.updatedAt);
+        if (!Number.isSafeInteger(istante)) continue;
         await db.syncCoda.put({
           id,
           tabella: nome,

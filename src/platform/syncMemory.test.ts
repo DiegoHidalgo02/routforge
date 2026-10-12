@@ -61,3 +61,11 @@ describe('Tetto del lotto — MECCANISMI §25, D-SYNC-4 n. 10 (audit P2-21)', ()
     expect((await tablet.pull(0, 1000)).buste).toHaveLength(500);
   });
 });
+
+describe('Istanti non interi — MECCANISMI §25 (audit N-4)', () => {
+  it('un istante con la virgola fa fallire il lotto intero, come il cast a bigint di push_records', async () => {
+    const { telefono, tablet } = await dueDispositivi();
+    await expect(telefono.push([{ ...busta('blocchi', 'b1'), updatedAt: 1000.5 }])).rejects.toThrow();
+    expect((await tablet.pull(0, 1000)).buste).toEqual([]);
+  });
+});

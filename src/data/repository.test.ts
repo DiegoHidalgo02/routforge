@@ -529,6 +529,18 @@ describe('Fotografia delle tabelle per il backup — MECCANISMI §22 (audit P2-8
   });
 });
 
+describe('Istanti delle voci della fusione — MECCANISMI §25 (audit N-4)', () => {
+  const coda = () => list(db, 'syncCoda');
+  it('un istante con la virgola si arrotonda; uno fuori dagli interi sicuri non entra in coda (fermerebbe il push)', async () => {
+    await putRemote(db, 'blocchi', [
+      { id: 'virgola', createdAt: 1, updatedAt: 1000.5, deletedAt: 1000.5 },
+      { id: 'enorme', createdAt: 1, updatedAt: 1e20, deletedAt: 1e20 },
+    ]);
+    await enqueueAll(db);
+    expect((await coda()).map((v) => [v.id, v.updatedAt])).toEqual([['blocchi:virgola', 1001]]);
+  });
+});
+
 describe('Lunghezza della coda — MECCANISMI §25 (audit P3-10)', () => {
   it('si conta senza leggere le voci, ed è il numero delle voci', async () => {
     const evento = { tipo: 'evento' as const, stato: 'programmato' as const, inizio: T0, fine: T1, conOrario: true };

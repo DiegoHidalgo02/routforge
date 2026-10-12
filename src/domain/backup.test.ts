@@ -116,3 +116,19 @@ describe('Stima del file — MECCANISMI §22 (audit P3-17)', () => {
     expect(backupSizeEstimate({ pdf: 0, altri: 0, codice: 0 })).toBe(0);
   });
 });
+
+describe('Istanti dei record — MECCANISMI §22, §25 (audit N-4)', () => {
+  it('un istante che non è un intero rende il file illeggibile: nella sync fermerebbe la coda per sempre', () => {
+    const file = (r: Record<string, unknown>) =>
+      JSON.stringify({ formato: FORMATO_BACKUP, versione: VERSIONE_BACKUP, creatoIl: 0, tabelle: { blocchi: [r] } });
+    expect(parseBackup(file({ id: 'b', createdAt: 1, updatedAt: 1.5, deletedAt: 2 }), ['blocchi'])).toEqual({
+      errore: 'illeggibile',
+    });
+    expect(parseBackup(file({ id: 'b', createdAt: 1e20, updatedAt: 2, deletedAt: 2 }), ['blocchi'])).toEqual({
+      errore: 'illeggibile',
+    });
+    expect(parseBackup(file({ id: 'b', createdAt: 1, updatedAt: 2, deletedAt: 2.5 }), ['blocchi'])).toEqual({
+      errore: 'illeggibile',
+    });
+  });
+});

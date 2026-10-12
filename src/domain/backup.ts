@@ -96,12 +96,14 @@ export function backupFile(tabelle: Record<string, readonly object[]>, now: numb
 }
 
 const oggetto = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+// Gli istanti sono millisecondi interi: un `1.5` o un `1e20` scritti a mano nel file fermerebbero per sempre la coda
+// della sync, che li spedisce come interi (audit N-4)
 const rigaValida = (r: unknown): r is RigaBackup =>
   oggetto(r) &&
   typeof r.id === 'string' &&
-  typeof r.createdAt === 'number' &&
-  typeof r.updatedAt === 'number' &&
-  (r.deletedAt === null || typeof r.deletedAt === 'number');
+  Number.isSafeInteger(r.createdAt) &&
+  Number.isSafeInteger(r.updatedAt) &&
+  (r.deletedAt === null || Number.isSafeInteger(r.deletedAt));
 
 /**
  * Gli indirizzi dei link di un file importato: solo http(s), come quelli che scrivono l'app e il parser. Un `data:` o un

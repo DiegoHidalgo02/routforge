@@ -119,6 +119,11 @@ export function memorySyncBackend(
         if (buste.length > 500) throw new Error('lotto_troppo_grande');
         // Il `check` di `records` e il `jsonb` del parametro fanno fallire tutta la chiamata, prima di ogni scrittura
         if (!buste.every((b) => sendable(b.dati))) throw new Error('new row violates check constraint');
+        // Il cast a bigint degli istanti: un decimale fa fallire tutta la chiamata (un valore non finito arriva come null
+        // e la `where` lo scarta, qui sotto; audit N-4)
+        const intero = (n: number | null) => n === null || !Number.isFinite(n) || Number.isSafeInteger(n);
+        if (!buste.every((b) => intero(b.updatedAt) && intero(b.deletedAt)))
+          throw new Error('invalid input syntax for type bigint');
         // La `where` di push_records: fuori ambito, id dei dati diverso o istante mancante si scartano in silenzio
         const valide = buste.filter(
           (b) => isSynced(b.tabella, b.id) && b.dati.id === b.id && Number.isFinite(b.updatedAt),
