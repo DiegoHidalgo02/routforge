@@ -9,7 +9,7 @@
 import { fileNameOf } from './course/parser';
 
 /** Limite per file (§17): 500 KB. */
-export const MAX_BYTE_CODICE = 500 * 1024;
+const MAX_BYTE_CODICE = 500 * 1024;
 
 export type MotivoEsclusione =
   | 'cartella_tecnica'
@@ -130,7 +130,7 @@ export const excludedCount = (voci: readonly Voce[]): number =>
   voci.filter((v) => v.motivo).reduce((n, v) => n + (v.file ?? 1), 0);
 
 /** Una riga dell'albero: cartella (`dimensione: null`) o file, rientrato per livello. */
-export interface RigaAlbero {
+interface RigaAlbero {
   percorso: string;
   nome: string;
   livello: number;

@@ -861,8 +861,8 @@ const ESITI: { id: Esito; Icona: LucideIcon }[] = [
   { id: 'salta', Icona: SkipForward },
 ];
 const CONFIDENZA: Chiave[] = ['confidenza1', 'confidenza2', 'confidenza3', 'confidenza4', 'confidenza5'];
-export const etichettaEsito = (e: Esito): string => t(NOME_ESITO[e]);
-export const etichettaConfidenza = (c: number | null): string => {
+const etichettaEsito = (e: Esito): string => t(NOME_ESITO[e]);
+const etichettaConfidenza = (c: number | null): string => {
   const chiave = c ? CONFIDENZA[c - 1] : undefined;
   return chiave ? t(chiave) : '—';
 };

@@ -15,7 +15,7 @@ export type Vista = 'giorno' | 'settimana' | 'mese';
 /** Ordine dei tipi nei puntini e nella legenda del mese (S1). */
 export const ORDINE_TIPI: readonly TipoBlocco[] = ['studio', 'routine', 'todo', 'evento'];
 /** Da quanti blocchi una cella del mese è «carica» (S1 «Mese con carico»; D-CAL-1). */
-export const CARICO_ALTO = 3;
+const CARICO_ALTO = 3;
 
 /** 00:00 locale del giorno "YYYY-MM-DD". */
 const dayStart = (giorno: string): number => localInstant(giorno, '00:00');

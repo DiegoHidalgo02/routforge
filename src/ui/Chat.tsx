@@ -124,7 +124,7 @@ function ErroreChat(p: { errore: Exclude<ErroreAi, 'rete'>; onRiprova: () => voi
 }
 
 /** Senza chiave (S19 `chat-nokey`): la chat e le generazioni chiedono la chiave in Impostazioni; il resto funziona. */
-export function SenzaChiave() {
+function SenzaChiave() {
   return (
     <div className={s.stato}>
       <span className={s.disco}>

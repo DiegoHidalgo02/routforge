@@ -95,7 +95,7 @@ export interface PianoOccorrenze {
  * legale (un orario che quel giorno non esiste) l'inizio va avanti come l'orologio e il blocco lo segue con la sua
  * durata; nella sovrapposizione vale la prima delle due ore uguali (D-TIME-3).
  */
-export function wallInstants(
+function wallInstants(
   giorno: string,
   orarioInizio: string,
   orarioFine: string | null,

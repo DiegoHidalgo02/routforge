@@ -23,8 +23,8 @@ import { modulePath, statiModuli } from '../pointer';
 // ------------------------------------------------------------------ tipi di output (FORMATO §4)
 
 export type TipoSezione = 'teoria' | 'studio' | 'pratica' | 'progetto';
-export type StatoSezione = 'da_fare' | 'in_corso' | 'fatta';
-export type Difficolta = 'alta' | 'media' | 'bassa';
+type StatoSezione = 'da_fare' | 'in_corso' | 'fatta';
+type Difficolta = 'alta' | 'media' | 'bassa';
 
 export interface RisorsaImportata {
   titolo: string;
@@ -61,7 +61,7 @@ export interface UnitaImportata {
   confidenza: number | null;
 }
 
-export interface CriterioImportato {
+interface CriterioImportato {
   testo: string;
   auto: boolean;
   /** Per i criteri auto: soglia 0..1 letta dal testo (es. "≥8/10" → 0,8). */
@@ -119,7 +119,7 @@ export type CodiceAvviso =
   | 'unita_duplicata'
   | 'modulo_duplicato';
 
-export interface AvvisoImport {
+interface AvvisoImport {
   file: string;
   codice: CodiceAvviso;
   parametri: Record<string, string | number>;
@@ -186,7 +186,7 @@ const SECTION_ORDER: TipoSezione[] = ['teoria', 'studio', 'pratica', 'progetto']
 // ------------------------------------------------------------------ helper
 
 export const fileNameOf = (path: string): string => path.split(/[\\/]/).pop() ?? path;
-export const stripBold = (s: string): string => s.replace(/\*\*(.+?)\*\*/g, '$1').trim();
+const stripBold = (s: string): string => s.replace(/\*\*(.+?)\*\*/g, '$1').trim();
 const num = (s: string): number => Number(s.replace(',', '.'));
 /** Riga separatrice `---` (FORMATO §2–§3): chiude un blocco, non è mai contenuto. */
 const isSeparator = (line: string): boolean => /^---+\s*$/.test(line);
@@ -220,7 +220,7 @@ export function parseEstimatedHours(text: string): number | null {
   return tilde ? num(tilde[1]!) : null;
 }
 
-export function parseDifficulty(text: string): Difficolta | null {
+function parseDifficulty(text: string): Difficolta | null {
   const m = DIFFICULTY.exec(text);
   return m ? (m[1]!.toLowerCase() as Difficolta) : null;
 }

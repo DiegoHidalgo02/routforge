@@ -43,7 +43,7 @@ export interface Panoramica {
 }
 
 /** Le ultime unità studiate nel periodo mostrate in Studio (S20 «Ultime unità»). */
-export const ULTIME_UNITA = 6;
+const ULTIME_UNITA = 6;
 
 /** `inizioSettimana` (FUNZ §23) lo passa la schermata: letto qui dentro, la query live smetterebbe di seguire i dati. */
 export async function readStats(db: RoutForgeDb, periodo: Periodo, now: number, inizioSettimana: InizioSettimana = 1) {

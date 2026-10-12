@@ -30,7 +30,7 @@ export interface RisultatoRipasso extends StatoCarta {
   rimettiInCoda: boolean;
 }
 
-export const FACILITA_INIZIALE = 2.5;
+const FACILITA_INIZIALE = 2.5;
 export const FACILITA_MINIMA = 1.3;
 export const INTERVALLO_NIENTE_MS = 10 * MINUTE;
 const DAY_MS = 24 * 60 * MINUTE;

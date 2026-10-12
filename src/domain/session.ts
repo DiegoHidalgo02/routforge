@@ -23,7 +23,7 @@ export type Contesto = 'anticipo' | 'routine' | 'recupero' | 'libera';
 export type Modalita = 'continua' | 'p25' | 'p50' | 'p90';
 
 /** «adesso < inizio − 5'» (§10.1). */
-export const SOGLIA_ANTICIPO = minutes(5);
+const SOGLIA_ANTICIPO = minutes(5);
 
 /** Ciò che l'utente decide nel setup (FUNZ §11.1). `durata` in minuti; `null` = cronometro. */
 export interface SceltaSessione {

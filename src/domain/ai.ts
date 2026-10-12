@@ -14,7 +14,7 @@
 import { weekOffset, type InizioSettimana } from './settings';
 import { addLocalDays, localWeekday, startOfLocalDay } from './time';
 
-export type AmbitoChat = 'unita' | 'modulo' | 'corso' | 'globale';
+type AmbitoChat = 'unita' | 'modulo' | 'corso' | 'globale';
 export type TipoFonte = 'TEORIA' | 'CODICE' | 'NOTA' | 'LINK' | 'PDF';
 export type ErroreAi = 'chiave' | 'modello' | 'limite' | 'sicurezza' | 'rete' | 'generico';
 
@@ -47,7 +47,7 @@ export function nextScope(origine: AmbitoAperto, attuale: AmbitoAperto): AmbitoA
 }
 
 /** `in_attesa`: scritto offline, parte al ritorno della rete (§18); `interrotto`: la risposta fermata con «Interrompi». */
-export type StatoMessaggio = 'inviato' | 'in_attesa' | 'interrotto';
+type StatoMessaggio = 'inviato' | 'in_attesa' | 'interrotto';
 
 export interface MessaggioChat {
   conversazioneId: string;

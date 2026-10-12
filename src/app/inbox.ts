@@ -12,7 +12,7 @@ import { addLocalDays, localDayKey, startOfLocalDay } from '../domain/time';
 import type { TipoBlocco } from '../domain/types';
 
 /** Riga di `preferenze`: l'istante dell'ultimo «Segna tutte lette». */
-export const CHIAVE_LETTE = 'notificheLette';
+const CHIAVE_LETTE = 'notificheLette';
 
 export interface EsitoPendente {
   id: string;

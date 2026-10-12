@@ -37,7 +37,7 @@ export function isNowCandidate(block: Blocco, now: number): boolean {
   return now >= block.inizio - WINDOW && now <= end + WINDOW;
 }
 
-export function isInProgress(block: Blocco, now: number): boolean {
+function isInProgress(block: Blocco, now: number): boolean {
   if (block.stato === 'in_corso') return true;
   return now >= block.inizio && now < effectiveEnd(block);
 }

@@ -16,11 +16,11 @@ import { endOfLocalDay, localDayKey, localInstant, minutes } from '../time';
 import { isOpen, type Blocco, type BloccoAncorato } from '../types';
 
 /** Finestra dello slot libero dei todo con orario (§6). */
-export const FINESTRA_SLOT = { inizio: '08:00', fine: '22:00' } as const;
+const FINESTRA_SLOT = { inizio: '08:00', fine: '22:00' } as const;
 /** Un todo che rotola è al più di 30 giorni fa: l'orizzonte più lungo è il mese, dal primo al 31 (§6). */
 export const GIORNI_INDIETRO = 30;
 /** La ricerca da adesso parte dal multiplo di 5' successivo: il passo delle durate e dell'aggancio (§2, §15; D-HOR-1). */
-export const PASSO = minutes(5);
+const PASSO = minutes(5);
 
 export interface PianoSpostamento<B extends BloccoAncorato> {
   /**

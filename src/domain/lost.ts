@@ -12,7 +12,7 @@ import { addLocalDays, endOfLocalDay, HOUR, localInstant, minutes, sameLocalDay,
 import { weekOffset, type InizioSettimana } from './settings';
 import type { Blocco } from './types';
 
-export const MARGINE_PERSO_MS = minutes(30);
+const MARGINE_PERSO_MS = minutes(30);
 
 /** Fine effettiva (§8): fine reale, o 23:59 locale del giorno d'inizio. */
 export function effectiveEnd(block: Pick<Blocco, 'inizio' | 'fine' | 'conOrario'>): number {
@@ -50,7 +50,7 @@ export function horizonLastDay(
  * passato restano quelli di prima e possono cadere in un altro giorno (D-TIME-2); mezzogiorno è dentro il giorno anche
  * con l'ora legale.
  */
-export function todoWithinHorizon(
+function todoWithinHorizon(
   block: Blocco & { giornoLocale?: string },
   now: number,
   inizioSettimana: InizioSettimana = 1,

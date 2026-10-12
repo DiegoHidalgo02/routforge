@@ -89,14 +89,14 @@ export const modulePath = (m: {
 });
 
 /** Predicato "modulo aperto" per il puntatore. Senza moduli dichiarati, tutto è aperto. */
-export function openModules(modules: readonly ModuloPercorso[] | undefined): (numero: number) => boolean {
+function openModules(modules: readonly ModuloPercorso[] | undefined): (numero: number) => boolean {
   if (!modules || modules.length === 0) return () => true;
   const stati = statiModuli(modules);
   return (numero) => stati.has(numero) && stati.get(numero) !== 'bloccato';
 }
 
 /** Unità pendenti in ordine di percorso, solo nei moduli aperti. */
-export function pendingUnits(units: readonly UnitaPercorso[], modules?: readonly ModuloPercorso[]): UnitaPercorso[] {
+function pendingUnits(units: readonly UnitaPercorso[], modules?: readonly ModuloPercorso[]): UnitaPercorso[] {
   const isOpen = openModules(modules);
   return sortedUnits(units).filter((u) => STATI_UNITA_PENDENTI.has(u.stato) && isOpen(u.moduloNumero));
 }

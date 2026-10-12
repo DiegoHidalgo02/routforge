@@ -16,7 +16,7 @@ export type TabellaSincronizzata = (typeof TABELLE_SINCRONIZZATE)[number];
  * Le righe di `preferenze` che viaggiano: un elenco chiuso, così una chiave nuova resta sul dispositivo finché non la si
  * aggiunge (il default sicuro per una credenziale: la chiave AI mai, D-SYNC-3).
  */
-export const PREFERENZE_SINCRONIZZATE: readonly string[] = ['impostazioni', 'notifiche', 'profilo'];
+const PREFERENZE_SINCRONIZZATE: readonly string[] = ['impostazioni', 'notifiche', 'profilo'];
 
 /**
  * La riga di `preferenze` con lo stato della sync di questo dispositivo (account, cursore, ultima riuscita): mai in sync
@@ -38,7 +38,7 @@ export function receivedInProgress(valore: unknown): Record<string, number> {
 }
 
 /** D-SYNC-2: un `updatedAt` oltre 5 minuti dopo l'ora del servizio si ferma lì (un orologio avanti non vince per sempre). */
-export const ANTICIPO_MASSIMO_MS = 5 * 60_000;
+const ANTICIPO_MASSIMO_MS = 5 * 60_000;
 
 export function isSynced(tabella: string, id: string): boolean {
   return (

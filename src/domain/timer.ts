@@ -30,7 +30,7 @@ import { MINUTE, minutes } from './time';
 const PRESET: Record<Exclude<Modalita, 'continua'>, PresetPomodoro> = { p25: '25/5', p50: '50/10', p90: '90/20' };
 
 /** Più di 30 minuti dall'ultimo battito = intervallo non verificato (§10.4, D-TIMER-2: la soglia degli orfani di §8). */
-export const SOGLIA_NON_VERIFICATO = minutes(30);
+const SOGLIA_NON_VERIFICATO = minutes(30);
 
 /** Millisecondi di pausa dell'utente prima di `t`. */
 const pausedBefore = (s: SessioneAttiva, t: number): number =>
@@ -76,7 +76,7 @@ export const excludeInterval = (s: SessioneAttiva, da: number): SessioneAttiva =
 export const plannedMs = (s: Pick<SessioneAttiva, 'durata' | 'fine' | 'avvio'>): number | null =>
   s.durata === null ? null : s.fine !== null ? s.fine - s.avvio : s.durata * MINUTE;
 
-export const isPaused = (s: SessioneAttiva): boolean => s.pause.some((p) => p.fine === null);
+const isPaused = (s: SessioneAttiva): boolean => s.pause.some((p) => p.fine === null);
 
 /** Segmento del pomodoro sul tempo attivo (ms dall'avvio): `fine` è la fine naturale, o l'istante del salto. */
 export interface SegmentoTimer {

@@ -10,7 +10,7 @@ import { hasShape } from './sync';
 export const FORMATO_BACKUP = 'routforge-backup';
 export const VERSIONE_BACKUP = 1;
 /** L'unica tabella con un binario: il campo `dati` (Uint8Array) dei PDF. */
-export const TABELLA_BINARI = 'materialiBinari';
+const TABELLA_BINARI = 'materialiBinari';
 
 export type RigaBackup = {
   id: string;

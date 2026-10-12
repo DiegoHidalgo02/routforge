@@ -20,7 +20,7 @@ import type { Blocco, FaseTemplate, Orizzonte, Priorita, Promemoria, Ricorrenza 
 export const ANCORA_TODO = '12:00';
 
 /** Da Crea si creano attività solo nei prossimi 7 giorni, oggi compreso (§2, SCENARI G5). */
-export const GIORNI_CREAZIONE = 7;
+const GIORNI_CREAZIONE = 7;
 
 /** I giorni in cui Crea può far partire un'attività (§2, G5): da oggi a oggi + 6. */
 export const creationDays = (oggi: string): readonly [string, string] => [
@@ -62,7 +62,7 @@ export const MAX_ANTICIPO_SVEGLIA = 7 * 60;
 export const MAX_VOCI_CHECKLIST = 60;
 export const MAX_CARATTERI_VOCE = 120;
 /** Titolo di default delle routine di studio (§2, §7). */
-export const TITOLO_STUDIO = 'Studio';
+const TITOLO_STUDIO = 'Studio';
 
 /** Fine di una ricorrenza: `null` = mai; altrimenti dopo N giorni/settimane/mesi (§2). */
 export type Termine = null | { n: number; unita: 'giorni' | 'settimane' | 'mesi' };
@@ -133,7 +133,7 @@ export type ErroreAttivita =
   | 'sveglia';
 
 export type NuovoBlocco = Omit<Blocco, 'id' | 'fasi'>;
-export type NuovaRicorrenza = Omit<Ricorrenza, 'id' | 'fasi' | 'fuso'>;
+type NuovaRicorrenza = Omit<Ricorrenza, 'id' | 'fasi' | 'fuso'>;
 
 /** Una fase validata: l'etichetta e, in Modifica, il suo id (i nuovi li dà il servizio). */
 export type FaseValida = { etichetta: string; id?: string };

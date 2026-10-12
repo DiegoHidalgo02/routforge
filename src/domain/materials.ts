@@ -8,7 +8,7 @@
  * materiali passano alle unità con lo stesso numero; quelli senza corrispondenza restano sul corso nuovo.
  */
 
-export type TipoMateriale = 'link' | 'nota' | 'pdf';
+type TipoMateriale = 'link' | 'nota' | 'pdf';
 
 export interface Materiale {
   id: string;
@@ -28,7 +28,7 @@ export interface Materiale {
 }
 
 /** Limite del PDF (§17): 20 MB. */
-export const MAX_PDF_BYTE = 20 * 1024 * 1024;
+const MAX_PDF_BYTE = 20 * 1024 * 1024;
 /** Estrazione del testo (§17): le prime 40 pagine, al più 60.000 caratteri. */
 export const MAX_PAGINE_ESTRATTE = 40;
 export const MAX_CARATTERI_ESTRATTI = 60_000;

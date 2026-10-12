@@ -108,7 +108,7 @@ function perWeek(
 }
 
 /** Le settimane delle barre (S20, vince il design: D-STATS-1): le ultime 12, fino a quella corrente, qualunque sia il periodo. */
-export const SETTIMANE_BARRE = 12;
+const SETTIMANE_BARRE = 12;
 export function barWeeks(now: number, inizio: InizioSettimana = 1): Intervallo {
   const corrente = primoGiorno(now, inizio);
   return {
@@ -190,7 +190,7 @@ export function discipline(
 /** Giorni della mappa di calore (§20): gli ultimi 84, oggi compreso. */
 export const GIORNI_MAPPA = 84;
 /** Minimo della scala della mappa: un giorno con meno di 60' non sembra pieno (§20). */
-export const MINIMO_SCALA = 60;
+const MINIMO_SCALA = 60;
 
 /**
  * Giorni con attività e mappa di calore (§20): sugli ultimi 84 giorni, oggi compreso anche per un blocco spuntato prima

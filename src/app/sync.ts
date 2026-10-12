@@ -53,7 +53,7 @@ import { RevocatoError, type Dispositivo, type SyncBackend } from './ports/sync'
 import { dropOccurrences, followRecurrence } from './recurrences';
 
 /** Il nome facoltativo dell'account (S22 Account): viaggia con la sync, per il saluto su ogni dispositivo. */
-export const CHIAVE_PROFILO = 'profilo';
+const CHIAVE_PROFILO = 'profilo';
 /** «Raggruppata entro pochi secondi» (piano §2.9): la sync parte 3 s dopo l'ultima modifica locale. */
 const RITARDO_MS = 3000;
 /**
@@ -70,7 +70,7 @@ interface StatoLocale {
   userId: string;
   cursore: number;
 }
-export type FaseSync = 'senza_account' | 'in_pari' | 'in_corso' | 'offline' | 'errore' | 'scollegato';
+type FaseSync = 'senza_account' | 'in_pari' | 'in_corso' | 'offline' | 'errore' | 'scollegato';
 export interface StatoSync {
   account: { email: string; nome: string | null } | null;
   fase: FaseSync;

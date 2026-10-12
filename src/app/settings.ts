@@ -7,7 +7,7 @@ import type { RoutForgeDb } from '../data/db';
 import { get, inTransaction, save } from '../data/repository';
 import { readableSettings, type Impostazioni } from '../domain/settings';
 
-export const CHIAVE_IMPOSTAZIONI = 'impostazioni';
+const CHIAVE_IMPOSTAZIONI = 'impostazioni';
 
 export async function readSettings(db: RoutForgeDb): Promise<Impostazioni> {
   return readableSettings((await get(db, 'preferenze', CHIAVE_IMPOSTAZIONI))?.valore);

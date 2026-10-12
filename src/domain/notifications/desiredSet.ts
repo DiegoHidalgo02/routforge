@@ -114,14 +114,14 @@ export function readableNotificationSettings(v: unknown): v is ImpostazioniNotif
 }
 
 /** §13.3: si armano le notifiche che scattano entro 14 giorni, sui blocchi che iniziano entro 14 + 31. */
-export const FINESTRA_NOTIFICHE_GIORNI = 14;
+const FINESTRA_NOTIFICHE_GIORNI = 14;
 export const ORIZZONTE_BLOCCHI_GIORNI = 14 + 31;
 /** §13.3: niente entro 5 s (vincolo d'armatura: una voce così vicina non si arma, ma se è già armata non si cancella). */
-export const MIN_ANTICIPO_ARMATURA_MS = 5_000;
+const MIN_ANTICIPO_ARMATURA_MS = 5_000;
 /** §13.2: «esito» a fine + 10'. */
-export const RITARDO_ESITO_MS = minutes(10);
+const RITARDO_ESITO_MS = minutes(10);
 /** §13.2: evento tutto il giorno alle 08:00. */
-export const ORARIO_TUTTO_IL_GIORNO = '08:00';
+const ORARIO_TUTTO_IL_GIORNO = '08:00';
 /** Una sola sessione attiva (§10.1): chiave fissa. */
 export const CHIAVE_TEMPO_SCADUTO = 'tempo_scaduto:0:sessione';
 /** §6, §8, §13.6: «todo in ritardo» e «blocco perso» partono ~10 s dopo la marcatura del ciclo. */
@@ -129,17 +129,17 @@ export const RITARDO_ONE_SHOT_MS = 10_000;
 /** §13.2: «Posticipa» = +10' dal tocco. */
 export const POSTICIPO_MS = minutes(10);
 /** §13.6: la notifica di prova a +6 s. */
-export const RITARDO_PROVA_MS = 6_000;
+const RITARDO_PROVA_MS = 6_000;
 export const CHIAVE_PROVA = 'prova:0:prova';
 
-export const notificationKey = (trigger: TriggerNotifica, anticipo: number, bloccoId: string): string =>
+const notificationKey = (trigger: TriggerNotifica, anticipo: number, bloccoId: string): string =>
   `${trigger}:${anticipo}:${bloccoId}`;
 
 /**
  * Anticipi dopo la fusione dei livelli (§13.1); `null` = nessun promemoria. Le occorrenze ereditano la definizione.
  * La sveglia viene solo dal Personalizzato, su blocchi con orario e anticipi ≤ 7 h (§13.1 n. 4).
  */
-export function mergedReminders(
+function mergedReminders(
   b: Blocco,
   definizione: Ricorrenza | undefined,
   imp: ImpostazioniNotifiche,

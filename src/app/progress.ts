@@ -13,7 +13,7 @@ import { calendarDays, type BloccoCalendario } from './calendar';
 import type { InizioSettimana } from '../domain/settings';
 
 /** Quanti giorni dopo oggi si guardano per «Prossime attività». */
-export const GIORNI_PROSSIMI = 28;
+const GIORNI_PROSSIMI = 28;
 
 export interface IngressiProgresso {
   /** I giorni della settimana di oggi, dal primo giorno (lunedì, o domenica: FUNZ §23), con i loro blocchi. */

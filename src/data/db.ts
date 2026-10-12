@@ -132,7 +132,7 @@ export const SCHEMA_V1: { [K in Exclude<keyof Tabelle, 'syncCoda'>]: string } = 
 };
 
 /** Versione 2 (T-033), additiva: la coda della sync. */
-export const SCHEMA_V2: { [K in keyof Tabelle]: string } = { ...SCHEMA_V1, syncCoda: 'id' };
+const SCHEMA_V2: { [K in keyof Tabelle]: string } = { ...SCHEMA_V1, syncCoda: 'id' };
 
 export type RoutForgeDb = Dexie & { [K in keyof Tabelle]: Table<Tabelle[K] | Tombstone, string> };
 

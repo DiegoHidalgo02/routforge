@@ -4,7 +4,7 @@
  * per esempio offline) e il messaggio del servizio: lo traduce `aiError` del dominio.
  */
 
-export interface TurnoAi {
+interface TurnoAi {
   ruolo: 'utente' | 'modello';
   testo: string;
 }

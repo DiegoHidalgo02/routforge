@@ -20,12 +20,7 @@ export type Destinazione = { percorso: string; vista?: Exclude<PassoSpunta, 'com
 const enc = encodeURIComponent;
 
 /** La rotta di un blocco aperto da una notifica o dal widget (§13.2, §21): lo studio apre l'unità, il resto il Dettaglio. */
-export const blockRoute = (b: {
-  id: string;
-  tipo: string;
-  corsoId?: string | null;
-  unitaId?: string | null;
-}): string =>
+const blockRoute = (b: { id: string; tipo: string; corsoId?: string | null; unitaId?: string | null }): string =>
   b.tipo === 'studio' && b.corsoId && b.unitaId
     ? `/corsi/${enc(b.corsoId)}/unita/${enc(b.unitaId)}`
     : `/attivita/${enc(b.id)}`;
