@@ -20,6 +20,7 @@ import {
   putRemote,
   queueSize,
   rawRow,
+  remove,
   save,
   watch,
 } from '../data/repository';
@@ -519,8 +520,9 @@ export function createSyncService(
     async eraseRemote() {
       try {
         await backend.eraseRemote();
-        const locale = await leggiStato(db);
-        if (locale) await scriviStato(db, { ...locale, cursore: 0 }, clock.now());
+        // Senza lo stato di qui, il giro dopo rifà la fusione: l'account riparte da tutti i dati di questo dispositivo, non
+        // solo dalle modifiche successive (un dispositivo nuovo riceverebbe blocchi senza la loro routine; audit B-12)
+        await remove(db, 'preferenze', CHIAVE_STATO_SYNC, clock.now());
         return true;
       } catch (e) {
         logError('sync', e);

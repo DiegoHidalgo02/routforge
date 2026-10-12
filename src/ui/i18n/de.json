@@ -985,7 +985,7 @@
   "datiAccount": "Daten",
   "cancellaDatiRemoti": "Entfernte Daten löschen",
   "cancellareDatiAccount": "Daten aus dem Konto löschen?",
-  "cancellareDatiAccountTesto": "Aktivitäten, Routinen, Ergebnisse und Einstellungen verschwinden aus dem Sync-Dienst. Auf diesem Gerät bleibt alles.",
+  "cancellareDatiAccountTesto": "Aktivitäten, Routinen, Ergebnisse und Einstellungen verschwinden aus dem Synchronisierungsdienst; auf diesem Gerät bleiben alle erhalten. Wenn du angemeldet bleibst, startet das Konto bei der nächsten Synchronisierung neu mit den Daten dieses Geräts.",
   "cancellaDallAccount": "Aus dem Konto löschen",
   "ciaoNome": "Hallo, {nome}",
   "servizioFinto": "Testdienst",

@@ -1066,3 +1066,18 @@ describe('Tombstone del ciclo nella fusione — MECCANISMI §25, D-SYNC-4 n. 4 (
     expect(new Set(tombstone.map((x) => x.updatedAt))).toEqual(new Set([eliminataIl]));
   });
 });
+
+describe('Dopo «Cancella i dati remoti» — MECCANISMI §25 (audit B-12)', () => {
+  it('restando nell’account, la sincronizzazione dopo riporta tutti i dati di qui: un dispositivo nuovo li riceve interi', async () => {
+    const telefono = dispositivo('telefono');
+    await accedi(telefono);
+    await crea(telefono.db, todo('Prima della cancellazione'));
+    await telefono.sync.run();
+    expect(await telefono.sync.eraseRemote()).toBe(true);
+    expect(archivio.righe.size).toBe(0);
+    await telefono.sync.run();
+    const nuovo = dispositivo('nuovo');
+    await accedi(nuovo);
+    expect(await titoli(nuovo.db)).toEqual(['Prima della cancellazione']);
+  });
+});

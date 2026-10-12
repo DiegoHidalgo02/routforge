@@ -985,7 +985,7 @@
   "datiAccount": "Dati",
   "cancellaDatiRemoti": "Cancella i dati remoti",
   "cancellareDatiAccount": "Cancellare i dati dall'account?",
-  "cancellareDatiAccountTesto": "Attività, routine, esiti e impostazioni spariscono dal servizio di sincronizzazione. Su questo dispositivo restano tutti.",
+  "cancellareDatiAccountTesto": "Attività, routine, esiti e impostazioni spariscono dal servizio di sincronizzazione; su questo dispositivo restano tutti. Se resti nell'account, alla prossima sincronizzazione l'account riparte dai dati di questo dispositivo.",
   "cancellaDallAccount": "Cancella dall'account",
   "ciaoNome": "Ciao, {nome}",
   "servizioFinto": "servizio finto",

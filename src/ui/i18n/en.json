@@ -985,7 +985,7 @@
   "datiAccount": "Data",
   "cancellaDatiRemoti": "Delete remote data",
   "cancellareDatiAccount": "Delete the data from the account?",
-  "cancellareDatiAccountTesto": "Activities, routines, outcomes and settings disappear from the sync service. On this device they all stay.",
+  "cancellareDatiAccountTesto": "Activities, routines, outcomes and settings disappear from the sync service; they all stay on this device. If you stay signed in, at the next sync the account starts again from this device’s data.",
   "cancellaDallAccount": "Delete from the account",
   "ciaoNome": "Hi, {nome}",
   "servizioFinto": "test service",
