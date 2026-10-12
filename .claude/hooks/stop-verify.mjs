@@ -6,6 +6,8 @@
 // - Salta silenziosamente se non esiste package.json (repo non ancora pronto)
 //   o se il file .claude/hooks/SKIP_VERIFY esiste (fase "rosso" voluta del TDD).
 // - Senza node_modules il gate non può girare: lo dice chiaramente invece di fallire su "tsc non trovato".
+// - Salta se nel checkout sono cambiati solo documenti Markdown che il gate non legge (o niente): un turno di sole
+//   risposte o di documenti non spende fino a 280 s di verifica (09/10/2026); i documenti letti dai test restano dentro.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -28,6 +30,24 @@ try {
 if (event.stop_hook_active) process.exit(0);
 if (!existsSync(join(root, 'package.json'))) process.exit(0);
 if (existsSync(join(root, '.claude/hooks/SKIP_VERIFY'))) process.exit(0);
+
+const LETTI_DAL_GATE = [
+  'docs/DIPENDENZE.md',
+  'docs/TASKS.md',
+  'docs/TRACCIABILITA.md',
+  'docs/spec/RoutForge_SCENARI.md',
+];
+const modifiche = spawnSync('git', ['status', '--porcelain', '-uall'], { cwd: root, encoding: 'utf8' });
+if (modifiche.status === 0) {
+  const percorsi = modifiche.stdout
+    .split('\n')
+    .filter(Boolean)
+    .map((r) => r.slice(3).split(' -> ').pop().replace(/^"|"$/g, ''));
+  const contano = percorsi.filter(
+    (p) => !p.startsWith('audit/') && !(p.endsWith('.md') && !LETTI_DAL_GATE.includes(p)),
+  );
+  if (contano.length === 0) process.exit(0);
+}
 if (!existsSync(join(root, 'node_modules'))) {
   process.stderr.write(
     'Dipendenze non installate: il gate `npm run verify` non può girare. Esegui `npm ci` e rilancia la verifica.\n',

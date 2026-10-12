@@ -1,57 +1,65 @@
 # RoutForge — Stato dello sviluppo
 
-*Aggiornato dall'agente alla fine di ogni task. Letto automaticamente a inizio sessione (hook SessionStart). Contesto tecnico, non un diario: il dettaglio dei task fatti sta nelle loro righe di `docs/TASKS.md`, nelle decisioni e nei commit.*
+*Aggiornato dall'agente alla fine di ogni task e letto a inizio sessione dall'hook SessionStart, che ne mostra 7 000
+caratteri: va tenuto sotto. Contesto tecnico, non un diario: i task fatti stanno in `docs/TASKS.md`, le regole nelle
+decisioni (`docs/01_DECISIONI.md`).*
 
-**Data**: 2026-10-09 · **Passo corrente** (CONTESTO §6): 6 — AI e sincronizzazione fatte (T-026–T-028, T-033, T-034, T-059), poi la build (T-035) · **Design**: il nuovo pacchetto è in `claude-design/` e la spec è allineata (D-DESIGN-3, 60 scenari); handoff per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 · **Gate**: `npm run verify` (typecheck su due tsconfig, lint, formato, 986 test in 92 file); macchina satura: `--maxWorkers=2`
+**Data**: 2026-10-12 · **Passo** (CONTESTO §6): 6 fatto; rilascio web e Android pronto (T-035) · **Design**:
+`claude-design/`, spec allineata (D-DESIGN-3, 60 scenari), handoff in `docs/03_HANDOFF_DESIGN_CODE.md` §3–§4 ·
+**Gate**: `npm run verify` (990 test in 92 file; macchina satura: `--maxWorkers=2`)
 
 ## Fatto
-- **T-035 rilascio, 09/10/2026** (D-RILASCIO-1): PWA installabile e offline (service worker solo nel browser), icone dal logo del design, APK firmato con `npm run apk` (chiave in `~/.routforge`, da copiare in un posto sicuro), build nella CI. CP6 con le scelte dell'agente.
-- **Audit del 09/10/2026**: passate 0–4 in `audit/` (automatici, conformità alle spec, struttura, ponytail, sintesi) e roadmap di 79 voci (`audit/04-sintesi.md` §3); correzioni in `audit/05-correzioni.md`, una riga e un commit per ID, ognuna col test che falliva prima: 57 corrette, 2 in parte (P3-19, P3-21), 5 coi soli test (copertura), 4 rinviate (P2-28, P3-24, P3-32, P3-33), 1 chiusa senza modifica (P3-35); 10 restano all'utente (sotto). Decisioni prese dall'agente da confermare: D-TIME-3 (buco dell'ora legale, P2-22) e D-PERSO-1 («perso» a fine + 30' esatti, P3-6). Invarianti nuovi: INV-22 (nessun ciclo d'import), INV-23 (classi dei CSS Modules). Revisione di sicurezza finale sui commit che toccano AI, backup, sync e file: nessun problema grave, due LOW corretti (P0-1 e P0-2 «revisione di sicurezza»), il terzo esteso in N-4. Problemi trovati durante le correzioni e non corretti: N-1…N-9 in `audit/nuovi-problemi.md` (N-9 già corretto, resta il caso estremo).
-- **Nuovo design, 05–06/10/2026**: T-048, T-049, T-044, T-040, T-050, T-056, T-054, T-042, T-055, T-053, T-037 (D-CASCATA-1, punto 3 da confermare), T-022, T-031, T-041 (un esempio importato prima va reimportato), T-029 (S20 come il design, D-STATS-1 n. 12), T-032 (D-IMPOST-1), T-024 (D-MAT-1, cestino su «Tuoi»), T-025 (D-CODE-1, riga del codice nella chiusura di S15); celebrazioni con Motion (spunta disegnata, chiusura della riga, coriandoli; «Sempre» vale per Motion); PDF col visore del sistema su Android (D-MAT-2: Capacitor inizializzato, plugin locale `VisorePdf`); Corsi su desktop a due colonne (elenco a 320 e pannello, unità con la colonna di 320; handoff n. 71). 07/10: decisioni del CP4 col council; T-030 Backup (D-BACKUP-1, D-BACKUP-2); T-021 adapter Android e T-051 (D-NATIVO-2), T-023 widget (D-WIDGET-1), T-057 sveglia S8 e azioni in sfondo (D-NATIVO-3), T-026 chat AI (D-AI-2, CP5 col modello finto), T-027 quiz, flashcard e ripasso (D-QUIZ-1–D-QUIZ-4), T-028 DevSwipe, Bug Hunter e Trivia (D-PRATICA-1, voce D-NATIVO-4), T-033 sincronizzazione (D-SYNC-4, INV-21; Supabase quando ci sono le chiavi), T-034 impronta del corso e ciclo dopo la ricezione (D-SYNC-5); revisione del lavoro fatto (sync D-SYNC-6 con l'SQL corretto, pratica); T-059 recupero e righe ricevute (D-RECUPERO-1). Dettagli nelle righe di `docs/TASKS.md`.
-- **05/10/2026**: T-052 primo incremento; import e verifica del nuovo design (D-DESIGN-3, D-DESIGN-4: `claude-design/`, `docs/spec/` = `spec/` del pacchetto, 60 scenari; `npm run mock`, `confronto`, `preview`; `lettore-mock`, `design-checker`, `/incremento`). **04/10**: pulizia (D-DESIGN-2, vecchio export in `3c60512`). **Fino al 02/10**: T-000–T-020, T-038, T-043, T-045–T-047, CP3 (D-NATIVO-1).
+- **12/10 — T-035 rilascio** (D-RILASCIO-1): PWA installabile e offline, icone dal logo del design, APK firmato
+  (`npm run apk`), build nella CI. Strumenti di Claude Code rivisti (D-TOOLS-4).
+- **09/10 — Audit**: `audit/00…04`, roadmap di 79 voci; registro `audit/05-correzioni.md` (57 corrette, 2 in parte,
+  5 coi soli test, 4 rinviate, 1 chiusa, 10 all'utente); INV-22, INV-23; problemi emersi: `audit/nuovi-problemi.md`.
+- **05–07/10**: nuovo design (mappa dell'handoff §4), Android nativo (T-021, T-023, T-051, T-057), AI (T-026–T-028),
+  backup (T-030), sync (T-033, T-034), recupero (T-059). **Fino al 02/10**: T-000–T-020, T-038, T-043, T-045–T-047.
 
 ## In corso
-- Nessun task: le correzioni autonome dell'audit del 09/10/2026 sono chiuse; restano le decisioni e le azioni dell'utente di «Problemi aperti».
+- Risposte dell'utente del 09/10 sull'audit e correzione dei problemi rimasti (N-1…N-9, voci rinviate).
 
 ## Problemi aperti
-**Da decidere con l'utente, non bloccanti**
-- Audit del 09/10/2026 (dettagli nelle righe di `audit/05-correzioni.md`): P1-14 (eliminare un corso cancella routine e storia anche sugli altri dispositivi: è il punto qui sotto), P2-2 (streak locale, giorno della chiusura invece dell'avvio), P2-23 (divergenze dalla spec senza decisione), P2-25 (archiviazione non persistente sul web senza avviso), P2-26 (import del backup con un account), P2-27 (backup Android in Documenti condivisa), P3-1 (anticipo di 29–31 giorni su una ricorrenza), P3-4 (blocco in sessione su un altro dispositivo), P3-10 (compattazione delle tombstone, tocca INV-14), P3-34 (scelte minori, fra cui PT 26: statistiche calcolate e non mostrate); conferma di D-TIME-3 e D-PERSO-1.
-- Azioni dell'utente dall'audit: push di `main` (P2-24: la CI coi quattro fusi è ferma dal 02/10); un APK nuovo da provare sul telefono (P1-6 azioni delle notifiche e sveglia S8; P3-30 versione 0.1.0); P2-28 (gesti ad app chiusa, codice nativo) da fare come task R.
-- CP4 deciso il 07/10 dal council (D-SYNC-1…D-SYNC-3, D-BACKUP-1; resoconto in `.claude/council-cache/council-1791340507.md`): all'utente il progetto Supabase (vedi Prossimo task), il tetto di spesa sulla chiave Gemini e l'allineamento di MECC §22 e §25 (chiave AI fuori da backup e sync).
-- Eliminare un corso elimina le routine di studio collegate anche sugli altri dispositivi, dove il corso c'è ancora (D-SYNC-5): confermare, o staccarle invece di eliminarle.
-- All'handoff del nuovo design: le scelte minime di D-DESIGN-1 dove il vecchio design taceva e le scelte dell'utente su aspetto e interazione si confrontano col nuovo design. Elenco in `docs/03_HANDOFF_DESIGN_CODE.md` §1; ciò che il nuovo design cambia nel codice è in §2.
-**Obblighi per i prossimi task**
-- Sessione attiva (D-SCHED-1, D-SESS-1, D-TIMER-1): la scrivono e la tolgono solo `startSession`, `editActiveSession`, `endSession` e `abandonSession` di `src/app/session.ts`, nella stessa transazione del blocco. Fra inizio ed esito il blocco di studio successivo dello stesso corso riceve la stessa unità (resta pendente finché l'esito non è scritto). «Abbandona» passa da `abandonPlan` (D-SESS-2): sopra la soglia è una chiusura `terminata_prima` con esito Continua, contata fra le sessioni concluse e non fra gli abbandoni (T-029); lo sheet non lascia correggere («Registra esito» sul parziale non esiste: solo la ripresa del parziale). Battiti (D-TIMER-2): `startHeartbeat` è l'unico che scrive `ultimoBattito` (una scrittura al minuto su `preferenze` con una sessione attiva: il `watch` delle notifiche riconcilia a ogni battito, con differenza vuota); il focus di `timerState`, `summary` e `focusPercent` esclude gli intervalli non contati; T-021 chiama `editActiveSession(db, s => beat(s, now), now)` dal servizio in primo piano (Doze e arresto forzato = intervallo non verificato); T-036 idem dalla Live Activity, se possibile.
-- Esiti (D-ESITO-1): ogni esito passa da `writeOutcome` di `src/app/outcome.ts` (unità, blocco, streak, puntatore); T-022 riusa `registerOutcome` e `SchedaEsito`. Con «Conta nel piano» spento un blocco passato torna `programmato` e il ciclo lo rimarca perso: l'avviso «perso» di T-020 non deve ripartire.
-- Card Adesso (T-048, D-NOW-2): sceglie `heroBlock`, disegna `HeroCard`; lo studio ha l'azione della sessione (T-016), gli altri tipi il cerchio di `canCheckFromCalendar` (all'evento lo dà T-049). `preferenze.adessoChiuso` non si scrive più (righe vecchie ignorate).
-- Notifiche (D-NOTIF-1, D-NOTIF-2, D-NOTIF-3): tutto passa da `desiredSet` (one-shot da `persoIl`/`ritardoIl`, digest, posticipi; nessun rinvio per l'orario) e dalla riconciliazione, che segue da sola ogni scrittura su blocchi, ricorrenze, sessione attiva, `preferenze.notifiche` e `preferenze.posticipi` (anche la Modifica di T-042): nessun servizio la chiama e nessuno «spedisce» avvisi; gli id di `AvvisiCiclo` restano per la Diagnostica. I todo già spostati o «non fatti» prima di T-020 hanno `ritardoIl` nel passato: non verranno avvisati. Un blocco con una sessione avviata (`minutiRitardo`) o nato dopo la sua fine non riceve l'avviso «perso»; un perso riprogrammato e perso di nuovo sì. T-021 scrive l'adapter nativo della stessa porta (`sveglia` a schermo intero, canali per tipo + silenzioso, azioni: Posticipa → `snoozeNotification`; tocco con l'istante di risposta in un campo del blocco, da far leggere a `triggerResponse` (T-029)); T-032 scrive `preferenze.notifiche` (orario del `digest`; nessuna card «Ore silenziose») e chiama `test()` dal pulsante «Notifica di prova»; T-022 legge dal registro anche digest e one-shot; il registro resta fuori da backup e sync (T-030, T-033).
-- Notifiche sul web: il permesso si chiede alla prima riconciliazione senza un gesto e Chrome non mostra il prompt: lo chiede la «Notifica di prova» col gesto; i timer di una scheda nascosta possono scattare in ritardo; niente azioni (§13.3).
-- Riordino (D-RIORD-1): ogni ingresso nel gruppo di priorità passa da `enterGroup` (T-042: cambio di priorità, passaggio a senza orario); `ordine` viaggia con il blocco (T-033).
-- `orarioOriginale` va azzerato anche dalla Modifica (T-042). Modificare una routine riscrive le occorrenze future previste: uno spostamento manuale (C4) torna al suo slot, o sparisce se lo slot è passato (§7; il trascinamento dei persi è uscito con T-044); la UI della modifica e dell'eliminazione dell'intera routine è T-042.
-- Saltare una singola occorrenza = giorno in `dateSaltate` con `editRecurrence` più `remove` del blocco (un `remove` da solo verrebbe rianimato dalla generazione, D-DATA-2); vale anche per la sync (T-033).
-- Diagnostica (T-032, INV-16): cicli falliti, `ricorrenzeSaltate`, riconciliazioni e porte del dispositivo vanno in `app/diagnostics.ts`, in memoria (si perdono al ricaricamento); le query live di `watch` che falliscono ci vanno anch'esse (`onError`, audit P1-13), e la Diagnostica si legge anche col database che non risponde. Un'impostazione letta dentro una transazione o una query live rompe Dexie: si passa come parametro (`progressInputs`, `readStats`).
-- Collaudo sul telefono (T-021, D-NATIVO-2; qui niente emulatore): permesso e canali delle notifiche, allarmi esatti, Posticipa · Inizia · Segna fatto · Registra esito e tocco (rotta giusta, `toccoVerificaIl`), notifica fissa della sessione col cronometro e battiti con l'app chiusa (Doze, arresto forzato), schermo acceso, Non Disturbare con l'accesso dato, vibrazione, scala del testo, PDF col visore, backup in Documenti e import, cambio di fuso ad app aperta, tasto indietro nell'iperfocus, widget e suoi collegamenti (a 110 dp d'altezza se taglia: 3 righe d'agenda), sveglia S8 sopra il blocco (sblocco prima di aprire, indietro, Chiudi), Posticipa e «Segna fatto» ad app chiusa, riarmo dopo il riavvio, «Sveglie a schermo intero» in Diagnostica, voce della Trivia (lingua, 5 s, una playlist a schermo spento, Salta, uscita, Play dopo un errore), swipe di DevSwipe partendo dal codice; utili `adb shell dumpsys alarm`, `am kill` con l'app in sfondo (nessun gesto ripetuto), `dumpsys deviceidle force-idle`, 35' a schermo spento.
+**Azioni dell'utente**
+- Copia di sicurezza della cartella `~/.routforge` (chiave di firma: senza, l'app installata non si aggiorna più).
+- Deploy web su un host con origine propria (Cloudflare Pages o Netlify; non GitHub Pages: D-RILASCIO-1).
+- Sync vera: progetto Supabase coi passi in testa a `supabase/schema.sql`, variabili in `.env.local` e sull'host.
+- Collaudo dell'APK sul telefono: `docs/COLLAUDO.md` (da un APK di debug: backup, disinstalla, installa, importa).
+- CP4 (council, 07/10): tetto di spesa sulla chiave Gemini; MECC §22 e §25 da allineare (chiave AI fuori da backup
+  e sync).
 
-**Limiti noti della UI** (elenco del vecchio design in `git show 7fe5040:docs/STATO.md`; lo scorrimento touch del desktop su iPad si verifica in T-036): le schermate leggono `Date.now()` (la porta `Clock` è dei servizi, D-SCHED-1 n. 9); jsdom non impagina, quindi `useOggi`, `useMinuto` e il banner del ritorno si verificano solo nel browser (G4 `parziale`); i 0,5 s della vista con 500 blocchi valgono sul dispositivo e non si misurano in fake-indexeddb (audit P2-14).
+**Obblighi per i prossimi task** (le regole stanno nelle decisioni citate)
+- Sessione attiva: la scrivono solo `startSession`, `editActiveSession`, `endSession`, `abandonSession`, nella
+  transazione del blocco (D-SESS-1); `ultimoBattito` solo `startHeartbeat` (D-TIMER-2).
+- Esiti solo da `writeOutcome` (D-ESITO-1); notifiche solo da `desiredSet` e dalla riconciliazione, che segue da sola
+  le scritture sui suoi ingressi (D-NOTIF-1…3); ingresso nel gruppo di priorità con `enterGroup` (D-RIORD-1); saltare
+  un'occorrenza = giorno in `dateSaltate` più `remove` del blocco (D-DATA-2).
+- Errori dei servizi in `app/diagnostics.ts` (INV-16); un'impostazione letta dentro una transazione o una query live
+  rompe Dexie: si passa come parametro (`progressInputs`, `readStats`).
+- Notifiche sul web: il permesso lo chiede «Notifica di prova» col gesto; timer ritardati a scheda nascosta.
 
-**Ambiente e strumenti**
-- Remote `origin` (GitHub, `DiegoHidalgo02/routforge`): `main` pushato il 02/10/2026, CI verde; i commit successivi, audit compreso, non sono pushati (P2-24). Security review del 07/10 (AI, file utente, backup, sync, Android) e del 09/10 sulle correzioni dell'audit: nessun problema grave, correzioni applicate (aperto N-4, LOW).
-- `npm audit`: due avvisi moderati su `@vitest/mocker` (correzione solo con Vitest 5); `eslint-plugin-jsx-a11y` usa `overrides` per ESLint 10 (`docs/DIPENDENZE.md`).
-- Server MCP `claude-design`: si connette dopo `/design-login` e `/mcp` (05/10). `read_file` restituisce `& < >` codificati e rifiuta i binari; un reimport si verifica confrontando i byte con `list_files` (Write ed Edit alterano spazi finali, righe di soli spazi e `\uXXXX` letterali).
-- `scripts/loop.sh` risulta modificato su Windows: `git config core.fileMode false` prima di `git add` (se già aggiunto: `git update-index --chmod=+x scripts/loop.sh`).
-- Android (D-MAT-2): `npm run build && npx cap sync android`, poi `./gradlew assembleDebug` in `android/` → `android/app/build/outputs/apk/debug/app-debug.apk`; qui nessun emulatore né dispositivo: l'APK si prova sul telefono.
-- Favicon e icone arrivano con CP6 (T-035); `crypto.randomUUID` richiede un contesto sicuro, iOS da verificare in T-036.
-- Permessi e strumenti: `.claude/settings.json` e `.claude/hooks/**` in `permissions.ask`; plugin solo di progetto e marketplace di terze parti senza versione fissata (D-TOOLS-2, D-TOOLS-3), da verificare con `/plugin`, `/mcp` e `npm run audit:claude`.
-- Verifiche nel browser (Edge headless via CDP): `npm run confronto` (versionato, D-DESIGN-4) fotografa tavola e app alla stessa misura; i vecchi script locali `coverage/cdp-*.mjs`, ignorati da git, valgono per la UI del vecchio design. In modalità loop (T-017) Edge headless, script Node e `powershell.exe` con `TZ` erano negati: si verificano in sessione interattiva.
+**Limiti noti**: le schermate leggono `Date.now()` (D-SCHED-1 n. 9); jsdom non impagina (G4 `parziale`); i 0,5 s
+con 500 blocchi si misurano solo sul dispositivo (audit P2-14); `npm audit`: `tinypool` e `@vitest/mocker`
+(strumenti di test, correzione con Vitest 5) e `uuid` di `@capacitor/cli`.
+
+**Ambiente**
+- `origin`: GitHub `DiegoHidalgo02/routforge`, CI coi quattro fusi e la build (`/fusi` in locale, D-TOOLS-4).
+- Android: `npm run apk` o `npm run apk:debug`; una modifica a Gradle si prova con
+  `./gradlew --offline :app:processDebugMainManifest`; niente emulatore.
+- MCP: `claude-design` (dopo `/design-login` e `/mcp`; un reimport si verifica coi byte di `list_files`) e
+  `context7` (`.mcp.json`). Plugin solo di progetto (D-TOOLS-2…4), da verificare con `/plugin` e
+  `npm run audit:claude`.
+- Browser: Edge headless via CDP; `npm run confronto` fotografa tavola e app alla stessa misura.
+- `scripts/loop.sh` su Windows: `git config core.fileMode false` prima di `git add`.
 
 ## Divergenze design ↔ spec
-- Nuovo design del 05/10/2026 (D-DESIGN-3): spec allineata al pacchetto su richiesta dell'utente; le divergenze col codice stanno per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §2–§3, coi task; le 38 del vecchio export in `3c60512`.
+- Le divergenze col codice stanno per schermata in `docs/03_HANDOFF_DESIGN_CODE.md` §2–§3; regola dell'utente:
+  vince sempre il design (D-DESIGN-1).
 
 ## Prossimo task
-- T-036 richiede il Mac. Deploy web: l'utente collega Cloudflare Pages o Netlify al repository (build `npm run build`, cartella `dist`, origine propria: D-RILASCIO-1). Sync vera: i passi in testa a `supabase/schema.sql` (progetto, codice OTP, `.env.local` e le stesse variabili sull'host).
-- Domande per l'utente aperte dalla verifica: le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 (le principali nel report del 05/10: riduzione animazioni, chiave Gemini solo sul dispositivo, «Inizia» o «Avvia sessione», categoria nel sub delle card); ognuna ferma solo il task che la tocca.
+- T-036 (iOS) richiede il Mac. Le voci **bloccante** di `docs/03_HANDOFF_DESIGN_CODE.md` §3 fermano solo il task che
+  le tocca.
 
 ## Checkpoint in attesa
-- **CP6 Release** (D-RILASCIO-1): firma, nome e icona scelti dall'agente su richiesta dell'utente («portare il progetto a rilascio»); restano all'utente la copia di sicurezza di `~/.routforge` e il collegamento dell'host web.
-- **CP3 Nativo deciso dall'utente il 02/10/2026** (D-NATIVO-1): Android (T-021, T-023, T-057) e iOS (T-036). CP4 deciso il 07/10 dal council; CP5 col default se manca una chiave di prova.
-- **CP2 approvato il 06/10/2026** (D-DESIGN-5): S1 Oggi sul nuovo design; i bloccanti di S1 (handoff §3 n. 2, 9–13, 15, 16, 18) restano aperti con le scelte provvisorie.
+- **CP6 Release** (D-RILASCIO-1): firma, nome e icona scelti dall'agente su richiesta dell'utente; restano la copia di
+  `~/.routforge` e l'host web. CP2 (S1 Oggi, D-DESIGN-5), CP3 (D-NATIVO-1), CP4 e CP5 decisi.

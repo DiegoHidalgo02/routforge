@@ -13,8 +13,11 @@ const read = (p) => {
   }
 };
 
-// STATO.md è contesto tecnico, non un diario: se supera il limite va accorciato, non solo troncato qui.
-const LIMITE = 12_000;
+// STATO.md è contesto tecnico, non un diario: se supera il limite va accorciato, non solo troncato qui. Claude Code
+// mette in un file l'output di un hook troppo lungo e nel contesto ne entrano solo 2 KB (09/10/2026: con 13 KB si
+// perdevano task e regole): stato, cinque righe di task e regole devono restare sotto i 10 000 caratteri.
+const LIMITE = 7_000;
+const RIGA_TASK = 280;
 const stato = read('docs/STATO.md').trim();
 const statoMostrato =
   stato.length > LIMITE
@@ -24,7 +27,8 @@ const tasks = read('docs/TASKS.md');
 const open = tasks
   .split('\n')
   .filter((l) => /^\|\s*T-\d+/.test(l) && /\|\s*aperto\s*\|/.test(l))
-  .slice(0, 5);
+  .slice(0, 5)
+  .map((l) => (l.length > RIGA_TASK ? `${l.slice(0, RIGA_TASK)}…` : l));
 
 const lines = [
   '=== RoutForge · stato di lavoro (docs/STATO.md) ===',
