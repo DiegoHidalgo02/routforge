@@ -657,6 +657,16 @@ describe('Inneschi — MECCANISMI §13.3 (ogni mutazione)', () => {
     expect(p.vista()).toContain(`${CHIAVE_TEMPO_SCADUTO}@08:50`);
     expect(p.vista()).not.toContain(`${CHIAVE_TEMPO_SCADUTO}@08:55`);
   });
+
+  it('start(): eliminare un blocco toglie subito le sue voci, senza aspettare il ciclo del minuto (audit N-7)', async () => {
+    const p = portaFinta();
+    const stop = createNotifications(db, p.porta, orologio(oggi(8))).start();
+    await blocco({ id: 's1', inizio: oggi(9), fine: oggi(10) });
+    await vi.waitFor(() => expect(p.armate.size).toBe(4));
+    await deleteBlock(db, 's1', oggi(8), FUSO);
+    await vi.waitFor(() => expect(p.armate.size).toBe(0), { timeout: 3000 });
+    stop();
+  });
 });
 
 // La lib della radice è ES2022 senza DOM né Node (D-TS-1): si dichiarano i soli globali che servono ai test

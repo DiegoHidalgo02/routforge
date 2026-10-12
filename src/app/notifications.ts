@@ -9,7 +9,7 @@
  * D-NOTIF-2.
  */
 import type { RoutForgeDb } from '../data/db';
-import { blocksBetween, get, inTransaction, list, purge, save, watch } from '../data/repository';
+import { blocksBetween, get, inTransaction, list, purge, rowCount, save, watch } from '../data/repository';
 import {
   CHIAVE_PROVA,
   desiredSet,
@@ -187,7 +187,9 @@ export function createNotifications(db: RoutForgeDb, porta: Notifications, clock
     reconcile,
     start: () =>
       watch(
-        () => readInputs(db, clock.now()),
+        // Con le righe di tutti i blocchi: la tombstone di un blocco eliminato esce dall'indice dei giorni e la sola
+        // lettura per giorno non vedrebbe l'eliminazione (audit N-7)
+        async () => [await readInputs(db, clock.now()), await rowCount(db, 'blocchi')] as const,
         () => void reconcile(clock.now()),
         (e) => logError('notifiche', e),
       ),

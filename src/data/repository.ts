@@ -222,6 +222,12 @@ export const rawRow = <K extends NomeTabella>(
 export const queueSize = (db: RoutForgeDb): Promise<number> => db.syncCoda.count();
 
 /**
+ * Le righe di una tabella, tombstone comprese, contate senza leggerle. In una query live osserva tutta la tabella: anche
+ * l'eliminazione, che toglie la riga dagli indici secondari (INV-14) e sfugge a una lettura per indice (audit N-7).
+ */
+export const rowCount = (db: RoutForgeDb, nome: NomeTabella): Promise<number> => tabella(db, nome).count();
+
+/**
  * Toglie dalla coda le voci spedite (T-033), solo se non sono cambiate dopo: una modifica arrivata durante il push ha un
  * `updatedAt` più recente e resta in coda.
  */
