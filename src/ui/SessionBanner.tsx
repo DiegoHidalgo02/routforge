@@ -1,7 +1,7 @@
 // Il banner «Sessione in corso» (S1 SessionShell, S15 Desktop) e la lettura della sessione attiva che lo alimenta: un
 // pezzo trasversale, usato da quasi ogni schermata, in un file proprio invece che dentro la Sessione, così le schermate
 // che lo mostrano non importano tutta la Sessione e il grafo degli import resta senza cicli (audit P2-17).
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Link, NavLink } from 'react-router';
 import { appDb, watch } from '../app/db';
 import { readSessionView, type VistaSessione } from '../app/session';
@@ -11,11 +11,32 @@ import { orologio } from './format';
 import { t } from './i18n';
 import s from './Session.module.css';
 
+// Una sola query live sulla sessione attiva, condivisa da Shell, banner e Sessione (audit N-8): la apre il primo che la
+// legge e la chiude l'ultimo; senza lettori la vista torna da leggere.
+let vistaCondivisa: VistaSessione | null | undefined;
+const lettori = new Set<() => void>();
+let smetti: (() => void) | null = null;
+function iscrivi(avvisa: () => void): () => void {
+  lettori.add(avvisa);
+  smetti ??= watch(
+    () => readSessionView(appDb),
+    (v) => {
+      vistaCondivisa = v;
+      for (const l of lettori) l();
+    },
+  );
+  return () => {
+    lettori.delete(avvisa);
+    if (lettori.size > 0) return;
+    smetti?.();
+    smetti = null;
+    vistaCondivisa = undefined;
+  };
+}
+
 /** La sessione attiva con unità e orario; `undefined` fino alla prima lettura. */
 export function useSessionView(): VistaSessione | null | undefined {
-  const [vista, setVista] = useState<VistaSessione | null>();
-  useEffect(() => watch(() => readSessionView(appDb), setVista), []);
-  return vista;
+  return useSyncExternalStore(iscrivi, () => vistaCondivisa);
 }
 
 /** Il numero del timer: conto alla rovescia, «+04:12» nel tempo extra, focus trascorso nel cronometro (FUNZ §11.2). */
