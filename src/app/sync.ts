@@ -379,6 +379,8 @@ export function createSyncService(
           .then(() => true)
           .catch((x: unknown) => void logError('sync', x));
         if (fatto) return void (ancora = true);
+        // Registrazione fallita (rete caduta proprio lì): il prossimo ritentativo la riprova (audit N-6)
+        registrando = false;
       }
       logError('sync', e);
       aggiorna({ fase: 'errore' });

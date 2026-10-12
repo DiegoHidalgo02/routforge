@@ -1009,3 +1009,25 @@ describe('Tetto in byte del lotto — MECCANISMI §25 (audit N-5)', () => {
     expect(await titoli(tablet.db)).toEqual(['A', 'B', 'C', 'D', 'E']);
   });
 });
+
+describe('Registrazione del dispositivo che fallisce — MECCANISMI §25, D-SYNC-6 (audit N-6)', () => {
+  it('una registrazione caduta per la rete si riprova al giro successivo, invece di restare ferma fino al riavvio', async () => {
+    const db = openDb(`test-sync-registra-${++n}`);
+    aperti.push(db);
+    const base = memorySyncBackend(archivio, () => ora, newId);
+    let tentativi = 0;
+    const backend: SyncBackend = {
+      ...base,
+      registerDevice: (nome, piattaforma) =>
+        ++tentativi === 1 ? Promise.reject(new Error('rete caduta')) : base.registerDevice(nome, piattaforma),
+    };
+    const rete = { online: () => true, onOnline: () => () => undefined };
+    const sync = createSyncService(db, backend, rete, clock, { nome: 'scheda', piattaforma: 'web' });
+    await backend.verifyCode(EMAIL, CODICE_FINTO);
+    await sync.run();
+    expect(sync.snapshot().fase).toBe('errore');
+    await sync.run();
+    expect(tentativi).toBe(2);
+    expect(sync.snapshot().fase).toBe('in_pari');
+  });
+});
