@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- requestLegacyExternalStorage: su Android 10 il backup va in Documenti solo così (T-030). allowBackup spento:
-         il backup automatico di Android copierebbe su Google Drive anche la chiave Gemini (D-BACKUP-1) -->
+         il backup automatico di Android copierebbe su Google Drive anche la chiave Gemini (D-BACKUP-1). Il trasferimento
+         diretto fra dispositivi di Android 12+ resta: porta i dati, chiave compresa, sul telefono nuovo dello stesso
+         utente (D-BACKUP-3, audit C-10) -->
     <application
         android:requestLegacyExternalStorage="true"
         android:allowBackup="false"
