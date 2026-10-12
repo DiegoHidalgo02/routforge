@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { VoceRegistro } from '../domain/notifications/desiredSet';
 import { webNotifications } from './notifications';
 
@@ -23,7 +23,7 @@ const voce = (over: Partial<VoceRegistro> = {}): VoceRegistro => ({
 });
 const testi = (v: VoceRegistro) => ({ titolo: v.titolo, corpo: v.chiave });
 
-let create: ReturnType<typeof vi.fn>;
+let create: Mock<(titolo: string, opzioni: NotificationOptions, notifica: object) => void>;
 let permesso: NotificationPermission;
 beforeEach(() => {
   vi.useFakeTimers();

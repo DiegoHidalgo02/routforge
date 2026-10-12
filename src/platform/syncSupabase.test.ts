@@ -20,6 +20,8 @@ vi.mock('@supabase/supabase-js', () => ({
 
 const { isAnonKey, supabaseSyncBackend } = await import('./syncSupabase');
 const servizio = () => supabaseSyncBackend('https://x.supabase.co', 'chiave-anonima');
+// Base64url senza `Buffer`: i test di `platform` hanno i tipi del browser (`tsconfig.dom.json`)
+const base64url = (s: string) => btoa(s).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 
 describe('Adapter Supabase della sync — MECCANISMI §25, T-033 (audit P2-7)', () => {
   it('il pull chiama pull_records e converte i bigint che PostgREST manda come stringhe', async () => {
@@ -93,7 +95,7 @@ describe('Adapter Supabase della sync — MECCANISMI §25, T-033 (audit P2-7)', 
   it('la sessione salvata prende il dispositivo dal session_id del token (base64url)', () => {
     const s = servizio();
     // `{"session_id":"s?~>"}` in base64url contiene `_` e `-`, che `atob` da solo non legge
-    const payload = Buffer.from('{"session_id":"s?~>"}').toString('base64url');
+    const payload = base64url('{"session_id":"s?~>"}');
     expect(payload).toMatch(/[-_]/);
     sb.ascolto?.('INITIAL_SESSION', { access_token: `h.${payload}.f`, user: { id: 'u1', email: 'a@b.it' } });
     expect(s.session()).toEqual({ userId: 'u1', email: 'a@b.it', dispositivo: 's?~>' });
@@ -101,7 +103,7 @@ describe('Adapter Supabase della sync — MECCANISMI §25, T-033 (audit P2-7)', 
 });
 
 describe('Chiave della build — CLAUDE.md §8, D-SYNC-4 n. 10 (audit P2-21)', () => {
-  const jwt = (claims: object) => `h.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.f`;
+  const jwt = (claims: object) => `h.${base64url(JSON.stringify(claims))}.f`;
   it('solo la chiave anonima: una «publishable» o un JWT con ruolo anon; mai una segreta o service_role', () => {
     expect(isAnonKey(jwt({ role: 'anon', iss: 'supabase' }))).toBe(true);
     expect(isAnonKey(`${'sb_publishable_'}abc123`)).toBe(true);

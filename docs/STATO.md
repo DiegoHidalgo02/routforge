@@ -35,8 +35,8 @@ decisioni (`docs/01_DECISIONI.md`).*
   sync).
 
 **Rinviati**: P3-24 (dialogo nativo del foglio della sessione) e P3-32 (componenti grandi), da fare col confronto del
-design; Vitest 5 per gli avvisi di `npm audit` su `tinypool` e `@vitest/mocker` (solo strumenti di test); N-3
-accettato, N-9 residuo accettato (`audit/nuovi-problemi.md`).
+design; N-3 accettato, avviso `uuid` di `xcode` accettato (`docs/DIPENDENZE.md`), N-9 residuo accettato
+(`audit/nuovi-problemi.md`).
 
 **Obblighi per i prossimi task** (le regole stanno nelle decisioni citate)
 - Sessione attiva: la scrivono solo `startSession`, `editActiveSession`, `endSession`, `abandonSession`, nella
