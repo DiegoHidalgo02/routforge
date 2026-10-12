@@ -21,7 +21,7 @@ import { newId } from './data/repository';
 import { configurePdf } from './app/materials';
 import { createNotifications, registerNotificationService } from './app/notifications';
 import { createScheduler } from './app/scheduler';
-import { blockRouteById, notificationGesture } from './app/notificationActions';
+import { backgroundGesture, blockRouteById, notificationGesture } from './app/notificationActions';
 import { followWidget } from './app/widget';
 import type { GestoNotifica, VoceToccata } from './app/ports/notifications';
 import { followSessionInForeground, releaseDoNotDisturb, startHeartbeat } from './app/session';
@@ -91,10 +91,12 @@ const apri = (percorso: string, stato: unknown = null) => {
 };
 // Il gesto su una notifica nativa (§13.2): l'app fa ciò che serve e poi si apre dove serve (T-021, T-051). Un gesto
 // fatto senza aprire l'app arriva con il suo istante e non apre nulla (A6, T-057)
-const gesto = (voce: VoceToccata, g: GestoNotifica, istante?: number) =>
-  notificationGesture(appDb, voce, g, istante ?? webClock.now(), webClock.fuso()).then((d) => {
-    if (istante === undefined && d) apri(d.percorso, d.vista ? { vista: d.vista } : null);
-  });
+const gesto = (voce: VoceToccata, g: GestoNotifica, istante?: number): Promise<boolean | void> =>
+  istante !== undefined
+    ? backgroundGesture(appDb, voce, g, istante, webClock.fuso())
+    : notificationGesture(appDb, voce, g, webClock.now(), webClock.fuso()).then((d) => {
+        if (d) apri(d.percorso, d.vista ? { vista: d.vista } : null);
+      });
 // La sveglia a schermo intero apre S8 sopra il blocco schermo (T-057)
 const android = eAndroid
   ? androidNotifications(testiNotifica, etichetteNative, gesto, (s) => apri('/sveglia', s))

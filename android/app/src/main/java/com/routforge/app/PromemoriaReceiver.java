@@ -120,12 +120,21 @@ public class PromemoriaReceiver extends BroadcastReceiver {
         e.commit();
     }
 
-    /** I gesti fatti senza aprire l'app, in ordine; la coda si svuota. Sincronizzato con l'accodamento del ricevitore. */
-    static synchronized JSONArray prendiGesti(Context context) throws JSONException {
+    /**
+     * I gesti fatti senza aprire l'app, in ordine, senza toglierli: l'app li toglie con `togliGesti` dopo averli applicati,
+     * così un gesto che non si applica (o un processo che muore a metà) resta in coda (audit P2-28).
+     */
+    static synchronized JSONArray leggiGesti(Context context) throws JSONException {
+        return new JSONArray(archivio(context).getString(GESTI, "[]"));
+    }
+
+    /** Toglie i primi `n` gesti, quelli applicati; i gesti accodati nel frattempo stanno dopo e restano. */
+    static synchronized void togliGesti(Context context, int n) throws JSONException {
         SharedPreferences p = archivio(context);
         JSONArray gesti = new JSONArray(p.getString(GESTI, "[]"));
-        p.edit().remove(GESTI).commit();
-        return gesti;
+        JSONArray resto = new JSONArray();
+        for (int i = Math.max(0, n); i < gesti.length(); i++) resto.put(gesti.get(i));
+        p.edit().putString(GESTI, resto.toString()).commit();
     }
 
     private static synchronized void accoda(Context context, JSONObject gesto) throws JSONException {

@@ -16,8 +16,10 @@ const plugin = vi.hoisted(() => ({
 vi.mock('@capacitor/core', () => ({
   registerPlugin: () => ({
     addListener: () => Promise.resolve({ remove: () => Promise.resolve() }),
-    prendiGesti: () =>
-      plugin.rifiuta ? Promise.reject(new Error('ponte')) : Promise.resolve({ gesti: plugin.gesti.splice(0) }),
+    // Le due fasi (audit P2-28): si legge senza togliere, si tolgono i primi n applicati
+    leggiGesti: () =>
+      plugin.rifiuta ? Promise.reject(new Error('ponte')) : Promise.resolve({ gesti: [...plugin.gesti] }),
+    togliGesti: ({ n }: { n: number }) => Promise.resolve(void plugin.gesti.splice(0, n)),
     programma: (o: { voci: { id: number; canale: string; extra: unknown }[] }) => {
       plugin.chiamate.push(`nativo.programma ${o.voci.map((v) => `${v.id}:${v.canale}`).join(' ')}`);
       return Promise.resolve(void plugin.extra.push(...o.voci.map((v) => v.extra)));
@@ -166,6 +168,17 @@ describe('Smistamento, gesti in sfondo ed errori su Android — MECCANISMI §13.
       'inizio inizio:0:b posticipa 200',
       'fine inizio:0:b',
     ]);
+  });
+
+  it('un gesto che non si applica resta nella coda nativa con quelli dopo, nell’ordine: si riprova al giro dopo (audit P2-28)', async () => {
+    plugin.gesti = [
+      { chiave: 'pre:5:a', trigger: 'pre', bloccoId: 'a', gesto: 'segna_fatto', istante: 100 },
+      { chiave: 'pre:5:b', trigger: 'pre', bloccoId: 'b', gesto: 'segna_fatto', istante: 200 },
+      { chiave: 'pre:5:c', trigger: 'pre', bloccoId: 'c', gesto: 'segna_fatto', istante: 300 },
+    ];
+    const porta = adapter((v) => Promise.resolve(v.chiave !== 'pre:5:b'));
+    await porta.pronte;
+    expect(plugin.gesti.map((g) => (g as { chiave: string }).chiave)).toEqual(['pre:5:b', 'pre:5:c']);
   });
 
   it('un armamento rifiutato arriva al servizio, che riprova; il ponte che non risponde non blocca l’avvio', async () => {

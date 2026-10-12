@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, type RoutForgeDb } from '../data/db';
 import { get, saveBlock, type DatiBlocco } from '../data/repository';
 import { local } from '../domain/time';
-import { notificationGesture } from './notificationActions';
+import { backgroundGesture, notificationGesture } from './notificationActions';
 import { CHIAVE_POSTICIPI } from './notifications';
 
 const ROMA = 'Europe/Rome';
@@ -89,5 +89,19 @@ describe('«Segna fatto» dalla notifica — SCENARI A6 (T-051)', () => {
     const tutte = await blocco({ titolo: 'Leggere 20 pagine', checklist: voci(5) });
     expect(await gesto(tutte, 'pre', 'segna_fatto')).toBeNull();
     expect((await get(db, 'blocchi', tutte.id))?.stato).toBe('completato');
+  });
+});
+
+describe('Gesti fatti ad app chiusa — MECCANISMI §13.2, D-NATIVO-3 (audit P2-28)', () => {
+  it('«Segna fatto» applicato dice true; un database che non risponde dice false, e il gesto resta da rifare', async () => {
+    const t = await blocco({ titolo: 'Spesa' });
+    const voce = { chiave: `pre:0:${t.id}`, trigger: 'pre' as const, bloccoId: t.id };
+    expect(await backgroundGesture(db, voce, 'segna_fatto', ADESSO, ROMA)).toBe(true);
+    expect((await get(db, 'blocchi', t.id))?.stato).toBe('completato');
+    // Riapplicarlo è innocuo: il todo resta completato
+    expect(await backgroundGesture(db, voce, 'segna_fatto', ADESSO, ROMA)).toBe(true);
+    expect((await get(db, 'blocchi', t.id))?.stato).toBe('completato');
+    db.close();
+    expect(await backgroundGesture(db, voce, 'segna_fatto', ADESSO, ROMA)).toBe(false);
   });
 });

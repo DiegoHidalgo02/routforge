@@ -72,7 +72,8 @@ const PromemoriaNativi = registerPlugin<{
     }[];
   }): Promise<void>;
   annulla(o: { ids: number[] }): Promise<void>;
-  prendiGesti(): Promise<{ gesti: (VoceToccata & { gesto: AzioneNotifica; istante: number })[] }>;
+  leggiGesti(): Promise<{ gesti: (VoceToccata & { gesto: AzioneNotifica; istante: number })[] }>;
+  togliGesti(o: { n: number }): Promise<void>;
   schermoIntero(): Promise<{ concesso: boolean | null }>;
   mostra(): Promise<void>;
   sblocca(): Promise<{ sbloccato: boolean }>;
@@ -94,19 +95,29 @@ const propria = (v: VoceRegistro) => v.sveglia || v.azioni.includes('segna_fatto
 export function androidNotifications(
   testi: TestiNotifica,
   etichette: EtichetteNative,
-  onGesto: (voce: VoceToccata, gesto: GestoNotifica, istante?: number) => Promise<void> | void,
+  /** Per un gesto fatto ad app chiusa (`istante`), `false` = non applicato: resta nella coda nativa (audit P2-28). */
+  onGesto: (voce: VoceToccata, gesto: GestoNotifica, istante?: number) => Promise<boolean | void> | boolean | void,
   onSveglia: (s: SvegliaAperta) => void,
 ): Notifications & { pronte: Promise<void> } {
   const segreto = segretoInstallazione();
   const registrati = new Set<string>();
-  /** I gesti fatti senza aprire l'app, uno dopo l'altro e con il loro istante (A6, F5); le chiamate si accodano. */
+  /**
+   * I gesti fatti senza aprire l'app, uno dopo l'altro e con il loro istante (A6, F5); le chiamate si accodano. Si tolgono
+   * dalla coda nativa solo quelli applicati: al primo che non si applica ci si ferma, e lui e i successivi si riprovano al
+   * giro dopo, nell'ordine (audit P2-28; riapplicare un gesto è innocuo).
+   */
   let coda: Promise<void> = Promise.resolve();
   const scarica = (): Promise<void> =>
     (coda = coda
       .then(async () => {
-        const { gesti } = await PromemoriaNativi.prendiGesti();
-        for (const g of gesti)
-          await onGesto({ chiave: g.chiave, trigger: g.trigger, bloccoId: g.bloccoId ?? null }, g.gesto, g.istante);
+        const { gesti } = await PromemoriaNativi.leggiGesti();
+        let applicati = 0;
+        for (const g of gesti) {
+          const voce = { chiave: g.chiave, trigger: g.trigger, bloccoId: g.bloccoId ?? null };
+          if ((await onGesto(voce, g.gesto, g.istante)) === false) break;
+          applicati++;
+        }
+        if (applicati > 0) await PromemoriaNativi.togliGesti({ n: applicati });
       })
       .catch(() => undefined));
   // Sveglia e gesti in sfondo prima di tutto, fuori dalla catena dei canali: i gesti fatti ad app chiusa si applicano

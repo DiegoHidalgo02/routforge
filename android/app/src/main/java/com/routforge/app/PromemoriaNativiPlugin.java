@@ -82,13 +82,23 @@ public class PromemoriaNativiPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void prendiGesti(PluginCall call) {
+    public void leggiGesti(PluginCall call) {
         try {
             JSObject esito = new JSObject();
-            esito.put("gesti", PromemoriaReceiver.prendiGesti(getContext()));
+            esito.put("gesti", PromemoriaReceiver.leggiGesti(getContext()));
             call.resolve(esito);
         } catch (JSONException | RuntimeException e) {
             call.reject("gesti illeggibili", e);
+        }
+    }
+
+    @PluginMethod
+    public void togliGesti(PluginCall call) {
+        try {
+            PromemoriaReceiver.togliGesti(getContext(), call.getInt("n", 0));
+            call.resolve();
+        } catch (JSONException | RuntimeException e) {
+            call.reject("gesti non tolti", e);
         }
     }
 

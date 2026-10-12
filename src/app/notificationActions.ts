@@ -44,28 +44,58 @@ export async function notificationGesture(
   fuso: string,
 ): Promise<Destinazione> {
   try {
-    const b = voce.bloccoId ? await get(db, 'blocchi', voce.bloccoId) : undefined;
-    // Qualunque gesto sulla notifica della verifica è una risposta (§13.2 «per quel trigger», §20)
-    if (b && voce.trigger === 'verifica') await saveBlock(db, { ...b, toccoVerificaIl: now }, now, fuso);
-    if (gesto === 'posticipa') {
-      await snoozeNotification(db, voce.chiave, now);
-      return null;
-    }
-    if (!voce.bloccoId) return { percorso: voce.trigger === 'tempo_scaduto' ? '/sessione' : '/' };
-    if (!b) return { percorso: '/' };
-    const dettaglio = `/attivita/${enc(b.id)}`;
-    if (gesto === 'inizia') return { percorso: `/sessione/setup?blocco=${enc(b.id)}` };
-    if (gesto === 'registra_esito') return { percorso: dettaglio, vista: 'esito' };
-    if (gesto === 'segna_fatto') {
-      const passo = await checkFromCalendar(db, b.id, now, fuso);
-      if (passo === 'completa') return null;
-      return passo ? { percorso: dettaglio, vista: passo } : { percorso: dettaglio };
-    }
-    if (b.tipo === 'studio' && (voce.trigger === 'esito' || voce.trigger === 'perso'))
-      return { percorso: dettaglio, vista: 'esito' };
-    return { percorso: blockRoute(b) };
+    return await applyGesture(db, voce, gesto, now, fuso);
   } catch (e) {
     logError('notifiche', e);
     return voce.bloccoId ? { percorso: `/attivita/${enc(voce.bloccoId)}` } : { percorso: '/' };
   }
+}
+
+/**
+ * Un gesto fatto ad app chiusa, col suo istante (A6, T-057): `false` se non si è applicato, così resta nella coda nativa
+ * e si riprova (audit P2-28). L'errore va in Diagnostica (INV-16).
+ */
+export async function backgroundGesture(
+  db: RoutForgeDb,
+  voce: VoceToccata,
+  gesto: GestoNotifica,
+  istante: number,
+  fuso: string,
+): Promise<boolean> {
+  try {
+    await applyGesture(db, voce, gesto, istante, fuso);
+    return true;
+  } catch (e) {
+    logError('notifiche', e);
+    return false;
+  }
+}
+
+async function applyGesture(
+  db: RoutForgeDb,
+  voce: VoceToccata,
+  gesto: GestoNotifica,
+  now: number,
+  fuso: string,
+): Promise<Destinazione> {
+  const b = voce.bloccoId ? await get(db, 'blocchi', voce.bloccoId) : undefined;
+  // Qualunque gesto sulla notifica della verifica è una risposta (§13.2 «per quel trigger», §20)
+  if (b && voce.trigger === 'verifica') await saveBlock(db, { ...b, toccoVerificaIl: now }, now, fuso);
+  if (gesto === 'posticipa') {
+    await snoozeNotification(db, voce.chiave, now);
+    return null;
+  }
+  if (!voce.bloccoId) return { percorso: voce.trigger === 'tempo_scaduto' ? '/sessione' : '/' };
+  if (!b) return { percorso: '/' };
+  const dettaglio = `/attivita/${enc(b.id)}`;
+  if (gesto === 'inizia') return { percorso: `/sessione/setup?blocco=${enc(b.id)}` };
+  if (gesto === 'registra_esito') return { percorso: dettaglio, vista: 'esito' };
+  if (gesto === 'segna_fatto') {
+    const passo = await checkFromCalendar(db, b.id, now, fuso);
+    if (passo === 'completa') return null;
+    return passo ? { percorso: dettaglio, vista: passo } : { percorso: dettaglio };
+  }
+  if (b.tipo === 'studio' && (voce.trigger === 'esito' || voce.trigger === 'perso'))
+    return { percorso: dettaglio, vista: 'esito' };
+  return { percorso: blockRoute(b) };
 }
