@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  intero,
   rowBytes,
   receivedInProgress,
   clampUpdatedAt,
@@ -301,5 +302,21 @@ describe('Byte di una riga — MECCANISMI §25 (audit N-5)', () => {
     // {\n "a": "è"\n} = 13 caratteri, la «è» vale 2 byte
     expect(rowBytes({ a: 'è' })).toBe(14);
     expect(rowBytes({ a: '😀' })).toBe(16);
+  });
+});
+
+describe('Istanti interi nella busta — MECCANISMI §25 (revisione di N-4)', () => {
+  it('una tombstone importata con istanti decimali parte con istanti interi, uguali nei dati e nella busta', () => {
+    const importata = { id: 'b1', createdAt: 1.4, updatedAt: 2.6, deletedAt: 2.6 };
+    const b = toEnvelope('blocchi', importata, { updatedAt: 3, generata: false });
+    expect(b.deletedAt).toBe(3);
+    expect(b.dati).toEqual({ id: 'b1', createdAt: 1, updatedAt: 3, deletedAt: 3 });
+    expect(validEnvelope({ ...b, updatedAt: 3 })).toBe(true);
+  });
+
+  it('un istante si arrotonda all’intero; uno non numerico o fuori dagli interi sicuri prende il ripiego', () => {
+    expect(intero(1.5, 9)).toBe(2);
+    expect(intero('x', 9)).toBe(9);
+    expect(intero(1e20, 9)).toBe(9);
   });
 });

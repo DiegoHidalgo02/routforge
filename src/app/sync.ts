@@ -28,6 +28,7 @@ import {
   CHIAVE_IN_CORSO_ALTROVE,
   CHIAVE_STATO_SYNC,
   decide,
+  intero,
   isSynced,
   MAX_BYTE_LOTTO,
   mergeLocalFields,
@@ -160,7 +161,13 @@ function applyPage(
       // mittente (INV-14: fuori dagli indici secondari; revisione di sicurezza di P0-2)
       await putRemote(db, b.tabella, [
         (b.deletedAt === null
-          ? { ...riga, gestoIl: b.updatedAt }
+          ? {
+              ...riga,
+              // Istanti interi: un mittente con un backup vecchio può averli decimali (revisione di N-4)
+              createdAt: intero((riga as { createdAt?: unknown }).createdAt, b.updatedAt),
+              updatedAt: intero(riga.updatedAt, b.updatedAt),
+              gestoIl: b.updatedAt,
+            }
           : {
               id: b.id,
               createdAt: locale?.createdAt ?? b.updatedAt,

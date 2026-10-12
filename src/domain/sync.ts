@@ -86,15 +86,33 @@ export interface VoceCoda {
  * venuta dopo non la fa sembrare più recente).
  */
 export function toEnvelope(tabella: TabellaSincronizzata, riga: RigaSync, voce: VoceCoda): Busta {
+  // Gli istanti partono interi e uguali nei dati e nella busta: il servizio li vuole interi, e una riga importata prima
+  // di N-4 può averli decimali (revisione di N-4)
+  const creata = (riga as { createdAt?: unknown }).createdAt;
+  const intera = {
+    ...riga,
+    ...(creata !== undefined && { createdAt: intero(creata, voce.updatedAt) }),
+    updatedAt: intero(riga.updatedAt, voce.updatedAt),
+    deletedAt: riga.deletedAt === null ? null : intero(riga.deletedAt, voce.updatedAt),
+  };
   return {
     tabella,
     id: riga.id,
-    dati: stripLocalFields(tabella, riga),
+    dati: stripLocalFields(tabella, intera),
     updatedAt: voce.updatedAt,
-    deletedAt: riga.deletedAt,
+    deletedAt: intera.deletedAt,
     generata: voce.generata,
   };
 }
+
+/**
+ * Un istante come intero: un decimale si arrotonda (righe importate o ricevute prima di N-4); un valore che non è un
+ * numero, o fuori dagli interi sicuri, prende `ripiego` (revisione di N-4).
+ */
+export const intero = (v: unknown, ripiego: number): number => {
+  const n = typeof v === 'number' ? Math.round(v) : Number.NaN;
+  return Number.isSafeInteger(n) ? n : ripiego;
+};
 
 type Campi = Record<string, unknown>;
 const oggetto = (v: unknown): v is Campi => typeof v === 'object' && v !== null && !Array.isArray(v);

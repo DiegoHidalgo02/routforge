@@ -1081,3 +1081,19 @@ describe('Dopo «Cancella i dati remoti» — MECCANISMI §25 (audit B-12)', () 
     expect(await titoli(nuovo.db)).toEqual(['Prima della cancellazione']);
   });
 });
+
+describe('Istanti delle righe ricevute — MECCANISMI §22, §25 (revisione di N-4)', () => {
+  it('una riga ricevuta con istanti decimali si salva con istanti interi: il backup di chi la riceve resta leggibile', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    const id = await crea(telefono.db, todo('Decimali'));
+    await telefono.sync.run();
+    // Il mittente aveva istanti decimali (un backup importato prima della correzione)
+    for (const r of archivio.righe.values())
+      if (r.busta.id === id) r.busta = { ...r.busta, dati: { ...r.busta.dati, createdAt: 1.5, updatedAt: ora + 0.5 } };
+    await accedi(tablet);
+    const riga = (await get(tablet.db, 'blocchi', id))!;
+    expect([Number.isSafeInteger(riga.createdAt), Number.isSafeInteger(riga.updatedAt)]).toEqual([true, true]);
+  });
+});
