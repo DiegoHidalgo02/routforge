@@ -14,6 +14,7 @@ Passo corrente, fatto, problemi aperti e prossimo task: `docs/STATO.md`. Il desi
 npm ci
 npm run verify          # gate unico: typecheck + lint + formato + test (dominio e regole del repository)
 npm run dev             # l'app nel browser (Vite); npm run build per la build web in dist/
+npm run apk             # APK firmato con la chiave di ~/.routforge (npm run apk:debug senza chiave)
 claude                  # Claude Code: poi /task next
 ```
 In VS Code: apri la cartella e accetta le estensioni consigliate; `Ctrl+Shift+B` esegue il gate.

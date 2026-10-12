@@ -81,7 +81,7 @@ Al cambio di fuso vale l'**ora locale di parete** (D-TIME-2, `docs/decisioni/D-T
 - `npm run verify` — **gate unico**: typecheck + lint + formato + tutti i test (dominio e regole del repository:
   architettura, tracciabilità, dipendenze, segreti). Deve essere verde prima di ogni commit.
   In Claude Code il comando di progetto è `/gate` (non `/verify`: è già un comando integrato di Claude Code con un altro scopo).
-- `npm run dev` — l'app nel browser (Vite); `npm run build` — build web in `dist/`.
+- `npm run dev` — l'app nel browser (Vite); `npm run build` — build web in `dist/`; `npm run apk` — APK firmato (`apk:debug` senza chiave; D-RILASCIO-1, collaudo in `docs/COLLAUDO.md`).
 - `npm test` / `npm run test:watch` — Vitest. `npm run check` — solo `tsc`. `npm run lint` — ESLint.
   `npm run format` — Prettier (nel gate: `format:check`). `npm run preview` — la build servita. `npm run mock` — i
   `.dc.html` di `claude-design/`; `npm run confronto` — stato di una tavola e app alla stessa misura (`scripts/confronto.mjs`).
