@@ -10,7 +10,7 @@
  * differenza. Gli istanti nascono dall'ora di parete con il costruttore `Date` locale, cioè nel fuso corrente del
  * dispositivo (D-TIME-2).
  */
-import { endsNextDay, wallDuration } from '../activity';
+import { endsNextDay, MAX_ANTICIPO_MINUTI, wallDuration } from '../activity';
 import { addLocalDays, localDayKey, localInstant, localTimeKey, localWeekday, MINUTE, startOfLocalDay } from '../time';
 import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 
@@ -23,7 +23,12 @@ export const ORIZZONTE_OCCORRENZE_GIORNI = 28;
  * giorni; audit P3-1, D-OCC-2).
  */
 export function horizonDays(r: Pick<Ricorrenza, 'promemoria'>): number {
-  const anticipi = r.promemoria.modo === 'personalizzato' ? r.promemoria.anticipi.map((a) => a.minuti) : [];
+  // Una ricorrenza ricevuta o importata può portare qualunque valore: contano solo gli anticipi validi (§13.1), così un
+  // promemoria assente o un anticipo enorme non fanno generare migliaia di occorrenze (revisione di P3-1)
+  const p = r.promemoria as Ricorrenza['promemoria'] | undefined;
+  const anticipi = (p?.modo === 'personalizzato' && Array.isArray(p.anticipi) ? p.anticipi : [])
+    .map((a) => a.minuti)
+    .filter((m) => Number.isInteger(m) && m >= 0 && m <= MAX_ANTICIPO_MINUTI);
   return Math.max(ORIZZONTE_OCCORRENZE_GIORNI, Math.ceil(Math.max(0, ...anticipi) / (24 * 60)) + 1);
 }
 

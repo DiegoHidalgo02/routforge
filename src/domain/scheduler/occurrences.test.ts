@@ -5,6 +5,7 @@ import { addLocalDays, HOUR, local, localDayKey, localInstant, localTimeKey, MIN
 import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 import {
   editPlan,
+  horizonDays,
   horizonSlotRange,
   isMovedOccurrence,
   missingOccurrences,
@@ -419,5 +420,23 @@ describe('Orizzonte di una routine col promemoria lungo — MECCANISMI §7, §13
     const ultimo = localDayKey(addLocalDays(local(2026, 9, 22, 0, 0), ORIZZONTE_OCCORRENZE_GIORNI));
     const tutti = ricorrenza({ giorni: [0, 1, 2, 3, 4, 5, 6] });
     expect(giorni(missingOccurrences(tutti, [], NOW)).at(-1)).toBe(ultimo);
+  });
+});
+
+describe('Orizzonte con dati non fidati — MECCANISMI §7, §13.1 (revisione di P3-1)', () => {
+  it('un anticipo oltre i 31 giorni, non intero o negativo (sync o backup modificati) non allunga l’orizzonte', () => {
+    const r = (anticipi: number[]) =>
+      ricorrenza({
+        promemoria: { modo: 'personalizzato', anticipi: anticipi.map((minuti) => ({ minuti, sveglia: false })) },
+      });
+    expect(horizonDays(r([1e8]))).toBe(ORIZZONTE_OCCORRENZE_GIORNI);
+    expect(horizonDays(r([Number.NaN, -5, 1.5]))).toBe(ORIZZONTE_OCCORRENZE_GIORNI);
+    expect(horizonDays(r([31 * 24 * 60]))).toBe(32);
+  });
+
+  it('una ricorrenza senza promemoria (riga ricevuta malformata) ha l’orizzonte di 28 giorni, senza errori', () => {
+    const senza = { ...ricorrenza() } as Partial<Ricorrenza>;
+    delete senza.promemoria;
+    expect(horizonDays(senza as Ricorrenza)).toBe(ORIZZONTE_OCCORRENZE_GIORNI);
   });
 });
