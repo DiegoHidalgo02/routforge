@@ -46,11 +46,28 @@ describe('Streak — MECCANISMI §12, §25 / SCENARI C2', () => {
     ).toEqual([]);
   });
 
-  it('il giorno è quello dell’esito, anche per un blocco pianificato il giorno prima (D-ESITO-1 n. 4)', () => {
+  it('una sessione serale chiusa dopo mezzanotte conta per la sera: lo studio è cominciato quel giorno (audit P2-2, A-3)', () => {
+    const giorni = studyDays([
+      studio(local(2026, 10, 5, 9, 30)),
+      { tipo: 'studio', stato: 'completato', inizio: local(2026, 10, 6, 23, 30), chiusoIl: local(2026, 10, 7, 0, 15) },
+    ]);
+    expect(giorni).toEqual(['2026-10-05', '2026-10-06']);
+    expect(currentStreak(giorni, local(2026, 10, 7, 0, 16))).toBe(2);
+  });
+
+  it('«Registra esito» su un perso di giorni fa conta il giorno della registrazione (D-ESITO-1 n. 4, C6)', () => {
     expect(
       studyDays([
-        { tipo: 'studio', stato: 'completato', inizio: local(2026, 9, 21, 23, 0), chiusoIl: local(2026, 9, 22, 0, 30) },
+        { tipo: 'studio', stato: 'completato', inizio: local(2026, 10, 3, 9, 0), chiusoIl: local(2026, 10, 7, 18, 0) },
       ]),
-    ).toEqual(['2026-09-22']);
+    ).toEqual(['2026-10-07']);
+  });
+
+  it('uno studio anticipato (esito prima dell’inizio pianificato) conta il giorno in cui si è studiato', () => {
+    expect(
+      studyDays([
+        { tipo: 'studio', stato: 'completato', inizio: local(2026, 10, 8, 9, 0), chiusoIl: local(2026, 10, 7, 20, 30) },
+      ]),
+    ).toEqual(['2026-10-07']);
   });
 });

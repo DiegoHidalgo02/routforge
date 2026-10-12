@@ -12,13 +12,21 @@
 import { addLocalDays, localDayKey } from './time';
 import type { Blocco } from './types';
 
+/**
+ * Il giorno di uno studio fatto: quello dell'inizio se l'esito arriva entro un giorno da lì (una sessione serale chiusa
+ * dopo mezzanotte conta per la sera: audit P2-2, A-3), altrimenti quello della registrazione (D-ESITO-1 n. 4: «Registra
+ * esito» su un perso di giorni fa conta oggi; uno studio anticipato conta il giorno in cui si è fatto).
+ */
+const studyDay = (b: Pick<Blocco, 'inizio' | 'chiusoIl'>): string => {
+  const esito = b.chiusoIl ?? b.inizio;
+  return localDayKey(esito >= b.inizio && esito < addLocalDays(b.inizio, 1) ? b.inizio : esito);
+};
+
 /** I giorni locali ("YYYY-MM-DD") con uno studio fatto, in ordine: la base di streak e record (§20). */
 export function studyDays(blocchi: readonly Pick<Blocco, 'tipo' | 'stato' | 'inizio' | 'chiusoIl'>[]): string[] {
   return [
     ...new Set(
-      blocchi
-        .filter((b) => b.tipo === 'studio' && (b.stato === 'completato' || b.stato === 'parziale'))
-        .map((b) => localDayKey(b.chiusoIl ?? b.inizio)),
+      blocchi.filter((b) => b.tipo === 'studio' && (b.stato === 'completato' || b.stato === 'parziale')).map(studyDay),
     ),
   ].sort();
 }
