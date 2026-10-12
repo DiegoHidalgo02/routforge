@@ -88,27 +88,33 @@ export function shouldMarkLost(
 
 /**
  * Un `in_corso` arrivato dalla sync è la sessione di un altro dispositivo, che qui non si vede (§25: la sessione attiva
- * non viaggia): non è orfano per 12 ore dalla ricezione, poi vale §8 (audit P3-4, D-SYNC-7).
+ * non viaggia): non è orfano per 12 ore dal gesto che l'ha avviato là, poi vale §8 (audit P3-4, D-SYNC-7).
  */
 export const ATTESA_SESSIONE_ALTROVE_MS = 12 * HOUR;
 
 /**
  * Orfano `in corso` (§8): un blocco resta `in_corso` solo mentre la sessione attiva lo punta. Non collegato a
  * `bloccoSessioneAttiva` e con la fine effettiva passata da > 30' torna `programmato`, prima della marcatura dei persi
- * (§9). Con la sessione attiva sul blocco non è mai orfano, anche nel tempo extra (§10.4); ricevuto `in_corso` da un
- * altro dispositivo all'istante `ricevutoIl`, non lo è per `ATTESA_SESSIONE_ALTROVE_MS`.
+ * (§9). Con la sessione attiva sul blocco non è mai orfano, anche nel tempo extra (§10.4). Arrivato `in_corso` da un
+ * altro dispositivo, avviato là all'istante `avviatoAltroveIl` (il gesto della busta), non lo è per
+ * `ATTESA_SESSIONE_ALTROVE_MS` da quell'istante, finché la riga di qui ha ancora quel gesto (`gestoIl`): una sessione
+ * avviata qui o un'altra modifica la tolgono dalla protezione (revisione di P3-4).
  */
 export function isOrphan(
-  block: Pick<Blocco, 'id' | 'stato' | 'inizio' | 'fine' | 'conOrario'>,
+  block: Pick<Blocco, 'id' | 'stato' | 'inizio' | 'fine' | 'conOrario'> & { gestoIl?: number },
   bloccoSessioneAttiva: string | null,
   now: number,
-  ricevutoIl?: number,
+  avviatoAltroveIl?: number,
 ): boolean {
+  const altrove =
+    avviatoAltroveIl !== undefined &&
+    block.gestoIl === avviatoAltroveIl &&
+    now < avviatoAltroveIl + ATTESA_SESSIONE_ALTROVE_MS;
   return (
     block.stato === 'in_corso' &&
     block.id !== bloccoSessioneAttiva &&
     now > effectiveEnd(block) + MARGINE_PERSO_MS &&
-    !(ricevutoIl !== undefined && now < ricevutoIl + ATTESA_SESSIONE_ALTROVE_MS)
+    !altrove
   );
 }
 

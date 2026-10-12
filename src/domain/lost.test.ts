@@ -214,29 +214,39 @@ describe('Orfani — MECCANISMI §8, SCENARI C8 (in corso senza la sessione atti
 });
 
 describe('In corso su un altro dispositivo — MECCANISMI §8, §25 (audit P3-4)', () => {
-  // Uno studio 09:00–10:00 avviato in recupero sul telefono: qui arriva `in_corso` dalla sync alle 10:35
-  const b = block({
-    id: 's',
-    tipo: 'studio',
-    stato: 'in_corso',
-    inizio: local(2026, 9, 23, 9, 0),
-    fine: local(2026, 9, 23, 10, 0),
-  });
-  const ricevutoIl = local(2026, 9, 23, 10, 35);
+  // Uno studio 09:00–10:00 avviato in recupero sul telefono alle 10:35: qui arriva `in_corso` col gesto di quell'istante
+  const avviatoIl = local(2026, 9, 23, 10, 35);
+  const b = {
+    ...block({
+      id: 's',
+      tipo: 'studio',
+      stato: 'in_corso',
+      inizio: local(2026, 9, 23, 9, 0),
+      fine: local(2026, 9, 23, 10, 0),
+    }),
+    gestoIl: avviatoIl,
+  };
 
-  it('per 12 ore dalla ricezione non è orfano: è la sessione dell’altro dispositivo, che qui non si vede', () => {
-    expect(isOrphan(b, null, local(2026, 9, 23, 10, 40), ricevutoIl)).toBe(false);
-    expect(isOrphan(b, null, local(2026, 9, 23, 22, 34), ricevutoIl)).toBe(false);
+  it('per 12 ore dall’avvio sull’altro dispositivo non è orfano: è la sua sessione, che qui non si vede', () => {
+    expect(isOrphan(b, null, local(2026, 9, 23, 10, 40), avviatoIl)).toBe(false);
+    expect(isOrphan(b, null, local(2026, 9, 23, 22, 34), avviatoIl)).toBe(false);
   });
 
   it('dopo 12 ore senza esito vale di nuovo §8: l’altro dispositivo non l’ha chiuso', () => {
-    expect(isOrphan(b, null, local(2026, 9, 23, 22, 36), ricevutoIl)).toBe(true);
+    expect(isOrphan(b, null, local(2026, 9, 23, 22, 36), avviatoIl)).toBe(true);
   });
 
-  it('il piano degli orfani legge le ricezioni per id; gli altri seguono §8 (C8)', () => {
+  it('un in corso rimasto sul servizio da giorni non si protegge: le 12 ore partono dall’avvio, non dalla ricezione (revisione)', () => {
+    const vecchio = local(2026, 9, 20, 10, 35);
+    expect(isOrphan({ ...b, gestoIl: vecchio }, null, local(2026, 9, 23, 10, 40), vecchio)).toBe(true);
+  });
+
+  it('se qui la riga è cambiata dopo (una sessione avviata qui, un altro gesto) la nota non vale più (revisione)', () => {
+    expect(isOrphan({ ...b, gestoIl: avviatoIl + 60_000 }, null, local(2026, 9, 23, 10, 40), avviatoIl)).toBe(true);
+  });
+
+  it('il piano degli orfani legge le note per id; gli altri seguono §8 (C8)', () => {
     const altro = { ...b, id: 'c8' };
-    expect(orphanPlan([b, altro], null, local(2026, 9, 23, 10, 40), { s: ricevutoIl }).map((x) => x.id)).toEqual([
-      'c8',
-    ]);
+    expect(orphanPlan([b, altro], null, local(2026, 9, 23, 10, 40), { s: avviatoIl }).map((x) => x.id)).toEqual(['c8']);
   });
 });

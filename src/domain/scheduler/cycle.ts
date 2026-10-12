@@ -16,17 +16,17 @@ import type { Blocco } from '../types';
 import { lateNoticeDue } from './horizon';
 
 /**
- * Gli orfani `in corso` riportati a `programmato` (§8): la marcatura dei persi li giudica subito dopo (§9). `ricevuti`:
- * per id, quando un blocco è arrivato `in_corso` da un altro dispositivo (audit P3-4).
+ * Gli orfani `in corso` riportati a `programmato` (§8): la marcatura dei persi li giudica subito dopo (§9). `altrove`:
+ * per id, il gesto con cui un blocco arrivato `in_corso` è stato avviato su un altro dispositivo (audit P3-4).
  */
-export function orphanPlan<B extends Blocco>(
+export function orphanPlan<B extends Blocco & { gestoIl?: number }>(
   blocchi: readonly B[],
   bloccoSessioneAttiva: string | null,
   now: number,
-  ricevuti: Readonly<Record<string, number>> = {},
+  altrove: Readonly<Record<string, number>> = {},
 ): B[] {
   return blocchi
-    .filter((b) => isOrphan(b, bloccoSessioneAttiva, now, ricevuti[b.id]))
+    .filter((b) => isOrphan(b, bloccoSessioneAttiva, now, altrove[b.id]))
     .map((b) => ({ ...b, stato: 'programmato' }));
 }
 

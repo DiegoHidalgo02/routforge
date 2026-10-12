@@ -171,7 +171,7 @@ function applyPage(
       scritte++;
       if (b.tabella === 'ricorrenze') await followReceived(db, b, now, fuso);
       if (b.tabella === 'blocchi' && b.deletedAt === null && (riga as { stato?: unknown }).stato === 'in_corso')
-        await noteInProgressElsewhere(db, b.id, now);
+        await noteInProgressElsewhere(db, b.id, b.updatedAt, now);
     }
     await scriviStato(db, stato, now);
     return scritte;
@@ -179,18 +179,15 @@ function applyPage(
 }
 
 /**
- * Un blocco arrivato `in_corso`: la sessione è dell'altro dispositivo e il ciclo di qui non lo tratta da orfano per 12
- * ore (audit P3-4, D-SYNC-7). Le voci più vecchie di così non servono più e si tolgono.
+ * Un blocco arrivato `in_corso`: la sessione è dell'altro dispositivo, avviata col gesto della busta (`avviatoIl`, lo
+ * stesso `gestoIl` della riga scritta qui), e il ciclo di qui non lo tratta da orfano per 12 ore da quel gesto (audit
+ * P3-4, D-SYNC-7). Le voci più vecchie di così non servono più e si tolgono.
  */
-async function noteInProgressElsewhere(db: RoutForgeDb, id: string, now: number): Promise<void> {
+async function noteInProgressElsewhere(db: RoutForgeDb, id: string, avviatoIl: number, now: number): Promise<void> {
   const voci = receivedInProgress((await get(db, 'preferenze', CHIAVE_IN_CORSO_ALTROVE))?.valore);
   const valide = Object.entries(voci).filter(([, il]) => now < il + ATTESA_SESSIONE_ALTROVE_MS);
-  await save(
-    db,
-    'preferenze',
-    { id: CHIAVE_IN_CORSO_ALTROVE, valore: { ...Object.fromEntries(valide), [id]: now } },
-    now,
-  );
+  const valore = { ...Object.fromEntries(valide), [id]: avviatoIl };
+  await save(db, 'preferenze', { id: CHIAVE_IN_CORSO_ALTROVE, valore }, now);
 }
 
 /**

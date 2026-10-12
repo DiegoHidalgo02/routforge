@@ -25,8 +25,9 @@ export const PREFERENZE_SINCRONIZZATE: readonly string[] = ['impostazioni', 'not
 export const CHIAVE_STATO_SYNC = 'sync';
 
 /**
- * La riga di `preferenze` coi blocchi arrivati `in_corso` da un altro dispositivo (id → istante della ricezione): resta
- * qui (non è fra le preferenze che viaggiano) e il ciclo non li tratta da orfani per 12 ore (audit P3-4, D-SYNC-7).
+ * La riga di `preferenze` coi blocchi arrivati `in_corso` da un altro dispositivo (id → istante del gesto che li ha
+ * avviati là): resta qui (non è fra le preferenze che viaggiano) e il ciclo non li tratta da orfani per 12 ore da quel
+ * gesto (audit P3-4, D-SYNC-7).
  */
 export const CHIAVE_IN_CORSO_ALTROVE = 'inCorsoAltrove';
 
