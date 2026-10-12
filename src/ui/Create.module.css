@@ -490,9 +490,11 @@
   background: var(--color-selected-ink);
 }
 
+/* minmax(0, 1fr): un `1fr` semplice non scende sotto la larghezza propria dell'input, che in inglese («08:00 PM») supera
+   la colonna a 360 px e fa scorrere il foglio a destra */
 .orari {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: end;
   gap: var(--space-3);
 }
