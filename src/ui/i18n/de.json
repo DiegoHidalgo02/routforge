@@ -719,6 +719,8 @@
   "backupIlleggibile": "Diese Datei ist keine RoutForge-Sicherung.",
   "backupVersione": "Die Sicherung stammt aus einer neueren App-Version: aktualisiere die App.",
   "backupNonImportato": "Sicherung nicht importiert: Die Daten sind unverändert.",
+  "importaConAccount": "Du wirst vom Konto abgemeldet: Bei der nächsten Anmeldung gilt für jede Aktivität die neueste Änderung, aus der Sicherung oder dem Konto.",
+  "backupNonImportatoAccount": "Sicherung nicht importiert: Die Daten sind unverändert, aber du bist vom Konto abgemeldet. Melde dich unter Konto und Synchronisierung wieder an.",
   "sostituireTitolo": "Alle lokalen Daten ersetzen?",
   "sostituireCorpo": "{corsi}, {attivita}, {pdf}.",
   "sostituisciRicarica": "Ersetzen und neu laden",

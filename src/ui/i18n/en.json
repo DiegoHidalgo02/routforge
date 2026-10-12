@@ -719,6 +719,8 @@
   "backupIlleggibile": "This file is not a RoutForge backup.",
   "backupVersione": "This backup comes from a newer version of the app: update it.",
   "backupNonImportato": "Backup not imported: your data is unchanged.",
+  "importaConAccount": "This signs you out: at the next sign-in, the most recent change wins for each activity, from the backup or the account.",
+  "backupNonImportatoAccount": "Backup not imported: your data is unchanged, but you're signed out. Sign in again from Account and sync.",
   "sostituireTitolo": "Replace all the data on this device?",
   "sostituireCorpo": "{corsi}, {attivita}, {pdf}.",
   "sostituisciRicarica": "Replace and reload",

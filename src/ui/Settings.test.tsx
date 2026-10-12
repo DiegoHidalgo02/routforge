@@ -12,6 +12,17 @@ import { appDb } from '../app/db';
 import { registerSyncService, type StatoSync, type SyncService } from '../app/sync';
 import { Account, Backup, Diagnostics } from './Settings';
 
+// `replaceAll` vero, che un test può far fallire come uno spazio esaurito a metà import (audit P2-26)
+const guasto = vi.hoisted(() => ({ replaceAll: false }));
+vi.mock('../data/repository', async (originale) => {
+  const m = await originale<typeof import('../data/repository')>();
+  return {
+    ...m,
+    replaceAll: (...a: Parameters<typeof m.replaceAll>) =>
+      guasto.replaceAll ? Promise.reject(new Error('spazio esaurito')) : m.replaceAll(...a),
+  };
+});
+
 let box: HTMLDivElement;
 let root: Root;
 beforeEach(async () => {
@@ -197,5 +208,64 @@ describe('«Svuota cache» — FUNZIONALITA §24, MECCANISMI §23 (T-035)', () =
     await vi.waitFor(() => expect(bottoni('Clear cache')).toHaveLength(1));
     bottoni('Clear cache')[0]!.click();
     await vi.waitFor(() => expect(unregister).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('Import di un backup con un account — MECCANISMI §22, §25, D-SYNC-4 n. 7 (audit P2-26)', () => {
+  const nulla = () => Promise.resolve();
+  /** Un servizio della sync finto, con o senza account. */
+  const sync = (account: StatoSync['account']) => {
+    const stato: StatoSync = { account, fase: 'in_pari', inCoda: 0, ultimaSync: null, dispositivi: [], finto: false };
+    registerSyncService({
+      start: () => () => undefined,
+      run: nulla,
+      sendCode: () => Promise.resolve(true),
+      verifyCode: () => Promise.resolve(true),
+      signOut: nulla,
+      signOutLocal: nulla,
+      revokeDevice: nulla,
+      eraseRemote: () => Promise.resolve(true),
+      setName: nulla,
+      subscribe: () => () => undefined,
+      snapshot: () => stato,
+    } satisfies SyncService);
+  };
+  afterEach(() => {
+    guasto.replaceAll = false;
+    sync(null);
+  });
+  const scegliBackup = async () => {
+    const { testo } = await backupText(appDb, 0);
+    apri(Backup);
+    const input = await vi.waitFor(() => {
+      const i = box.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!i) throw new Error('nessun selettore del file');
+      return i;
+    });
+    Object.defineProperty(input, 'files', {
+      value: [{ name: 'routforge.rfbackup', text: () => Promise.resolve(testo) }],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await vi.waitFor(() => expect(conferma()).not.toBeNull());
+  };
+
+  it('con un account la conferma dice che si esce e che al nuovo accesso vale la modifica più recente', async () => {
+    sync({ email: 'diego@example.com', nome: null });
+    await scegliBackup();
+    expect(conferma()?.textContent).toContain('the most recent change wins');
+  });
+
+  it('senza account la conferma resta quella di prima', async () => {
+    sync(null);
+    await scegliBackup();
+    expect(conferma()?.textContent).not.toContain('the most recent change wins');
+  });
+
+  it('un import fallito con un account dice che i dati sono com’erano e che si è usciti dall’account', async () => {
+    sync({ email: 'diego@example.com', nome: null });
+    await scegliBackup();
+    guasto.replaceAll = true;
+    bottoni('Replace and reload')[0]!.click();
+    await vi.waitFor(() => expect(box.querySelector('[role="alert"]')?.textContent).toContain('signed out'));
   });
 });

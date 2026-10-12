@@ -719,6 +719,8 @@
   "backupIlleggibile": "Ce fichier n'est pas une sauvegarde RoutForge.",
   "backupVersione": "La sauvegarde vient d'une version plus récente de l'app : mets-la à jour.",
   "backupNonImportato": "Sauvegarde non importée : les données sont restées telles quelles.",
+  "importaConAccount": "Vous serez déconnecté du compte : à la prochaine connexion, pour chaque activité, la modification la plus récente l’emporte, de la sauvegarde ou du compte.",
+  "backupNonImportatoAccount": "Sauvegarde non importée : les données sont restées telles quelles, mais vous êtes déconnecté du compte. Reconnectez-vous depuis Compte et synchronisation.",
   "sostituireTitolo": "Remplacer toutes les données locales ?",
   "sostituireCorpo": "{corsi}, {attivita}, {pdf}.",
   "sostituisciRicarica": "Remplacer et recharger",

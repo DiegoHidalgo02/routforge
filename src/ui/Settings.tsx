@@ -445,6 +445,8 @@ export function Backup() {
   const [elimina, setElimina] = useState(false);
   const [lavoro, setLavoro] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  // Con un account l'import esce e il nuovo accesso rifà la fusione (D-SYNC-4 n. 7): la conferma e l'errore lo dicono
+  const conAccount = useSync().account !== null;
   useEffect(() => watch(() => lastBackup(appDb), setUltimo), []);
   // «~ 14 MB»: i PDF pesano un terzo in più nel file (base64), il resto dei dati è poca cosa
   useEffect(
@@ -555,12 +557,18 @@ export function Backup() {
                   attivita: tn('unaAttivita', 'nAttivita', scelto.letto.attivita),
                   pdf: tn('unPdf', 'nPdf', scelto.letto.pdf),
                 })}
+                {conAccount && <> {t('importaConAccount')}</>}
               </>
             }
             azione={t('sostituisciRicarica')}
             lavoro={lavoro}
             onAnnulla={() => setScelto(null)}
-            onConferma={() => void esegui(() => importBackup(appDb, scelto.letto), 'backupNonImportato')}
+            onConferma={() =>
+              void esegui(
+                () => importBackup(appDb, scelto.letto),
+                conAccount ? 'backupNonImportatoAccount' : 'backupNonImportato',
+              )
+            }
           />
         )}
         <Gruppo titolo={t('zonaPericolosa')}>

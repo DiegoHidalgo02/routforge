@@ -719,6 +719,8 @@
   "backupIlleggibile": "Este archivo no es una copia de RoutForge.",
   "backupVersione": "La copia viene de una versión más nueva de la app: actualízala.",
   "backupNonImportato": "Copia no importada: los datos siguen como estaban.",
+  "importaConAccount": "Se cerrará la sesión de la cuenta: en el próximo acceso, en cada actividad prevalece el cambio más reciente, de la copia o de la cuenta.",
+  "backupNonImportatoAccount": "Copia no importada: los datos siguen como estaban, pero se cerró la sesión de la cuenta. Vuelve a entrar desde Cuenta y sincronización.",
   "sostituireTitolo": "¿Sustituir todos los datos locales?",
   "sostituireCorpo": "{corsi}, {attivita}, {pdf}.",
   "sostituisciRicarica": "Sustituir y recargar",
