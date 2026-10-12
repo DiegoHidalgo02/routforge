@@ -26,7 +26,7 @@ const occurrencesOf = (db: RoutForgeDb, ricorrenzaId: string) => listBy(db, 'blo
  */
 export async function generateOccurrences(db: RoutForgeDb, r: Ricorrenza, now: number, fuso: string): Promise<number> {
   return inTransaction(db, ['blocchi'], async () => {
-    const mancanti = missingOccurrences(r, await listKeyRange(db, 'blocchi', ...horizonSlotRange(r.id, now)), now);
+    const mancanti = missingOccurrences(r, await listKeyRange(db, 'blocchi', ...horizonSlotRange(r, now)), now);
     for (const b of mancanti) await saveBlock(db, b, now, fuso, 'ciclo');
     return mancanti.length;
   });

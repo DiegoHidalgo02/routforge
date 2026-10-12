@@ -279,7 +279,7 @@ describe("Id dell'occorrenza = slot della ricorrenza — D-DATA-2", () => {
   });
 
   it("gli slot dell'orizzonte stanno in un intervallo di chiavi: da oggi a oggi + 28 inclusi, a ogni orario (D-SCHED-1)", () => {
-    const [da, a] = horizonSlotRange('r-corsa', NOW);
+    const [da, a] = horizonSlotRange(ricorrenza(), NOW);
     const dentro = (id: string) => id >= da && id <= a;
     expect(dentro(occurrenceId('r-corsa', '2026-09-22', '00:00'))).toBe(true);
     expect(dentro(occurrenceId('r-corsa', '2026-10-20', '23:59'))).toBe(true); // oggi + 28 (§7)
@@ -399,5 +399,25 @@ describe('Ricorrenza che non si legge — MECCANISMI §9, D-SCHED-1 n. 8 (audit 
   it('l’errore della generazione, o null se la ricorrenza si legge: una sola prova per il ciclo e per la sync', () => {
     expect(recurrenceError(ricorrenza(), NOW)).toBeNull();
     expect(recurrenceError({ ...ricorrenza(), giorni: null as never }, NOW)).toBeInstanceOf(Error);
+  });
+});
+
+describe('Orizzonte di una routine col promemoria lungo — MECCANISMI §7, §13.1, §13.3 (audit P3-1)', () => {
+  // Un promemoria personalizzato arriva a 31 giorni (§13.1): l'occorrenza deve esistere prima che il suo avviso scatti
+  const lunga = ricorrenza({
+    giorni: [0, 1, 2, 3, 4, 5, 6],
+    promemoria: { modo: 'personalizzato', anticipi: [{ minuti: 30 * 24 * 60, sveglia: false }] },
+  });
+
+  it('30 giorni prima: le occorrenze arrivano a oggi + 31, e l’intervallo degli slot letti le comprende', () => {
+    const ultimo = localDayKey(addLocalDays(local(2026, 9, 22, 0, 0), 31));
+    expect(giorni(missingOccurrences(lunga, [], NOW)).at(-1)).toBe(ultimo);
+    expect(horizonSlotRange(lunga, NOW)[1] > occurrenceId(lunga.id, ultimo, '07:00')).toBe(true);
+  });
+
+  it('senza anticipi lunghi resta l’orizzonte di 28 giorni (§7, B1)', () => {
+    const ultimo = localDayKey(addLocalDays(local(2026, 9, 22, 0, 0), ORIZZONTE_OCCORRENZE_GIORNI));
+    const tutti = ricorrenza({ giorni: [0, 1, 2, 3, 4, 5, 6] });
+    expect(giorni(missingOccurrences(tutti, [], NOW)).at(-1)).toBe(ultimo);
   });
 });

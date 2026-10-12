@@ -1,5 +1,6 @@
 /**
- * Occorrenze delle routine e delle routine di studio: generazione a 28 giorni, modifica, eliminazione, riancoraggio.
+ * Occorrenze delle routine e delle routine di studio: generazione a 28 giorni (di più per un promemoria personalizzato
+ * più lungo: D-OCC-2), modifica, eliminazione, riancoraggio.
  * Fonte: MECCANISMI §7 (orizzonte, idempotenza, filtri, fine ≤ inizio → giorno dopo, senza durata, campi ereditati,
  * modifica, eliminazione), §1 (il giorno è quello locale dell'inizio). Decisioni: D-DATA-2 (id = slot della
  * ricorrenza), D-TIME-2 (ora di parete e riancoraggio, INV-18), D-OCC-1 (scelte di T-011). Scenari: B1, B3, B4, B6.
@@ -17,6 +18,16 @@ import type { Blocco, BloccoAncorato, Ricorrenza } from '../types';
 export const ORIZZONTE_OCCORRENZE_GIORNI = 28;
 
 /**
+ * Giorni dell'orizzonte di una ricorrenza: 28 (§7), o il suo anticipo personalizzato più lungo (fino a 31 giorni,
+ * §13.1) più uno, perché l'occorrenza esista prima che il suo avviso scatti (§13.3 considera i blocchi entro 14 + 31
+ * giorni; audit P3-1, D-OCC-2).
+ */
+export function horizonDays(r: Pick<Ricorrenza, 'promemoria'>): number {
+  const anticipi = r.promemoria.modo === 'personalizzato' ? r.promemoria.anticipi.map((a) => a.minuti) : [];
+  return Math.max(ORIZZONTE_OCCORRENZE_GIORNI, Math.ceil(Math.max(0, ...anticipi) / (24 * 60)) + 1);
+}
+
+/**
  * Id deterministico di un'occorrenza = slot della ricorrenza: ricorrenza, giorno locale e orario di parete d'inizio
  * della definizione (D-DATA-2). Non cambia se l'utente sposta l'occorrenza (C4) né al riancoraggio; cambiare l'orario
  * della definizione crea slot nuovi (B6).
@@ -25,15 +36,15 @@ export const occurrenceId = (ricorrenzaId: string, giorno: string, orarioInizio:
   `${ricorrenzaId}:${giorno}:${orarioInizio}`;
 
 /**
- * Intervallo delle chiavi degli slot dell'orizzonte, da oggi a oggi + 28 inclusi (§7): gli id di slot si ordinano per
+ * Intervallo delle chiavi degli slot dell'orizzonte, da oggi all'ultimo giorno di `horizonDays` (§7): gli id di slot si ordinano per
  * ricorrenza, giorno e orario, e un'occorrenza spostata conserva il suo (D-DATA-2). Così la generazione legge solo gli
  * slot che confronta, non tutta la storia della routine (D-SCHED-1).
  */
-export function horizonSlotRange(ricorrenzaId: string, now: number): readonly [string, string] {
+export function horizonSlotRange(r: Pick<Ricorrenza, 'id' | 'promemoria'>, now: number): readonly [string, string] {
   const oggi = startOfLocalDay(now);
-  const ultimo = localDayKey(addLocalDays(oggi, ORIZZONTE_OCCORRENZE_GIORNI));
+  const ultimo = localDayKey(addLocalDays(oggi, horizonDays(r)));
   // "~" viene dopo le cifre e i ":" dell'orario: chiude il giorno `ultimo` a ogni orario
-  return [`${ricorrenzaId}:${localDayKey(oggi)}`, `${ricorrenzaId}:${ultimo}:~`];
+  return [`${r.id}:${localDayKey(oggi)}`, `${r.id}:${ultimo}:~`];
 }
 
 /** Giorno locale dello slot, letto dall'id (D-DATA-2): resta quello anche se l'utente ha spostato l'occorrenza (C4). */
@@ -110,11 +121,11 @@ function occurrenceOf(r: Ricorrenza, giorno: string): Blocco {
   };
 }
 
-/** Le occorrenze previste da oggi a oggi + 28 nei giorni scelti, entro le date e fuori dalle date saltate (§7). */
+/** Le occorrenze previste nell'orizzonte (`horizonDays`) nei giorni scelti, entro le date e fuori dalle saltate (§7). */
 function expectedOccurrences(r: Ricorrenza, now: number): Blocco[] {
   const oggi = startOfLocalDay(now);
   const out: Blocco[] = [];
-  for (let i = 0; i <= ORIZZONTE_OCCORRENZE_GIORNI; i++) {
+  for (let i = 0, fine = horizonDays(r); i <= fine; i++) {
     const inizioGiorno = addLocalDays(oggi, i);
     const giorno = localDayKey(inizioGiorno);
     if (!r.giorni.includes(localWeekday(inizioGiorno))) continue;
