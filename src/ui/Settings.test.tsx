@@ -12,14 +12,14 @@ import { appDb } from '../app/db';
 import { registerSyncService, type StatoSync, type SyncService } from '../app/sync';
 import { Account, Backup, Diagnostics } from './Settings';
 
-// `replaceAll` vero, che un test può far fallire come uno spazio esaurito a metà import (audit P2-26)
-const guasto = vi.hoisted(() => ({ replaceAll: false }));
-vi.mock('../data/repository', async (originale) => {
-  const m = await originale<typeof import('../data/repository')>();
+// L'import vero, che un test può far fallire come uno spazio esaurito a metà (audit P2-26); la UI non vede `data` (INV-1)
+const guasto = vi.hoisted(() => ({ importazione: false }));
+vi.mock('../app/backup', async (originale) => {
+  const m = await originale<typeof import('../app/backup')>();
   return {
     ...m,
-    replaceAll: (...a: Parameters<typeof m.replaceAll>) =>
-      guasto.replaceAll ? Promise.reject(new Error('spazio esaurito')) : m.replaceAll(...a),
+    importBackup: (...a: Parameters<typeof m.importBackup>) =>
+      guasto.importazione ? Promise.reject(new Error('spazio esaurito')) : m.importBackup(...a),
   };
 });
 
@@ -231,7 +231,7 @@ describe('Import di un backup con un account — MECCANISMI §22, §25, D-SYNC-4
     } satisfies SyncService);
   };
   afterEach(() => {
-    guasto.replaceAll = false;
+    guasto.importazione = false;
     sync(null);
   });
   const scegliBackup = async () => {
@@ -264,7 +264,7 @@ describe('Import di un backup con un account — MECCANISMI §22, §25, D-SYNC-4
   it('un import fallito con un account dice che i dati sono com’erano e che si è usciti dall’account', async () => {
     sync({ email: 'diego@example.com', nome: null });
     await scegliBackup();
-    guasto.replaceAll = true;
+    guasto.importazione = true;
     bottoni('Replace and reload')[0]!.click();
     await vi.waitFor(() => expect(box.querySelector('[role="alert"]')?.textContent).toContain('signed out'));
   });
