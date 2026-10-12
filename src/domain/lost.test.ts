@@ -10,6 +10,7 @@ import {
   recoveryDeadline,
   shouldMarkLost,
 } from './lost';
+import { orphanPlan } from './scheduler/cycle';
 import { local, localDayKey } from './time';
 import type { Blocco } from './types';
 
@@ -209,5 +210,33 @@ describe('Orfani — MECCANISMI §8, SCENARI C8 (in corso senza la sessione atti
     const s = { ...b, fine: null };
     expect(isOrphan(s, null, local(2026, 9, 24, 0, 29))).toBe(false);
     expect(isOrphan(s, null, local(2026, 9, 24, 0, 30))).toBe(true);
+  });
+});
+
+describe('In corso su un altro dispositivo — MECCANISMI §8, §25 (audit P3-4)', () => {
+  // Uno studio 09:00–10:00 avviato in recupero sul telefono: qui arriva `in_corso` dalla sync alle 10:35
+  const b = block({
+    id: 's',
+    tipo: 'studio',
+    stato: 'in_corso',
+    inizio: local(2026, 9, 23, 9, 0),
+    fine: local(2026, 9, 23, 10, 0),
+  });
+  const ricevutoIl = local(2026, 9, 23, 10, 35);
+
+  it('per 12 ore dalla ricezione non è orfano: è la sessione dell’altro dispositivo, che qui non si vede', () => {
+    expect(isOrphan(b, null, local(2026, 9, 23, 10, 40), ricevutoIl)).toBe(false);
+    expect(isOrphan(b, null, local(2026, 9, 23, 22, 34), ricevutoIl)).toBe(false);
+  });
+
+  it('dopo 12 ore senza esito vale di nuovo §8: l’altro dispositivo non l’ha chiuso', () => {
+    expect(isOrphan(b, null, local(2026, 9, 23, 22, 36), ricevutoIl)).toBe(true);
+  });
+
+  it('il piano degli orfani legge le ricezioni per id; gli altri seguono §8 (C8)', () => {
+    const altro = { ...b, id: 'c8' };
+    expect(orphanPlan([b, altro], null, local(2026, 9, 23, 10, 40), { s: ricevutoIl }).map((x) => x.id)).toEqual([
+      'c8',
+    ]);
   });
 });

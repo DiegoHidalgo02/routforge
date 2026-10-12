@@ -21,7 +21,7 @@ import { deleteRecurrence, editRecurrence, generateOccurrences } from './app/rec
 import { eraseAllData } from './app/backup';
 import { readDiagnostics } from './app/diagnostics';
 import { runCycle } from './app/scheduler';
-import { setupInputs } from './app/session';
+import { setupInputs, startSession } from './app/session';
 import { createSyncService, registerSyncService, type SyncService } from './app/sync';
 
 const FUSO = 'Europe/Rome';
@@ -944,5 +944,45 @@ describe('Tombstone ricevute — MECCANISMI §25, INV-14 (revisione di sicurezza
     await telefono.sync.run();
     const riga = (await allRows(telefono.db, 'blocchi')).find((r) => r.id === 'b-ad-arte');
     expect(riga).toEqual({ id: 'b-ad-arte', createdAt: ora + 1, updatedAt: ora + 1, deletedAt: ora });
+  });
+});
+
+describe('Sessione su un altro dispositivo — MECCANISMI §8, §25 (audit P3-4)', () => {
+  it('lo studio in corso sul telefono resta in corso sul tablet invece di diventare perso; dopo 12 ore no', async () => {
+    const telefono = dispositivo('telefono');
+    const tablet = dispositivo('tablet');
+    await accedi(telefono);
+    await accedi(tablet);
+    // Un recupero: lo studio 07:00–08:00 avviato alle 09:00, oltre la fine + 30'
+    await saveBlock(
+      telefono.db,
+      {
+        id: 'st',
+        tipo: 'studio',
+        stato: 'programmato',
+        conOrario: true,
+        inizio: local(2026, 9, 22, 7, 0),
+        fine: local(2026, 9, 22, 8, 0),
+        corsoId: null,
+        unitaId: null,
+      },
+      ora,
+      FUSO,
+    );
+    await startSession(
+      telefono.db,
+      'st',
+      { unitaId: null, corsoId: null, durata: 25, modalita: 'continua', iperfocus: false },
+      ora,
+      FUSO,
+    );
+    await telefono.sync.run();
+    await tablet.sync.run();
+    const stato = async () => (await get(tablet.db, 'blocchi', 'st'))?.stato;
+    expect(await stato()).toBe('in_corso');
+    await runCycle(tablet.db, ora + 10 * MINUTE, FUSO);
+    expect(await stato()).toBe('in_corso');
+    await runCycle(tablet.db, ora + 13 * 60 * MINUTE, FUSO);
+    expect(await stato()).toBe('perso');
   });
 });

@@ -24,6 +24,18 @@ export const PREFERENZE_SINCRONIZZATE: readonly string[] = ['impostazioni', 'not
  */
 export const CHIAVE_STATO_SYNC = 'sync';
 
+/**
+ * La riga di `preferenze` coi blocchi arrivati `in_corso` da un altro dispositivo (id → istante della ricezione): resta
+ * qui (non è fra le preferenze che viaggiano) e il ciclo non li tratta da orfani per 12 ore (audit P3-4, D-SYNC-7).
+ */
+export const CHIAVE_IN_CORSO_ALTROVE = 'inCorsoAltrove';
+
+/** La riga letta, con le sole voci valide (id → istante). */
+export function receivedInProgress(valore: unknown): Record<string, number> {
+  if (typeof valore !== 'object' || valore === null) return {};
+  return Object.fromEntries(Object.entries(valore).filter(([, v]) => Number.isFinite(v))) as Record<string, number>;
+}
+
 /** D-SYNC-2: un `updatedAt` oltre 5 minuti dopo l'ora del servizio si ferma lì (un orologio avanti non vince per sempre). */
 export const ANTICIPO_MASSIMO_MS = 5 * 60_000;
 

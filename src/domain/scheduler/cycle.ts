@@ -15,13 +15,19 @@ import type { InizioSettimana } from '../settings';
 import type { Blocco } from '../types';
 import { lateNoticeDue } from './horizon';
 
-/** Gli orfani `in corso` riportati a `programmato` (§8): la marcatura dei persi li giudica subito dopo (§9). */
+/**
+ * Gli orfani `in corso` riportati a `programmato` (§8): la marcatura dei persi li giudica subito dopo (§9). `ricevuti`:
+ * per id, quando un blocco è arrivato `in_corso` da un altro dispositivo (audit P3-4).
+ */
 export function orphanPlan<B extends Blocco>(
   blocchi: readonly B[],
   bloccoSessioneAttiva: string | null,
   now: number,
+  ricevuti: Readonly<Record<string, number>> = {},
 ): B[] {
-  return blocchi.filter((b) => isOrphan(b, bloccoSessioneAttiva, now)).map((b) => ({ ...b, stato: 'programmato' }));
+  return blocchi
+    .filter((b) => isOrphan(b, bloccoSessioneAttiva, now, ricevuti[b.id]))
+    .map((b) => ({ ...b, stato: 'programmato' }));
 }
 
 export interface PianoPersi<B extends Blocco> {

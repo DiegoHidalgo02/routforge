@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  receivedInProgress,
   clampUpdatedAt,
   courseFingerprint,
   decide,
@@ -283,5 +284,13 @@ describe('Righe che il servizio rifiuta sempre — MECCANISMI §25 (audit P1-11)
     // Il testo «\u0000» scritto dall'utente (un esercizio di programmazione) e una coppia valida (un'emoji) partono
     expect(sendable({ id: 'b1', note: 'stampa \\u0000 e \\\\u0000' })).toBe(true);
     expect(sendable({ id: 'b1', note: 'fatto 😀' })).toBe(true);
+  });
+});
+
+describe('Blocchi in corso altrove — MECCANISMI §25 (audit P3-4)', () => {
+  it('la riga locale si legge con le sole voci valide: id → istante della ricezione', () => {
+    expect(receivedInProgress({ a: 10, b: 'x', c: Number.NaN, d: null })).toEqual({ a: 10 });
+    expect(receivedInProgress(null)).toEqual({});
+    expect(receivedInProgress('rotta')).toEqual({});
   });
 });

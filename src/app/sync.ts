@@ -24,10 +24,12 @@ import {
   watch,
 } from '../data/repository';
 import {
+  CHIAVE_IN_CORSO_ALTROVE,
   CHIAVE_STATO_SYNC,
   decide,
   isSynced,
   mergeLocalFields,
+  receivedInProgress,
   sendable,
   TABELLE_SINCRONIZZATE,
   toEnvelope,
@@ -35,6 +37,7 @@ import {
   type BustaRicevuta,
   type TabellaSincronizzata,
 } from '../domain/sync';
+import { ATTESA_SESSIONE_ALTROVE_MS } from '../domain/lost';
 import { recurrenceError } from '../domain/scheduler/occurrences';
 import type { Ricorrenza } from '../domain/types';
 import { courseFingerprints } from './courses';
@@ -162,10 +165,27 @@ function applyPage(
       ]);
       scritte++;
       if (b.tabella === 'ricorrenze') await followReceived(db, b, now, fuso);
+      if (b.tabella === 'blocchi' && b.deletedAt === null && (riga as { stato?: unknown }).stato === 'in_corso')
+        await noteInProgressElsewhere(db, b.id, now);
     }
     await scriviStato(db, stato, now);
     return scritte;
   });
+}
+
+/**
+ * Un blocco arrivato `in_corso`: la sessione è dell'altro dispositivo e il ciclo di qui non lo tratta da orfano per 12
+ * ore (audit P3-4, D-SYNC-7). Le voci più vecchie di così non servono più e si tolgono.
+ */
+async function noteInProgressElsewhere(db: RoutForgeDb, id: string, now: number): Promise<void> {
+  const voci = receivedInProgress((await get(db, 'preferenze', CHIAVE_IN_CORSO_ALTROVE))?.valore);
+  const valide = Object.entries(voci).filter(([, il]) => now < il + ATTESA_SESSIONE_ALTROVE_MS);
+  await save(
+    db,
+    'preferenze',
+    { id: CHIAVE_IN_CORSO_ALTROVE, valore: { ...Object.fromEntries(valide), [id]: now } },
+    now,
+  );
 }
 
 /**

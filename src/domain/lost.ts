@@ -87,17 +87,28 @@ export function shouldMarkLost(
 }
 
 /**
+ * Un `in_corso` arrivato dalla sync è la sessione di un altro dispositivo, che qui non si vede (§25: la sessione attiva
+ * non viaggia): non è orfano per 12 ore dalla ricezione, poi vale §8 (audit P3-4, D-SYNC-7).
+ */
+export const ATTESA_SESSIONE_ALTROVE_MS = 12 * HOUR;
+
+/**
  * Orfano `in corso` (§8): un blocco resta `in_corso` solo mentre la sessione attiva lo punta. Non collegato a
  * `bloccoSessioneAttiva` e con la fine effettiva passata da > 30' torna `programmato`, prima della marcatura dei persi
- * (§9). Con la sessione attiva sul blocco non è mai orfano, anche nel tempo extra (§10.4).
+ * (§9). Con la sessione attiva sul blocco non è mai orfano, anche nel tempo extra (§10.4); ricevuto `in_corso` da un
+ * altro dispositivo all'istante `ricevutoIl`, non lo è per `ATTESA_SESSIONE_ALTROVE_MS`.
  */
 export function isOrphan(
   block: Pick<Blocco, 'id' | 'stato' | 'inizio' | 'fine' | 'conOrario'>,
   bloccoSessioneAttiva: string | null,
   now: number,
+  ricevutoIl?: number,
 ): boolean {
   return (
-    block.stato === 'in_corso' && block.id !== bloccoSessioneAttiva && now > effectiveEnd(block) + MARGINE_PERSO_MS
+    block.stato === 'in_corso' &&
+    block.id !== bloccoSessioneAttiva &&
+    now > effectiveEnd(block) + MARGINE_PERSO_MS &&
+    !(ricevutoIl !== undefined && now < ricevutoIl + ATTESA_SESSIONE_ALTROVE_MS)
   );
 }
 

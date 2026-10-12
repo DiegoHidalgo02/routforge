@@ -13,10 +13,10 @@
  * `registerOpening`). Decisioni: D-SCHED-1, D-ASSENZA-1.
  */
 import type { RoutForgeDb } from '../data/db';
-import { inTransaction, list, listBy, save, saveBlock, watch } from '../data/repository';
+import { get, inTransaction, list, listBy, save, saveBlock, watch } from '../data/repository';
 import { lostPlan, orphanPlan } from '../domain/scheduler/cycle';
 import { reanchor, recurrenceError } from '../domain/scheduler/occurrences';
-import { needsFingerprints, relinkPlan } from '../domain/sync';
+import { CHIAVE_IN_CORSO_ALTROVE, needsFingerprints, receivedInProgress, relinkPlan } from '../domain/sync';
 import { MINUTE } from '../domain/time';
 import { registerOpening } from './absence';
 import { courseFingerprints } from './courses';
@@ -78,7 +78,9 @@ export async function runCycle(db: RoutForgeDb, now: number, fuso: string): Prom
     // 3. Reset degli orfani (§8): tornano `programmati` e il passo 4 li giudica
     // Il blocco che la sessione attiva punta (`preferenze.sessioneAttiva`, scritta da `app/session.ts`, D-SCHED-1)
     const attivo = (await readActiveSession(db))?.bloccoId ?? null;
-    for (const b of orphanPlan(await listBy(db, 'blocchi', 'stato', 'in_corso'), attivo, now))
+    // Quelli arrivati `in_corso` dalla sync sono la sessione di un altro dispositivo (audit P3-4)
+    const altrove = receivedInProgress((await get(db, 'preferenze', CHIAVE_IN_CORSO_ALTROVE))?.valore);
+    for (const b of orphanPlan(await listBy(db, 'blocchi', 'stato', 'in_corso'), attivo, now, altrove))
       await saveBlock(db, b, now, fuso, 'ciclo');
     // 4. Marcatura dei persi (§8; il todo «non fatto», §6)
     const persi = lostPlan(await listBy(db, 'blocchi', 'stato', 'programmato'), now, inizioSettimana);
