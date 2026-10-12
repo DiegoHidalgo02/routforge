@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         if (avvio != null && (savedInstanceState != null || (avvio.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)) {
             avvio.removeExtra("LocalNotificationId");
             avvio.removeExtra(PromemoriaNativiPlugin.SVEGLIA);
+            avvio.removeExtra(PromemoriaNativiPlugin.SEGRETO);
             avvio.setData(null);
         }
         super.onCreate(savedInstanceState);

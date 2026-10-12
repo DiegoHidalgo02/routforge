@@ -233,11 +233,13 @@ public class PromemoriaReceiver extends BroadcastReceiver {
     /** La schermata della sveglia (S8): l'app sopra il blocco schermo; il plugin rilegge la voce dall'archivio (id). */
     static PendingIntent schermo(Context context, JSONObject v) throws JSONException {
         int id = v.getInt("id");
+        JSONObject extra = v.optJSONObject("extra");
         Intent i = new Intent(context, MainActivity.class)
             .setAction(PromemoriaNativiPlugin.SVEGLIA)
             .setData(Uri.parse("routforge-sveglia://" + id))
             .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .putExtra(PromemoriaNativiPlugin.SVEGLIA, id);
+            .putExtra(PromemoriaNativiPlugin.SVEGLIA, id)
+            .putExtra(PromemoriaNativiPlugin.SEGRETO, extra != null ? extra.optString("segreto") : "");
         return PendingIntent.getActivity(context, id, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 

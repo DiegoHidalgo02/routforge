@@ -31,6 +31,8 @@ import org.json.JSONObject;
 public class PromemoriaNativiPlugin extends Plugin {
 
     static final String SVEGLIA = "com.routforge.app.SVEGLIA";
+    /** Il segreto dell'installazione nell'intent della sveglia: solo quello creato dall'app apre S8 (audit N-2). */
+    static final String SEGRETO = "com.routforge.app.SEGRETO";
     private static PromemoriaNativiPlugin vivo;
     private OnBackPressedCallback indietro;
 
@@ -107,6 +109,9 @@ public class PromemoriaNativiPlugin extends Plugin {
         JSONObject v = PromemoriaReceiver.leggi(getContext(), intent.getIntExtra(SVEGLIA, Integer.MIN_VALUE));
         JSONObject extra = v != null && v.optBoolean("sveglia") ? v.optJSONObject("extra") : null;
         if (extra == null) return;
+        // L'id si calcola dalla chiave della voce; il segreto no: un'altra app non apre S8 sopra il blocco (audit N-2)
+        String segreto = extra.optString("segreto");
+        if (segreto.isEmpty() || !segreto.equals(intent.getStringExtra(SEGRETO))) return;
         JSObject sveglia = new JSObject();
         sveglia.put("id", v.optInt("id"));
         sveglia.put("chiave", extra.optString("chiave"));
